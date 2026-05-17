@@ -38,13 +38,22 @@ inputs:
     type: string
     description: Ledger parent slug/path copied from the upstream agent.
     required: false
+  upstreamSkill:
+    type: string
+    description: Skill that requested this PR plan population, usually new-plan.
+    required: false
+  autoContinue:
+    type: boolean
+    description: When true, report implementation readiness after PR planning; this skill still does not start coding.
+    required: false
+    default: true
 ---
 
 # PR plan: §§ 1–4 from the parent plan
 
 This skill drives the **per-PR planning move** under Sedea's New Feature Development Process: take a freshly-spawned PR plan stub (indexed child from the parent's **`### PR list`** under **`PR breakdown`**, typically right after the **`new-plan`** protocol branch) and populate §§ **1–4** of the **per-PR template** — Single concern, Background, Change scope, Reasoning. §§ **5–8** and the § 7 deploy scaffold stay **`_TBD_`** for **`coding-session`** and later turns unless the **developer** explicitly asks for a **fill** sketch here.
 
-The agent has enough context after step 3 to draft §§ 1–4 from the parent's **`### PR list`** row, **`### Single-concern strategy`**, **`### Sequencing`**, and earlier parent sections (diagrams / changes as *context* — PR plans do **not** embed parent diagrams in the body). § 4 is consumed by **a coding agent** (PR description) and **pre-pr-review** / **a reviewer agent**; keep sentences unambiguous.
+The agent has enough context after step 3 to draft §§ 1–4 from the parent's **`### PR list`** row, **`### Single-concern strategy`**, **`### Sequencing`**, and earlier parent sections (diagrams / changes as *context* — PR plans do **not** embed parent diagrams in the body). § 4 is consumed by **a coding agent** (PR description) and **pre-pr-review** / **a reviewer agent**; keep sentences unambiguous. This skill reports implementation readiness, but it does **not** start coding or create a worktree.
 
 The procedure below is a hard contract — do **not** skip steps or start drafting before the target is verified as a PR plan stub.
 
@@ -59,6 +68,8 @@ The **developer** picks the next move via **AskQuestion** or a **numbered** list
 ## Step 1 — Identify the target plan and verify it's a PR plan stub
 
 The skill operates on a **target** `.plan.md` resolved before this skill runs, per [`planning-target-resolution.mdc`](../../../rules/planning-target-resolution.mdc) § *Resolution order*. Acknowledge the target slug in one line when this skill starts. Resolve targets from session, snapshot, or explicit path — **planning-target-resolution** is normative. Do **not** infer the target from the IDE’s focused-file list alone.
+
+When spawned by `new-plan`, `targetPlanPath`, `targetPlanSlug`, `parentPlanPath`, `parentPlanSlug`, and `parentIndex` are already locked. Treat missing or conflicting values as a spawn-contract failure: stop with `failure` or `partial` and report the missing field. Do not fall back to IDE focus or free-form target discovery in spawned mode.
 
 If there is no resolved target, **stop** and emit a fresh *Where we are now in the plan tree* snapshot; let the **developer** pick the lane via **AskQuestion** or numbered options, then continue.
 
@@ -94,6 +105,8 @@ Read the target plan's sidecar `<slug>.state.yaml` for `parent:`.
 
 Acknowledge: *"Parent: `<parent-slug>` (mode #3 **`PR breakdown`**); proceeding."*
 
+If `parentPlanPath` / `parentPlanSlug` inputs were supplied, they must match the resolved sidecar parent and the parent file read here. If they conflict, stop with `failure`; the child was spawned against the wrong parent context.
+
 ## Step 2 — Load the development-process doc
 
 Read `.sedea/centers/sedea-centers--development/docs/development-process.md` with the Read tool, **no offset, no limit** (hosting repo root). Acknowledge: *"Loaded development-process.md; will follow § 3 per-PR template + § 6/§ 5 contents rule."*
@@ -106,15 +119,17 @@ Read the parent plan in full. Locate **`## 6. PR breakdown`** (Master parent) or
 
 ### 3a — Match the target plan to a numbered item in `### PR list`
 
-Match the target plan's `name:` to the **bolded slug** on a **`### PR list`** row:
+Match the target plan's `name:` to the **bolded slug** on a **`### PR list`** row. If spawned input includes `parentIndex`, inspect that exact item first and require it to match the target plan link or title; do not silently pick a different row.
 
 1. Exact match.
 2. Slug-normalised match (spaces ↔ `_` / `-`, case-insensitive where helpful).
 3. Substring match only when 1–2 fail **and** one row clearly wins.
 
-If ambiguous or no match, **stop** and use **AskQuestion** (or a numbered list) so the **developer** picks item **N**, or they fix parent list / child `name:`.
+If ambiguous or no match, **stop**. In standalone mode, use **AskQuestion** so the **developer** picks item **N**, or they fix parent list / child `name:`. In spawned mode, return `partial` with `remainingTasks` naming the row/link mismatch; do not ask the developer from this child lane unless the upstream agent explicitly delegated that choice.
 
 Capture **N**, the **Single concern** sub-bullet (proto-§ 1), and the **Plan** line (link or **`_TBD`** placeholder until **`new-plan`** / **`plan-reconcile`** wires it).
+
+Verify that the captured **Plan** line links to this target plan after **`new-plan`** wiring. If it is still `_TBD`, points to another file, or is missing, continue drafting only if the body is otherwise valid, but report `parentPlanLinkStatus: "blocked"` and add a `remainingTasks` item for **`plan-reconcile`**. Do not report terminal readiness while the parent link is untrusted.
 
 Acknowledge: *"Parent `### PR list` item N=<n>: \"<slug>\" — single concern captured."*
 
@@ -259,12 +274,37 @@ Echo: *"Inserted frontmatter todo `deploy-test-plan-verified` (per development-p
 
 Do **not** fully author §§ 5–8 as final text in the same turn as **4a** unless the **developer** explicitly chose a **fill** option in step 5 — those sections are usually best filled in **`coding-session`** once code paths exist. **`pre-pr-review`** treats missing or **`_TBD_`** § 5 / § 7 as hard problems and § 6 as under-documentation risk when the skill is run with strict gates — leaving **`_TBD_`** after **4a** is expected.
 
-## Step 5 — Hand back with next-move options
+## Step 5 — Resolve implementation readiness
+
+After §§ 1–4 are drafted and the deploy capstone todo is present, compute readiness for implementation.
+
+### 5a — Readiness checks
+
+Set `readyForImplementation: true` only when all are true:
+
+- Target body has populated §§ 1–4.
+- `## 1. Single concern` is one clear concern.
+- `## 3. Change scope` has at least one concrete PR-scoped bullet.
+- `## 4. Reasoning` has **Why this approach** populated.
+- Parent `### PR list` row is matched and the parent `Plan:` link points to this target plan.
+- Frontmatter includes `deploy-test-plan-verified`.
+
+Set `readyForImplementation: false` when any of those checks fail. Add each missing item to `remainingTasks`.
+
+### 5b — Planning completeness
+
+§§ 5–8 may remain `_TBD_` after this skill. That does **not** block implementation readiness by itself, because `coding-session` owns repo rules impact, tests, deploy plan details, and caveats once code paths are concrete. However:
+
+- If § 4 **Considered & rejected** is `_TBD_`, add a non-blocking `remainingTasks` note for `coding-session`.
+- If parent link is blocked, keep `continuationStatus: "active"` until **`plan-reconcile`** repairs it or the upstream agent explicitly accepts the partial state.
+- Do not start `coding-session`; report readiness only.
+
+### 5c — Hand back with next-move options
 
 End with:
 
 1. A **`file://`** link to the target `.plan.md` under `.sedea/operations/.../plans/...`.
-2. One-line summary: *Drafted per-PR §§ 1–4; §§ 5–8 remain **`_TBD_`** for **`coding-session`** unless you request a fill sketch.*
+2. One-line summary: *Drafted per-PR §§ 1–4; implementation readiness: `<ready|not ready>`; §§ 5–8 remain **`_TBD_`** for **`coding-session`** unless you request a fill sketch.*
 3. **Numbered options** (adapt labels):
 
    1. **Revise § *N*** — The **developer** names the section and feedback; one focused `StrReplace`; echo.
@@ -272,13 +312,13 @@ End with:
    3. **Commit when ready** — Remind the **developer** to commit; this skill does **not** run `git`.
    4. **Continue in `coding-session`** — Implementation fills §§ 5–7 before merge cadence per **`development-process.md`**; **`deploy-walk`** drives § 7 checkbox lifecycle.
 
-**Stop** after this block — do not run **`coding-session`** inside this turn unless mission dispatch continues.
+**Stop** after this block — do not run **`coding-session`** inside this turn.
 
 ## Step 5a — Follow-up turns
 
 On revise requests, re-read the section, `StrReplace`, echo, re-offer the step 5 menu.
 
-On **fill** requests for § 5–8, draft the requested section with explicit *sketch* caveats; offer revise or accept; executor still owns final polish.
+On **fill** requests for § 5–8, draft the requested section with explicit *sketch* caveats; offer revise or accept; executor still owns final polish. After any fill, recompute implementation readiness and update the result contract.
 
 ## One primary choice per turn — surface observations
 
@@ -286,10 +326,16 @@ Perform exactly what was chosen. List short **numbered observations** for gaps (
 
 ## Scope guard
 
-**Owns:** target PR plan **body** §§ 1–4; **4a-bis** append-only capstone todo; optional **fill** sketches for § 5–8 when explicitly chosen.
+**Owns:** target PR plan **body** §§ 1–4; **4a-bis** append-only capstone todo; implementation readiness assessment; optional **fill** sketches for § 5–8 when explicitly chosen.
 
-**Out of scope:** parent **`### PR list`** edits; parent **`Plan:`** wiring (**`plan-reconcile`**); frontmatter `name` / `overview` / `isProject` (except **4a-bis** append); spawning children; `git`; Master / Phase templates (**`master-plan`**, **`phase-plan`**).
+**Out of scope:** parent **`### PR list`** edits; parent **`Plan:`** wiring (**`plan-reconcile`**); frontmatter `name` / `overview` / `isProject` (except **4a-bis** append); spawning children; starting `coding-session`; creating worktrees; `git`; Master / Phase templates (**`master-plan`**, **`phase-plan`**).
 
 Stop after the step 5 handoff block.
 
-When spawned, end with a child result containing `outputs.targetPlanPath`, `outputs.targetPlanSlug`, `outputs.parentPlanPath`, `outputs.parentPlanSlug`, `outputs.parentIndex`, `outputs.activeLanes`, `outputs.openLedgerEntries`, `outputs.remainingTasks`, `outputs.continuationOwner: "pr-plan-agent"`, and `outputs.continuationStatus` (`active` while PR planning or coding-session handoff remains, `terminal` when the PR plan has no remaining planning work).
+When spawned, end with a child result containing `outputs.targetPlanPath`, `outputs.targetPlanSlug`, `outputs.parentPlanPath`, `outputs.parentPlanSlug`, `outputs.parentIndex`, `outputs.parentPlanLinkStatus` (`linked` | `blocked` | `unknown`), `outputs.readyForImplementation`, `outputs.implementationReadinessReasons`, `outputs.activeLanes`, `outputs.openLedgerEntries`, `outputs.remainingTasks`, `outputs.continuationOwner: "pr-plan-agent"`, and `outputs.continuationStatus`.
+
+Set `outputs.continuationStatus` as follows:
+
+- `terminal` when `readyForImplementation: true`, parent link is trusted, and no blocking `remainingTasks` remain.
+- `active` when the plan is drafted but parent link repair, explicit fill sketches, or implementation handoff decision remains.
+- `terminal` with `readyForImplementation: false` only when the upstream agent or developer explicitly marks the PR plan deferred, abandoned, or out of scope.
