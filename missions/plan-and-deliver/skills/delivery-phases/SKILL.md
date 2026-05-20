@@ -215,7 +215,7 @@ Only return `continuationStatus: "terminal"` when every row is explicitly `compl
 
 ## One primary choice per turn — surface observations
 
-Match the discipline in **`master-plan`** and **`phase-plan`**: perform exactly what was chosen; do not silently expand scope. If you notice gaps (diagram vs phase boundary, duplicate wording, phase count vs assessment), list short **numbered observations** in the chat reply; the developer addresses them on the next turn or folds them into a revise pass. Do **not** invent typed shortcut vocabularies for accepting or skipping flags.
+Match the discipline in **`master-plan`** and **`phase-plan`**: perform exactly what was chosen; scope stays on the chosen pass. If you notice gaps (diagram vs phase boundary, duplicate wording, phase count vs assessment), list short **numbered observations** in the chat reply; the developer addresses them on the next turn or folds them into a revise pass. Offer **AskQuestion** or a **numbered list** for accepting or skipping flags.
 
 ## Scope guard
 

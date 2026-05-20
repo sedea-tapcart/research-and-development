@@ -370,7 +370,7 @@ Phrase a hard gate, e.g. `Warm-up first — do not read the task body below --- 
 
 1. **Workspace readiness** — **Read** the worktree **`README`** and **`CONTRIBUTING`** when present. For **readiness or pre-task checks**, follow **only** what those files say, what the **plan** explicitly links for setup, and what **`.cursor/rules/*.mdc`** files prescribe **when they describe pre-work or environment gates** (do not invent extra checks). If nothing prescribes a check, one line **Readiness: no checks in README / CONTRIBUTING / cited rules** — continue. If a prescribed check fails, **stop** and ask the user.
 2. **Verify branch:** `git branch --show-current` matches the expected branch.
-3. **Process handback** — the **developer** continues via **AskQuestion** / **numbered** options or mission dispatch per **development-process**; do **not** rely on legacy typed shortcut tokens as the control surface. Name next moves with protocol branches (**`plan-reconcile`**, **`pre-pr-review`**, **`pr-review`**, commit cadence per **20_efficient-pr-shipping**).
+3. **Process handback** — the **developer** continues via **AskQuestion** / **numbered** options or mission dispatch per **development-process**. Name next moves with protocol branches (**`plan-reconcile`**, **`pre-pr-review`**, **`pr-review`**, commit-push cadence per **20_efficient-pr-shipping**).
 4. **Load project rules:** `Read` every path under **Project rules**; acknowledge before continuing.
 5. **Plan file + sidecar** *(plan-anchored only)*: Plans live under **`.sedea/operations/.../plans/`**; runtime fields (`worktrees`, `prs`, `session`, `parent`, todos via scripts) follow the **`.sedea/operations/`** plan union and **`plan-state.mjs`** contracts — flip todo status only through **`plan-state.mjs`** subcommands (`set-todo-status`, `todo-start`, `todo-done`); do not hand-edit `.state.yaml` except to repair a bad state. After substantive progress on a scoped todo, update status so the Plan Board stays accurate. PR linkage after push follows **20_efficient-pr-shipping** and **`plan-state.mjs upsert-pr`**.
 
@@ -381,7 +381,7 @@ Include:
 - Which PR to implement (scope, behaviour, files).
 - **Plan link:** absolute path to the `.plan.md` (e.g. `@/…/.sedea/operations/…/plans/<slug>.plan.md`). When present, the emitter must have used the **five-step** warm-up.
 - **Follow-ups** — per **development-process** *Coding session* / *Feedback collection*: maintain **`## Follow-ups`** on the PR plan; append bullets for out-of-scope ideas with optional `(target: …)` hints.
-- **Review cadence** — after implementation and an explicit committed cut point, **a coding agent** invokes **`coding-session`** review handoff so Mission Control spawns **`pre-pr-review`** in a fresh reviewer lane before treating the change as merge-ready; coordinate **`pr-review`** and commit/push steps per **efficient-pr-shipping** (describe by **protocol branch** name, not legacy tokens).
+- **Review cadence** — after implementation and an explicit committed cut point, **a coding agent** invokes **`coding-session`** review handoff so Mission Control spawns **`pre-pr-review`** in a fresh reviewer lane before treating the change as merge-ready; coordinate **`pr-review`** and commit-push cadence per **20_efficient-pr-shipping** (name **protocol branches** in prompts and menus).
 - **Multi-repo only:** scope guard line per repo.
 
 ## Verbatim override

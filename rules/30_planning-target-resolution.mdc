@@ -4,7 +4,7 @@ description: >-
   (new-plan, phase-plan, pr-plan, delivery-phases, pr-breakdown, plan-reconcile). Resolution
   is from session and chat context — not from IDE focused-file list. Covers resolution order,
   snapshot emission, and "Where we are now in the plan tree" table format for AskQuestion /
-  numbered choices (no developer-typed workflow shortcuts on planning moves; ship cadence uses rule **20** / **`pr-review`** — see § *Scope — planning vs ship cadence*). **`master-plan`** handoff uses the same contract (Step 7 — AskQuestion + AGENT_RUN_REQUEST_V1).
+  numbered choices for planning moves (§ *Planning vs ship cadence*). **`master-plan`** handoff uses the same contract (Step 7 — AskQuestion + AGENT_RUN_REQUEST_V1).
 alwaysApply: true
 ---
 
@@ -12,24 +12,22 @@ alwaysApply: true
 
 Planning protocol branches act on a specific `.plan.md` under the **`.sedea/operations/`** union. The target is resolved from **session input, chat context, and structured choices** — not from the IDE focused-file list alone (IDE state can drift from planning intent).
 
-## Scope — planning vs ship cadence
+## Planning vs ship cadence
 
-The **no developer-typed shortcut** rule in § *Standard flow* applies to **planning-tree** moves (snapshots, Master Plan decomposition, **`new-plan`** index picks, and similar).
+**Planning-tree** moves (§ *Standard flow* below): **`AskQuestion`**, numbered options, each naming **protocol branch + target plan**.
 
-It does **not** govern **implementation / ship** cadence. For that, see **`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`** § *Commit and push cadence* and **`missions/plan-and-deliver/skills/pr-review/SKILL.md`**:
+**Implementation / ship** moves: **`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`** § *Commit and push cadence* and **`missions/plan-and-deliver/skills/pr-review/SKILL.md`**:
 
-| Intent | Use (not legacy tokens) |
-|--------|-------------------------|
-| Triage open PR review comments | **`pr-review`** protocol branch — **AskQuestion**, natural language (*triage PR comments*, *run pr-review*), or **coding-session** handoff |
-| Commit, push, plan upsert, optional **create-pr** prompt | **Commit and push cadence** in rule **20** — **AskQuestion** or same-message *commit* / *push* per **`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`** |
-
-Legacy global shortcuts **`cp`** and **`pr`** are **retired** in this center — do not treat them as valid commands or snapshot hooks.
+| Intent | Control surface |
+|--------|-----------------|
+| Triage open PR review comments | **`pr-review`** — **AskQuestion**, natural language (*triage PR comments*, *run pr-review*), or **coding-session** handoff |
+| Commit, push, plan upsert, optional **create-pr** prompt | Rule **20** commit-push cadence — **AskQuestion** or same-message *commit* / *push* per **`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`** |
 
 ## Standard flow
 
 1. Developer signals a planning-tree lane change — explicitly (*"where are we?"*, *"what's next?"*) or implicitly (*"back to plan"*, *"let's move on to …"*).
 2. Agent emits a **"Where we are now in the plan tree"** snapshot (§ *Snapshot format*).
-3. Agent lists **numbered next-move options** in the same reply, each naming the **protocol branch + target plan** (e.g. *Option 2: sub-plan index 3 under `<slug>` → **new-plan** spawns child*). Use **`AskQuestion`** or a numbered bullet list; the developer picks a number or option — they do **not** type legacy shortcut tokens to select the move.
+3. Agent lists **numbered next-move options** in the same reply, each naming the **protocol branch + target plan** (e.g. *Option 2: sub-plan index 3 under `<slug>` → **new-plan** spawns child*). Offer **`AskQuestion`** or a numbered bullet list; the developer picks by number or option label.
 4. Agent resolves the target from the chosen option and invokes the relevant skill with the target pre-resolved.
 
 Mid-flow, when chat already unambiguously names the current lane (e.g. sub-plan expansion just wrote child `3_xxx_<hex>.plan.md` and the next step is clearly **phase-plan** on that file), the agent may continue without a new snapshot — see § *Resolution order* bullet 4.
@@ -67,9 +65,9 @@ Markdown table for each in-flight plan (typically one Master Plan subtree):
 | **Status** | Drafted sections, `_TBD_`, PR linked, archived. |
 | **Next viable moves** | **Numbered** options naming **protocol branch + target** (e.g. *1. **new-plan** — sub-plan index 2 under `<parent-slug>`*; *2. **phase-plan** — populate child `<path>`*). |
 
-Below the table, repeat the same options as **`AskQuestion`** choices or a **numbered bullet list** the developer can answer with a digit — per this rule's snapshot format and Sedea conduct (numbered picks, not legacy typed shortcuts). Session and plan-path contracts for planning live in this center rule, **`planning-target-resolution`**, center skills, and **`.sedea/centers/research-and-development/docs/development-process.md`** — not in product-repo **`.cursor/rules/`** (those files are for codebase architecture and navigation only).
+Below the table, repeat the same options as **`AskQuestion`** choices or a **numbered bullet list** the developer can answer with a digit. Session and plan-path contracts for planning live in this center rule, **`planning-target-resolution`**, center skills, and **`.sedea/centers/research-and-development/docs/development-process.md`** — product-repo **`.cursor/rules/`** cover codebase architecture and navigation only.
 
-**Snapshot-scoped hooks** (e.g. *"Reply **fill PR plan** to continue"*) are allowed **only** inside that snapshot; do not rely on global typed shortcuts.
+**Snapshot-scoped prompts** (e.g. *Option 2: **phase-plan** on `<path>`*) belong **only** inside that snapshot.
 
 ### PR-plan completeness before coding-session
 

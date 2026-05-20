@@ -233,7 +233,7 @@ Return:
 - `openQuestions`
 - `sourceLedger`
 - `planningReadiness`: `ready`, `partial`, or `blocked`
-- `recommendedNextAction` — when `planningReadiness` is `ready` or accepted `partial`, tell the developer to start a **new** Mission Control dispatch: center **research-and-development**, mission **`plan and deliver`**, command phrase **`plan and deliver`** (supply PRD `@path` or link in the opening message). Do **not** reference **`create new plan`** — that phrase is retired.
+- `recommendedNextAction` — when `planningReadiness` is `ready` or accepted `partial`, tell the developer to start a **new** Mission Control dispatch: center **research-and-development**, mission **`plan and deliver`**, command phrase **`plan and deliver`** (supply PRD `@path` or link in the opening message).
 
 ## Safety constraints
 

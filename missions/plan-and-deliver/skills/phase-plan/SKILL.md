@@ -361,7 +361,7 @@ End with:
 
 1. A **file link** — absolute `file://` path to the target `.plan.md` under `.sedea/operations/.../plans/...`.
 2. The parent's indicative decomposition line for this phase: **`<Delivery phases | PR breakdown>`** (from step 3a).
-3. **Structured route options** (use **AskQuestion** when waiting for the developer) — the developer picks one; do **not** treat legacy chat tokens as the control surface.
+3. **Structured route options** (use **AskQuestion** when waiting for the developer) — numbered choices naming the **protocol branch** to run next.
 
 Suggested options (adapt labels to context):
 

@@ -6,7 +6,7 @@ description: >-
   AskQuestion, archive with plan-state.mjs archive, then follow-ups triage
   before archiving user-selected slugs. Use under mission dispatch, natural
   language ("plan reconcile"), or when the developer wants merge-driven archive
-  cadence — not legacy two-letter chat tokens.
+  cadence — via **AskQuestion**, natural language, or mission dispatch.
 inputs:
   targetPlanPath:
     type: string

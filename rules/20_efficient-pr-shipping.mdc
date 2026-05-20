@@ -87,15 +87,14 @@ Use `origin/main`, **not** `main` — `git worktree add … main` (and `git fetc
 
 ## Commit and push cadence
 
-Procedure name in docs: **commit-push** (not a user-typed command). How to run the full cadence:
+Procedure id in docs: **commit-push**. How to run the full cadence:
 
-### Control surface (AskQuestion — not `cp` / `pr` tokens)
+### User input
 
-Per **`.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`** § *Scope — planning vs ship cadence*:
+Per **`.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`** § *Planning vs ship cadence*:
 
-- **Retired:** developer-typed shortcuts **`cp`** and **`pr`** as workflow commands anywhere in this center.
-- **PR comment triage** — run **`pr-review`** (`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-review/SKILL.md`) via **AskQuestion**, natural language (*triage PR comments*, *run pr-review*), or **coding-session** when PR context is already loaded.
-- **Commit and push** — use **AskQuestion** or natural language in the **same user message** that explicitly requests *commit* and/or *push* (per **`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`**). Phrases like *commit and push*, *land the branch* are valid; **`cp`** alone is not.
+- **PR comment triage** — **`pr-review`** (`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-review/SKILL.md`) via **AskQuestion**, natural language (*triage PR comments*, *run pr-review*), or **coding-session** when PR context is already loaded.
+- **Commit and push** — **AskQuestion** or natural language in the **same user message** that requests *commit* and/or *push* (per **`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`**), e.g. *commit and push*, *land the branch*.
 
 ### Steps
 

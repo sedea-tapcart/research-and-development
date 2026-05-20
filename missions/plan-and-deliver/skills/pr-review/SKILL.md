@@ -195,8 +195,6 @@ After Step 4, use **AskQuestion** (per **`.sedea/centers/sedea/rules/2_ask-quest
 3. **Defer — stay on pr-review**
 4. **More details for option _**
 
-Do **not** instruct the developer to type legacy **`cp`** or **`pr`** tokens (retired per rule **20** § *Control surface*).
-
 ### Step 5 — GitHub reconciliation (after commit-push or skipped-only)
 
 **Entry points:**

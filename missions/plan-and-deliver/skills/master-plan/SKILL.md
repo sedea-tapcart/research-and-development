@@ -441,7 +441,7 @@ Do **not** draft section 6 (`Delivery phases | PR breakdown`) or section 7 (Cave
 
 ## Step 7 — Next moves (AskQuestion + spawn)
 
-§§ 1–5 are drafted (including **`### Complexity score`**); §6 and §7 stay `_TBD_` until the user chooses next moves. **Do not use developer-typed shortcut tokens** (`6`, `7`, `iterate § N`, `flag N: lg`, `sp <N>`, etc.) — those are legacy prototype leftovers. Per **`.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`** and Sedea conduct, the user picks via **`AskQuestion`** / **`MC_ASKQUESTION_V1`** or a **numbered list** in chat; you execute **one** chosen action per turn.
+§§ 1–5 are drafted (including **`### Complexity score`**); §6 and §7 stay `_TBD_` until the user chooses next moves. Per **`.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`** and Sedea conduct, the user picks via **`AskQuestion`** / **`MC_ASKQUESTION_V1`** or a **numbered list** in chat; you execute **one** chosen action per turn.
 
 §6 decomposition is owned by spawned **`delivery-phases`** / **`pr-breakdown`** agents (`AGENT_RUN_REQUEST_V1`). §7 **Caveats** is drafted **inline** in this skill when the user selects that option.
 

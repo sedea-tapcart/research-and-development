@@ -112,7 +112,7 @@ flowchart TD
 - `type`: Finish/stop logic.
 - `intent`: End the PRD mission with a clear artifact path, readiness status, and next action.
 - `inputs`: Review decision from step 4, PRD path, title, section policy, gaps, open questions, and planning handoff recommendation.
-- `expected output`: Concise result with PRD path or reference, readiness for **`plan and deliver`** on center **research-and-development** (Mission Control command phrase — not the retired `create new plan` label), missing information, and whether the dispatch is resolved, partial, aborted, or abandoned.
+- `expected output`: Concise result with PRD path or reference, readiness for **`plan and deliver`** on center **research-and-development** (Mission Control command phrase), missing information, and whether the dispatch is resolved, partial, aborted, or abandoned.
 - `next-step resolution`: Terminal when the PRD is approved or explicitly accepted as partial. Resumable when more sources, policy decisions, or user review are required.
 - `terminal vs resumable state`:
   - `resolved` when the PRD is approved and mandatory completeness sections are satisfied.
