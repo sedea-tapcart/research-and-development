@@ -256,3 +256,11 @@ Extend spawned result outputs with:
 - `outputs.archivedSlugs`
 - `outputs.flaggedSlugs`
 - `outputs.postponedSlugs`
+
+## Completion (spawned)
+
+End every spawned run (including after nested **`deploy-walk`** or **`plan-reconcile`** results are merged) with exactly one terminal line:
+
+`AGENT_RESULT_RESPONSE_V1` — same `correlationId` as the originating `AGENT_RUN_REQUEST_V1`; `status`: `success` | `partial` | `failure` | `aborted` | `abandoned`; 1–3 sentence `summary`; `outputs` per **## Result contract** and any **Extend spawned result outputs** bullets above; optional `errors`. Re-emit an **updated** result after user-requested follow-up on this lane (same `correlationId`).
+
+Stop after the terminal line.

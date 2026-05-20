@@ -163,7 +163,7 @@ flowchart TD
 
 ### Spawn, wait, and parent resume
 
-This subsection is the **Squad Leader** contract for §§3, 5, 6, and 7. Sedea host behavior is defined in **`.sedea/centers/sedea/rules/4_mission.mdc`** (spawn invocation, agent session closure). Each planning skill’s **`## Completion (spawned)`** is the child-lane contract; see **`missions/plan-and-deliver/skills/README.md`** for the index.
+This subsection is the **Squad Leader** contract for §§3, 5, 6, and 7. Sedea host behavior is defined in **`.sedea/centers/sedea/rules/4_mission.mdc`** (spawn invocation, agent session closure). **Planning** child lanes use each skill’s **`## Completion (spawned)`**; **ship** lanes use the same terminal line with field lists in domain sections (see **`missions/plan-and-deliver/skills/README.md`** § Planning spawn, § Ship spawn, § Inline-only).
 
 **Host vs “wait.”** Mission Control does **not** block the parent turn while a child runs. **Wait** means: announce that you are waiting for a child result, emit **`AGENT_RUN_REQUEST_V1`**, then **stop** further protocol work on the leader lane until Mission Control delivers a silent UserSend that begins with **`Mission Control: agent-result-response delivered.`** Follow the response-protocol footer in that message before §6, §7, or another spawn.
 
@@ -412,6 +412,16 @@ Maintain one row per in-scope **PR plan** path under `.sedea/operations/.../plan
 **Phase enum (happy-path order)** — update when the developer or a bubbled child result reports progress; do not skip backward without explicit correction:
 
 `not-started` → `worktree` → `implementing` → `pre-pr-review` → `pr-open` → `pr-review` → `deploy-walk` → `reconcile` → `done`
+
+**Ship child `outputs` hints (when `AGENT_RESULT_RESPONSE_V1` bubbles up)** — see **`skills/README.md`** § Ship spawn. Typical mappings:
+
+| Child skill | Advance `phase` when `outputs` include |
+|-------------|----------------------------------------|
+| `coding-session` | `developerApprovedImplementation` + `targetPlanPath` → at least `implementing`; worktree ready → `worktree` |
+| `pre-pr-review` | `recommendation: go` → `pre-pr-review` |
+| `create-pr` | `prUrl` / `prNumber` → `pr-open` |
+| `deploy-walk` | `deployStatus: done` and `deployTodoStatus: done` → `deploy-walk` (then `done` when reconcile complete) |
+| `plan-reconcile` | terminal reconcile with target archived → `reconcile` or `done` |
 
 **Register or refresh a ship row when any of:**
 

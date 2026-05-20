@@ -1,10 +1,10 @@
 # plan-and-deliver — spawn contracts
 
-Planning skills for **`plan and deliver`** follow the dual-mode shape in **`.sedea/centers/sedea/skills/README.md`**. On this mission, Squad Leader steps **§3** and **§5** and downstream decomposition agents run these skills **spawned** only; each skill file has **`## Completion (spawned)`** and **`## Completion (inline)`**.
+This mission uses **three execution shapes** (see **`.sedea/centers/sedea/skills/README.md`** for dual-mode authoring). Parent resume for the **Squad Leader** is in **`../plan.mdc`** § **Spawn, wait, and parent resume** (planning §§3–7) and § **8** (ship oversight). Host spawn/result protocol is in **`.sedea/centers/sedea/rules/4_mission.mdc`**.
 
-Parent resume behavior for the **Squad Leader** is in **`../plan.mdc`** § **Spawn, wait, and parent resume**. Host spawn/result protocol is in **`.sedea/centers/sedea/rules/4_mission.mdc`**.
+## Planning spawn (Squad Leader §3, §5, decomposition tree)
 
-## Spawn index
+Squad Leader steps **§3** and **§5** and downstream decomposition agents run these skills **spawned** on child lanes. Each file has **`## Completion (spawned)`** and **`## Completion (inline)`** (inline is unused on standard leader spawn for most of these).
 
 | Skill | Typical spawner | Squad Leader ledger |
 |-------|-----------------|---------------------|
@@ -16,21 +16,45 @@ Parent resume behavior for the **Squad Leader** is in **`../plan.mdc`** § **Spa
 | `phase-plan` | `new-plan` / decomposition | Populator lane; route fields for next branch |
 | `pr-plan` | `new-plan` / decomposition | `readyForImplementation`; implementation handoff pending |
 
-## Required terminal line
+Field-level `outputs` and `continuationStatus` rules: each skill’s **`## Completion (spawned)`**.
 
-Every spawned child ends with exactly one:
+## Ship spawn (detached / coding-session chain)
 
-```text
-AGENT_RESULT_RESPONSE_V1 {"version":1,"correlationId":"<uuid>","status":"<success|partial|failure|aborted|abandoned>","summary":"<1-3 sentences>","outputs":{...},"errors":[...]}
-```
+These skills run on **detached** or **nested** lanes (often **not** the Squad Leader). They use **domain-specific section titles** for long procedures; each file also has **`## Completion (spawned)`** with the host terminal line. Detailed `outputs` lists live in the section named in the **Outputs section** column.
 
-Field-level requirements are listed under each skill’s **`## Completion (spawned)`**.
+| Skill | Typical spawner | Outputs section | §8 ship phase hints |
+|-------|-----------------|-----------------|---------------------|
+| `coding-session` | Developer / mission dispatch | `## Implementation handoff result` | `worktree`, `implementing`; `developerApprovedImplementation`, `targetPlanPath` |
+| `pre-pr-review` | `coding-session` | Step 8 — Report and result | `pre-pr-review`; `recommendation: go` |
+| `create-pr` | `coding-session` | `## Result contract` (+ lifecycle sections) | `pr-open`; `prUrl`, `prNumber` |
+| `deploy-walk` | `create-pr` (after merge, when chosen) | `## Spawned result contract` | `deploy-walk`; `deployStatus`, `deployTodoStatus` |
+| `plan-reconcile` | Developer / `create-pr` after deploy | `## Spawned result contract` | `reconcile` → `done`; `archivedSlugs` |
 
-## Default warm-up (skill frontmatter)
+The Squad Leader **§8** ship ledger may update from **developer-message** when detached lanes do not bubble `AGENT_RESULT_RESPONSE_V1` to the leader — see **`../plan.mdc`** §8.
 
-Spawned children merge skill `warmUpRules` with run-request paths. Default pack on planning skills:
+## Inline-only (no spawn)
+
+| Skill | Invoker | Result section |
+|-------|---------|----------------|
+| `pr-review` | Active **`coding-session`** agent only | `## Inline result for coding-session` |
+
+Do **not** emit **`AGENT_RUN_REQUEST_V1`** for **`pr-review`** on this mission. Merge `outputs.prReview*` into the **`coding-session`** handoff result.
+
+## Required terminal line (all spawned children)
+
+Every **spawned** child (planning and ship) ends with exactly one line on its lane:
+
+`AGENT_RESULT_RESPONSE_V1` — same `correlationId` as the originating **`AGENT_RUN_REQUEST_V1`**; JSON fields `version`, `status` (`success` | `partial` | `failure` | `aborted` | `abandoned`), `summary` (1–3 sentences), `outputs` (per the skill’s completion section), optional `errors`. Re-emit an **updated** line after user-requested follow-up on that lane (same `correlationId`).
+
+Populate `outputs` from the skill’s **`## Completion (spawned)`** and any referenced domain section above. Stop after the terminal line.
+
+## Default warm-up
+
+**Planning skills** (frontmatter `warmUpRules` on most planning skills):
 
 - `.sedea/centers/research-and-development/docs/development-process.md`
 - `.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`
 
-The invoker should also pass this mission **`plan.mdc`** and Sedea always-apply rules via Mission Control warm-up and optional run-request `warmUpRules`.
+**Ship skills** — invoker should pass rule **20**, target plan path, and Sedea always-apply rules via Mission Control warm-up and optional run-request **`warmUpRules`** (many ship skills omit frontmatter `warmUpRules`).
+
+The invoker should also pass this mission **`plan.mdc`** where the parent is the Squad Leader or needs mission context.

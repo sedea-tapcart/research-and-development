@@ -264,6 +264,14 @@ Set `continuationStatus`:
 - `active` when flagged plans, postponed follow-ups, manual routing, or developer choices remain.
 - `partial` status with `continuationStatus: "active"` when script errors or missing merge/deploy gates block reconcile.
 
+## Completion (spawned)
+
+End every spawned run with exactly one terminal line:
+
+`AGENT_RESULT_RESPONSE_V1` — same `correlationId` as the originating `AGENT_RUN_REQUEST_V1`; `status`: `success` | `partial` | `failure` | `aborted` | `abandoned`; 1–3 sentence `summary`; `outputs` per **## Spawned result contract** above; optional `errors`. Re-emit an **updated** result after user-requested follow-up on this lane (same `correlationId`).
+
+Stop after the terminal line.
+
 ## Extensions
 
 - **Stale worktree prune.** Today other flows own this. If UX merges here, add **`prune-sessions`** behind an explicit **`AskQuestion`** gate.

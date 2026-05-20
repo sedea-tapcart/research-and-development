@@ -240,3 +240,5 @@ Return results through the active coding-session lane, not as a child-agent resu
 - `outputs.continuationStatus`
 
 Keep `continuationStatus: "active"` until every PR review comment is fixed, skipped with rationale, converted to follow-up, or explicitly deferred by the developer, and GitHub reconciliation has run when required.
+
+This skill is **inline-only** on the **`plan and deliver`** mission — no **`AGENT_RUN_REQUEST_V1`**, no **`AGENT_RESULT_RESPONSE_V1`** on this lane. See **`missions/plan-and-deliver/skills/README.md`** § Inline-only.

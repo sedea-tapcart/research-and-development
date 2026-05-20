@@ -417,3 +417,11 @@ Implement the scoped change described in `@<absolute-hosting-repo-root>/.sedea/o
 
 Stop after implementation; after an explicit committed cut point, invoke **`coding-session`** review handoff so Mission Control spawns **`pre-pr-review`** in a fresh reviewer lane per **development-process**.
 ```
+
+## Completion (spawned)
+
+End every spawned run with exactly one terminal line:
+
+`AGENT_RESULT_RESPONSE_V1` — same `correlationId` as the originating `AGENT_RUN_REQUEST_V1`; `status`: `success` | `partial` | `failure` | `aborted` | `abandoned`; 1–3 sentence `summary`; `outputs` per **## Implementation handoff result** above (include **`pr-review`** inline fields when that flow ran); optional `errors`. Re-emit an **updated** result after user-requested follow-up on this lane (same `correlationId`).
+
+Do not emit **`MC_DISPATCH_RESOLVED_V1`** from this skill. Stop after the terminal line.

@@ -180,4 +180,12 @@ Set `continuationStatus`:
 - `active` when blockers require a coding-session fix loop and developer approval is pending.
 - `partial` status with `continuationStatus: "active"` when the review ran but missing rules, dirty uncommitted edits, or incomplete anchors make the result degraded.
 
-Stop after the report and terminal child result. Do not run `git`, `gh`, source edits, commits, pushes, or PR creation.
+Stop after the report. Do not run `git`, `gh`, source edits, commits, pushes, or PR creation.
+
+## Completion (spawned)
+
+End every spawned run with exactly one terminal line:
+
+`AGENT_RESULT_RESPONSE_V1` — same `correlationId` as the originating `AGENT_RUN_REQUEST_V1`; `status`: `success` | `partial` | `failure` | `aborted` | `abandoned`; 1–3 sentence `summary`; `outputs` per **Step 8 — Report and result** above; optional `errors`. Re-emit an **updated** result after user-requested follow-up on this lane (same `correlationId`).
+
+Stop after the terminal line.
