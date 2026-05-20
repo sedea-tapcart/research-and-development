@@ -175,7 +175,7 @@ Do **not** include `Must fix`, `Should fix`, or `Skipped (no follow-up)` items h
 
 Acknowledge: *"Prepared <K> Code Review Follow-ups for `<slug>.plan.md` § Follow-ups; awaiting developer approval before appending."*
 
-Plan files live under **`.sedea/operations/`** on the hosting checkout. In the Sedea `app` monorepo, see `.cursor/rules/operations-structure.mdc`: that tree is often its **own** git repository, gitignored from the monorepo. Edits to `*.plan.md` / `*.state.yaml` therefore may **not** appear in the implementation repo's `git status`. Sync plan changes through whatever workflow owns the operations checkout (for example a dedicated `operations` commit), not only the `app` PR — Step 5's `cp` flow still commits implementation-repo source changes as usual.
+Plan files live under **`.sedea/operations/`** on the hosting checkout. In the Sedea `app` monorepo, see `.sedea/centers/sedea/rules/0_hosting-checkout.mdc`: that tree is often its **own** git repository, gitignored or submodule-pinned from the monorepo. Edits to `*.plan.md` / `*.state.yaml` therefore may **not** appear in the implementation repo's `git status`. Sync plan changes through whatever workflow owns the operations checkout (for example a dedicated `operations` commit), not only the `app` PR — Step 5's `cp` flow still commits implementation-repo source changes as usual.
 
 ### Step 4 — Report
 
