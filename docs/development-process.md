@@ -31,6 +31,18 @@ The six principles below are the non-negotiables. Everything in **Planning Modes
 
 Single catalogue of **what we use** in this process. Later sections still spell out **agent roles** wherever a role appears (e.g. **a coding agent**) so a developer reader scanning a template never has to chase definitions.
 
+### Center and mission governance
+
+This center does **not** ship **`missions/<missionSlug>/rules/*.mdc`** for **`plan-and-deliver`**, **`prd`**, or **`topics`**. That is **intentional**, not incomplete setup. Sedea treats mission rules as **optional** (see **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Rules* — absence is normal).
+
+R&D delivery agents are governed by:
+
+- **Center rules** — `.sedea/centers/research-and-development/rules/`
+- **Mission plans** — `missions/<missionSlug>/plan.mdc`
+- **Skills** — `missions/<missionSlug>/skills/` and the **Protocol branches** table below
+
+**Audits and gap reports** must **not** flag missing mission-level rule files under this center. To change **center** process or rules, use **`improve center rules`** on **sedea** `center-maintenance`. To change **repo** agent guidance in a product or hosting checkout, use **`.cursor/rules/*.mdc`** per **`.sedea/centers/research-and-development/rules/40_maintain-rules.mdc`** and per-PR plan **§ 5. Repo rules impact**.
+
 ### Agents and roles
 
 **Coding agent.** Delivers deliverables defined in a PR plan.
