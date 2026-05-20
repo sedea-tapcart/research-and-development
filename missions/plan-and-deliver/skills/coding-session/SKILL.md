@@ -273,11 +273,10 @@ The inline procedure:
 
 1. Collects PR review comments.
 2. Classifies each as `Must fix`, `Should fix`, `Skipped`, or `Skipped → follow-up`.
-3. Uses **AskQuestion** for developer approval before any code, plan, GitHub, commit, or push action.
+3. **Commit/push gates (stacked):** **AskQuestion** and **20_efficient-pr-shipping** § *Review before commit* for approval before the next stage; **`git commit`** / **`git push`** only per **`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`** when the user **same message** explicitly asks (*commit*, *push*, etc.). Workflow approval alone is not git consent.
 4. Applies only the approved fix scope.
-5. Requires developer review before commit/push.
-6. Runs GitHub reconciliation only after approved fixes are committed/pushed, or immediately for skipped-only triage.
-7. Keeps coding-session `continuationStatus: "active"` until all PR comments are resolved, followed up, skipped with rationale, or explicitly deferred.
+5. Runs GitHub reconciliation only after approved fixes are committed/pushed, or immediately for skipped-only triage.
+6. Keeps coding-session `continuationStatus: "active"` until all PR comments are resolved, followed up, skipped with rationale, or explicitly deferred.
 
 ## Implementation handoff result
 
