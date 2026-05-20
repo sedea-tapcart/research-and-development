@@ -10,9 +10,8 @@ description: >-
   §§ 1–4 follow **pr-plan**. Target resolved per
   planning-target-resolution. Use under mission dispatch, **pr-breakdown**
   protocol branch, or natural language (decompose into PRs, draft PR breakdown).
-timeoutMs: 1800000
 warmUpRules:
-  - ".sedea/centers/sedea-centers--development/rules/planning-target-resolution.mdc"
+  - ".sedea/centers/research-and-development/rules/planning-target-resolution.mdc"
 inputs:
   targetPlanPath:
     type: string
@@ -85,7 +84,7 @@ Acknowledge: *"Stage: <Master Plan | Phase plan>; proceeding."*
 
 ## Step 2 — Load the development-process doc
 
-Read `.sedea/centers/sedea-centers--development/docs/development-process.md` with the Read tool, **no offset, no limit** (hosting repo root). Acknowledge in one sentence: *"Loaded development-process.md; will follow § 3 PR breakdown set-level template + § 6/§ 5 contents rule."*
+Read `.sedea/centers/research-and-development/docs/development-process.md` with the Read tool, **no offset, no limit** (hosting repo root). Acknowledge in one sentence: *"Loaded development-process.md; will follow § 3 PR breakdown set-level template + § 6/§ 5 contents rule."*
 
 This is a **standards document**, not an executable plan — its sections describe the process you apply. Re-read on every invocation; do not rely on session memory.
 
@@ -246,7 +245,7 @@ When running as a spawned downstream agent under `master-plan`, mission dispatch
    - **Defer child PR plan creation**
    - **Abandon this branch**
    - **More details for option _**
-3. Only when the developer chooses **Approve PR breakdown and spawn PR plans**, emit one child-spawn request per PR row for `.sedea/centers/sedea-centers--development/missions/plan-and-deliver/skills/new-plan/SKILL.md`.
+3. Only when the developer chooses **Approve PR breakdown and spawn PR plans**, emit one child-spawn request per PR row for `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/new-plan/SKILL.md`.
 4. Each request's inputs must include `mode: "indexed-child"`, `parentPlanPath`, `parentPlanSlug`, `index`, `childKind: "pr-plan"`, `requestedPopulatorSkill: "pr-plan"`, `ledgerParent`, `upstreamSkill: "pr-breakdown"`, and `decompositionKind: "pr-breakdown"`.
 5. Record each spawned child as an open ledger entry keyed by correlation id plus `(parentPlanSlug, index)` with status `active`.
 6. Announce that this agent is waiting for **K** indexed child results and stop. Do not return terminal success upstream until every spawned `new-plan` lane has returned terminal status or the developer explicitly defers/abandons the remaining rows.

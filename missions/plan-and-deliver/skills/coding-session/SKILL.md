@@ -9,10 +9,9 @@ description: >-
   Plan-anchored runs validate per-PR plans with plan-ws-completeness.mjs (_TBD_ in body
   requires completion or explicit override incomplete plan). Use under mission dispatch,
   natural language, or after planning when handing off implementation.
-timeoutMs: 1800000
 warmUpRules:
-  - ".sedea/centers/sedea-centers--development/rules/planning-target-resolution.mdc"
-  - ".sedea/centers/sedea-centers--development/rules/efficient-pr-shipping.mdc"
+  - ".sedea/centers/research-and-development/rules/planning-target-resolution.mdc"
+  - ".sedea/centers/research-and-development/rules/efficient-pr-shipping.mdc"
 inputs:
   targetPlanPath:
     type: string
@@ -93,9 +92,9 @@ If repo targets are missing, stop and ask the developer with **AskQuestion** to 
 
 ## Plan completeness gate (before any worktree)
 
-When this run anchors Phase 2 to a Plan Board **`.plan.md`** under the **`.sedea/operations/`** union (absolute path from the user message, an `@` path, or `node .sedea/centers/sedea-centers--development/missions/plan-and-deliver/scripts/plan-state.mjs resolve --cwd "$PWD"` from the **hosting repo** when already linked), **validate the plan** before `git worktree add`, Mission Control attach, or emitting the session prompt.
+When this run anchors Phase 2 to a Plan Board **`.plan.md`** under the **`.sedea/operations/`** union (absolute path from the user message, an `@` path, or `node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs resolve --cwd "$PWD"` from the **hosting repo** when already linked), **validate the plan** before `git worktree add`, Mission Control attach, or emitting the session prompt.
 
-**Lane-change snapshots** (*back to plan*, *where are we?*, …) follow `.sedea/centers/sedea-centers--development/rules/planning-target-resolution.mdc` § *PR-plan completeness before coding-session*: when a snapshot lists both an incomplete per-PR plan and **coding-session**, **finishing the plan** must be ordered **first**.
+**Lane-change snapshots** (*back to plan*, *where are we?*, …) follow `.sedea/centers/research-and-development/rules/planning-target-resolution.mdc` § *PR-plan completeness before coding-session*: when a snapshot lists both an incomplete per-PR plan and **coding-session**, **finishing the plan** must be ordered **first**.
 
 **Skip this gate** when there is **no** plan file anchor (handoff with no `*.plan.md` in the task body).
 
@@ -106,7 +105,7 @@ Otherwise:
 1. Resolve the plan’s **absolute** path. If you cannot, **stop** and ask for a path or a `plan-state` linkage — do not silently skip validation.
 2. From the **hosting repo root** (the tree that contains `.sedea/`), run:
    ```bash
-   node .sedea/centers/sedea-centers--development/missions/plan-and-deliver/scripts/plan-ws-completeness.mjs --file "<absolute-plan-path>"
+   node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-ws-completeness.mjs --file "<absolute-plan-path>"
    ```
    - Exit **0** and stdout `OK` or `SKIP_NOT_PER_PR` → proceed.
    - Exit **1** and stdout `INCOMPLETE` → **per-PR plan** still has `_TBD_` after stripping fenced code. **Do not** create worktrees or emit the prompt until the user accepts proceeding:
@@ -143,7 +142,7 @@ Run only **after** the [Plan completeness gate](#plan-completeness-gate-before-a
    git fetch origin main
    git worktree add <sibling-path> -b <branch> origin/main
    ```
-   - Prefix sibling paths with the repo directory basename (see **Worktree setup** in `.sedea/centers/sedea-centers--development/rules/efficient-pr-shipping.mdc`).
+   - Prefix sibling paths with the repo directory basename (see **Worktree setup** in `.sedea/centers/research-and-development/rules/efficient-pr-shipping.mdc`).
    - Always branch from **`origin/main`**, not **`main`** (same failure mode as in **efficient-pr-shipping**).
    - Branch naming: follow **stacked-pr-branch-prefix** for this monorepo (`feat/NN-…`) and **efficient-pr-shipping** otherwise.
    - Refuse dirty primary checkouts before creating a worktree: run `git status --porcelain` in each repo and stop on any output. Do not stash, commit, discard, or clean the user's WIP.
@@ -151,10 +150,10 @@ Run only **after** the [Plan completeness gate](#plan-completeness-gate-before-a
 
 2. **Record the session on the plan** (see [Sidecar state](#sidecar-state)). From the **hosting repo root**:
    ```bash
-   node .sedea/centers/sedea-centers--development/missions/plan-and-deliver/scripts/plan-state.mjs set-worktrees \
+   node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs set-worktrees \
      --slug <plan-slug> \
      --json '[{"repo":"<repo-basename>","path":"<absolute-worktree-path>"}]'
-   node .sedea/centers/sedea-centers--development/missions/plan-and-deliver/scripts/plan-state.mjs set-session \
+   node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs set-session \
      --slug <plan-slug> \
      --focus <absolute-worktree-path>
    ```
@@ -215,7 +214,7 @@ Compile the **`pre-pr-review`** child inputs:
 - `ledgerParent`
 - `upstreamSkill: "coding-session"`
 
-Spawn `.sedea/centers/sedea-centers--development/missions/plan-and-deliver/skills/pre-pr-review/SKILL.md`, announce that **coding-session** is waiting for the pre-PR review result, and stop. Do not open a PR before the reviewer returns `recommendation: "go"`.
+Spawn `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pre-pr-review/SKILL.md`, announce that **coding-session** is waiting for the pre-PR review result, and stop. Do not open a PR before the reviewer returns `recommendation: "go"`.
 
 ### Review result aggregation
 
@@ -254,7 +253,7 @@ When **`pre-pr-review`** returns `recommendation: "go"`:
    - **Abandon this implementation**
    - **More details for option _**
 3. Only **Approve follow-ups and create PR now** authorizes appending proposed follow-ups before PR creation. **Create PR without appending proposed follow-ups** authorizes only PR creation. Do not treat `pre-pr-review` `go` as developer approval to mutate the plan or open/prepare a PR.
-4. Emit exactly one child-spawn request for `.sedea/centers/sedea-centers--development/missions/plan-and-deliver/skills/create-pr/SKILL.md`.
+4. Emit exactly one child-spawn request for `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/create-pr/SKILL.md`.
 5. Inputs must include `targetPlanPath`, `targetPlanSlug`, `worktreePath`, `branchName`, `baseRef`, `repoUrl`, `diffSummary`, `prePrReviewRecommendation: "go"`, `prePrReviewFlags`, `followUpsAppended`, `ledgerParent`, and `upstreamSkill: "coding-session"`.
 6. Announce that **coding-session** is waiting for the PR-creating agent result and stop. Do not continue to `pr-review` or deploy until `create-pr` reports a PR URL/number or a blocking failure.
 
@@ -262,7 +261,7 @@ When Mission Control delivers the **`create-pr`** result, copy `prUrl`, `prNumbe
 
 ### Inline PR review after PR creation
 
-After `create-pr` reports a PR URL/number, the active **coding-session agent** executes `.sedea/centers/sedea-centers--development/missions/plan-and-deliver/skills/pr-review/SKILL.md` inline. Do not spawn a `pr-review` agent.
+After `create-pr` reports a PR URL/number, the active **coding-session agent** executes `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-review/SKILL.md` inline. Do not spawn a `pr-review` agent.
 
 Inline `pr-review` inputs come from coding-session state:
 

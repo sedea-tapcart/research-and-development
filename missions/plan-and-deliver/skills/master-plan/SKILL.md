@@ -11,9 +11,8 @@ description: >-
   and section 7 (Caveats) stay as TBD stubs for follow-up turns. Use when the user
   opens a fresh planning chat from the "feature plan: design + changes"
   plan-board prompt, or says "master-plan" / "draft a master plan".
-timeoutMs: 1800000
 warmUpRules:
-  - ".sedea/centers/sedea-centers--development/rules/planning-target-resolution.mdc"
+  - ".sedea/centers/research-and-development/rules/planning-target-resolution.mdc"
 inputs:
   seedBlock:
     type: string
@@ -54,7 +53,7 @@ There is **no required model tier** for this skill: proceed to Step 2 either way
 
 ## Step 2 — Load the development-process doc, in full
 
-Read `.sedea/centers/sedea-centers--development/docs/development-process.md` with the Read tool, **no offset, no limit**. The whole file. This is a **standards document**, not an executable plan — its sections describe the process you will apply, not work for you to perform. Acknowledge in one sentence that you have it loaded and that you will follow the **Master Plan template** for sections 4 and 5.
+Read `.sedea/centers/research-and-development/docs/development-process.md` with the Read tool, **no offset, no limit**. The whole file. This is a **standards document**, not an executable plan — its sections describe the process you will apply, not work for you to perform. Acknowledge in one sentence that you have it loaded and that you will follow the **Master Plan template** for sections 4 and 5.
 
 If the file has changed since you last knew it, the in-file template is the source of truth — not your memory.
 
@@ -135,7 +134,7 @@ Related (optional, `<role>: <link or @path>` per bullet):
 - <role>: <link or @path>
 - ...
 
-Load and follow .sedea/centers/sedea-centers--development/missions/plan-and-deliver/skills/master-plan/SKILL.md ...
+Load and follow .sedea/centers/research-and-development/missions/plan-and-deliver/skills/master-plan/SKILL.md ...
 ```
 
 `Feature planning:`, `PRD:`, and `Parent:` are required slots. The Related block is the only optional one — empty when the feature stands alone. `Parent:` is read in step 5a; if it's empty or unresolvable, step 5a falls back to an `AskQuestion` picker so the user can still proceed.
@@ -525,8 +524,8 @@ When the user replies with one of the shortcuts (or free-form feedback) and you 
 - For every section already drafted *in this skill's territory* (§§ 1–5 and § 7), offer an `iterate § N: <feedback>` option. **Do not list `iterate § 6`** — § 6 is owned by **Delivery phases** / **PR breakdown**, and iterating it happens in those skills' sessions; the chat-shortcuts dispatcher routes `iterate § 6` there if the user types it explicitly.
 - When the user asks to **`iterate § 4`** or **`iterate § 5`**, after applying the edit **re-run Step 6c** (recompute the three counts, overall score, band) and **StrReplace** the entire `### Complexity score (plan-scope signal)` subsection so the file stays truthful. End with Step **7a** or **7b** according to the new band.
 - **`6` is a route choice and spawn point, not an inline draft.** When the user chooses `6`, prompt them: *"For § 6, choose **Delivery phases** (child phase plans) or **PR breakdown** (one or more PR plans)."* Then stop. When the user chooses a route, emit exactly one child-spawn request for the selected skill:
-  - **Delivery phases** uses `.sedea/centers/sedea-centers--development/missions/plan-and-deliver/skills/delivery-phases/SKILL.md`.
-  - **PR breakdown** uses `.sedea/centers/sedea-centers--development/missions/plan-and-deliver/skills/pr-breakdown/SKILL.md`.
+  - **Delivery phases** uses `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/delivery-phases/SKILL.md`.
+  - **PR breakdown** uses `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-breakdown/SKILL.md`.
   - Inputs include `targetPlanPath`, `targetPlanSlug`, `parentAgentRole: "master-plan-agent"`, `ledgerParent: <masterPlanSlug>`, `complexityBand`, `complexityScore`, `decompositionAssessment`, and `routeLock` (`"delivery-phases"` for Delivery phases, `"pr-breakdown"` for PR breakdown).
   - Announce that the **Master Plan agent** is waiting for the downstream result and stop; do not continue with more planning actions in the same turn.
   - When Mission Control delivers the downstream result, update the result contract you return upstream: add/close `activeLanes`, `openLedgerEntries`, `spawnedPlans`, and `remainingTasks` from the child outputs before ending.

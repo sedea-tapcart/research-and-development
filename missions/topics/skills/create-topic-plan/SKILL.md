@@ -1,7 +1,6 @@
 ---
 name: create-topic-plan
 description: Create a root-level topic `.plan.md` and `.state.yaml` sidecar in the operations plan tree.
-timeoutMs: 900000
 inputs:
   topicName:
     type: string

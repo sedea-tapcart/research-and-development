@@ -6,10 +6,9 @@ description: >-
   propose Code Review Follow-ups when plan-anchored, and report go/no-go before PR
   creation. Spawned by coding-session after the implementation cut point; coding-session
   obtains developer approval before any follow-up mutation.
-timeoutMs: 1800000
 warmUpRules:
-  - ".sedea/centers/sedea-centers--development/rules/planning-target-resolution.mdc"
-  - ".sedea/centers/sedea-centers--development/rules/efficient-pr-shipping.mdc"
+  - ".sedea/centers/research-and-development/rules/planning-target-resolution.mdc"
+  - ".sedea/centers/research-and-development/rules/efficient-pr-shipping.mdc"
 inputs:
   anchorType:
     type: string
@@ -79,7 +78,7 @@ Confirm this is a fresh reviewer lane. Do not reuse context from the coding agen
 
 ## Step 3 — Load standards and rules
 
-Read `.sedea/centers/sedea-centers--development/docs/development-process.md` in full, or at minimum the per-PR template, strategy, cadence, and Pre-PR reviewer sections.
+Read `.sedea/centers/research-and-development/docs/development-process.md` in full, or at minimum the per-PR template, strategy, cadence, and Pre-PR reviewer sections.
 
 Read every path from `projectRules`. If a rule path is missing, report it as `partial` unless the rule is clearly irrelevant to the diff.
 

@@ -14,13 +14,13 @@ description: >-
 
 ## Helper script
 
-Script: `.sedea/centers/sedea-centers--development/missions/plan-and-deliver/scripts/pr-review.py` (reads PAT from `GH_TOKEN` or `~/.sedea/mcp.json` — the token source is config only; **do not invoke the GitHub MCP** during `pr`).
+Script: `.sedea/centers/research-and-development/missions/plan-and-deliver/scripts/pr-review.py` (reads PAT from `GH_TOKEN` or `~/.sedea/mcp.json` — the token source is config only; **do not invoke the GitHub MCP** during `pr`).
 
 The script reads input from (in order): **`PR_REVIEW_INPUT`** (absolute path to a JSON file — keeps payloads **outside** the repo).
 
 ### Input file and script: **always two separate steps**
 
-The point is a **reviewable JSON payload** and a **stable allowlisted shell command** (`python3 .sedea/centers/sedea-centers--development/missions/plan-and-deliver/scripts/pr-review.py` only) — **never** `printf … && python3 …` in one line.
+The point is a **reviewable JSON payload** and a **stable allowlisted shell command** (`python3 .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/pr-review.py` only) — **never** `printf … && python3 …` in one line.
 
 1. **First step — write the input file only**  
    Create a temp path outside the repo, e.g. `PRR_INPUT=$(mktemp /tmp/cursor-pr-review-input.XXXXXX)` (six trailing `X`). Use the **Write** tool to write the JSON to that **absolute** path (or a **Shell** that **only** writes the file and exits — **no** `&&` to the script).
@@ -28,13 +28,13 @@ The point is a **reviewable JSON payload** and a **stable allowlisted shell comm
 2. **Second step — run the script only**  
    A **separate** **Shell** invocation:
 
-   `cd <implementation-repo-root> && PR_REVIEW_INPUT="<absolute-path-from-step-1>" python3 .sedea/centers/sedea-centers--development/missions/plan-and-deliver/scripts/pr-review.py`
+   `cd <implementation-repo-root> && PR_REVIEW_INPUT="<absolute-path-from-step-1>" python3 .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/pr-review.py`
 
    No `echo`/`printf`/heredoc, no redirection, no `&&` chaining write + script on this line.
 
 **Never** chain writing and executing in one shell line, for example:
 
-`printf '…' > /tmp/foo.json && python3 .sedea/centers/sedea-centers--development/missions/plan-and-deliver/scripts/pr-review.py`
+`printf '…' > /tmp/foo.json && python3 .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/pr-review.py`
 
 That defeats the two-step workflow (re-approval noise, hides the clean script-only command). **Never** use a shell `for` loop that overwrites the input file and calls the script each iteration — put the full sequence in **one** JSON payload (single object or **array** of commands) and run the script **once**.
 
@@ -59,7 +59,7 @@ Supported `command` values: `threads`, `reply`, `resolve`, `minimize`, `pr-for-b
 
 ### GitHub MCP is **out of scope** for `pr-review`
 
-Do **not** call **`user-github`** (or any other GitHub MCP) to list reviews, comments, or threads. That duplicates the script, stresses the agent UI with huge payloads, and is forbidden here. **All** GitHub reads and writes for this workflow go through **`cd <implementation-repo-root> && PR_REVIEW_INPUT="<absolute-path-from-step-1>" python3 .sedea/centers/sedea-centers--development/missions/plan-and-deliver/scripts/pr-review.py`** (plus `git` / `gh` in Step 0 only if you already use them for branch or URL resolution — optional; `pr-for-branch` in the script is preferred when resolving the PR from the current branch).
+Do **not** call **`user-github`** (or any other GitHub MCP) to list reviews, comments, or threads. That duplicates the script, stresses the agent UI with huge payloads, and is forbidden here. **All** GitHub reads and writes for this workflow go through **`cd <implementation-repo-root> && PR_REVIEW_INPUT="<absolute-path-from-step-1>" python3 .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/pr-review.py`** (plus `git` / `gh` in Step 0 only if you already use them for branch or URL resolution — optional; `pr-for-branch` in the script is preferred when resolving the PR from the current branch).
 
 ## When coding-session executes `pr-review`
 
@@ -78,7 +78,7 @@ Always confirm which PR is being reviewed (print URL and title) before proceedin
 
 Before Step 1, attempt to upsert the resolved PR number into the Plan Board sidecar so `plan-reconcile` can later archive the plan when all linked PRs merge. This is the same `upsert-pr` call documented in `commit-push` step 3 of [`efficient-pr-shipping.mdc`](../../../../rules/efficient-pr-shipping.mdc) — running it here as well closes the gap when `pr` triage ends with all comments skipped (no follow-up `cp`, so `cp`'s upsert never fires) or when the PR is otherwise quiet enough that no second `cp` ever happens. The helper is idempotent, so running it on every `pr` invocation is harmless.
 
-**`plan-state.mjs`** lives in the center tree: `.sedea/centers/sedea-centers--development/missions/plan-and-deliver/scripts/plan-state.mjs`. It discovers plans only under the **union** of `.sedea/operations/joint/...` (literal `joint`) and `.sedea/operations/<operations-user-id>/...` on the **hosting repo** (parent directory of `.sedea/`). Pass the per-user scope when needed:
+**`plan-state.mjs`** lives in the center tree: `.sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs`. It discovers plans only under the **union** of `.sedea/operations/joint/...` (literal `joint`) and `.sedea/operations/<operations-user-id>/...` on the **hosting repo** (parent directory of `.sedea/`). Pass the per-user scope when needed:
 
 - **`--operations-user-id <id>`** before the subcommand (recommended in Shell logs), or
 - one line in **`.sedea/local/operations-user-id`** (gitignored; hosting repo root), or
@@ -88,7 +88,7 @@ If the id is omitted and unset, only `joint` plans are visible (stderr warns onc
 
 ```bash
 ROOT="$(git rev-parse --show-toplevel)"
-PLAN_STATE="$ROOT/.sedea/centers/sedea-centers--development/missions/plan-and-deliver/scripts/plan-state.mjs"
+PLAN_STATE="$ROOT/.sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs"
 # Optional first args: --operations-user-id <id>  (before the subcommand), e.g.
 # node -- "$PLAN_STATE" --operations-user-id "<id>" resolve --cwd "$PWD"
 
@@ -200,7 +200,7 @@ Tell the user explicitly: after local fixes look good, say **`cp`** — `efficie
 
 - **Skipped-only triage** — Step 3 marked every comment **Skipped (no follow-up)** with **no** code edits: run **GitHub only** immediately (no commit/push).
 
-**GitHub only** (two-step `PR_REVIEW_INPUT` + `python3 .sedea/centers/sedea-centers--development/missions/plan-and-deliver/scripts/pr-review.py` per § *Input file and script* — never chain write + script):
+**GitHub only** (two-step `PR_REVIEW_INPUT` + `python3 .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/pr-review.py` per § *Input file and script* — never chain write + script):
 
 1. **Reply + resolve** each inline thread using approved dispositions from Step 4 — **Must fix**, **Should fix**, **Skipped (no follow-up)**, or **Skipped → follow-up** (same paraphrase + `(target: …)` as Step 3a) plus short reasoning, then resolve the thread.
 

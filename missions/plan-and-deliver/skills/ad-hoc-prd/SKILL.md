@@ -8,7 +8,6 @@ description: >-
   link is required. For **Ad-Hoc PRD creator** agent sessions — explicit
   mission dispatch or upstream agent only. Does not edit
   `.plan.md` files or run/spawn **`master-plan`**.
-timeoutMs: 900000
 inputs:
   createIntent:
     type: boolean

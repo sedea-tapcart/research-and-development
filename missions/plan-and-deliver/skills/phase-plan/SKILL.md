@@ -10,9 +10,8 @@ description: >-
   planning-target-resolution. Use under mission dispatch, **`phase-plan`** protocol
   branch, natural language, or after **`new-plan`** ignition on a `Delivery phases`
   child stub.
-timeoutMs: 1800000
 warmUpRules:
-  - ".sedea/centers/sedea-centers--development/rules/planning-target-resolution.mdc"
+  - ".sedea/centers/research-and-development/rules/planning-target-resolution.mdc"
 inputs:
   targetPlanPath:
     type: string
@@ -112,7 +111,7 @@ If `parentPlanPath` / `parentPlanSlug` inputs were supplied, they must match the
 
 ## Step 2 — Load the development-process doc
 
-Read `.sedea/centers/sedea-centers--development/docs/development-process.md` with the Read tool, **no offset, no limit**. Acknowledge in one sentence: *"Loaded development-process.md; will follow § 2 Phase plan template + § 6/§ 5 contents rule."*
+Read `.sedea/centers/research-and-development/docs/development-process.md` with the Read tool, **no offset, no limit**. Acknowledge in one sentence: *"Loaded development-process.md; will follow § 2 Phase plan template + § 6/§ 5 contents rule."*
 
 This is a **standards document**, not an executable plan — its sections describe the process you will apply, not work for you to perform. Re-read on every invocation; do not rely on session memory.
 
@@ -338,8 +337,8 @@ Apply:
 
 When this skill is running as a spawned child and `autoContinue` is not `false`, spawn the next decomposition branch **only** when route signal is clear:
 
-- `delivery-phases` → spawn `.sedea/centers/sedea-centers--development/missions/plan-and-deliver/skills/delivery-phases/SKILL.md`
-- `pr-breakdown` → spawn `.sedea/centers/sedea-centers--development/missions/plan-and-deliver/skills/pr-breakdown/SKILL.md`
+- `delivery-phases` → spawn `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/delivery-phases/SKILL.md`
+- `pr-breakdown` → spawn `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-breakdown/SKILL.md`
 
 Before spawning, present the drafted phase plan body and the route signal to the developer via **AskQuestion**. Required options:
 

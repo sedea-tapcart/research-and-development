@@ -18,9 +18,8 @@ description: >-
   command mappings use **AskQuestion** (not freeform guessing). Use when the user
   says `start dep <N>`, `dep <N> done [: <note>]`, `dep <N> skip: <reason>`,
   `dep <N> block: <reason>`, `dep deployed [: <note>]`, or `dep status`.
-timeoutMs: 1800000
 warmUpRules:
-  - ".sedea/centers/sedea-centers--development/rules/planning-target-resolution.mdc"
+  - ".sedea/centers/research-and-development/rules/planning-target-resolution.mdc"
 inputs:
   targetPlanPath:
     type: string

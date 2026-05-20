@@ -73,8 +73,8 @@ flowchart TD
 - `type`: Agent engagement and handover.
 - `intent`: Delegate evidence gathering, section policy, drafting, updating, and completeness review to a focused Author PRD agent while the Squad Leader owns routing and final approval.
 - `target agent role`: Author PRD agent.
-- `assigned skill`: `.sedea/centers/sedea-centers--development/missions/prd/skills/author-prd/SKILL.md`.
-- `required rule context`: Sedea center always-apply rules, this mission plan, `.sedea/centers/sedea-centers--development/docs/development-process.md`, and the `author-prd` skill.
+- `assigned skill`: `.sedea/centers/research-and-development/missions/prd/skills/author-prd/SKILL.md`.
+- `required rule context`: Sedea center always-apply rules, this mission plan, `.sedea/centers/research-and-development/docs/development-process.md`, and the `author-prd` skill.
 - `inputs`: Resolved PRD target, initial source references or notes from step 2, existing PRD body when updating, current Sedea user context, and requested output path.
 - `expected output`: Child agent result with `status`, `outputs.prdPath`, `outputs.prdTitle`, `outputs.sectionPolicy`, `outputs.completedSections`, `outputs.missingMandatorySections`, `outputs.missingImportantSections`, `outputs.openQuestions`, `outputs.sourceLedger`, `outputs.planningReadiness`, and `outputs.recommendedNextAction`.
 - `next-step resolution`:

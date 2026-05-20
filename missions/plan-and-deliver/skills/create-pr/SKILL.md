@@ -3,7 +3,6 @@ name: create-pr
 description: >-
   PR-creating agent: create or prepare a GitHub PR from a reviewed implementation
   branch using coding-session context, PR plan lineage, and pre-pr-review result.
-timeoutMs: 900000
 inputs:
   targetPlanPath:
     type: string
@@ -85,7 +84,7 @@ When direct PR creation is not authorized, generate a prompt for **a PR-creating
 1. **Current branch**: `git branch --show-current`
 2. **Base branch**: `git log --oneline --decorate --all` or `git merge-base` to determine the branch this was forked from. Use the most recent parent branch that has a remote tracking branch (e.g. `main`, `phase-1/...`). If ambiguous, ask the user.
 3. **Repo URL**: parse from `git remote get-url origin` (e.g. `https://github.com/sedea-ai/app`).
-4. **Changes summary**: review `git diff <base-branch>...HEAD` and the conversation context. You have better context than **a PR-creating agent** — the description starter must be **reviewer-complete** (see `.sedea/centers/sedea-centers--development/rules/efficient-pr-shipping.mdc` → **Comprehensive PR descriptions** → **a PR-creating agent prompt and proportional context**). Scale length to PR size; small PRs stay short but still cover **why this slice**, **not in this PR**, **plan lineage** when work came from a plan, and **how to verify** (tests / observable behaviour), plus the usual what/why and behavioural deltas.
+4. **Changes summary**: review `git diff <base-branch>...HEAD` and the conversation context. You have better context than **a PR-creating agent** — the description starter must be **reviewer-complete** (see `.sedea/centers/research-and-development/rules/efficient-pr-shipping.mdc` → **Comprehensive PR descriptions** → **a PR-creating agent prompt and proportional context**). Scale length to PR size; small PRs stay short but still cover **why this slice**, **not in this PR**, **plan lineage** when work came from a plan, and **how to verify** (tests / observable behaviour), plus the usual what/why and behavioural deltas.
 
 Then print the following inside a fenced code block (so the user can copy it):
 
@@ -166,7 +165,7 @@ When `autoDeployAfterMerge` is not `false` and PR status is `merged`, verify dep
 
 Only when the developer chooses **Start deploy verification now**, emit exactly one child-spawn request for:
 
-`.sedea/centers/sedea-centers--development/missions/plan-and-deliver/skills/deploy-walk/SKILL.md`
+`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/deploy-walk/SKILL.md`
 
 Inputs must include:
 
@@ -212,7 +211,7 @@ If all prerequisites are ready, ask the developer with **AskQuestion** before sp
 
 Only when the developer chooses **Run plan-reconcile now**, emit exactly one child-spawn request for:
 
-`.sedea/centers/sedea-centers--development/missions/plan-and-deliver/skills/plan-reconcile/SKILL.md`
+`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/plan-reconcile/SKILL.md`
 
 Inputs must include:
 

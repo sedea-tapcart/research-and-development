@@ -155,7 +155,7 @@ flowchart TD
 ### 1. Establish PRD source
 
 - **Type:** Branching logic
-- **Intent:** Capture requirements input before any planning artifacts (per **Setup** in `.sedea/centers/sedea-centers--development/docs/development-process.md`: PRD is upstream to the Master Plan).
+- **Intent:** Capture requirements input before any planning artifacts (per **Setup** in `.sedea/centers/research-and-development/docs/development-process.md`: PRD is upstream to the Master Plan).
 - **Inputs:** Opening message matching `create new plan` (case-insensitive); optional remainder is context only.
 - **Expected output:** A PRD link or `@path`, or a short ad-hoc task description for ad-hoc PRD authoring.
 - **Next-step resolution:**
@@ -172,7 +172,7 @@ flowchart TD
 
 **Out of scope for this step:** Indexed child / sub-plan spawns — those use a **dedicated protocol branch** and separate session command (not `create new plan`).
 
-**Referenced assets:** `.sedea/centers/sedea-centers--development/docs/development-process.md`; `skills/ad-hoc-prd/SKILL.md`; `skills/master-plan/SKILL.md`.
+**Referenced assets:** `.sedea/centers/research-and-development/docs/development-process.md`; `skills/ad-hoc-prd/SKILL.md`; `skills/master-plan/SKILL.md`.
 
 ### 2. Validate linked PRD
 
@@ -200,9 +200,9 @@ flowchart TD
 
 - **Type:** Agent engagement and handover
 - **Intent:** Delegate ad-hoc PRD creation to a focused **Ad-Hoc PRD agent** so the **Squad Leader** can keep ownership of the main `create new plan` protocol.
-- **Inputs:** Confirmed ad-hoc task description from §1; optional title if already provided; Sedea always-apply rules; this mission plan; `.sedea/centers/sedea-centers--development/docs/development-process.md`; assigned skill `skills/ad-hoc-prd/SKILL.md`.
+- **Inputs:** Confirmed ad-hoc task description from §1; optional title if already provided; Sedea always-apply rules; this mission plan; `.sedea/centers/research-and-development/docs/development-process.md`; assigned skill `skills/ad-hoc-prd/SKILL.md`.
 - **Target agent role:** Ad-Hoc PRD agent
-- **Assigned skill:** `.sedea/centers/sedea-centers--development/missions/plan-and-deliver/skills/ad-hoc-prd/SKILL.md`
+- **Assigned skill:** `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/ad-hoc-prd/SKILL.md`
 - **Required rule context:** Sedea center always-apply rules, this mission plan, `development-process.md`, and the `ad-hoc-prd` skill.
 - **Expected output:** Child agent result with `status: success` or `partial`, `outputs.prdPath`, `outputs.prdRef`, `outputs.prdTitle`, `outputs.missingFields`, `outputs.complexityGuard`, `outputs.activeLanes`, `outputs.openLedgerEntries`, `outputs.remainingTasks`, `outputs.continuationOwner`, and `outputs.continuationStatus`.
 - **Next-step resolution:**
@@ -263,7 +263,7 @@ Related (optional):
 - **Intent:** Delegate Master Plan creation and §§1–5 drafting to a focused **Master Plan agent** while the **Squad Leader** keeps ownership of the overall `create new plan` protocol.
 - **Inputs:** Complete seed from §4 (`Feature planning`, `PRD`, `Parent`, optional `Related`); Sedea always-apply rules; this mission plan; `development-process.md`; assigned skill `skills/master-plan/SKILL.md`.
 - **Target agent role:** Master Plan agent
-- **Assigned skill:** `.sedea/centers/sedea-centers--development/missions/plan-and-deliver/skills/master-plan/SKILL.md`
+- **Assigned skill:** `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/master-plan/SKILL.md`
 - **Required rule context:** Sedea center always-apply rules, this mission plan, `development-process.md`, planning target resolution rule, and the `master-plan` skill.
 - **Expected output:** Child agent result with `status: success` or `partial`, `outputs.masterPlanPath`, `outputs.masterPlanSlug`, `outputs.complexityBand`, `outputs.complexityScore`, `outputs.continuationOwner`, `outputs.continuationStatus`, `outputs.activeLanes`, `outputs.openLedgerEntries`, `outputs.spawnedPlans`, `outputs.remainingTasks`, and any recommended next action.
 - **Next-step resolution:**

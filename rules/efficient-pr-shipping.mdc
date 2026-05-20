@@ -18,7 +18,7 @@ There are two kinds of agent sessions:
   - Planned implementation PRs
   - PR reviews and PR comment fixes
 
-When the Squad Leader receives an implementation request, PR review, or cross-repo task, hand off to a new agent session via the **`coding-session` protocol branch** ([`coding-session/SKILL.md`](.sedea/centers/sedea-centers--development/missions/plan-and-deliver/skills/coding-session/SKILL.md) — same mission as `pr-review` / `create-pr`; add this file in the center repo when wiring the protocol). Create the worktree with `git worktree add` (see **Worktree setup in plans**), then in Mission Control chat call the MCP tool **`sedea_add_worktree_folder`** with **`path`** set to the **absolute** filesystem path of the new worktree root (optional **`name`** for the explorer folder label) so that folder is added to the Sedea workbench workspace before emitting the two-phase session prompt, and stop.
+When the Squad Leader receives an implementation request, PR review, or cross-repo task, hand off to a new agent session via the **`coding-session` protocol branch** ([`coding-session/SKILL.md`](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md) — same mission as `pr-review` / `create-pr`; add this file in the center repo when wiring the protocol). Create the worktree with `git worktree add` (see **Worktree setup in plans**), then in Mission Control chat call the MCP tool **`sedea_add_worktree_folder`** with **`path`** set to the **absolute** filesystem path of the new worktree root (optional **`name`** for the explorer folder label) so that folder is added to the Sedea workbench workspace before emitting the two-phase session prompt, and stop.
 
 ## Plan for independence
 
@@ -89,12 +89,12 @@ How to perform `commit-push`:
 
 1. `commit-push`. **Skip this step if `git status --short` is empty** — typical after the committed cut point reviewed by `pre-pr-review`. Do not amend the previous commit and do not pass `--allow-empty`; just proceed to step 2.
 2. Push to remote.
-3. **PR comment reconciliation (`pr-review` → `commit-push`).** When this coding session already ran [`pr-review`](.sedea/centers/sedea-centers--development/missions/plan-and-deliver/skills/pr-review/SKILL.md) Steps 1–4 (per-comment dispositions in the Step 4 report) and **GitHub** reply / resolve / minimize / summary from **Step 5** has **not** run yet, **`commit-push` is incomplete** until Step 5 runs — **same agent turn**, immediately after the push succeeds (so the summary can cite `git rev-parse --short HEAD`). Load `pr-review` **Step 5 — GitHub only** and execute it via `python3 .sedea/centers/sedea-centers--development/missions/plan-and-deliver/scripts/pr-review.py` (two-step `PR_REVIEW_INPUT` per that skill). If thread IDs or PR identity are missing from context, re-run that skill’s **Step 1** script array for the same PR, then Step 5. If there was no `pr-review` triage in this chat, skip this step entirely.
+3. **PR comment reconciliation (`pr-review` → `commit-push`).** When this coding session already ran [`pr-review`](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-review/SKILL.md) Steps 1–4 (per-comment dispositions in the Step 4 report) and **GitHub** reply / resolve / minimize / summary from **Step 5** has **not** run yet, **`commit-push` is incomplete** until Step 5 runs — **same agent turn**, immediately after the push succeeds (so the summary can cite `git rev-parse --short HEAD`). Load `pr-review` **Step 5 — GitHub only** and execute it via `python3 .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/pr-review.py` (two-step `PR_REVIEW_INPUT` per that skill). If thread IDs or PR identity are missing from context, re-run that skill’s **Step 1** script array for the same PR, then Step 5. If there was no `pr-review` triage in this chat, skip this step entirely.
 4. **Link the PR to its plan sidecar.** After push (and after step 3 when applicable), attempt to upsert the PR number into the Plan Board sidecar so `plan-reconcile` can later archive the plan when all linked PRs merge. Run:
 
    ```bash
    # Which plan owns this worktree? (exit 2 = none; skip silently)
-   node .sedea/centers/sedea-centers--development/missions/plan-and-deliver/scripts/plan-state.mjs resolve --cwd "$PWD"
+   node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs resolve --cwd "$PWD"
    # → prints "<slug>\t<planPath>" on exit 0.
 
    # Does an open PR already exist for this branch?
@@ -102,7 +102,7 @@ How to perform `commit-push`:
    # → prints a number on stdout, or nothing (first push, a PR-creating agent not yet invoked).
 
    # If both resolved: upsert into sidecar prs[] (idempotent).
-   node .sedea/centers/sedea-centers--development/missions/plan-and-deliver/scripts/plan-state.mjs upsert-pr \
+   node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs upsert-pr \
      --slug <slug-from-resolve> \
      --repo "$(basename "$(git rev-parse --show-toplevel)")" \
      --number <number-from-gh>
@@ -110,7 +110,7 @@ How to perform `commit-push`:
 
    Skip silently when `resolve` exits non-zero (session with no plan) or `gh pr list` returns empty (first push — the PR will appear after a PR-creating agent opens it; the **next** `commit-push` picks it up). Never block `commit-push` on a helper failure — log and continue with the remaining `commit-push` steps. **Exit code 3** from `upsert-pr` means the resolved plan is not a PR plan (the helper refuses to link PRs onto Master / Phase / top-level topic / stub plans, since sidecar `prs[]` is reconcile-tracked); surface the helper's stderr message verbatim so the user can fix the worktree → plan linkage, then continue with the remaining `commit-push` steps.
 
-   The [`pr-review` protocol branch](.sedea/centers/sedea-centers--development/missions/plan-and-deliver/skills/pr-review/SKILL.md) runs the same `upsert-pr` call at its Step 0 (after the PR is resolved) as a belt-and-braces linker for cases where no follow-up `commit-push` ever happens — `pr-review` triage that ends with all comments skipped (no commit, no push), quiet PRs with zero reviewer rounds, or single-commit PRs merged straight from GitHub. `commit-push` and `pr-review` upserts are idempotent against each other.
+   The [`pr-review` protocol branch](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-review/SKILL.md) runs the same `upsert-pr` call at its Step 0 (after the PR is resolved) as a belt-and-braces linker for cases where no follow-up `commit-push` ever happens — `pr-review` triage that ends with all comments skipped (no commit, no push), quiet PRs with zero reviewer rounds, or single-commit PRs merged straight from GitHub. `commit-push` and `pr-review` upserts are idempotent against each other.
 5. Check if this is the **first push** for the branch (e.g. `git push` output contains `[new branch]`, or `gh pr list` in step 4 returned empty). If so, also generate **a PR-creating agent PR prompt** via the `create-pr` protocol branch — this is mandatory, not prompted by a separate `create-pr` option from the user. The PR-creating agent prompt **replaces** any GitHub create-PR URL. The prompt’s description starter must satisfy **Comprehensive PR descriptions** (including slice boundaries and plan lineage when applicable). On subsequent pushes, only commit/push/reconcile/upsert — skip the PR-creating agent prompt.
 
 Example:
@@ -157,7 +157,7 @@ Minimize **two dimensions** independently:
 2. **Test-case count** — count the **test cases** the PR introduces or meaningfully changes (unit tests, integration / snapshot cases, exploratory recordings — each enumerated case counts once):
    - **≤ 10** — simple PR.
    - **11–20** — mid-sized PR.
-   - **21+** — heavy PR; investigate splitting, but do **not** split if the result is a half-shipped feature (Strategy #4 trumps size — see `.sedea/centers/sedea-centers--development/docs/development-process.md`).
+   - **21+** — heavy PR; investigate splitting, but do **not** split if the result is a half-shipped feature (Strategy #4 trumps size — see `.sedea/centers/research-and-development/docs/development-process.md`).
 
 When in doubt, **fewer concerns wins** over smaller test-case count.
 
@@ -209,7 +209,7 @@ PRs are reviewed by AI agents who compare the description against the code and t
 
 ### A PR-creating agent prompt and proportional context
 
-The **`create-pr` protocol branch** (`.sedea/centers/sedea-centers--development/missions/plan-and-deliver/skills/create-pr/SKILL.md`) produces the text **a PR-creating agent** uses to open the PR. That block must give reviewer agents enough **reasoning**, not only diff facts — otherwise comments are often unactionable. **Scale length to PR size**: a small PR gets a **shorter** write-up, but it must still be **complete for one concern**.
+The **`create-pr` protocol branch** (`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/create-pr/SKILL.md`) produces the text **a PR-creating agent** uses to open the PR. That block must give reviewer agents enough **reasoning**, not only diff facts — otherwise comments are often unactionable. **Scale length to PR size**: a small PR gets a **shorter** write-up, but it must still be **complete for one concern**.
 
 Every description starter (including on first `commit-push`) should cover, in whatever brevity fits the PR:
 
@@ -223,5 +223,5 @@ Every description starter (including on first `commit-push`) should cover, in wh
 Descriptive kebab-case reflecting scope:
 
 - `feat/<short-description>` — new features
-- `improve/<short-description>` — improvements (or a more specific verb prefix like `simplify/`, `harden/`, `speedup/`; see `.sedea/centers/sedea-centers--development/rules/10_plan-naming-convention.mdc`)
+- `improve/<short-description>` — improvements (or a more specific verb prefix like `simplify/`, `harden/`, `speedup/`; see `.sedea/centers/research-and-development/rules/10_plan-naming-convention.mdc`)
 - `fix/<short-description>` — bug fixes

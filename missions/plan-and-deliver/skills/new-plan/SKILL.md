@@ -10,9 +10,8 @@ description: >-
   initiating-agent ignition when those skills exist. Use under mission dispatch or
   when the developer asks for a new plan / sub-plan / indexed child from a
   numbered dual-title list.
-timeoutMs: 900000
 warmUpRules:
-  - ".sedea/centers/sedea-centers--development/rules/planning-target-resolution.mdc"
+  - ".sedea/centers/research-and-development/rules/planning-target-resolution.mdc"
 inputs:
   mode:
     type: string
@@ -55,9 +54,9 @@ inputs:
 
 # New plan
 
-Scaffold a standalone `.plan.md` and `.state.yaml` under the **`.sedea/operations/`** plan union (`joint/.../plans/` or `<operations-user-id>/.../plans/` — see **Slug and filename**). On first write, frontmatter must be valid YAML and match the shape Sedea tooling expects (see **Write the plan template** and naming guidance in `.sedea/centers/sedea-centers--development/docs/development-process.md` plus `.sedea/centers/sedea-centers--development/rules/10_plan-naming-convention.mdc`).
+Scaffold a standalone `.plan.md` and `.state.yaml` under the **`.sedea/operations/`** plan union (`joint/.../plans/` or `<operations-user-id>/.../plans/` — see **Slug and filename**). On first write, frontmatter must be valid YAML and match the shape Sedea tooling expects (see **Write the plan template** and naming guidance in `.sedea/centers/research-and-development/docs/development-process.md` plus `.sedea/centers/research-and-development/rules/10_plan-naming-convention.mdc`).
 
-**Resolution contract:** read `.sedea/centers/sedea-centers--development/rules/planning-target-resolution.mdc` and follow it for target selection and snapshots. Resolve parents using **§ Parent derivation** below (explicit session/message → `plan-state resolve` → recent chat references).
+**Resolution contract:** read `.sedea/centers/research-and-development/rules/planning-target-resolution.mdc` and follow it for target selection and snapshots. Resolve parents using **§ Parent derivation** below (explicit session/message → `plan-state resolve` → recent chat references).
 
 ## Triggers
 
@@ -113,7 +112,7 @@ A plan without a parent is a **top-level topic** (top-level plan: `parent: null`
 2. **Session anchor** — from hosting repo root:
 
    ```bash
-   node .sedea/centers/sedea-centers--development/missions/plan-and-deliver/scripts/plan-state.mjs resolve --cwd "$PWD"
+   node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs resolve --cwd "$PWD"
    ```
 
    Exit **0** means `$PWD` is inside a worktree listed in some plan’s sidecar; that plan is a strong passive parent candidate. Optional scope: **`--user-uuid <id>`** before the subcommand (CLI flag name is **historical**; value is the **operations user id**), else `.sedea/local/operations-user-uuid`, else `git config --local sedea.operationsUserUuid`; if none set, only `joint` plans are searched.
@@ -222,8 +221,8 @@ Always write the sidecar. `parent:` required; use YAML `null` unquoted for a **t
 
    Populator skill paths:
 
-   - `phase-plan` → `.sedea/centers/sedea-centers--development/missions/plan-and-deliver/skills/phase-plan/SKILL.md`
-   - `pr-plan` → `.sedea/centers/sedea-centers--development/missions/plan-and-deliver/skills/pr-plan/SKILL.md`
+   - `phase-plan` → `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/phase-plan/SKILL.md`
+   - `pr-plan` → `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-plan/SKILL.md`
 
    Inputs must include `targetPlanPath`, `targetPlanSlug`, `parentPlanPath`, `parentPlanSlug`, `parentIndex`, `ledgerParent`, and `upstreamSkill: "new-plan"`. Announce that this agent is waiting for the populator result and stop. **`pr-breakdown`**, nested decomposition, and **`plan-reconcile`** happen in their own mission steps after this skill finishes. If a center populator `SKILL.md` is ever absent, end after stub + parent link and point at **`development-process.md`**.
 

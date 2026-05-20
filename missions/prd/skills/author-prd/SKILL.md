@@ -1,7 +1,6 @@
 ---
 name: author-prd
 description: Gather evidence and draft or update a flexible Product or Feature Requirements Document.
-timeoutMs: 1800000
 inputs:
   prdTitle:
     type: string

@@ -7,7 +7,6 @@ description: >-
   before archiving user-selected slugs. Use under mission dispatch, natural
   language ("plan reconcile"), or when the developer wants merge-driven archive
   cadence — not legacy two-letter chat tokens.
-timeoutMs: 1800000
 inputs:
   targetPlanPath:
     type: string
@@ -74,7 +73,7 @@ If any gate fails, stop with `partial`, keep `continuationStatus: "active"`, and
 All **`plan-state.mjs`** invocations run from the **hosting repo root** (the tree that contains **`.sedea/`**). Use a **direct `node` command** — the **Node runtime bundled with Sedea / VS Code** (e.g. integrated terminal where `node` is the editor’s runtime). **Do not** rely on **fnm**, **nvm**, or other host-installed Node managers.
 
 ```bash
-node .sedea/centers/sedea-centers--development/missions/plan-and-deliver/scripts/plan-state.mjs <subcommand> …
+node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs <subcommand> …
 ```
 
 Plans and sidecars live only under the **`.sedea/operations/`** union — **`.sedea/operations/joint/plans/`** and **`.sedea/operations/<operations-user-id>/plans/`** (literal **`joint`**). Do **not** use **`~/.cursor/plans/`** for Sedea product plans.
@@ -84,7 +83,7 @@ Plans and sidecars live only under the **`.sedea/operations/`** union — **`.se
 ### 1. Preview reconcile (PR-tracked path)
 
 ```bash
-node .sedea/centers/sedea-centers--development/missions/plan-and-deliver/scripts/plan-state.mjs reconcile --dry-run
+node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs reconcile --dry-run
 ```
 
 This queries **`gh pr view`** for every sidecar **`prs[]`** entry without moving files or appending parent bullets. The printed report has three buckets:
@@ -108,7 +107,7 @@ Present the dry-run report to the developer and use **AskQuestion** before runni
 Only **Approve PR-tracked reconcile mutations** authorizes:
 
 ```bash
-node .sedea/centers/sedea-centers--development/missions/plan-and-deliver/scripts/plan-state.mjs reconcile
+node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs reconcile
 ```
 
 If the developer skips PR-tracked reconcile, do not run non-dry-run `reconcile`; continue only to read-only `list-candidates` and developer-selected archive work. If the developer aborts, stop with `continuationStatus: "active"` and no archive mutations.
@@ -116,7 +115,7 @@ If the developer skips PR-tracked reconcile, do not run non-dry-run `reconcile`;
 ### 2. Run list-candidates (non-PR path)
 
 ```bash
-node .sedea/centers/sedea-centers--development/missions/plan-and-deliver/scripts/plan-state.mjs list-candidates --json
+node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs list-candidates --json
 ```
 
 Emits a JSON array of plans reconcile could not auto-decide. Schema per entry:
@@ -159,7 +158,7 @@ If both lists are empty → no question; continue (step 3.5 only if something in
 
 ### 3.5 — Follow-ups triage
 
-Per **`.sedea/centers/sedea-centers--development/docs/development-process.md`** (**Cadence** / plan updates): **an un-triaged follow-up is a forgotten one**. Before archiving a plan that has a non-empty **`## Follow-ups`** section, route every bullet.
+Per **`.sedea/centers/research-and-development/docs/development-process.md`** (**Cadence** / plan updates): **an un-triaged follow-up is a forgotten one**. Before archiving a plan that has a non-empty **`## Follow-ups`** section, route every bullet.
 
 **Scope**
 
@@ -196,7 +195,7 @@ If a plan in scope has no **`## Follow-ups`** section, or the section is empty, 
 For each slug the user picked that is **not** in the **`postponed:`** set from step 3.5:
 
 ```bash
-node .sedea/centers/sedea-centers--development/missions/plan-and-deliver/scripts/plan-state.mjs archive \
+node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs archive \
   --slug <slug> \
   --signal "<signal-text>"
 ```
