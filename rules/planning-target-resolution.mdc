@@ -54,7 +54,7 @@ Markdown table for each in-flight plan (typically one Master Plan subtree):
 | **Status** | Drafted sections, `_TBD_`, PR linked, archived. |
 | **Next viable moves** | **Numbered** options naming **protocol branch + target** (e.g. *1. **new-plan** — sub-plan index 2 under `<parent-slug>`*; *2. **phase-plan** — populate child `<path>`*). |
 
-Below the table, repeat the same options as **`AskQuestion`** choices or a **numbered bullet list** the developer can answer with a digit — aligned with [sedea-plan-and-deliver.mdc](../../../../.cursor/rules/sedea-plan-and-deliver.mdc).
+Below the table, repeat the same options as **`AskQuestion`** choices or a **numbered bullet list** the developer can answer with a digit — per this rule's snapshot format and Sedea conduct (numbered picks, not legacy typed shortcuts). Session and plan-path contracts for planning live in this center rule, **`planning-target-resolution`**, center skills, and **`.sedea/centers/research-and-development/docs/development-process.md`** — not in product-repo **`.cursor/rules/`** (those files are for codebase architecture and navigation only).
 
 **Snapshot-scoped hooks** (e.g. *"Reply **fill PR plan** to continue"*) are allowed **only** inside that snapshot; do not rely on global typed shortcuts.
 

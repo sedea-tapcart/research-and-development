@@ -190,7 +190,7 @@ After each decomposition step, make validation easy for the human: **(a)** diagr
 
 Do not rely on chat alone for where work stands.
 
-- **Filesystem** — Intent lives in `.sedea/operations/**/plans/*.plan.md`: body, overview, frontmatter **todos**. Runtime state for the **Plan Board** extension lives in optional sidecars `.sedea/operations/**/plans/<slug>.state.yaml` (e.g. `worktrees`, `prs`, `session.focusPath`); contract and roadmap live in `.sedea/operations/**/plans/plan_board_extension_mvp_a0939d76.plan.md`.
+- **Filesystem** — Intent lives in `.sedea/operations/**/plans/*.plan.md`: body, overview, frontmatter **todos**. Runtime state for the **Plan Board** extension lives in optional sidecars `.sedea/operations/**/plans/<slug>.state.yaml` (e.g. `worktrees`, `prs`, `session.focusPath`). Plan Board hierarchy and status come from that union — do not assume a fixed roadmap filename; when the workspace ships a roadmap or extension plan under `.sedea/operations/`, resolve it from Plan Board UI, user message, or `plan-state.mjs list-candidates` rather than a hard-coded slug.
 - **Agent habits** — Keep todo `status` accurate (`not_started` / `started` / `completed` / `canceled`). Track **postponed** work with a **Postponed / Deferred** subsection or explicit todos so "done" plans do not hide scope. Link related work: a **Related plans** section (slug + one line) in the parent body is enough unless you maintain optional `parent:` / `children:` frontmatter.
 - **Dashboard** — Use the Plan Board sidebar to see the **plan-file hierarchy** (master-plans, plan nesting, **Unlinked**), **status** icons, **worktrees**, and (when wired) PRs; keep plans and sidecars consistent with what the board displays.
 

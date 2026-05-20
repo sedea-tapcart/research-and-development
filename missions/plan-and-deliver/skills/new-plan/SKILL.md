@@ -123,7 +123,7 @@ Lock the parent using the bullets above; **planning-target-resolution** is norma
 
 **Confirm** before writing on this path (unless **Indexed child spawn** already skipped the gate). Wrong parent is the expensive failure mode. Example:
 
-> Parent: `plan_board_extension_mvp_a0939d76` (from `plan-state resolve`). OK? Reply yes to write, paste a different slug, or `null` for a **top-level topic** (top-level plan).
+> Parent: `<parent-slug>` (from `plan-state resolve`). OK? Reply yes to write, paste a different slug, or `null` for a **top-level topic** (top-level plan).
 
 If two candidates conflict, present both and ask.
 
