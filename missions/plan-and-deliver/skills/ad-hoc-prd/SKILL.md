@@ -139,7 +139,7 @@ Error states:
 - File already exists at the generated path → generate a different 8-hex suffix once; if still blocked, return `failure`.
 - Write failure → `status: "failure"` or `partial` if recoverable, with `errors[].message` and `remainingTasks`.
 
-Stop after the terminal result. Do not spawn **`master-plan`**.
+Stop after the terminal line. Do not emit another `AGENT_RUN_REQUEST_V1` or run the next protocol step in the same turn (see **`../README.md`** § *Terminal stop (normative)*). Do not spawn **`master-plan`** from this skill.
 
 ## Completion (inline)
 

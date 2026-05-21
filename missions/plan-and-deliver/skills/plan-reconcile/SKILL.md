@@ -63,6 +63,20 @@ Script-backed flow: **`plan-state.mjs`** owns YAML and file moves; the agent dec
 - Spawned by **`create-pr`** only after both PR merge and deploy verification are complete **and the developer explicitly chooses to run reconcile**. A `deploy-walk` completion by itself is not enough; spawned reconcile requires `prState: "merged"`, `deployStatus: "done"`, and `deployTodoStatus: "done"`.
 - Standalone natural-language reconcile remains available for developer-initiated archive passes.
 
+## Not auto-started from `deploy-walk`
+
+**`deploy-walk` completion does not open this skill.** Deploy verification (`deployStatus` / `deployTodoStatus` **done**) is necessary for **spawned** reconcile from **`create-pr`**, but **`deploy-walk` alone never triggers reconcile**.
+
+| Prior step completed | Starts **`plan-reconcile` automatically?** |
+|----------------------|---------------------------------------------|
+| **`deploy-walk`** (checklist + capstone todo done) | **No** |
+| **`create-pr`** after merge + developer chooses reconcile | **Yes** (spawned child) |
+| Developer says **plan reconcile** / mission dispatch | **Yes** (explicit start) |
+
+If the user expects archive right after deploy, use **AskQuestion** once: start **`plan-reconcile`** now vs defer — do not assume merge + deploy implied reconcile.
+
+Canonical: **`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`** § *deploy-walk vs plan-reconcile (not chained)*.
+
 ## Spawned reconcile gate
 
 When spawned by `create-pr`, verify:
@@ -272,7 +286,7 @@ Set `continuationStatus`:
 
 ## Squad Leader bubble-up (detached lanes)
 
-Runs on a **detached** reconcile lane. When reconcile reaches terminal success for the target PR plan, nudge the developer to post **Ship recap — plan and deliver** on the leader dispatch (**`../plan.mdc`** §8).
+Runs on a **detached** reconcile lane. When reconcile reaches terminal success for the target PR plan, nudge the developer to post **Ship recap — plan and deliver** on the leader dispatch (**`../../plan.mdc`** §8).
 
 | Outcome | `shipPhase` | `rowStatus` | Key `outputs` for recap |
 |---------|-------------|-------------|-------------------------|
@@ -280,15 +294,29 @@ Runs on a **detached** reconcile lane. When reconcile reaches terminal success f
 | Flagged / postponed follow-ups | `reconcile` | `open` | `targetPlanPath`, `flaggedSlugs`, `postponedSlugs`, `remainingTasks` |
 | Script or gate blocked | `reconcile` | `blocked` | `targetPlanPath`, `remainingTasks`, `blockedReason` |
 
+## Mission Control section 8 sync (required terminal `outputs`)
+
+On **every** terminal `AGENT_RESULT_RESPONSE_V1` (including follow-up re-emits), `outputs` **must** include:
+
+| Field | Rule |
+|-------|------|
+| `targetPlanPath` | Absolute PR plan `.plan.md` path — **required** |
+| `shipPhase` | `done` with `rowStatus: closed` when target archived and ship complete; `reconcile` when follow-ups remain; `blocked` when gates fail |
+| `rowStatus` | Per bubble-up table |
+| `remainingTasks` | When `rowStatus` is not `closed` |
+| `blockedReason` | When `rowStatus` is `blocked` |
+
+Mission Control syncs section 8 on the Squad Leader lane from these fields.
+
 ## Completion (spawned)
 
-Required `outputs` per **## Spawned result contract** above. Re-emit an **updated** terminal result after user-requested follow-up on this lane (same `correlationId`).
+Required `outputs` per **## Spawned result contract**, **Mission Control section 8 sync**, and the bubble-up table. Re-emit an **updated** terminal result after user-requested follow-up on this lane (same `correlationId`).
 
 ### Host protocol line (required)
 
-Emit **exactly one** line on its own: `AGENT_RESULT_RESPONSE_V1` immediately followed by a single JSON object on the **same** line. Required keys: `version` (1), `correlationId` (from the spawn request), `status`, `summary`, `outputs`, `errors` (use `[]` when none). Populate `outputs` from the sections above. The emitted line must be **valid JSON** (no `{...}` placeholders in the actual output). See **`.sedea/centers/sedea/skills/README.md`** § *Spawned terminal line*.
+Emit **exactly one** line on its own: `AGENT_RESULT_RESPONSE_V1` immediately followed by a single JSON object on the **same** line. Required keys: `version` (1), `correlationId` (from the spawn request), `status`, `summary`, `outputs`, `errors` (use `[]` when none). Populate `outputs` from the sections above **including** `targetPlanPath`, `shipPhase`, and `rowStatus` on every terminal line. The emitted line must be **valid JSON** (no `{...}` placeholders in the actual output). See **`.sedea/centers/sedea/skills/README.md`** § *Spawned terminal line*.
 
-Stop after this line.
+Stop after the terminal line. Do not emit another `AGENT_RUN_REQUEST_V1` or run the next protocol step in the same turn (see **`../README.md`** § *Terminal stop (normative)*).
 
 ## Completion (inline)
 

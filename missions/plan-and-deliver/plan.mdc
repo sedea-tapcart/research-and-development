@@ -220,7 +220,7 @@ This subsection is the **Squad Leader** contract for §§3, 5, 6, and 7. Sedea h
 ### 2. Validate linked PRD
 
 - **Type:** Branching logic
-- **Intent:** Resolve the developer-provided PRD link or file into a readable PRD artifact before the mission engages **`master-plan`**.
+- **Intent:** Resolve the developer-provided PRD link or file into a readable PRD artifact before the mission engages **`master-plan`**. Intake routing vs the **`prd`** mission: **`.sedea/centers/research-and-development/docs/development-process.md`** § *PRD intake — plan and deliver §2 vs prd mission*.
 - **Inputs:** Confirmed §1 option **1**; PRD URL, absolute path, or workspace `@path`; optional title or related-document hints from the opening message.
 - **Expected output:** A readable PRD body plus the original PRD reference to pass into the **`master-plan`** seed.
 - **Next-step resolution:**
@@ -412,6 +412,8 @@ Related (optional):
 
 **`deploy-walk` entry points:** developer phrase on a detached lane; **`create-pr`** spawns after merge when the developer chooses **Start deploy verification now**; or direct skill dispatch with plan inputs. Finishing deploy-walk does **not** run **`plan-reconcile`**.
 
+**Start `coding-session`:** Detached lane only — not a Squad Leader spawn from §§1–7. Entry paths, required inputs, and anti-patterns: **`.sedea/centers/research-and-development/docs/development-process.md`** § *Start implementation (`coding-session` entry)*.
+
 Procedures, gates, and spawn contracts live in those skills and in **`.sedea/centers/research-and-development/docs/development-process.md`** (**Protocol branches** table and § *Ship chain*). The Squad Leader **does not** emit `AGENT_RUN_REQUEST_V1` for this table unless a future protocol step explicitly adds it.
 
 **Ship ledger row (per PR plan)**
@@ -451,7 +453,47 @@ Maintain one row per in-scope **PR plan** path under `.sedea/operations/.../plan
 
 **Leader-lane ship recap (minimal bubble-up)**
 
-Ship skills usually run on **detached** lanes; the Squad Leader often receives **no** child `AGENT_RESULT_RESPONSE_V1`. Progress reaches §8 via **`lastReportedBy: developer-message`** (preferred) or **`child-output`** when a parent lane forwards results.
+Ship skills usually run on **detached** lanes; the Squad Leader often receives **no** child `AGENT_RESULT_RESPONSE_V1` on the leader transcript. Progress reaches §8 via **Mission Control host sync** (below), **`lastReportedBy: developer-message`** (manual recap), or **`child-output`** when a parent lane forwards results.
+
+### Mission Control host sync (section 8)
+
+When Mission Control hosts a **`plan and deliver`** dispatch, the extension may **auto-sync** §8 from detached ship child terminals (product behavior in the hosting repo Mission Control extension — not defined in this center repo alone). Host implementation contract: **`extensions/mission-control/docs/plan-and-deliver-section-8-ship-ledger.md`**; manifest: **`center.yaml`** `governance.hostSync`.
+
+| Step | Behavior |
+|------|----------|
+| **Trigger** | A ship child lane emits terminal **`AGENT_RESULT_RESPONSE_V1`** for **`coding-session`**, **`pre-pr-review`**, **`create-pr`**, **`deploy-walk`**, or **`plan-reconcile`** with **`outputs.targetPlanPath`**, **`outputs.shipPhase`**, and **`outputs.rowStatus`** (required per each skill § *Mission Control section 8 sync*). |
+| **Persist** | Merge one row per `targetPlanPath` into **`ship-ledger.v1.json`** in the dispatch bundle directory (alongside **`dispatch.yaml`**). |
+| **Deliver** | Queue a silent **UserSend** on the **Squad Leader** lane whose body starts with **`Mission Control: ship-ledger sync (section 8).`** and includes a **Ship recap — plan and deliver** block (same fields as the template below). The leader agent should parse it like a developer-posted recap and refresh §8 rows before other protocol work. |
+| **Audit** | Append **`ship-ledger-row-updated`** to **`dispatch-events.v1.ndjson`**. |
+
+**Limits**
+
+- Host sync **does not** replace child **`AGENT_RESULT_RESPONSE_V1`** delivery to parent lanes, domain **`continuationStatus`** fields, or *Pre-resolution checklist* / **`MC_DISPATCH_RESOLVED_V1`** gates.
+- If **`outputs.targetPlanPath`** is missing on a terminal line, the host **skips** ledger sync for that result (agents must populate required fields).
+- **`pr-review`** runs **inline** on the active **`coding-session`** lane — there is often **no** separate child terminal, so **`pr-review`** milestones still need a **manual Ship recap** on the leader dispatch (or fields forwarded from **`coding-session`**). See **`skills/pr-review/SKILL.md`** § *Leader §8 recap* and **`coding-session`** § *Squad Leader bubble-up*.
+- Leader-tab UI for the full ledger may lag persistence; treat **`ship-ledger.v1.json`** and the silent recap message as source of truth until UI catches up.
+
+Manual **Ship recap** paste on the leader dispatch remains valid and should be used when host sync did not run or rows look stale.
+
+### §8 troubleshooting (when the ledger looks wrong)
+
+Use this when the **plan and deliver** leader dispatch cannot propose **`resolved`**, §8 rows look stale, or detached ship work finished but the leader lane shows no progress.
+
+| Symptom | Likely cause | What to do |
+|---------|--------------|------------|
+| No §8 update after a ship child finished | Child terminal omitted **`outputs.targetPlanPath`**, **`outputs.shipPhase`**, or **`outputs.rowStatus`** | Re-emit or paste **Ship recap** with all three fields; fix the child skill terminal per § *Mission Control section 8 sync* |
+| No silent **`Mission Control: ship-ledger sync (section 8).`** message | Host sync skipped (missing `outputs`), older Mission Control build, or work ran outside MC | Paste **Ship recap** on the leader dispatch; treat **`ship-ledger.v1.json`** in the dispatch bundle as source of truth if present |
+| PR comment triage done but §8 stuck at `pr-open` | **`pr-review`** is **inline** on **`coding-session`** — no separate child terminal for host sync | Post **Ship recap** with `shipPhase: pr-review` and fields from **`coding-session`** / **`pr-review`** |
+| Developer says “done” but resolution blocked | *Pre-resolution checklist* — no recap parsed this session for open/blocked rows | **AskQuestion**: paste recap, planning-only close, or **`partial`** — do not guess `phase` from chat alone |
+| UI ledger disagrees with agent state | Leader tab may lag **`ship-ledger.v1.json`** | Prefer host-sync message + recap template over UI-only inference |
+
+**Three ways §8 gets truth on the leader lane** (same as **`.sedea/centers/research-and-development/docs/development-process.md`** § *Leader-lane ship recap*):
+
+1. **Host sync** — terminal **`AGENT_RESULT_RESPONSE_V1`** from **`coding-session`**, **`pre-pr-review`**, **`create-pr`**, **`deploy-walk`**, or **`plan-reconcile`** with required **`outputs`**.
+2. **Manual recap** — developer or agent posts the template block below on **this** dispatch.
+3. **Forwarded child-output** — parent lane forwards parseable results; leader parses like a recap.
+
+**Never:** treat silence on a detached lane as ship complete; advance §8 `phase` from **`pr-plan`** `readyForImplementation` alone; or emit **`resolved`** while any row is `open`/`blocked` without recap or planning-only **AskQuestion** choice.
 
 **`pr-review`** runs **inline** on the active **`coding-session`** lane (still often detached from the leader). After PR comment triage, post **Ship recap** on the leader dispatch with `shipPhase: pr-review` and fields from **`coding-session`** / **`pr-review`** (`prReviewStatus`, `githubReconciliationStatus`) — see **`skills/pr-review/SKILL.md`** § *Leader §8 recap* and **`coding-session`** § *Squad Leader bubble-up*.
 
@@ -501,7 +543,7 @@ Do **not** treat silence on detached lanes as ship complete.
 Before emitting **`MC_DISPATCH_RESOLVED_V1`** when the developer signals dispatch done (*done*, *wrap up*, *close*, or equivalent per **`.sedea/centers/sedea/rules/4_mission.mdc`** § *User-initiated dispatch closure signals*):
 
 1. **Re-scan §8 ship rows** — list every row with `rowStatus: open` or `blocked`, or with `phase` not paired with `rowStatus: closed` and `phase: done`.
-2. **If any such row exists** and this session has **not** parsed a **Ship recap** block (template above) that updates that row **and** the developer has **not** already chosen **planning-only** closure via **AskQuestion** in this dispatch:
+2. **If any such row exists** and this session has **not** parsed a **Ship recap** block (template above, including **`Mission Control: ship-ledger sync (section 8).`** host messages) that updates that row **and** the developer has **not** already chosen **planning-only** closure via **AskQuestion** in this dispatch:
    - **Do not** emit **`MC_DISPATCH_RESOLVED_V1`** with **`resolved`** in that turn.
    - Use **AskQuestion** once (required fields: `targetPlanPath`, `shipPhase`, `rowStatus` when they paste recap):
      - **Paste Ship recap** (I will paste the template block next)
@@ -529,7 +571,7 @@ Before emitting **`MC_DISPATCH_RESOLVED_V1`** when the developer signals dispatc
 **Procedure**
 
 1. After §7 reports planning complete, scan for PR plans with implementation handoff signals; open a ship row for each (or confirm none — then run AskQuestion for planning-only vs active ship).
-2. On each leader-lane turn that touches ship, update rows before other protocol work — parse **leader-lane ship recap** blocks or child `outputs` per the tables above.
+2. On each leader-lane turn that touches ship, update rows before other protocol work — parse **host-sync** messages, **leader-lane ship recap** blocks, or child `outputs` per the tables above.
 3. When recap is missing for an `open` row, run *Pre-resolution checklist* **AskQuestion** (or ask once for template fields) before proposing dispatch resolution.
 4. When the developer signals done on **this dispatch**, run *Pre-resolution checklist* then re-check all rows against the gates table; choose `resolved` / `partial` / `abandoned` accordingly.
 5. Put the recap in `MC_DISPATCH_RESOLVED_V1` **`summary`**; list open PR plans or deferred ship work when status is **`partial`**.

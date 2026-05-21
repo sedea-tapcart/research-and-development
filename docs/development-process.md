@@ -51,6 +51,8 @@ node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/v
 
 Exit **0** when manifest and disk match; **1** prints paths only on disk or only in YAML. Plan-and-deliver authors also see **`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md`** § *Adding or removing a skill*.
 
+**Scripts vendor trees.** Any `node_modules/` or other tooling-only trees under `missions/*/scripts/` are **not** center governance assets — do not link-audit or gap-report them as protocol. Hosting checkouts document audit scope in **`.cursor/rules/`** (not in this center repo).
+
 ### PRD authoring — which path?
 
 Two R&D flows produce requirements upstream of **`master-plan`**. Pick **one** row; do not run both for the same feature unless the developer explicitly switches (for example after **`manage prd`** on an existing doc, then **`plan and deliver`** with that `@path`).
@@ -71,6 +73,31 @@ Two R&D flows produce requirements upstream of **`master-plan`**. Pick **one** r
 
 **Referenced skills:** **`ad-hoc-prd`**, **`author-prd`**; missions **`plan-and-deliver/plan.mdc`** §§1–2, **`prd/plan.mdc`**.
 
+### PRD intake — `plan and deliver` §2 vs `prd` mission
+
+The table above chooses **how to author** a PRD. This table chooses **which mission validates or loads** requirements before **`master-plan`**.
+
+| Developer situation | Where to work | What the agent does |
+| --- | --- | --- |
+| **Readable PRD already exists** — workspace `@path`, local file, or URL the agent can fetch | **`plan and deliver`** §1 option **1** → **§2** | Squad Leader collects the reference, reads or fetches the body, acknowledges title/source, passes the artifact into the **`master-plan`** seed. **Do not** open a **`prd`** dispatch for intake alone. |
+| **No PRD yet; needs a full structured doc** — sections, evidence, iterative revision via **`manage prd`** | **`prd`** mission first (**`create prd`** / **`manage prd`**) | **`author-prd`** writes under **`.sedea/operations/<operationsUserId>/docs/`**. When the developer is satisfied, start a **separate** **`plan and deliver`** dispatch with **`@path`** (or link) to that file → §2 treats it like any existing PRD. |
+| **No PRD yet; short blurb; already on `plan and deliver`** | Same dispatch — §1 option **2** → §3 **`ad-hoc-prd`** | Spawn **`ad-hoc-prd`** on this dispatch. **Not** **`create prd`** / **`manage prd`** (those belong to the **`prd`** mission). |
+| **External URL auth-blocked or unreadable in §2** | Stay on **`plan and deliver`** (or switch per AskQuestion) | §2 **AskQuestion**: paste body, switch to ad-hoc (§1 option 2), **`create prd` mission first** (then return with `@path`), or a different readable `@path`. See **`plan.mdc`** §2 *Auth-blocked or unreadable PRD*. |
+| **PRD needs more depth before planning** | **`prd`** **`manage prd`** | Finish or revise the doc on the **`prd`** dispatch; resume **`plan and deliver`** only when the developer supplies a readable `@path` or link. |
+
+**`plan and deliver` §2 does not:** spawn **`author-prd`**, run **`create prd`** / **`manage prd`** inline, or replace option **1** (existing PRD) with **`ad-hoc-prd`**.
+
+**`prd` mission does not:** perform Squad Leader §2 link validation or Confluence/Google fetch for the **`master-plan`** seed — that is **`plan and deliver`** only.
+
+**Handoff phrase examples**
+
+| Developer says (paraphrase) | Route |
+| --- | --- |
+| “Here’s the PRD `@path` — start planning” | **`plan and deliver`** → §2 |
+| “Write a PRD from these notes, then we’ll plan” | **`create prd`** → later **`plan and deliver`** + `@path` |
+| “Small fix, plan and deliver” (no file) | **`plan and deliver`** §1 option **2** → **`ad-hoc-prd`** |
+| “This Confluence link won’t load” | **`plan and deliver`** §2 **AskQuestion** (not invented body text) |
+
 ### Agent UX pitfalls (easy mis-runs)
 
 | Pitfall | Correct surface |
@@ -80,6 +107,7 @@ Two R&D flows produce requirements upstream of **`master-plan`**. Pick **one** r
 | **Commit and push cadence** step 3 | Rule **20** step 3 = **`pr-review` Step 5 — GitHub only** after push when Steps 1–4 already ran — not a second full triage |
 | **High complexity** Master Plan (score **> 20**) | Omit §6 spawn routes until score **≤ 20**; Squad Leader never spawns **`delivery-phases`** / **`pr-breakdown`** |
 | Branch/PR/chat titles | **`.sedea/centers/research-and-development/rules/10_plan-naming-convention.mdc`** — benefit verbs only; never the forbidden busy-work prefix |
+| **`create prd`** while already on **`plan and deliver`** §1–2 | §1 option **2** → **`ad-hoc-prd`**, or finish **`prd`** first then new **`plan and deliver`** + `@path` — § *PRD intake — plan and deliver §2 vs prd mission* |
 
 ### Agents and roles
 
@@ -342,7 +370,7 @@ Sections 1, 2, 3, 4, 6, 7, and 8 (when present) flow into the PR description tha
 | Happy-path **skill order** (planning → ship) | **Cadence reference** diagram (matches **`plan-and-deliver/plan.mdc`** *Cadence reference*) |
 | **Mission Control `plan and deliver` dispatch** — who spawns whom, §§1–8 protocol, §8 ship ledger, `MC_DISPATCH_RESOLVED_V1` gates | **`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`** — *Squad operations* and §8 (not duplicated here) |
 
-The large loop diagram below includes planning, **ship chain**, feedback, and plan updates. It is **not** the Squad Leader spawn map. Detached ship lanes and leader-lane recap: **`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`** §8 and § *Leader-lane ship recap* under **Loop stages** below.
+The large loop diagram below includes planning, **ship chain**, feedback, and plan updates. It is **not** the Squad Leader spawn map. Detached ship lanes, Mission Control §8 host sync, and leader-lane recap: **`plan.mdc`** §8 (*Mission Control host sync*, *Leader-lane ship recap*) and **Loop stages** § *Leader-lane ship recap* below.
 
 ### Cadence reference (skill order — same as plan-and-deliver mission plan)
 
@@ -462,6 +490,25 @@ Two independent gates apply before a worktree opens. Do not treat **`pr-plan`** 
 
 When **`readyForImplementation`** is true but §§5–8 still contain `_TBD_`, the script prints **`INCOMPLETE`** — expected, not a bug. Proceed only after the developer finishes those sections, uses **`pr-plan`** pre-fill sketches, chooses **Start with incomplete plan (executive override)** in the worktree-open gate, or sends **`override incomplete plan`** in the message. **`readyForImplementation` alone does not advance the Squad Leader §8 ship `phase` beyond `not-started`** until completeness passes or is overridden and **`coding-session`** sets `developerApprovedImplementation` (**`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`** §7–§8). See **`.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`** § *PR-plan completeness before coding-session* and § *Agent checklist (planning vs ship — do not conflate)*.
 
+#### Start implementation (`coding-session` entry)
+
+After **`pr-plan`** handoff (or an approved per-PR plan), implementation runs on a **detached** lane — **not** on the **`plan and deliver`** Squad Leader lane (§§1–7). There is **no** `mission.yaml` command phrase for ship; use one of the starts below.
+
+| How to start | Typical lane | Minimum inputs |
+|--------------|--------------|----------------|
+| **New Mission Control session** — natural language | Detached | Name **`coding-session`** or “implement this PR”; `@path` to `.sedea/operations/<operationsUserId>/plans/<slug>.plan.md` or `targetPlanSlug`; product **`repoPath`** or **`repoPaths`** |
+| **After `pr-plan` menu handoff** (step 5c option 4) | New detached session | Same; `readyForImplementation: true` is a hint only — **`coding-session`** still runs the worktree-open gate |
+| **Re-use a prior session prompt** | Detached / coding-agent | Two-phase prompt from an earlier **`coding-session`** run; branch and sidecar `worktrees` must still match |
+| **Planning snapshot** | Detached | Snapshot with `targetPlanPath`, `operationsUserId`, repo paths per **`.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`** |
+
+**Do not**
+
+- Implement product code on the **`pr-plan`** lane or the Squad Leader planning lane because `readyForImplementation` is true.
+- Open a worktree from planning outputs alone without **`plan-ws-completeness.mjs`** exit 0 or an explicit override in **`coding-session`** § *Worktree-open gate*.
+
+**Canonical skill:** `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`  
+**Squad Leader §8:** post **Ship recap — plan and deliver** on the active leader dispatch as ship milestones complete (**`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`** §8).
+
 #### Coding Session
 
 Each PR is delivered through the **`coding-session`** protocol branch (see **Development tools** § *Protocol branches*). This stage spins up a worktree, attaches the Sedea workbench when applicable, emits a copy-safe prompt for **a coding agent**, and coordinates the **ship chain** (§ *Ship chain* below) after an explicit committed implementation cut point.
@@ -512,13 +559,31 @@ Archive candidates, follow-ups triage, merge/deploy gates. Often developer-trigg
 
 ##### Leader-lane ship recap (detached lanes)
 
-On a **`plan and deliver`** Mission Control dispatch, the Squad Leader **§8** ship ledger may **not** receive child **`AGENT_RESULT_RESPONSE_V1`** from detached lanes.
+On a **`plan and deliver`** Mission Control dispatch, the Squad Leader **§8** ship ledger often does **not** show detached child **`AGENT_RESULT_RESPONSE_V1`** on the leader chat. Progress still reaches §8 through three channels (see **`plan.mdc`** §8 *Mission Control host sync* and *Leader-lane ship recap*):
 
-- **§8 does not auto-update from detached work.** Finishing **`pre-pr-review`**, **`create-pr`**, **`deploy-walk`**, or **`plan-reconcile`** on a detached or nested lane does **not** refresh the leader §8 table by itself. Advance or register a row when the developer posts **Ship recap — plan and deliver** on the **leader dispatch** (`lastReportedBy: developer-message`), or when a parent lane forwards a child result the leader can parse (`lastReportedBy: child-output`). Until then, §8 rows stay stale even if the PR plan file or GitHub already moved on.
+| Channel | When |
+|---------|------|
+| **Host sync** | Mission Control persists **`ship-ledger.v1.json`** and injects a silent leader-lane message **`Mission Control: ship-ledger sync (section 8).`** with a **Ship recap — plan and deliver** block when a ship child terminal includes **`outputs.targetPlanPath`**, **`outputs.shipPhase`**, and **`outputs.rowStatus`**. |
+| **Developer recap** | Developer or agent posts the recap template on the **leader dispatch** (`lastReportedBy: developer-message`). |
+| **Forwarded child-output** | A parent lane forwards parseable child results to the leader. |
 
-After each ship milestone, post the **Ship recap — plan and deliver** block on the **leader dispatch** (template and phase enum: **`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`** §8 *Leader-lane ship recap*). Each ship skill § *Squad Leader bubble-up* maps **`outputs`** → **`shipPhase`**. **`pr-review`** is inline on the **`coding-session`** lane — use the same recap with `shipPhase: pr-review` (**`pr-review/SKILL.md`** § *Leader §8 recap*).
+- **Host sync is partial.** It covers terminal results from **`coding-session`**, **`pre-pr-review`**, **`create-pr`**, **`deploy-walk`**, and **`plan-reconcile`** when required **`outputs`** are present. It does **not** run for inline **`pr-review`** on the **`coding-session`** lane (no separate child terminal). Manual recap is still required for **`pr-review`** milestones and whenever sync was skipped (missing `targetPlanPath`, older Mission Control build, or nested parent not the Squad Leader).
+- **Manual recap still valid.** Post **Ship recap — plan and deliver** on the leader dispatch when host sync did not fire or §8 rows look stale. Each ship skill § *Squad Leader bubble-up* and § *Mission Control section 8 sync* maps terminal **`outputs`** → **`shipPhase`** / **`rowStatus`**.
 
-- **Dispatch closure gate:** On the **plan and deliver** leader lane, do **not** propose **`MC_DISPATCH_RESOLVED_V1`** with **`resolved`** while any §8 ship row is **`open`** or **`blocked`** unless a **Ship recap** block for that row was parsed on the leader dispatch in this session, or the developer explicitly chose **planning-only** dispatch closure via **AskQuestion** (see **`plan.mdc`** §8 *Pre-resolution checklist*).
+##### §8 troubleshooting (stale ledger or blocked dispatch close)
+
+Full checklist and *Pre-resolution checklist* live in **`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`** §8 *§8 troubleshooting (when the ledger looks wrong)*. Short version:
+
+| If… | Then… |
+|-----|--------|
+| Ship child finished but leader §8 unchanged | Child terminal must include **`targetPlanPath`**, **`shipPhase`**, **`rowStatus`** — otherwise host sync skips; paste **Ship recap** |
+| No **`Mission Control: ship-ledger sync (section 8).`** on leader | Paste recap manually; read **`ship-ledger.v1.json`** in the dispatch bundle when present |
+| **`pr-review`** finished on coding lane | No detached child terminal — post recap with `shipPhase: pr-review` |
+| Developer wants **`resolved`** but rows still `open` | Run *Pre-resolution checklist* **AskQuestion** — recap, planning-only close, or **`partial`** |
+
+**Host sync scope:** **`coding-session`**, **`pre-pr-review`**, **`create-pr`**, **`deploy-walk`**, **`plan-reconcile`** terminals only — not inline **`pr-review`**. Behavior is implemented in the **hosting repo Mission Control extension**, not in this center repository alone. Implementation contract: **`extensions/mission-control/docs/plan-and-deliver-section-8-ship-ledger.md`** (from monorepo root); manifest pointer: **`center.yaml`** `governance.hostSync`.
+
+- **Dispatch closure gate:** On the **plan and deliver** leader lane, do **not** propose **`MC_DISPATCH_RESOLVED_V1`** with **`resolved`** while any §8 ship row is **`open`** or **`blocked`** unless a **Ship recap** block for that row was parsed on the leader dispatch in this session (including host-sync messages), or the developer explicitly chose **planning-only** dispatch closure via **AskQuestion** (see **`plan.mdc`** §8 *Pre-resolution checklist*).
 
 #### Feedback Collection
 

@@ -58,6 +58,29 @@ After implementing changes, **stop**. Do not `git add`, `git commit`, or `git pu
 
 If **AskQuestion** approved a workflow step in a **prior** turn, wait for a **new** user message containing *commit* / *push* before running git write commands. Do **not** treat *Approve follow-ups and create PR now* ( **`coding-session`** Create-PR gate) as *commit* or *push* consent.
 
+### Mission-owned git when `plan and deliver` is active
+
+When Mission Control dispatches **`plan and deliver`** on **research-and-development**, commit/push cut points in **this rule** and in **`coding-session`**, **`pre-pr-review`**, and **`create-pr`** count as **mission-owned git** per [`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`](../../sedea/rules/6_git-commit-push-gate.mdc) § *Mission-owned git*.
+
+| Situation | [`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`](../../sedea/rules/6_git-commit-push-gate.mdc) § *Hosting-repo file edits* |
+|-----------|-------------------------------------------------------------------------------------------------------------------------------------|
+| **`coding-session`** / ship child on product worktree | **Do not** duplicate rule-6 pre-edit or post-satisfaction AskQuestion for the same commit/push — follow **this rule** § *Review before commit* and the skill cadence |
+| **`plan and deliver`** Squad Leader (planning only) | Usually no product-repo writes — rule 6 often N/A on that lane |
+| Edits under **`.sedea/centers/`** on a **center-maintenance** or hosting dispatch | Rule 6 **applies** (not mission-owned) unless another mission owns git for that lane |
+
+**Both gates still apply** on implementation lanes: (1) workflow pause and AskQuestion here, and (2) explicit *commit* / *push* in the **same user message** per rule 6. Approving *next stage* or *run pre-pr-review* is **not** commit or push consent.
+
+## deploy-walk vs plan-reconcile (not chained)
+
+Finishing **`deploy-walk`** (checklist complete, capstone todo **`deploy-test-plan-verified`** → `done`) does **not** start **`plan-reconcile`**.
+
+| Skill | Ends when | Does **not** auto-start |
+|-------|-----------|-------------------------|
+| **`deploy-walk`** | Deploy §7 walked; Status `done` | **`plan-reconcile`** |
+| **`plan-reconcile`** | Archive / follow-ups triage per **`plan-state.mjs`** | (nothing upstream) |
+
+Start **`plan-reconcile`** separately: developer phrase, mission dispatch, or **`create-pr`** after merge when the developer **explicitly** chooses reconcile — see **`plan-reconcile/SKILL.md`** § *When to trigger* and **development-process.md** § *Ship chain*.
+
 ## PR creation — only **`create-pr`** on a PR-creating agent
 
 **Rule (read first).** The **only** lane that may call `gh pr create` (or any equivalent GitHub API/MCP call that creates, drafts, or reopens a PR) is **a PR-creating agent** executing [`create-pr/SKILL.md`](../missions/plan-and-deliver/skills/create-pr/SKILL.md) after **`pre-pr-review`** returns `go` and that skill's gates pass. That child lane opens the PR **on the developer's behalf** after they approve PR creation — not from coding, planning, review, or Squad Leader lanes.

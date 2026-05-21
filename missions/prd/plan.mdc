@@ -26,7 +26,7 @@ flowchart TD
 
 Session command phrases are declared in `mission.yaml`. This section defines routing and execution for each phrase.
 
-**PRD path vs `plan and deliver`:** Routing among **`prd`**, **`ad-hoc-prd`**, and external PRDs is canonical in **`.sedea/centers/research-and-development/docs/development-process.md`** § *PRD authoring — which path?*. This mission owns **`create prd`** / **`manage prd`** only — not **`plan and deliver`** Squad Leader §1 option 2 (use **`ad-hoc-prd`** on that dispatch instead).
+**PRD path vs `plan and deliver`:** Authoring routes are in **`.sedea/centers/research-and-development/docs/development-process.md`** § *PRD authoring — which path?*; **intake** (who validates an existing PRD before **`master-plan`**) is § *PRD intake — plan and deliver §2 vs prd mission*. This mission owns **`create prd`** / **`manage prd`** only — not **`plan and deliver`** Squad Leader §1 option 2 (use **`ad-hoc-prd`** on that dispatch) and not §2 link fetch (return with **`@path`** after this mission completes).
 
 ```mermaid
 flowchart TD

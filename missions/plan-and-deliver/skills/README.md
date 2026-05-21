@@ -93,8 +93,9 @@ After emitting **`AGENT_RESULT_RESPONSE_V1`**, **stop on that lane** for the cur
 |-------|------------------------------------------------------------------------|--------|
 | `author-prd` (prd mission) | Yes | Also forbids downstream planning spawns |
 | `pr-plan` | Yes | Also forbids **`coding-session`** spawn |
-| `master-plan` | Variant | “Stop after the handoff line and terminal result” when `continuationStatus: active` |
-| `delivery-phases`, `pr-breakdown`, `new-plan`, `ad-hoc-prd`, ship chain | Often **no** in spawned section | **`warmUpRules`** includes this README (§ *Default warm-up*); **Host protocol line** in each skill |
+| `master-plan` | Yes | Procedure stop before terminal when `continuationStatus: active`; Step 7 spawns on **later** user messages only |
+| `delivery-phases`, `pr-breakdown`, `new-plan`, `ad-hoc-prd` | Yes | Step 6 / write handoff **before** terminal line; see each skill § *Completion (spawned)* |
+| Ship chain (`coding-session`, `pre-pr-review`, `create-pr`, `deploy-walk`, `plan-reconcile`) | Yes | See each skill § *Completion (spawned)* |
 | `phase-plan` | Yes | Same canonical stop sentence as **`pr-plan`** |
 
 When authoring or reviewing a skill, duplicating the canonical sentence under **`## Completion (spawned)`** is encouraged but **not** required if this README is in **`warmUpRules`** or the spawn request passes it.
@@ -135,7 +136,7 @@ When you add, rename, or remove a protocol branch under `missions/plan-and-deliv
 
 ### Scripts (`plan-state.mjs`, `pr-review.py`)
 
-- **Location:** `missions/plan-and-deliver/scripts/` (paths in skills and rule **20** are relative to the **hosting repo root** that contains **`.sedea/`**).
+- **Location:** `missions/plan-and-deliver/scripts/` (paths in skills and rule **20** are workspace-root relative from the checkout that contains **`.sedea/`** — see that checkout’s **`.cursor/rules/`** for hosting-repo specifics).
 - **Runtime:** use the **Node / Python runtime bundled with Sedea / VS Code** — not **fnm**, **nvm**, or other host managers (see **`plan-reconcile`** § *Script CLI*).
-- **`node_modules/`:** a local **`yaml`** dependency may exist under `scripts/node_modules/` for development; it is **not** part of center governance and is **not** tracked in the center git checkout. Agents should not treat vendor trees under `scripts/` as protocol docs.
+- **Vendor trees:** do not treat `scripts/**/node_modules/` or other installed dependencies as protocol documentation (center governance ends at `SKILL.md`, rules, and mission plans).
 - **`verify-skill-manifest.mjs`** — compares **`center.yaml`** `skillEntries` to on-disk `SKILL.md` files for all missions in this center (exit 0 = match).

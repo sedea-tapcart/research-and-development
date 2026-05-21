@@ -548,7 +548,7 @@ Required `outputs` fields:
 - `outputs.spawnedPlans` — plan paths/slugs created or reported by downstream agents
 - `outputs.remainingTasks` — pending user or agent actions; empty only when `continuationStatus` is `terminal`
 
-Stop after the handoff line and terminal result. While `continuationStatus` is `active`, the **Squad Leader** acknowledges only (**`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`** §6); this lane owns **AskQuestion** + downstream spawns (Step 7).
+Stop after the terminal line. Do not emit another `AGENT_RUN_REQUEST_V1` or run the next protocol step in the same turn (see **`../README.md`** § *Terminal stop (normative)*). While `continuationStatus` is `active`, the **Squad Leader** acknowledges only (**`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`** §6); this lane owns **AskQuestion** + downstream spawns (Step 7) on **later** user messages on this lane — not in the same turn as the terminal line.
 
 ## Completion (inline)
 

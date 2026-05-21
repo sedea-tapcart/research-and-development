@@ -75,3 +75,24 @@ governance:
   note: >-
     Intentionally no `missions/<slug>/rules/*.mdc` packs. Center rules plus each
     mission `plan.mdc` and skill `SKILL.md` files are the source of truth.
+  hostSync:
+    mission: plan-and-deliver
+    summary: >-
+      Section 8 ship progress from detached ship child terminals is persisted by the
+      hosting Mission Control extension (not by this center repo alone).
+    agentDocs:
+      - missions/plan-and-deliver/plan.mdc
+      - docs/development-process.md
+    extensionDoc: >-
+      Hosting repo `extensions/mission-control/docs/plan-and-deliver-section-8-ship-ledger.md`
+      (ship-ledger.v1.json, silent leader recap, required child outputs, audit events).
+    requiredChildOutputs:
+      - targetPlanPath
+      - shipPhase
+      - rowStatus
+    shipSkills:
+      - coding-session
+      - pre-pr-review
+      - create-pr
+      - deploy-walk
+      - plan-reconcile

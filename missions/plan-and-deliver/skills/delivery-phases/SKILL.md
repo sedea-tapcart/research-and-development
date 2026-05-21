@@ -241,7 +241,7 @@ Required `outputs` fields:
 - `outputs.continuationOwner`: `"delivery-phases-agent"`
 - `outputs.continuationStatus` — `active` while approval, child creation, or population remains; `terminal` when all child rows are `completed`, `deferred`, `abandoned`, or `out_of_scope` and no active populator lanes remain
 
-Stop after the step 6 handoff block or after spawning and announcing the wait state.
+Complete the step 6 handoff block (or announce spawn wait) **before** the terminal line. Stop after the terminal line. Do not emit another `AGENT_RUN_REQUEST_V1` or run the next protocol step in the same turn (see **`../README.md`** § *Terminal stop (normative)*).
 
 ## Completion (inline)
 

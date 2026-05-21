@@ -263,7 +263,7 @@ Required `outputs` fields:
 - `outputs.continuationOwner`: `"new-plan-agent"`
 - `outputs.continuationStatus` — `active` while populator approval, a populator lane, or row repair remains; `terminal` when stub, parent link, and optional populator handoff are complete
 
-Stop after write + parent confirmation (when required) + parent `Plan:` update (indexed) + optional populator spawn / wait state when downstream skills exist.
+Complete write + parent confirmation (when required) + parent `Plan:` update (indexed) + optional populator spawn / wait announcement **before** the terminal line. Stop after the terminal line. Do not emit another `AGENT_RUN_REQUEST_V1` or run the next protocol step in the same turn (see **`../README.md`** § *Terminal stop (normative)*).
 
 ## Completion (inline)
 
