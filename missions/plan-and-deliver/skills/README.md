@@ -93,8 +93,9 @@ After emitting **`AGENT_RESULT_RESPONSE_V1`**, **stop on that lane** for the cur
 |-------|------------------------------------------------------------------------|--------|
 | `author-prd` (prd mission) | Yes | Also forbids downstream planning spawns |
 | `pr-plan` | Yes | Also forbids **`coding-session`** spawn |
-| `master-plan` | Variant | “Stop after the handoff line and terminal result” when `continuationStatus: active` |
-| `delivery-phases`, `pr-breakdown`, `new-plan`, `ad-hoc-prd`, ship chain | Often **no** in spawned section | **`warmUpRules`** includes this README (§ *Default warm-up*); **Host protocol line** in each skill |
+| `master-plan` | Yes | Procedure stop before terminal when `continuationStatus: active`; Step 7 spawns on **later** user messages only |
+| `delivery-phases`, `pr-breakdown`, `new-plan`, `ad-hoc-prd` | Yes | Step 6 / write handoff **before** terminal line; see each skill § *Completion (spawned)* |
+| Ship chain (`coding-session`, `pre-pr-review`, `create-pr`, `deploy-walk`, `plan-reconcile`) | Yes | See each skill § *Completion (spawned)* |
 | `phase-plan` | Yes | Same canonical stop sentence as **`pr-plan`** |
 
 When authoring or reviewing a skill, duplicating the canonical sentence under **`## Completion (spawned)`** is encouraged but **not** required if this README is in **`warmUpRules`** or the spawn request passes it.

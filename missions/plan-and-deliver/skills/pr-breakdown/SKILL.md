@@ -304,7 +304,7 @@ Required `outputs` fields:
 - `outputs.continuationOwner`: `"pr-breakdown-agent"`
 - `outputs.continuationStatus` — `active` while approval, child creation, or population remains; `terminal` when all PR rows are closed, deferred, abandoned, or out of scope
 
-Stop after the step 6 handoff block or after spawning and announcing the wait state.
+Complete the step 6 handoff block (or announce spawn wait) **before** the terminal line. Stop after the terminal line. Do not emit another `AGENT_RUN_REQUEST_V1` or run the next protocol step in the same turn (see **`../README.md`** § *Terminal stop (normative)*).
 
 ## Completion (inline)
 
