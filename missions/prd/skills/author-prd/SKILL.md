@@ -31,6 +31,9 @@ inputs:
     type: string
     description: Current Mission Control operations user id for user-private operations paths.
     required: true
+warmUpRules:
+  - ".sedea/centers/research-and-development/missions/prd/plan.mdc"
+  - ".sedea/centers/research-and-development/docs/development-process.md"
 ---
 
 # Skill: author-prd
