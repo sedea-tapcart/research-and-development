@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Helper script for the `pr` chat shortcut.
+"""GitHub API helper for the `pr-review` protocol branch (coding-session inline step).
+
+See `missions/plan-and-deliver/skills/pr-review/SKILL.md`.
 
 Reads input in this order:
 
