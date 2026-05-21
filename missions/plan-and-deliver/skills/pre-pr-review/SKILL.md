@@ -197,13 +197,27 @@ Runs on a **detached** reviewer lane; the **plan and deliver** Squad Leader may 
 | `recommendation: go` | `pre-pr-review` | `open` | `targetPlanPath`, `remainingTasks` |
 | `no-go` / blockers | `pre-pr-review` | `blocked` | `targetPlanPath`, `blockers`, `blockedReason` in recap |
 
+## Mission Control section 8 sync (required terminal `outputs`)
+
+On **every** terminal `AGENT_RESULT_RESPONSE_V1` (including follow-up re-emits), `outputs` **must** include:
+
+| Field | Rule |
+|-------|------|
+| `targetPlanPath` | Absolute PR plan `.plan.md` path — **required**; host skips ledger sync without it |
+| `shipPhase` | From the bubble-up table row for this terminal (`pre-pr-review` typical) |
+| `rowStatus` | `open` when `recommendation: go`; `blocked` when `no-go` or blockers remain |
+| `remainingTasks` | When `rowStatus` is not `closed` |
+| `blockedReason` | When `rowStatus` is `blocked` (summarize blockers) |
+
+Mission Control writes `ship-ledger.v1.json` and may inject **Ship recap — plan and deliver** on the Squad Leader lane. Manual recap paste on the leader dispatch is still allowed.
+
 ## Completion (spawned)
 
-Required `outputs` per **Step 8 — Report and result** above. Re-emit an **updated** terminal result after user-requested follow-up on this lane (same `correlationId`).
+Required `outputs` per **Step 8 — Report and result**, **Mission Control section 8 sync**, and the bubble-up table. Re-emit an **updated** terminal result after user-requested follow-up on this lane (same `correlationId`).
 
 ### Host protocol line (required)
 
-Emit **exactly one** line on its own: `AGENT_RESULT_RESPONSE_V1` immediately followed by a single JSON object on the **same** line. Required keys: `version` (1), `correlationId` (from the spawn request), `status` (`success` | `partial` | `failure` | `aborted` | `abandoned`), `summary` (1–3 sentences), `outputs`, `errors` (use `[]` when none). Populate `outputs` from Step 8. The emitted line must be **valid JSON** (no `{...}` placeholders in the actual output). See **`.sedea/centers/sedea/skills/README.md`** § *Spawned terminal line*.
+Emit **exactly one** line on its own: `AGENT_RESULT_RESPONSE_V1` immediately followed by a single JSON object on the **same** line. Required keys: `version` (1), `correlationId` (from the spawn request), `status` (`success` | `partial` | `failure` | `aborted` | `abandoned`), `summary` (1–3 sentences), `outputs`, `errors` (use `[]` when none). Populate `outputs` from Step 8 **and** include `targetPlanPath`, `shipPhase`, and `rowStatus` on every terminal line. The emitted line must be **valid JSON** (no `{...}` placeholders in the actual output). See **`.sedea/centers/sedea/skills/README.md`** § *Spawned terminal line*.
 
 Stop after this line.
 

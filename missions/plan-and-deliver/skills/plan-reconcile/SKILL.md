@@ -280,13 +280,27 @@ Runs on a **detached** reconcile lane. When reconcile reaches terminal success f
 | Flagged / postponed follow-ups | `reconcile` | `open` | `targetPlanPath`, `flaggedSlugs`, `postponedSlugs`, `remainingTasks` |
 | Script or gate blocked | `reconcile` | `blocked` | `targetPlanPath`, `remainingTasks`, `blockedReason` |
 
+## Mission Control section 8 sync (required terminal `outputs`)
+
+On **every** terminal `AGENT_RESULT_RESPONSE_V1` (including follow-up re-emits), `outputs` **must** include:
+
+| Field | Rule |
+|-------|------|
+| `targetPlanPath` | Absolute PR plan `.plan.md` path — **required** |
+| `shipPhase` | `done` with `rowStatus: closed` when target archived and ship complete; `reconcile` when follow-ups remain; `blocked` when gates fail |
+| `rowStatus` | Per bubble-up table |
+| `remainingTasks` | When `rowStatus` is not `closed` |
+| `blockedReason` | When `rowStatus` is `blocked` |
+
+Mission Control syncs section 8 on the Squad Leader lane from these fields.
+
 ## Completion (spawned)
 
-Required `outputs` per **## Spawned result contract** above. Re-emit an **updated** terminal result after user-requested follow-up on this lane (same `correlationId`).
+Required `outputs` per **## Spawned result contract**, **Mission Control section 8 sync**, and the bubble-up table. Re-emit an **updated** terminal result after user-requested follow-up on this lane (same `correlationId`).
 
 ### Host protocol line (required)
 
-Emit **exactly one** line on its own: `AGENT_RESULT_RESPONSE_V1` immediately followed by a single JSON object on the **same** line. Required keys: `version` (1), `correlationId` (from the spawn request), `status`, `summary`, `outputs`, `errors` (use `[]` when none). Populate `outputs` from the sections above. The emitted line must be **valid JSON** (no `{...}` placeholders in the actual output). See **`.sedea/centers/sedea/skills/README.md`** § *Spawned terminal line*.
+Emit **exactly one** line on its own: `AGENT_RESULT_RESPONSE_V1` immediately followed by a single JSON object on the **same** line. Required keys: `version` (1), `correlationId` (from the spawn request), `status`, `summary`, `outputs`, `errors` (use `[]` when none). Populate `outputs` from the sections above **including** `targetPlanPath`, `shipPhase`, and `rowStatus` on every terminal line. The emitted line must be **valid JSON** (no `{...}` placeholders in the actual output). See **`.sedea/centers/sedea/skills/README.md`** § *Spawned terminal line*.
 
 Stop after this line.
 

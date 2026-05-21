@@ -274,13 +274,28 @@ Runs on a **detached** PR-creator lane. After PR open (or a blocked handoff), nu
 | PR created | `pr-open` | `targetPlanPath`, `prUrl`, `prNumber` |
 | Blocked / deferred | `implementing` or `blocked` | `targetPlanPath`, `remainingTasks`, `blockedReason` |
 
+## Mission Control section 8 sync (required terminal `outputs`)
+
+On **every** terminal `AGENT_RESULT_RESPONSE_V1` (including after nested **`deploy-walk`** / **`plan-reconcile`** merges and follow-up re-emits), `outputs` **must** include:
+
+| Field | Rule |
+|-------|------|
+| `targetPlanPath` | Absolute PR plan `.plan.md` path — **required** |
+| `shipPhase` | From the bubble-up row for this terminal (`pr-open`, `implementing`, `blocked`, `deploy-walk`, `done`, etc.) |
+| `rowStatus` | `open` while PR lifecycle continues; `closed` when target plan is fully done; `blocked` when handoff blocked |
+| `prUrl` / `prNumber` | When `shipPhase` is `pr-open` or later |
+| `remainingTasks` | When `rowStatus` is not `closed` |
+| `blockedReason` | When `rowStatus` is `blocked` |
+
+Mission Control syncs the Squad Leader section 8 ledger from these fields. Manual **Ship recap** on the leader dispatch remains valid.
+
 ## Completion (spawned)
 
-Required `outputs` per **## Result contract** and any **Extend spawned result outputs** bullets above (including after nested **`deploy-walk`** or **`plan-reconcile`** results are merged). Re-emit an **updated** terminal result after user-requested follow-up on this lane (same `correlationId`).
+Required `outputs` per **## Result contract**, **Extend spawned result outputs**, **Mission Control section 8 sync**, and the bubble-up table. Re-emit an **updated** terminal result after user-requested follow-up on this lane (same `correlationId`).
 
 ### Host protocol line (required)
 
-Emit **exactly one** line on its own: `AGENT_RESULT_RESPONSE_V1` immediately followed by a single JSON object on the **same** line. Required keys: `version` (1), `correlationId` (from the spawn request), `status`, `summary`, `outputs`, `errors` (use `[]` when none). Populate `outputs` from the sections above. The emitted line must be **valid JSON** (no `{...}` placeholders in the actual output). See **`.sedea/centers/sedea/skills/README.md`** § *Spawned terminal line*.
+Emit **exactly one** line on its own: `AGENT_RESULT_RESPONSE_V1` immediately followed by a single JSON object on the **same** line. Required keys: `version` (1), `correlationId` (from the spawn request), `status`, `summary`, `outputs`, `errors` (use `[]` when none). Populate `outputs` from the sections above **including** `targetPlanPath`, `shipPhase`, and `rowStatus` on every terminal line. The emitted line must be **valid JSON** (no `{...}` placeholders in the actual output). See **`.sedea/centers/sedea/skills/README.md`** § *Spawned terminal line*.
 
 Stop after this line.
 
