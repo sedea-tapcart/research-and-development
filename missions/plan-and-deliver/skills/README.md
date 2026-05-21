@@ -55,11 +55,11 @@ When a ship skill finishes a milestone on a **detached** lane, nudge the develop
 
 ## Inline-only (no spawn)
 
-| Skill | Invoker | Result section |
-|-------|---------|----------------|
-| `pr-review` | Active **`coding-session`** agent only | `## Inline result for coding-session` |
+| Skill | Invoker | Result section | §8 ship ledger |
+|-------|---------|------------------|----------------|
+| `pr-review` | Active **`coding-session`** agent on its lane | `## Inline result for coding-session` | Leader **Ship recap** after triage — fields via **`coding-session`** § *Squad Leader bubble-up* (`shipPhase: pr-review`) |
 
-Do **not** emit **`AGENT_RUN_REQUEST_V1`** or **`AGENT_RESULT_RESPONSE_V1`** for **`pr-review`** on this mission. No **Host protocol line** — results merge into **`coding-session`** via **`## Inline result for coding-session`** (prose on the coding-session lane, or **`coding-session`** spawned `outputs` when that parent is spawned).
+**`pr-review`** returns through **`coding-session`** on the coding lane. Update §8 on the **plan and deliver** leader dispatch with the recap template (**`../plan.mdc`** §8).
 
 ## Required terminal line (all spawned children)
 

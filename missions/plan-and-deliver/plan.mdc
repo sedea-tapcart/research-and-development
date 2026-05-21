@@ -437,6 +437,8 @@ Maintain one row per in-scope **PR plan** path under `.sedea/operations/.../plan
 
 Ship skills usually run on **detached** lanes; the Squad Leader often receives **no** child `AGENT_RESULT_RESPONSE_V1`. Progress reaches §8 via **`lastReportedBy: developer-message`** (preferred) or **`child-output`** when a parent lane forwards results.
 
+**`pr-review`** runs **inline** on the active **`coding-session`** lane (still often detached from the leader). After PR comment triage, post **Ship recap** on the leader dispatch with `shipPhase: pr-review` and fields from **`coding-session`** / **`pr-review`** (`prReviewStatus`, `githubReconciliationStatus`) — see **`skills/pr-review/SKILL.md`** § *Leader §8 recap* and **`coding-session`** § *Squad Leader bubble-up*.
+
 When the developer returns to the **plan and deliver** leader dispatch and any ship row is `open` or `blocked`, collect a **minimal recap** per PR plan (use **AskQuestion** once if they give only vague chat). Do **not** advance `phase` from **`inferred`** unless unavoidable — ask for the fields below.
 
 | Field | Required | Purpose |
