@@ -166,7 +166,7 @@ Per [`development-process.md`](../../../../docs/development-process.md) § *Cade
 Otherwise, for every comment marked **Skipped → follow-up** in Step 3, prepare a one-sentence bullet for the linked PR plan file **`planPath`** from Step 0 (`…/.sedea/operations/joint/plans/<slug>.plan.md` or `…/.sedea/operations/<operationsUserId>/plans/<slug>.plan.md`). Do **not** append yet. The Step 3b developer approval gate must approve follow-up capture before any plan mutation. Each proposed bullet:
 
 - Paraphrases the comment's substantive concern in one sentence — do **not** quote the GitHub body verbatim (the comment thread already preserves it).
-- Carries an optional `(target: <hint>)` suffix when routing is obvious — `Master Plan`, `current phase plan`, `sibling plan`, `new plan`, `drop`.
+- Carries an optional `(target: <hint>)` suffix when routing is obvious — `Master Plan`, `current phase plan`, `sibling plan`, `new-plan (standalone)`, `drop`.
 - Will live at the bottom of the file if approved. If the PR plan has no `## Follow-ups` section yet, the approved mutation adds one at the bottom (after § 7 Caveats, or after § 6 if § 7 is omitted) using a single `StrReplace` that inserts the header + the new bullets in one shot.
 
 Do **not** include `Must fix`, `Should fix`, or `Skipped (no follow-up)` items here — those don't survive the PR as follow-up planning items (`Must` / `Should` land in the diff after approval; `Skipped (no follow-up)` is noise by definition).

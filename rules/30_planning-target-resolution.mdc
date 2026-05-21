@@ -27,10 +27,10 @@ Planning protocol branches act on a specific `.plan.md` under the **`.sedea/oper
 
 1. Developer signals a planning-tree lane change — explicitly (*"where are we?"*, *"what's next?"*) or implicitly (*"back to plan"*, *"let's move on to …"*).
 2. Agent emits a **"Where we are now in the plan tree"** snapshot (§ *Snapshot format*).
-3. Agent lists **numbered next-move options** in the same reply, each naming the **protocol branch + target plan** (e.g. *Option 2: sub-plan index 3 under `<slug>` → **new-plan** spawns child*). Offer **`AskQuestion`** or a numbered bullet list; the developer picks by number or option label.
+3. Agent lists **numbered next-move options** in the same reply, each naming the **protocol branch + target plan** (e.g. *Option 2: **new-plan** — expand list item **3** under `<parent-slug>`*, then *Option 3: **phase-plan** on `<child-path>`*). Offer **`AskQuestion`** or a numbered bullet list; the developer picks by number or option label. Do **not** use retired tokens **`sub-plan`**, **`new plan`**, or `sub-plan <N>` as branch names.
 4. Agent resolves the target from the chosen option and invokes the relevant skill with the target pre-resolved.
 
-Mid-flow, when chat already unambiguously names the current lane (e.g. sub-plan expansion just wrote child `3_xxx_<hex>.plan.md` and the next step is clearly **phase-plan** on that file), the agent may continue without a new snapshot — see § *Resolution order* bullet 4.
+Mid-flow, when chat already unambiguously names the current lane (e.g. **`new-plan`** indexed-child just wrote `3_xxx_<hex>.plan.md` and the next step is clearly **phase-plan** on that file), the agent may continue without a new snapshot — see § *Resolution order* bullet 4.
 
 ## Resolution order
 
@@ -63,7 +63,7 @@ Markdown table for each in-flight plan (typically one Master Plan subtree):
 | **Plan** | Slug + display name. |
 | **Stage** | Mode #1 Master Plan, #2 Phase, #3 PR plan, roadmap topic. |
 | **Status** | Drafted sections, `_TBD_`, PR linked, archived. |
-| **Next viable moves** | **Numbered** options naming **protocol branch + target** (e.g. *1. **new-plan** — sub-plan index 2 under `<parent-slug>`*; *2. **phase-plan** — populate child `<path>`*). |
+| **Next viable moves** | **Numbered** options naming **protocol branch + target** (e.g. *1. **new-plan** — expand list item **2** under `<parent-slug>`*; *2. **phase-plan** — populate child `<path>`*). |
 
 Below the table, repeat the same options as **`AskQuestion`** choices or a **numbered bullet list** the developer can answer with a digit. Session and plan-path contracts for planning live in this center rule, **`planning-target-resolution`**, center skills, and **`.sedea/centers/research-and-development/docs/development-process.md`** — product-repo **`.cursor/rules/`** cover codebase architecture and navigation only.
 
