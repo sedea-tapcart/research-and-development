@@ -23,6 +23,17 @@ Planning protocol branches act on a specific `.plan.md` under the **`.sedea/oper
 
 **Lane rule:** Planning skills (**`pr-plan`**, **`master-plan`**, decomposition tree) ≠ ship skills (**`coding-session`** → **`pre-pr-review`** → **`create-pr`** → …). **`pr-plan` does not spawn `coding-session`.**
 
+## Disambiguation — rule 20 cadence step 3 vs `pr-review` steps
+
+Two different **step 3** labels appear in ship docs. **Do not** conflate them with planning-protocol step numbers or with “run full **`pr-review`**” after every push.
+
+| Label | Where | Meaning |
+|-------|--------|---------|
+| **Rule 20 — cadence step 3** | [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](20_efficient-pr-shipping.mdc) § *Commit and push cadence* → *Steps* item **3** | On a **`coding-session`** (implementation) lane, **after** commit and push: run **`pr-review`** skill **Step 5 — GitHub only** via `pr-review.py` — **only** when that skill’s Steps **1–4** already ran in this chat. **Skip** cadence step 3 when there was no **`pr-review`** triage. **Not** a second full triage from scratch. |
+| **`pr-review` Steps 1–5** | [`pr-review/SKILL.md`](../missions/plan-and-deliver/skills/pr-review/SKILL.md) | Inline on the active **`coding-session`** lane. **Step 5** is the GitHub reconciliation that rule 20 cadence step 3 names. |
+
+Pitfall cross-reference: **`.sedea/centers/research-and-development/docs/development-process.md`** § *Agent UX pitfalls* — *Commit and push cadence step 3*.
+
 Details: § *Planning readiness vs ship* below; ship ledger: **`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`** §8.
 
 ## Planning readiness vs ship (do not conflate)
@@ -46,6 +57,7 @@ Three different signals appear in plan-and-deliver; advancing one does **not** a
 | Set Squad Leader §8 `phase` to `worktree` / `implementing` from **`pr-plan`** outputs alone | Advance §8 only after **`coding-session`** reports `developerApprovedImplementation: true` or a parsed **Ship recap** on the leader dispatch |
 | Run **`git commit`** / **`git push`** while still on a planning skill lane | Ship cadence is **`coding-session`** (or rule **20** on an implementation lane) — see rule **20** § *AskQuestion vs git commit/push* |
 | Treat planning **AskQuestion** (*next phase*, *continue planning*) as ship or git consent | Planning picks use § *Standard flow*; commit/push need rule **20** + **`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`** same-message words |
+| Treat rule **20** cadence **step 3** as “run full **`pr-review`** from Step 1” after every push | Cadence step **3** = **`pr-review` Step 5 — GitHub only** when Steps 1–4 already ran; otherwise **skip** cadence step 3 — § *Disambiguation — rule 20 cadence step 3 vs `pr-review` steps* and rule **20** § *Commit and push cadence* |
 
 Squad Leader §8 ship rows advance from **`coding-session`** outputs or an explicit **Ship recap — plan and deliver** on the leader dispatch — see [`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`](../missions/plan-and-deliver/plan.mdc) §8 and rule **20** § *Leader §8 ship recap*.
 
