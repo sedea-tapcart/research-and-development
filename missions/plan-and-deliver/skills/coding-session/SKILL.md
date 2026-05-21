@@ -93,7 +93,7 @@ Only **two** developer-consent layers apply before worktrees. Do not stack extra
 
 | Layer | Where decided | Output field | This skill |
 |-------|---------------|--------------|------------|
-| **1 — Planning handoff** | **`pr-plan`** step 5c (especially option 4) | `readyForImplementation` | Hint only; **do not** re-ask. Does **not** authorize worktrees or advance **`plan.mdc`** §8 `phase` past `not-started`. |
+| **1 — Planning handoff** | **`pr-plan`** step 5c (especially option 4) | `readyForImplementation` | Hint only; **do not** re-ask. Does **not** authorize worktrees or advance **`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`** §8 `phase` past `not-started`. |
 | **2 — Worktree open** | [Worktree-open gate](#worktree-open-gate) below (one **AskQuestion**) | `developerApprovedImplementation` | Set `true` only after an authorizing choice in that gate. |
 
 **Not consent layers** (validation / setup only — no separate approval **AskQuestion**):

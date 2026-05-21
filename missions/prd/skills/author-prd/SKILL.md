@@ -218,7 +218,7 @@ Use this template as a starting point. Remove optional sections that do not appl
 
 ## Completion (spawned)
 
-The **prd** mission Squad Leader spawns this skill on a child lane (mission **`plan.mdc`** §3). A successful child result is **not** developer approval to continue the PRD mission — the Squad Leader still runs review (step 4).
+The **prd** mission Squad Leader spawns this skill on a child lane (**`.sedea/centers/research-and-development/missions/prd/plan.mdc`** §3). A successful child result is **not** developer approval to continue the PRD mission — the Squad Leader still runs review (step 4).
 
 ### Host protocol line (required)
 

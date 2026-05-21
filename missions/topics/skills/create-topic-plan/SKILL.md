@@ -27,7 +27,7 @@ inputs:
 
 # Create Topic Plan
 
-Create one root-level topic plan and its sidecar under the selected Sedea operations plan tree. The **topics** mission runs this skill **inline** on the Squad Leader lane (**`plan.mdc`** §3). This skill writes planning metadata only; it does not draft delivery phases, PR breakdowns, worktrees, or implementation tasks.
+Create one root-level topic plan and its sidecar under the selected Sedea operations plan tree. The **topics** mission runs this skill **inline** on the Squad Leader lane (**`.sedea/centers/research-and-development/missions/topics/plan.mdc`** §3). This skill writes planning metadata only; it does not draft delivery phases, PR breakdowns, worktrees, or implementation tasks.
 
 ## Inputs
 
@@ -91,7 +91,7 @@ Create one root-level topic plan and its sidecar under the selected Sedea operat
 
 ## Completion (inline)
 
-**Inline-only skill** for the **topics** mission (**`plan.mdc`** §3, § *Mission closure*). End the skill portion by reporting these fields in prose on the Squad Leader lane (see **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Inline completion*). The Squad Leader then runs **`plan.mdc`** step 4 and proposes **`MC_DISPATCH_RESOLVED_V1`** when the user closes the dispatch.
+**Inline-only skill** for the **topics** mission (**`.sedea/centers/research-and-development/missions/topics/plan.mdc`** §3, § *Mission closure*). End the skill portion by reporting these fields in prose on the Squad Leader lane (see **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Inline completion*). The Squad Leader then runs **`.sedea/centers/research-and-development/missions/topics/plan.mdc`** step 4 and proposes **`MC_DISPATCH_RESOLVED_V1`** when the user closes the dispatch.
 
 | Field | Values | Use |
 |-------|--------|-----|
