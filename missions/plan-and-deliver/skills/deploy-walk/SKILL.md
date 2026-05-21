@@ -73,6 +73,17 @@ This skill drives the **per-step deploy verification loop** for a PR plan's `## 
 
 When spawned by **`create-pr`**, this skill is the **deploy-walk agent** for a merged PR. It owns deploy verification status and reports it upstream; it does not run implementation, PR review, or plan reconciliation.
 
+## Not chained to `plan-reconcile`
+
+**This skill never invokes `plan-reconcile`.** Capstone todo **`deploy-test-plan-verified`** → `done` closes the **deploy checklist only** — not archive, not parent-plan reconcile.
+
+| Agent mistake | Correct action |
+|---------------|----------------|
+| Treat deploy walk `done` as permission to archive the plan | Tell the developer to start **`plan-reconcile`** separately (phrase, dispatch, or **`create-pr`** reconcile choice after merge) |
+| Emit **`AGENT_RUN_REQUEST_V1`** for **`plan-reconcile`** from this lane | **Forbidden** — hand off in prose only |
+
+Canonical: **`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`** § *deploy-walk vs plan-reconcile (not chained)*.
+
 ## Entry points
 
 Canonical table: **`.sedea/centers/research-and-development/docs/development-process.md`** § *Ship chain* → **`deploy-walk` entry points**.

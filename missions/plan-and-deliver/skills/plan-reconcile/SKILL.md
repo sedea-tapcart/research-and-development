@@ -63,6 +63,20 @@ Script-backed flow: **`plan-state.mjs`** owns YAML and file moves; the agent dec
 - Spawned by **`create-pr`** only after both PR merge and deploy verification are complete **and the developer explicitly chooses to run reconcile**. A `deploy-walk` completion by itself is not enough; spawned reconcile requires `prState: "merged"`, `deployStatus: "done"`, and `deployTodoStatus: "done"`.
 - Standalone natural-language reconcile remains available for developer-initiated archive passes.
 
+## Not auto-started from `deploy-walk`
+
+**`deploy-walk` completion does not open this skill.** Deploy verification (`deployStatus` / `deployTodoStatus` **done**) is necessary for **spawned** reconcile from **`create-pr`**, but **`deploy-walk` alone never triggers reconcile**.
+
+| Prior step completed | Starts **`plan-reconcile` automatically?** |
+|----------------------|---------------------------------------------|
+| **`deploy-walk`** (checklist + capstone todo done) | **No** |
+| **`create-pr`** after merge + developer chooses reconcile | **Yes** (spawned child) |
+| Developer says **plan reconcile** / mission dispatch | **Yes** (explicit start) |
+
+If the user expects archive right after deploy, use **AskQuestion** once: start **`plan-reconcile`** now vs defer — do not assume merge + deploy implied reconcile.
+
+Canonical: **`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`** § *deploy-walk vs plan-reconcile (not chained)*.
+
 ## Spawned reconcile gate
 
 When spawned by `create-pr`, verify:
