@@ -3,14 +3,22 @@ description: >-
   How to resolve the target `.plan.md` when running plan-and-deliver protocol branches
   (new-plan, phase-plan, pr-plan, delivery-phases, pr-breakdown, plan-reconcile). Resolution
   is from session and chat context — not from IDE focused-file list. Covers resolution order,
-  snapshot emission, and "Where we are now in the plan tree" table format for AskQuestion /
-  numbered choices for planning moves (§ *Planning vs ship cadence*). **`master-plan`** handoff uses the same contract (Step 7 — AskQuestion + AGENT_RUN_REQUEST_V1).
+  snapshot emission, and "Where we are now in the plan tree" table format for planning moves
+  (§ *Sedea input channel*; § *Planning vs ship cadence*). **`master-plan`** handoff uses the same contract (Step 7 — AskQuestion + AGENT_RUN_REQUEST_V1).
 alwaysApply: true
 ---
 
 # Planning target resolution
 
 Planning protocol branches act on a specific `.plan.md` under the **`.sedea/operations/`** union. The target is resolved from **session input, chat context, and structured choices** — not from the IDE focused-file list alone (IDE state can drift from planning intent).
+
+## Sedea input channel (planning picks)
+
+When a turn **requires a user reply** before you continue (pick a planning branch, confirm a target plan, choose list index **N** for **`new-plan`**), collect that pick through **AskQuestion** or **`MC_ASKQUESTION_V1`** per [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](../../sedea/rules/2_ask-question-instructions.mdc). **Supersedes** the former *AskQuestion or numbered bullet list* option in this rule. Mission Control **AskQuestion** also exposes **free-form text** on the modal — use it for extra instruction alongside an `option` pick; do not reopen choices in prose chat.
+
+**Snapshot table (information-only).** The *Next viable moves* column may use **numbered rows** so the developer can read the plan tree in one glance. Those numbers are **reference labels** for the snapshot only — when a pick is required, the choosable paths live in **AskQuestion** `options`, not as a prose menu in the agent message.
+
+**Transcript boundary.** When the snapshot is long, use two assistant turns per [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](../../sedea/rules/2_ask-question-instructions.mdc) § *Mission Control transcript boundary*: (1) snapshot only; (2) **AskQuestion** only with one `option` per move (brief `label`; full branch + target in `prompt` if needed).
 
 ## At a glance — planning vs ship (read first)
 
@@ -63,7 +71,7 @@ Squad Leader §8 ship rows advance from **`coding-session`** outputs or an expli
 
 ## Planning vs ship cadence
 
-**Planning-tree** moves (§ *Standard flow* below): **`AskQuestion`**, numbered options, each naming **protocol branch + target plan**.
+**Planning-tree** moves (§ *Standard flow* below): **`AskQuestion`** options, each naming **protocol branch + target plan** (§ *Sedea input channel*).
 
 **Implementation / ship** moves: **`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`** § *Commit and push cadence* and **[`pr-review/SKILL.md`](../missions/plan-and-deliver/skills/pr-review/SKILL.md)**:
 
@@ -75,9 +83,9 @@ Squad Leader §8 ship rows advance from **`coding-session`** outputs or an expli
 ## Standard flow
 
 1. Developer signals a planning-tree lane change — explicitly (*"where are we?"*, *"what's next?"*) or implicitly (*"back to plan"*, *"let's move on to …"*).
-2. Agent emits a **"Where we are now in the plan tree"** snapshot (§ *Snapshot format*).
-3. Agent lists **numbered next-move options** in the same reply, each naming the **protocol branch + target plan** (e.g. *Option 2: **new-plan** — expand list item **3** under `<parent-slug>`*, then *Option 3: **phase-plan** on `<child-path>`*). Offer **`AskQuestion`** or a numbered bullet list; the developer picks by number or option label.
-4. Agent resolves the target from the chosen option and invokes the relevant skill with the target pre-resolved.
+2. Agent emits a **"Where we are now in the plan tree"** snapshot (§ *Snapshot format*) — information-only when a pick will follow.
+3. When a pick is required before continuing, use **AskQuestion** (§ *Sedea input channel*) with one option per **protocol branch + target plan** (brief `label`; put branch and path in `prompt` when needed).
+4. Agent resolves the target from the **AskQuestion** response (selected `option` plus any modal free-form text per § *Resolution order* bullet 2), then invokes the relevant skill with the target pre-resolved.
 
 Mid-flow, when chat already unambiguously names the current lane (e.g. **`new-plan`** indexed-child just wrote `3_xxx_<hex>.plan.md` and the next step is clearly **phase-plan** on that file), the agent may continue without a new snapshot — see § *Resolution order* bullet 4.
 
@@ -86,10 +94,10 @@ Mid-flow, when chat already unambiguously names the current lane (e.g. **`new-pl
 Highest confidence first. Stop at the first match.
 
 1. **Explicit in session or message.** Slug, relative path under `plans/`, or absolute `.sedea/operations/.../*.plan.md` — use verbatim.
-2. **Most recent agent recommendation.** The last turn proposed an option that named a concrete target; the user’s **`AskQuestion`** / numbered pick locks that target in.
+2. **AskQuestion response.** The developer submitted **AskQuestion** (selected `option` `id` / `label` from the most recent planning pick, plus any **free-form text** Mission Control returns with that submission). Bind the target from that `option`; treat modal free-form text as scope or path hints when unambiguous.
 3. **Snapshot pinpoint.** The latest snapshot lists exactly one option matching the branch the user chose — use that target.
 4. **Mid-flow continuation.** Chat names the current lane unambiguously (e.g. child file just written; next skill is **phase-plan** on that path). Valid while snapshot freshness holds (§ *Snapshot freshness*).
-5. **Stop and emit fresh snapshot.** If still ambiguous, emit a new snapshot and ask again via **AskQuestion** / numbered list.
+5. **Stop and emit fresh snapshot.** If still ambiguous, emit a new snapshot (information-only) and ask again via **AskQuestion** (§ *Sedea input channel*).
 
 Do **not** use `<open_and_recently_viewed_files>` as the primary resolver for planning targets.
 
@@ -114,7 +122,7 @@ Markdown table for each in-flight plan (typically one Master Plan subtree):
 | **Status** | Drafted sections, `_TBD_`, PR linked, archived. |
 | **Next viable moves** | **Numbered** options naming **protocol branch + target** (e.g. *1. **new-plan** — expand list item **2** under `<parent-slug>`*; *2. **phase-plan** — populate child `<path>`*). |
 
-Below the table, repeat the same options as **`AskQuestion`** choices or a **numbered bullet list** the developer can answer with a digit. Session and plan-path contracts for planning live in this center rule, **`planning-target-resolution`**, center skills, and **`.sedea/centers/research-and-development/docs/development-process.md`** — hosting-repo **`.cursor/rules/`** cover codebase architecture and navigation only.
+When a pick is required, offer the same moves as **`AskQuestion`** `options` (§ *Sedea input channel*). Session and plan-path contracts for planning live in this center rule, **`planning-target-resolution`**, center skills, and **`.sedea/centers/research-and-development/docs/development-process.md`** — hosting-repo **`.cursor/rules/`** cover codebase architecture and navigation only.
 
 **Snapshot-scoped prompts** (e.g. *Option 2: **phase-plan** on `<path>`*) belong **only** inside that snapshot.
 
@@ -152,7 +160,7 @@ Emit a fresh snapshot when:
 
 - Explicit: *where are we?*, *what's next?*, *plan tree?*
 - Implicit: *back to plan*, *next phase*, *continue with the plan*, etc.
-- Ambiguous branch selection after **AskQuestion** / list.
+- Ambiguous branch selection after **AskQuestion** (unclear `option` or modal free-form text).
 - Stale: user picks a move after a plan-tree state change since the last snapshot.
 
 ## Skills consume the resolved target

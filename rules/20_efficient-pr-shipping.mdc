@@ -37,6 +37,8 @@ Before any `node …/plan-state.mjs` or `python3 …/pr-review.py` invocation:
 
 When the agent already knows the Mission Control primary hosting repo path, set **`HOSTING_ROOT`** explicitly instead of guessing.
 
+5. If no ancestor contains **`.sedea/`**, **stop** — use **AskQuestion** once for the hosting repo root (absolute path). Do not run **`plan-state.mjs`**, **`plan-ws-completeness.mjs`**, or **`pr-review.py`** from a worktree path alone.
+
 ### Worktree context for `resolve --cwd`
 
 When linking a plan to a worktree, pass the **worktree** path to **`resolve --cwd`** while the shell **`cwd`** is **`HOSTING_ROOT`**:
@@ -92,7 +94,27 @@ After implementing changes, **stop**. Do not `git add`, `git commit`, or `git pu
 - This applies to **all** workflows: feature PRs, PR comment fixes, and any other code changes.
 - The exceptions are creating branches and worktrees (fine without confirmation), and explicit `pre-pr-review` cut-point confirmation. The coding agent must not silently commit; after an explicit committed cut point, `coding-session` spawns the `pre-pr-review` reviewer lane.
 
-**Sedea git gate (same message):** This section is a **workflow** pause — it does **not** replace [`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`](../../sedea/rules/6_git-commit-push-gate.mdc). Agents must satisfy **both**: (1) review and next-step confirmation here (often via **AskQuestion**), and (2) **`git commit`** / **`git push`** only when the user **same message** explicitly asks (e.g. *commit*, *push*). Approving the next stage without *commit* / *push* in that message is **not** permission to run commit or push.
+**Sedea git gate (same message):** This section is a **workflow** pause — it does **not** replace [`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`](../../sedea/rules/6_git-commit-push-gate.mdc). Agents must satisfy **both** layers in § *Ship git consent (workflow + Sedea gate)* below.
+
+## Ship git consent (workflow + Sedea gate)
+
+Two **independent** layers apply on **implementation** lanes (`coding-session` and ship children). Satisfy **both**; neither substitutes for the other.
+
+| Layer | Source | Controls | User grants via |
+|-------|--------|----------|-----------------|
+| **1 — Workflow** | § *Review before commit* (above) | Pause before advancing ship stage (summary, next skill, cut point) | **AskQuestion** — workflow-only options (*proceed*, *run pre-pr-review*, *more changes*, …) |
+| **2 — Git history** | [`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`](../../sedea/rules/6_git-commit-push-gate.mdc) | `git commit`, `git push`, PR steps that imply push | **Same user message** includes *commit* / *push*, **or** an **AskQuestion** pick on **that turn** whose `id` is `commit-only`, `commit-push`, or `commit-push-pr` (rule 6 § *After the user is satisfied*) |
+
+**Cross-turn rule:** A workflow **AskQuestion** pick in a **prior** turn does **not** authorize commit or push. A message with *commit* / *push* does **not** approve *run pre-pr-review* unless the **same message** also approves that workflow step.
+
+**When both layers apply in one turn**, use **one AskQuestion** with separate workflow options and git options (brief `label` text per [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](../../sedea/rules/2_ask-question-instructions.mdc)), **or** split turns: workflow **AskQuestion** first, then a **new** user message with *commit* / *push*.
+
+| Developer need | Example workflow `options` | Example git `options` (layer 2 — same AskQuestion when committing this turn) |
+|----------------|----------------------------|-------------------------------------------------------------------------------|
+| Review only, no git yet | *Proceed to pre-pr-review* · *More changes* · More details for option _ | Omit git options |
+| Commit and push now | *Proceed* (if needed) | *Commit only* · *Commit + push* · *No git actions* · More details for option _ (rule 6 labels) |
+
+Planning-tree picks use [`.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`](30_planning-target-resolution.mdc) § *Sedea input channel* — not this table.
 
 ### AskQuestion vs git commit/push (same message)
 
@@ -115,7 +137,7 @@ When Mission Control dispatches **`plan and deliver`** on **research-and-develop
 | **`plan and deliver`** Squad Leader (planning only) | Usually no hosting-repo writes — rule 6 often N/A on that lane |
 | Edits under **`.sedea/centers/`** on a **center-maintenance** or hosting dispatch | Rule 6 **applies** (not mission-owned) unless another mission owns git for that lane |
 
-**Both gates still apply** on implementation lanes: (1) workflow pause and AskQuestion here, and (2) explicit *commit* / *push* in the **same user message** per rule 6. Approving *next stage* or *run pre-pr-review* is **not** commit or push consent.
+**Both layers still apply** on implementation lanes — see § *Ship git consent (workflow + Sedea gate)*. Approving *next stage* or *run pre-pr-review* is **not** commit or push consent.
 
 ## deploy-walk vs plan-reconcile (not chained)
 
