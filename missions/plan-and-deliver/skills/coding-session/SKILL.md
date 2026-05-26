@@ -4,11 +4,13 @@ description: >-
   **Coding session** protocol branch: create a git worktree + branch from origin/main,
   record worktrees and session focus in the plan sidecar via plan-state.mjs, attach the
   worktree in the same Sedea workbench (Mission Control sedea_add_worktree_folder per
-  20_efficient-pr-shipping.mdc), emit a copy/paste-safe two-phase session prompt for
-  **a coding agent**, and after the implementation cut point spawn **pre-pr-review**.
-  Plan-anchored runs validate per-PR plans with plan-ws-completeness.mjs (_TBD_ in body
-  requires completion or explicit override incomplete plan). Use under mission dispatch,
-  natural language, or after planning when handing off implementation.
+  20_efficient-pr-shipping.mdc). On a **spawned child lane** with layer-2 approval,
+  **implement the anchored PR plan on this lane** in that worktree; on **prompt-only**
+  entry, emit a copy/paste-safe two-phase session prompt for a separate coding chat.
+  After the implementation cut point spawn **pre-pr-review**. Plan-anchored runs validate
+  per-PR plans with plan-ws-completeness.mjs (_TBD_ in body requires completion or
+  explicit override incomplete plan). Use under mission dispatch, natural language, or
+  after planning when handing off implementation.
 inputs:
   targetPlanPath:
     type: string
@@ -52,6 +54,13 @@ inputs:
     type: string
     description: Optional context label (developer dispatch, snapshot, pr-plan spawn, planning skill).
     required: false
+  promptOnly:
+    type: boolean
+    description: >-
+      When true, stop after worktree attach and emit an external session prompt only (detached
+      handoff). Default false for Mission Control spawn from pr-plan — same lane implements.
+    required: false
+    default: false
 warmUpRules:
   - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
   - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
@@ -62,13 +71,13 @@ warmUpRules:
 
 # Coding session
 
-Hand off a unit of work from the **initiating** session to **a coding agent** in a **dedicated git worktree**, with the worktree visible in the **same Sedea workbench** (multi-root workspace), not a second editor process.
+Hand off a unit of work into a **dedicated git worktree**, with the worktree visible in the **same Sedea workbench** (multi-root workspace), not a second editor process. **Execution mode** after setup depends on entry path — see [Execution mode after worktree attach](#execution-mode-after-worktree-attach).
 
-**Owns:** per-PR plan §§ **5–8** during implementation (repo rules impact, tests, deploy plan, caveats); `git worktree add`, `plan-state.mjs set-worktrees` / `set-session`, Mission Control worktree attach, pre-worktree validation + worktree-open gate, curated session prompt emission; ship-chain spawns (**`pre-pr-review`**, **`create-pr`**, inline **`pr-review`**) after cut points.
+**Owns:** per-PR plan §§ **5–8** during implementation (repo rules impact, tests, deploy plan, caveats); `git worktree add`, `plan-state.mjs set-worktrees` / `set-session`, Mission Control worktree attach, pre-worktree validation + worktree-open gate; **spawned-lane implementation** or curated **prompt-only** session prompt emission; ship-chain spawns (**`pre-pr-review`**, **`create-pr`**, inline **`pr-review`**) after cut points.
 
-**Out of scope:** drafting per-PR §§ **1–4** ( **`pr-plan`** ); implementing hosting repo code in this chat; opening PRs from the planning lane; **`plan-reconcile`** archive cadence except where this skill references it for cleanup narrative.
+**Out of scope:** drafting per-PR §§ **1–4** ( **`pr-plan`** ); implementing hosting repo code when this run is **prompt-only** (see [Prompt-only handoff](#prompt-only-handoff)); opening PRs from the planning lane; **`plan-reconcile`** archive cadence except where this skill references it for cleanup narrative.
 
-After emitting the implementation session prompt(s), **stop** — do not `cd` into the worktree to implement. When invoked later from the coding agent lane after a committed cut point, this same skill owns spawning **`pre-pr-review`**.
+On **[Spawned implementation lane](#spawned-implementation-lane)**, **this lane** edits the hosting repo under the worktree through the implementation cut point — do not tell the developer to paste a session prompt into another chat. On **prompt-only** runs, emit the external prompt and **stop** without implementing here.
 
 ## Relationship to `pr-plan`
 
@@ -156,9 +165,42 @@ Otherwise:
 
 All other choices → `developerApprovedImplementation: false`; end or stay `continuationStatus: active` without worktrees. A prior **`pr-plan`** menu option does not substitute for this gate.
 
+## Execution mode after worktree attach
+
+After [Pre-worktree validation](#pre-worktree-validation-plan-completeness), an authorizing [Worktree-open gate](#worktree-open-gate) choice, worktree creation, sidecar writes, and Mission Control attach, choose **one** mode:
+
+| Mode | When | After attach |
+|------|------|--------------|
+| **Spawned implementation lane** | Mission Control **spawned child** (`AGENT_RUN_REQUEST_V1` for this skill) **and** `outputs.developerApprovedImplementation: true` **and** `inputs.promptOnly` is not `true` **and** the developer did not choose **Defer implementation** at the gate | Continue on **this lane** — [Spawned implementation lane](#spawned-implementation-lane) |
+| **Prompt-only handoff** | Detached natural-language entry, **re-use a prior session prompt**, planning snapshot handoff without spawn, `inputs.promptOnly: true`, **Defer implementation**, or Squad Leader orchestration that only needs an external coding chat | [Prompt-only handoff](#prompt-only-handoff) — emit fenced prompt and **stop** |
+
+**Orientation (spawned lane):** Tell the developer you are **implementing on this worktree on this lane**. Do **not** say “paste the prompt in another session” unless **prompt-only** mode applies.
+
+## Spawned implementation lane
+
+Normative path when **`pr-plan`** (or another spawner) opens a **coding-session** child lane and layer 2 is satisfied.
+
+1. **Scope guard** — Edit only files under the attached worktree root(s). Resolve hosting repo root vs worktree per **20_efficient-pr-shipping.mdc**.
+2. **Warm-up on this lane** — Follow [Session prompt structure](#session-prompt-structure) Phase 1 steps (workspace readiness, branch check, load **Project rules** from the worktree, plan file + sidecar when anchored). You may skip emitting a fenced **external** session prompt unless the developer asks for a copy.
+3. **Read the anchored PR plan** — Load `targetPlanPath` (from spawn `inputs` / `initiatingPrompt`). Use §§ **1–4** for context; **implement** per §§ **5–8** (fill `_TBD_` where this skill owns them).
+4. **Implement** — Make hosting-repo edits (code, tests, docs) in the worktree until an explicit **committed cut point** or a blocking stop. Maintain **`## Follow-ups`** on the PR plan per **development-process** § *Coding Session*.
+5. **Continuation** — Keep `outputs.continuationStatus: "active"` and `outputs.shipPhase: "implementing"` while work remains. Emit **`AGENT_RESULT_RESPONSE_V1`** with `status: partial` when blocked; do **not** use `continuationStatus: terminal` to mean “prompt emitted — hand off elsewhere.”
+6. **Cut point** — When implementation is ready for review, follow [Pre-PR review handoff](#pre-pr-review-handoff) on **this same lane**.
+
+## Prompt-only handoff
+
+Reserved when this run is **not** a spawned implementation lane (see table above).
+
+1. Emit a **session prompt** per [Session prompt structure](#session-prompt-structure) inside a [copy/paste-safe](#copypaste-safe-prompt-output-required) fence.
+2. Set `outputs.sessionPromptEmitted: true` and `outputs.implementationMode: "prompt-only"`.
+3. **Stop** — do not `cd` into the worktree to implement on this lane.
+4. When the developer later continues on **this** or another lane after a committed cut point, this skill owns [Pre-PR review handoff](#pre-pr-review-handoff).
+
+Detached developers may paste the prompt into a separate Mission Control session; that session then follows the same skill as an implementation lane once layer 2 is satisfied there.
+
 ## Copy/paste-safe prompt output (required)
 
-When you emit the final session prompt for the user to paste into **a coding agent** session:
+When you emit the final session prompt for the user to paste into **a separate coding agent** session (**prompt-only** mode):
 
 - Wrap the **entire session prompt** in a fenced markdown code block (default ` ```text … ``` `).
 - If the body contains triple backticks, use a four-backtick outer fence or escape inner fences.
@@ -199,11 +241,11 @@ Run only **after** [Pre-worktree validation](#pre-worktree-validation-plan-compl
 
 3. **Attach the worktree in Sedea** (same workbench): in Mission Control, invoke MCP **`sedea_add_worktree_folder`** with JSON `{ "path": "<absolute-worktree-root>" }` (optional `"name"` for the explorer label). See **20_efficient-pr-shipping.mdc** — *Squad Leader on the main branch vs. agent sessions on worktree* and *Attach the worktree in Sedea*.
 
-   This MCP attach is mandatory before emitting the coding-agent prompt. If the MCP call fails, stop with `partial`; report the worktree path and the attach error, and keep `continuationStatus: "active"` so the Squad Leader does not close the implementation lane.
+   This MCP attach is mandatory before post-setup work. If the MCP call fails, stop with `partial`; report the worktree path and the attach error, and keep `continuationStatus: "active"` so the Squad Leader does not close the implementation lane.
 
-4. Emit a **session prompt** (see [Session prompt structure](#session-prompt-structure)).
-
-5. **Stop.**
+4. **Branch** per [Execution mode after worktree attach](#execution-mode-after-worktree-attach):
+   - **Spawned implementation lane** → continue with [Spawned implementation lane](#spawned-implementation-lane) (steps 1–6 there).
+   - **Prompt-only handoff** → [Prompt-only handoff](#prompt-only-handoff).
 
 ## Multi-repo flow (shared branch name)
 
@@ -216,9 +258,9 @@ When the plan’s **Worktree setup** lists two or more repos, or the user asks f
 
 3. **`plan-state.mjs set-worktrees`** with one JSON entry per repo; **`set-session --focus`** to the workspace file **or** primary worktree path per your team convention (must stay consistent with **`resolve --cwd`** expectations in **planning-target-resolution**).
 
-4. Emit **one session prompt per repo** (each with its own **Project rules** list and a **scope guard**: only edit under that repo’s worktree path).
+4. **Branch** per [Execution mode after worktree attach](#execution-mode-after-worktree-attach) (spawned lane implements each repo’s scope in turn, or prompt-only emits **one session prompt per repo** with per-repo scope guards).
 
-5. **Stop.**
+5. **Prompt-only:** **Stop** after prompts. **Spawned lane:** continue implementation per repo scope before cut point.
 
 Cleanup when PRs merge: **`sedea_remove_worktree_folder`**, **`git worktree remove`**, **`plan-state.mjs prune-sessions`**, and **`plan-reconcile`** per **development-process** and **efficient-pr-shipping** — not repeated here.
 
@@ -341,6 +383,7 @@ When this skill runs as a spawned child, end with a child result containing at l
 - `outputs.worktrees` (array of `{repo, path, branch, attached}`)
 - `outputs.branchName`
 - `outputs.sessionPromptEmitted`
+- `outputs.implementationMode` — `spawned-lane` \| `prompt-only`
 - `outputs.prePrReviewStatus`
 - `outputs.prePrReviewRecommendation`
 - `outputs.reviewBlockers`
@@ -370,13 +413,14 @@ When this skill runs as a spawned child, end with a child result containing at l
 
 Set `outputs.continuationStatus` as follows:
 
-- `active` when worktrees are created and prompts emitted; implementation is now waiting on the coding agent lane.
+- `active` when **spawned implementation lane** is coding, reviewing, or waiting on developer approval on **this** lane.
+- `active` when **prompt-only** setup finished and an external coding agent (or a later message on this lane) still owns implementation before cut point.
 - `active` when pre-pr-review returns blockers and developer approval for fixes is pending.
 - `active` when approved review fixes, a new committed cut point, or re-review remains.
 - `active` when PR review comments, developer approval, fixes, commit/push, or GitHub reconciliation remain.
 - `active` when PR merge, deploy-walk, deploy checklist, or deploy capstone todo remains.
 - `active` when worktrees exist but Mission Control attach or prompt emission still needs repair.
-- `terminal` only when this branch is explicitly scoped to worktree/prompt setup and those setup tasks are complete with no active coding lane tracked by this dispatch.
+- `terminal` only for **prompt-only** runs when worktree/prompt setup is complete and no implementation is tracked on this dispatch, or when explicitly abandoned with no active work.
 - `partial` status with `continuationStatus: "active"` when readiness, repo selection, dirty tree, base branch, sidecar write, or MCP attach blocks setup.
 
 Do not propose dispatch resolution from this skill; the Squad Leader closes the ledger after coding, review, PR, and deploy verification report terminal status.
@@ -387,8 +431,8 @@ This skill usually runs **off** the **plan and deliver** leader lane. The Squad 
 
 | Milestone in this skill | Suggested `shipPhase` | Copy from `outputs` |
 |-------------------------|----------------------|---------------------|
-| Worktrees attached + prompt emitted | `worktree` | `targetPlanPath`, `worktrees`, `developerApprovedImplementation: true`, `remainingTasks` |
-| Implementation / review loop in progress | `implementing` | `targetPlanPath`, `prePrReviewRecommendation`, `prReviewStatus` |
+| Worktrees attached; setup complete (`implementationMode: prompt-only` or pre-code) | `worktree` | `targetPlanPath`, `worktrees`, `developerApprovedImplementation: true`, `remainingTasks` |
+| Spawned lane implementing or review loop in progress | `implementing` | `targetPlanPath`, `implementationMode: spawned-lane`, `prePrReviewRecommendation`, `prReviewStatus` |
 | Pre-PR **go** | `pre-pr-review` | `targetPlanPath`, `prePrReviewRecommendation: go` |
 | PR opened | `pr-open` | `targetPlanPath`, `prUrl`, `prNumber` |
 | PR comment triage complete | `pr-review` | `targetPlanPath`, `prReviewStatus`, `githubReconciliationStatus` |
@@ -513,4 +557,4 @@ Stop after the terminal line. Do not emit another `AGENT_RUN_REQUEST_V1` or run 
 
 Report the fields below in prose to the invoker on the **same lane**. Do **not** emit `AGENT_RUN_REQUEST_V1`, `AGENT_RESULT_RESPONSE_V1`, or `MC_DISPATCH_RESOLVED_V1`. Do **not** add a **Host protocol line** under this section (see **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Inline completion* and **`.sedea/centers/sedea/skills/README.md`** § *Completion (inline)*).
 
-**plan and deliver** normally spawns this skill on a detached lane. If run inline, use the same `outputs` semantics as **## Implementation handoff result** and **`## Completion (spawned)`** in prose only (merge **`pr-review`** inline fields when that sub-flow ran).
+**plan and deliver** normally spawns this skill on a **child lane** — default **spawned implementation lane**, not prompt-only. If run inline, use the same `outputs` semantics as **## Implementation handoff result** and **`## Completion (spawned)`** in prose only (merge **`pr-review`** inline fields when that sub-flow ran).
