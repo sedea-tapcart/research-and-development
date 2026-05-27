@@ -187,6 +187,18 @@ Normative path when **`pr-plan`** (or another spawner) opens a **coding-session*
 5. **Continuation** — Keep `outputs.continuationStatus: "active"` and `outputs.shipPhase: "implementing"` while work remains. Emit **`AGENT_RESULT_RESPONSE_V1`** with `status: partial` when blocked; do **not** use `continuationStatus: terminal` to mean “prompt emitted — hand off elsewhere.”
 6. **Cut point** — When implementation is ready for review, follow [Pre-PR review handoff](#pre-pr-review-handoff) on **this same lane**.
 
+## Deploy test plan confirmations
+
+When the developer **confirms** a numbered step in the anchored PR plan’s **`## N. Deploy test plan`** (§7 **`### Before deploy`** or **`### After deploy`**), treat chat as **not** the system of record — same contract as **`deploy-walk`**: state lives in the plan file.
+
+1. **Resolve `targetPlanPath`** — from spawn `inputs`, `plan-state.mjs resolve --cwd "<worktreePath>"`, or an explicit `@path` in the message. If multiple plans could apply, use **AskQuestion** once for **which plan** or **which step number** — not whether to persist.
+2. **Same-turn file edit** — before the reply ends, patch the matching §7 line: flip `[ ]` → `[x]` for that step number. Optionally append a short dated note on the line or under §7 (for example `— confirmed YYYY-MM-DD`).
+3. **Reply** — state the **absolute `targetPlanPath`** you edited and which step numbers were checked.
+4. **Do not** tell the developer “you can mark” or “likely done” without editing when you can write the operations plan. If you cannot write (permissions, wrong repo, missing path), say why and offer **`deploy-walk present 7`** / **`deploy-walk <N> done`** or a concrete absolute path.
+5. **Terminal `outputs`** — when you emit **`AGENT_RESULT_RESPONSE_V1`** in the same turn after edits, include `outputs.deployPlanStepsChecked` (array of step numbers, e.g. `[1,2,3]`) and `outputs.targetPlanPath`.
+
+**Trigger examples:** “1 confirmed”, “step 2 done”, “3. confirmed” (numbered §7 items). Do not infer confirmation from vague chat (“looks good”) without an explicit step reference — use **AskQuestion** for the step number if needed.
+
 ## Prompt-only handoff
 
 Reserved when this run is **not** a spawned implementation lane (see table above).
@@ -400,6 +412,7 @@ When this skill runs as a spawned child, end with a child result containing at l
 - `outputs.mergedAt`
 - `outputs.deployStatus`
 - `outputs.deployTodoStatus`
+- `outputs.deployPlanStepsChecked` — step numbers flipped to `[x]` in §7 during this turn (when applicable)
 - `outputs.prReviewStatus`
 - `outputs.prReviewComments`
 - `outputs.prReviewDispositions`
