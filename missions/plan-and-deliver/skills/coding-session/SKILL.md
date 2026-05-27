@@ -141,6 +141,8 @@ Otherwise:
 
 **Layer 2 — single AskQuestion** before any `git worktree add`, sidecar session write, Mission Control worktree attach, or coding-agent prompt emission.
 
+**Turn boundary:** Summarize completeness / plan path in **Turn A** (information-only) when needed; run this gate in **Turn B** only (`MC_ASKQUESTION_V1` = sentinel + JSON, no leading prose). See **`../README.md`** § *Turn A / B / C* and **`.cursor/rules/mission-control-agent-runtime.mdc`**.
+
 **When `planCompleteness: complete`** (or validation skipped / override already in the user message), required options:
 
 - **Start implementation now**

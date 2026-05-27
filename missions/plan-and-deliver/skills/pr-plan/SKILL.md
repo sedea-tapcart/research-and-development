@@ -328,14 +328,24 @@ However:
 - If parent link is blocked, keep `continuationStatus: "active"` until **`plan-reconcile`** repairs it or the upstream agent explicitly accepts the partial state.
 - Do not run worktrees or implementation on this lane; spawn **`coding-session`** only per §5d.
 
-### 5c — Hand back (information-only + AskQuestion)
+### 5c — Hand back (Turn A + Turn B)
 
-**Transcript boundary:** One assistant turn with (1)–(2) only — no **AskQuestion** in the same message. A **separate** turn runs **AskQuestion** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`**.
+Run **Turn A** and **Turn B** as **separate assistant turns** (see **`../README.md`** § *Turn A / B / C*).
+
+#### Turn A — Information-only
+
+Do **not** include **AskQuestion**, **`MC_ASKQUESTION_V1`**, **`AGENT_RUN_REQUEST_V1`**, or **`AGENT_RESULT_RESPONSE_V1`** in Turn A.
 
 1. A **`file://`** link to the target `.plan.md` under `.sedea/operations/.../plans/...`.
 2. One-line summary: *Drafted per-PR §§ 1–4; implementation readiness: `<ready|not ready>`; §§ 5–8 remain **`_TBD_`** for **`coding-session`** unless you request a fill sketch.*
 
-**Next turn — AskQuestion** (`modalTitle`: *PR plan — next move*). Required options (brief `label`; put detail in `prompt` when needed):
+Do **not** echo the full §§ 1–4 body in chat unless the developer asked for a fill sketch in the same flow.
+
+#### Turn B — AskQuestion (next turn)
+
+**Next turn only** — invoke **AskQuestion** or **`MC_ASKQUESTION_V1`** (`modalTitle`: *PR plan — next move*). When using **`MC_ASKQUESTION_V1`**, sentinel + JSON only — no prose before the sentinel.
+
+Required options (brief `label`; put detail in `prompt` when needed):
 
 | Option id | Label |
 |-----------|--------|

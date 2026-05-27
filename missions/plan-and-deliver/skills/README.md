@@ -12,6 +12,20 @@ When a skill runs **inline** on the invoker’s lane (not spawned via **`AGENT_R
 
 **plan and deliver** normally spawns planning and ship skills on child lanes; inline sections exist for dual-mode authoring and rare same-lane runs. **`pr-review`** is **inline-only** (no **`## Completion (spawned)`**).
 
+## Turn A / B / C (plan-and-deliver)
+
+Mission Control **transcript boundary** for skills that mix long plan output with structured user choice. Canonical Sedea rules: **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`**. Hosting-repo runtime: **`.cursor/rules/mission-control-agent-runtime.mdc`**.
+
+| Turn | Purpose | This turn must not include |
+|------|---------|----------------------------|
+| **A — Context** | Plan link, one-line summary, optional short recap | `MC_ASKQUESTION_V1`, AskQuestion tool, `AGENT_RUN_REQUEST_V1`, `AGENT_RESULT_RESPONSE_V1` (unless Turn C of that skill) |
+| **B — Question** | AskQuestion or `MC_ASKQUESTION_V1` only | Prose, plan body echo, numbered menus, fences before sentinel |
+| **C — Act** | Spawn, terminal result, implementation | Combining A and B in one message |
+
+**Reference implementation:** **`pr-breakdown`** §5d–§6 (Turn A notify → Turn B approval → Turn C spawn). **`pr-plan`** §5c–§5d, **`master-plan`** §7a–§7c, **`delivery-phases`** §5d–§6 follow the same pattern.
+
+**Ship skills:** use Turn B for worktree-open, review approval, and create-PR gates; keep Turn A for status or diff recap only.
+
 ## Planning spawn (Squad Leader §3, §5, decomposition tree)
 
 Squad Leader steps **§3** and **§5** and downstream decomposition agents run these skills **spawned** on child lanes. Each file has **`## Completion (spawned)`** and **`## Completion (inline)`** (inline is unused on standard leader spawn for most of these).

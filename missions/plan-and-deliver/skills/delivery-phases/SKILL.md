@@ -160,41 +160,58 @@ Do **not** modify other sections in the same call. Do **not** add extra `## <N>.
 
 After writing, read the file back and confirm the section reads as intended.
 
-### 5d — Echo to chat
+### 5d — Notify draft (Turn A — information-only)
 
-Echo the drafted section so the developer can review without opening the file. Mirror the file’s headings and list shape.
+**Mission Control transcript boundary:** This turn is **information-only**. Do **not** include **`MC_ASKQUESTION_V1`**, the **AskQuestion** tool, **`AGENT_RESULT_RESPONSE_V1`**, or **`AGENT_RUN_REQUEST_V1`** here.
+
+After step **5c**, end Turn A with **only**:
+
+1. A **`file://`** link to the target `.plan.md` under `.sedea/operations/.../plans/...`.
+2. One line: *Drafted `## <N>. Delivery phases` with **K** child rows — open the plan to review the full section.*
+
+Do **not** mirror the full **`Delivery phases`** body in chat. Count **K** from numbered rows before Turn B.
 
 ## Step 6 — Hand back with next-move options
 
-End with:
+Run **Turn B** and **Turn C** as **separate assistant turns**. Never combine Turn A, Turn B, and Turn C in one message.
 
-1. A **`file://`** link to the target `.plan.md` under `.sedea/operations/.../plans/...` (use the resolved absolute path from **`plan-state resolve`** or equivalent).
-2. A one-line summary: *Drafted `## <N>. Delivery phases` with **K** child rows.*
-3. **Numbered options** (adapt labels; offer **AskQuestion** when it clarifies). After drafting **K** rows, keep **K** visible in the summary so the developer knows how many indexed children exist.
+### Turn B — Approval (interactive only)
 
-   1. **Spawn phase children (`new-plan`, indexed)** — For each list index **1** through **K**, this agent can emit a child-spawn request for the **`new-plan`** protocol branch with this plan as parent and that index (digit-only **N** per session contract in **`new-plan`** § *Indexed child spawn*). Each run creates the child stub and wires the parent **`Plan:`** line when the flow completes.
-   2. **`phase-plan` on a child** — After a child `.plan.md` exists, ignite **`phase-plan`** on that path to draft §§ 1–4 and **`### Decomposition assessment`**.
-   3. **Revise this `Delivery phases` section** — The developer gives free-text feedback; you apply one focused `StrReplace` on the list and echo the result.
-   4. **Switch to `pr-breakdown`** — If work should skip the phase layer after all, hand off to **`pr-breakdown`** (do not silently change the heading unless step 4 already chose PR breakdown or the developer explicitly asks here).
-   5. **Commit when ready** — Remind the developer to commit; this skill does **not** run `git`.
+In a **new** assistant turn after Turn A, collect the developer’s choice via **AskQuestion** or **`MC_ASKQUESTION_V1`** only.
 
-When running as a spawned downstream agent under `master-plan`, mission dispatch **does** explicitly continue:
+- When using **`MC_ASKQUESTION_V1`**, the message must contain **only** the sentinel line and JSON object — **no** prose, plan recap, or markdown fences before or between the sentinel and JSON.
+- Put every choosable path in **`options`** (`id` / `label`). Do **not** duplicate choices as a numbered prose menu in the same turn.
 
-1. After drafting the phase list, count the numbered rows as **K**.
-2. Present the drafted `Delivery phases` section to the developer and use **AskQuestion** before creating child plans. Required options:
-   - **Approve phase list and spawn children**
-   - **Revise phase list first**
-   - **Defer child plan creation**
-   - **Abandon this branch**
-   - **More details for option _**
-3. Only when the developer chooses **Approve phase list and spawn children**, emit one child-spawn request per phase row for `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/new-plan/SKILL.md`.
-4. Each request's inputs must include `mode: "indexed-child"`, `parentPlanPath`, `parentPlanSlug`, `index`, `childKind: "phase-plan"`, `requestedPopulatorSkill: "phase-plan"`, `ledgerParent`, `upstreamSkill: "delivery-phases"`, and `decompositionKind: "delivery-phases"`.
-5. Record each spawned child as an open ledger entry keyed by correlation id plus `(parentPlanSlug, index)` with status `active`.
-6. Announce that this agent is waiting for **K** indexed child results and stop. Do not return terminal success upstream until every spawned `new-plan` lane has returned terminal status or the developer explicitly defers/abandons the remaining rows.
+Required **`options`** (adapt labels; keep **K** visible in the **`prompt`** when helpful):
 
-If **K = 0**, treat that as a drafting failure: do not spawn children; return failure or partial with an error explaining that no phase rows were created.
+| Option id (illustrative) | Label (brief) |
+| --- | --- |
+| `approve-spawn` | Approve phase list and spawn children |
+| `revise` | Revise phase list first |
+| `defer` | Defer child plan creation |
+| `abandon` | Abandon this branch |
+| `more-details` | More details for option _ |
 
-For standalone/non-spawned use, re-offer the same structure after iteration and stop after this block — wait for the developer’s next message.
+**Spawned under `master-plan`:** Turn B is mandatory before indexed child spawns. Do **not** emit **`AGENT_RESULT_RESPONSE_V1`** in Turn B.
+
+**Standalone:** After Turn B, **stop** and wait for the developer’s next message.
+
+### Turn C — Act on choice (after developer replies)
+
+In a **new** assistant turn after Turn B:
+
+| Choice | Action |
+| --- | --- |
+| **Approve phase list and spawn children** | Emit one **`AGENT_RUN_REQUEST_V1`** per phase row **1…K** for `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/new-plan/SKILL.md`. Record each spawned child in the ledger. Announce waiting for **K** results. Then emit **`AGENT_RESULT_RESPONSE_V1`** with `continuationStatus: "active"` — **not** in Turn A or Turn B. |
+| **Revise phase list first** | Apply one focused `StrReplace` on the list, then repeat Turn A → Turn B. |
+| **Defer / abandon** | Emit terminal result per labels; do not spawn. |
+| **More details for option _** | Elaborate (information-only), then run Turn B again. |
+
+When running as a spawned downstream agent under `master-plan`, each **`AGENT_RUN_REQUEST_V1`** in Turn C must include `mode: "indexed-child"`, `parentPlanPath`, `parentPlanSlug`, `index`, `childKind: "phase-plan"`, `requestedPopulatorSkill: "phase-plan"`, `ledgerParent`, `upstreamSkill: "delivery-phases"`, and `decompositionKind: "delivery-phases"`. Record each spawned child in the ledger; announce waiting for **K** results.
+
+If **K = 0**, treat that as a drafting failure: do not run Turn B spawn paths; return failure or partial.
+
+For standalone/non-spawned use, re-offer Turn A → Turn B after iteration.
 
 ## Step 6a — Follow-up turns
 
