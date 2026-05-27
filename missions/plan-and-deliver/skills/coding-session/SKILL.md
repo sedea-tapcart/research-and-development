@@ -90,6 +90,21 @@ Approval gates and branch picks use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**
 
 On **[Spawned implementation lane](#spawned-implementation-lane)**, **this lane** edits the hosting repo under the worktree through the implementation cut point — do not tell the developer to paste a session prompt into another chat. On **prompt-only** runs, emit the external prompt and **stop** without implementing here.
 
+### Spawned lane — sentinel-first (binding)
+
+On spawned **`coding-session`** lanes the **AskQuestion tool** is usually **unavailable**. Before the [Worktree-open gate](#worktree-open-gate), [Worktree-open gate (pr-plan spawn handoff)](#worktree-open-gate-pr-plan-spawn-handoff), and [Pre-PR cut-point gate](#pre-pr-cut-point-gate):
+
+1. **Self-check:** the assistant message **starts** with **`MC_PHASED_RESPONSE_V1`** (or sentinel-only **`MC_ASKQUESTION_V1`**) — **no** recap prose before the sentinel.
+2. Put required recap lines in **`display.markdown`** only (see pr-plan spawn handoff recap below).
+3. Copy-paste template for pr-plan spawn **worktree-open** gate (replace `<recap>` when validation adds a line):
+
+```
+MC_PHASED_RESPONSE_V1
+{"version":1,"display":{"markdown":"<recap>"},"askQuestion":{"modalTitle":"Coding session — start implementation","questions":[{"id":"worktree-open","prompt":"Authorize worktree and implementation on this lane?","allowMultiple":false,"options":[{"id":"continue-fill-5-8","label":"Continue — fill §§5–8 while implementing"},{"id":"revise-plan","label":"Revise PR plan first"},{"id":"change-repo","label":"Change repo or branch settings"},{"id":"defer","label":"Defer implementation"},{"id":"more-details","label":"More details for option _"}]}]}}
+```
+
+Default **`<recap>`** for pr-plan spawn: *Planning handoff complete (§§1–4). §§5–8 fill on this lane during implementation.*
+
 ## Relationship to `pr-plan`
 
 | Concern | **`pr-plan`** | **`coding-session`** (this skill) |
@@ -171,7 +186,7 @@ Otherwise:
 
 **Layer 2 — single AskQuestion** before any `git worktree add`, sidecar session write, Mission Control worktree attach, or coding-agent prompt emission.
 
-**Recap and structured choice:** Summarize completeness / plan path in a brief **recap** when helpful. Open this gate via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** (recap in `display.markdown`), or **sentinel-only** **`MC_ASKQUESTION_V1`** — prefer one message for recap + modal. See **`../README.md`** § *Recap, structured choice, act (plan-and-deliver)*, **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`**, and **`.cursor/rules/mission-control-agent-runtime.mdc`**.
+**Recap and structured choice:** Summarize completeness / plan path in **`display.markdown`** when using **`MC_PHASED_RESPONSE_V1`**. On spawned lanes, **`MC_PHASED_RESPONSE_V1` must be line 1** — see [Spawned lane — sentinel-first (binding)](#spawned-lane--sentinel-first-binding). Open this gate via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **sentinel-only** **`MC_ASKQUESTION_V1`** — prefer one message for recap + modal. See **`../README.md`** § *Recap, structured choice, act (plan-and-deliver)*, **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`**, and **`.cursor/rules/mission-control-agent-runtime.mdc`**.
 
 **Branch first:** when [pr-plan spawn handoff detection](#pr-plan-spawn-handoff-detection) applies, use [Worktree-open gate (pr-plan spawn handoff)](#worktree-open-gate-pr-plan-spawn-handoff) below — even when `planCompleteness: complete`. Otherwise use the generic tables in this section.
 

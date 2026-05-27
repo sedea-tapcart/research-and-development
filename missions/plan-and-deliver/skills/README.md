@@ -38,6 +38,8 @@ Mission Control delivery for skills that mix long plan output with structured us
 
 **Lane pick (no resolved target):** emit *Where we are now in the plan tree* snapshot, then structured choice per **30_planning-target-resolution** § *Sedea input channel* (phased or split — not prose menus).
 
+**Spawned child lanes:** Cloud/spawned agents usually lack the native AskQuestion tool. On structured-choice turns, **`MC_PHASED_RESPONSE_V1` must be line 1** — recap only in **`display.markdown`**, never prose before the sentinel. See **`.cursor/rules/mission-control-agent-runtime.mdc`** § *Spawned child lanes — sentinel-first (binding)* and **`coding-session/SKILL.md`** § *Structured choice* for gate templates.
+
 ## Planning spawn (Squad Leader §3, §5, decomposition tree)
 
 Squad Leader steps **§3** and **§5** and downstream decomposition agents run these skills **spawned** on child lanes. Each file has **`## Completion (spawned)`** and **`## Completion (inline)`** (inline is unused on standard leader spawn for most of these).
