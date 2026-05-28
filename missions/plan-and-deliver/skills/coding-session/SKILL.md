@@ -5,7 +5,7 @@ description: >-
   record worktrees and session focus in the plan sidecar via plan-state.mjs, attach the
   worktree in the same Sedea workbench (Mission Control sedea_add_worktree_folder per
   20_efficient-pr-shipping.mdc), then run **`scripts/bootstrap-worktree-dev.sh`** on
-  **`WORKTREE_ROOT`** before implementation. On a **spawned child lane** with layer-2 approval,
+  **`WORKTREE_ROOT`** before implementation.   On a **spawned child lane** with layer-2 approval (or **pr-plan** spawn auto-authorize),
   **implement the anchored PR plan on this lane** in that worktree; on **prompt-only**
   entry, emit a copy/paste-safe two-phase session prompt for a separate coding chat.
   After the implementation cut point run the **Pre-PR cut-point gate** (diff review, optional
@@ -60,7 +60,13 @@ inputs:
     type: string
     description: >-
       When "sections-1-4-complete" (from pr-plan §5d spawn), §§5–8 may stay _TBD_;
-      use Worktree-open gate (pr-plan spawn handoff), not executive-override framing.
+      use auto-authorize or pr-plan spawn handoff gate, not executive-override framing.
+    required: false
+  planningHandoffApproved:
+    type: boolean
+    description: >-
+      Layer 1 approval from pr-plan §5c Start coding session. When true with
+      planningHandoffMode, waives worktree-open AskQuestion when §§1–4 are drafted.
     required: false
   promptOnly:
     type: boolean
@@ -93,7 +99,7 @@ On **[Spawned implementation lane](#spawned-implementation-lane)**, **this lane*
 
 ### Spawned lane — sentinel-first (binding)
 
-On spawned **`coding-session`** lanes the **AskQuestion tool** is usually **unavailable**. Before the [Worktree-open gate](#worktree-open-gate), [Worktree-open gate (pr-plan spawn handoff)](#worktree-open-gate-pr-plan-spawn-handoff), and [Pre-PR cut-point gate](#pre-pr-cut-point-gate):
+On spawned **`coding-session`** lanes the **AskQuestion tool** is usually **unavailable**. Before the [Worktree-open gate](#worktree-open-gate), [Worktree-open gate (pr-plan spawn handoff)](#worktree-open-gate-pr-plan-spawn-handoff), and [Pre-PR cut-point gate](#pre-pr-cut-point-gate) — **unless** [Auto-authorize implementation (pr-plan spawn)](#auto-authorize-implementation-pr-plan-spawn) applies (no modal; proceed to worktrees):
 
 1. **Self-check:** the assistant message **starts** with **`MC_PHASED_RESPONSE_V1`** (or sentinel-only **`MC_ASKQUESTION_V1`**) — **no** recap prose before the sentinel.
 2. Put required recap lines in **`display.markdown`** only (see pr-plan spawn handoff recap below).
@@ -123,7 +129,7 @@ Treat this run as a **pr-plan spawn handoff** when **either**:
 - `inputs.planningHandoffMode === "sections-1-4-complete"`, or
 - `inputs.upstreamSkill === "pr-plan"` **and** `inputs.readyForImplementation === true`.
 
-When true, follow [Spawned from `pr-plan` (expected incomplete)](#spawned-from-pr-plan-expected-incomplete) and [Worktree-open gate (pr-plan spawn handoff)](#worktree-open-gate-pr-plan-spawn-handoff) — not the generic incomplete gate with “executive override” labels.
+When true, follow [Spawned from `pr-plan` (expected incomplete)](#spawned-from-pr-plan-expected-incomplete). After [Pre-worktree validation](#pre-worktree-validation-plan-completeness), use [Auto-authorize implementation (pr-plan spawn)](#auto-authorize-implementation-pr-plan-spawn) when eligible — otherwise [Worktree-open gate (pr-plan spawn handoff)](#worktree-open-gate-pr-plan-spawn-handoff) — not the generic incomplete gate with “executive override” labels.
 
 ### Spawned from `pr-plan` (expected incomplete)
 
@@ -132,7 +138,7 @@ When [pr-plan spawn handoff detection](#pr-plan-spawn-handoff-detection) applies
 1. Do **not** say the PR plan is “not fully populated,” “incomplete planning,” “not ready,” or that **`pr-plan`** failed.
 2. Say: *Planning handoff complete (§§1–4). §§5–8 fill on this lane during implementation.*
 3. After **`plan-ws-completeness.mjs`** → `INCOMPLETE` (optional second stdout line `EXPECTED_SECTIONS_5_8_TBD`), treat as **expected**, not a defect — do **not** send the developer back to **`pr-plan`** unless they choose **Revise PR plan first** or **Stop — I'll complete the plan first** (detached / snapshot entry only — demoted on pr-plan spawn path).
-4. At the [Worktree-open gate (pr-plan spawn handoff)](#worktree-open-gate-pr-plan-spawn-handoff), use the required recap and **Continue — fill §§5–8 while implementing** as the default authorizing choice — not “executive override” wording.
+4. When [Auto-authorize implementation (pr-plan spawn)](#auto-authorize-implementation-pr-plan-spawn) does **not** apply, the [Worktree-open gate (pr-plan spawn handoff)](#worktree-open-gate-pr-plan-spawn-handoff) uses **Continue — fill §§5–8 while implementing** as the default authorizing choice — not “executive override” wording.
 
 ## Plan-anchored context (optional inputs)
 
@@ -148,15 +154,15 @@ Only **two** developer-consent layers apply before worktrees. Do not stack extra
 
 | Layer | Where decided | Output field | This skill |
 |-------|---------------|--------------|------------|
-| **1 — Planning handoff** | **`pr-plan`** §5c **Start coding session** + §5d spawn `inputs` | `readyForImplementation` | Hint only; **do not** re-ask. Does **not** authorize worktrees or advance **`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`** §8 `phase` past `not-started`. |
-| **2 — Worktree open** | [Worktree-open gate](#worktree-open-gate) below (one **AskQuestion**) | `developerApprovedImplementation` | Set `true` only after an authorizing choice in that gate. |
+| **1 — Planning handoff** | **`pr-plan`** §5c **Start coding session** + §5d spawn `inputs` | `readyForImplementation`, `planningHandoffApproved` | Hint only; **do not** re-ask. Does **not** authorize worktrees or advance **`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`** §8 `phase` past `not-started`. |
+| **2 — Worktree open** | [Worktree-open gate](#worktree-open-gate) **or** [Auto-authorize implementation (pr-plan spawn)](#auto-authorize-implementation-pr-plan-spawn) | `developerApprovedImplementation` | Set `true` after an authorizing gate choice **or** auto-authorize when spawn handoff + §§1–4 drafted (see below). |
 
 **Not consent layers** (validation / setup only — no separate approval **AskQuestion**):
 
 - **`plan-ws-completeness.mjs`** — script check; incomplete plans are handled inside the worktree-open gate (override option), not a second gate.
 - **Repo selection** — **AskQuestion** only when `repoPath` / `repoPaths` are missing.
 
-`inputs.developerApprovedImplementation` is never a substitute for layer 2; ignore upstream `true` until the developer picks an authorizing worktree-open option in **this** run.
+`inputs.developerApprovedImplementation` is never a substitute for layer 2 on **detached** entry; ignore upstream `true` until the developer picks an authorizing worktree-open option **or** [Auto-authorize implementation (pr-plan spawn)](#auto-authorize-implementation-pr-plan-spawn) applies on this run.
 
 ## Pre-worktree validation (plan completeness)
 
@@ -181,15 +187,45 @@ Otherwise:
    - Exit **1** (`INCOMPLETE`) → `planCompleteness: incomplete` — **do not** create worktrees yet; route to the worktree-open gate (pr-plan spawn handoff vs generic incomplete).
    - When [pr-plan spawn handoff detection](#pr-plan-spawn-handoff-detection) applies, `INCOMPLETE` is **expected** (§§5–8 still `_TBD_` by design). If stdout includes `EXPECTED_SECTIONS_5_8_TBD`, treat as the normal §5d handoff. Use [Spawned from `pr-plan` (expected incomplete)](#spawned-from-pr-plan-expected-incomplete) wording — not “plan not fully populated.”
 
-**Multi-repo:** run the script **once** on the shared plan before the worktree-open gate.
+**Multi-repo:** run the script **once** on the shared plan before the worktree-open gate or auto-authorize branch.
+
+## Auto-authorize implementation (pr-plan spawn)
+
+**Layer 2 waived** — no worktree-open **AskQuestion** / **`MC_PHASED_RESPONSE_V1`** / **`MC_ASKQUESTION_V1`** when the developer already approved **Start coding session** on the **`pr-plan`** lane and the PR plan is ready to implement.
+
+### Eligibility (all required)
+
+1. [pr-plan spawn handoff detection](#pr-plan-spawn-handoff-detection) applies.
+2. `inputs.planningHandoffApproved === true` **or** (`inputs.readyForImplementation === true` **and** `inputs.upstreamSkill === "pr-plan"`).
+3. `inputs.promptOnly` is not `true`.
+4. `inputs.repoPath` or non-empty `inputs.repoPaths` is present.
+5. After [Pre-worktree validation](#pre-worktree-validation-plan-completeness), **either**:
+   - `planCompleteness: complete` (`plan-ws-completeness.mjs` exit **0** / `OK`), **or**
+   - `planCompleteness: incomplete` **and** stdout included `EXPECTED_SECTIONS_5_8_TBD` (§§ **1–4** drafted; §§ **5–8** may stay `_TBD_`).
+
+### When eligibility fails
+
+| Failure | Action |
+|---------|--------|
+| §§ **1–4** still contain `_TBD_` (incomplete without `EXPECTED_SECTIONS_5_8_TBD`) | [Worktree-open gate](#worktree-open-gate) — generic incomplete options; do **not** auto-authorize |
+| `readyForImplementation: false` or `planningHandoffApproved` not set | [Worktree-open gate (pr-plan spawn handoff)](#worktree-open-gate-pr-plan-spawn-handoff) or generic gate |
+| Missing `repoPath` / `repoPaths` | **AskQuestion** once for repo only — not a second planning-approval round |
+| Detached / snapshot entry (no spawn handoff) | [Worktree-open gate](#worktree-open-gate) — layer 2 required |
+
+### When eligible — act without modal
+
+1. Set `outputs.developerApprovedImplementation: true` and `outputs.planCompleteness` from validation.
+2. State one informational line (no modal): *Planning handoff approved on **pr-plan** lane. §§1–4 ready — implementing; §§5–8 fill on this lane as code lands.* When `planCompleteness: complete`, use: *PR plan complete — implementing.*
+3. Proceed immediately to [Generic flow](#generic-flow) (worktree add, sidecar, attach, bootstrap) — then [Spawned implementation lane](#spawned-implementation-lane).
+4. Do **not** emit **`MC_PHASED_RESPONSE_V1`** for worktree-open on this path.
 
 ## Worktree-open gate
 
-**Layer 2 — single AskQuestion** before any `git worktree add`, sidecar session write, Mission Control worktree attach, or coding-agent prompt emission.
+**Layer 2 — single AskQuestion** before any `git worktree add`, sidecar session write, Mission Control worktree attach, or coding-agent prompt emission — **skip** when [Auto-authorize implementation (pr-plan spawn)](#auto-authorize-implementation-pr-plan-spawn) applies.
 
 **Recap and structured choice:** Summarize completeness / plan path in **`display.markdown`** when using **`MC_PHASED_RESPONSE_V1`**. On spawned lanes, **`MC_PHASED_RESPONSE_V1` must be line 1** — see [Spawned lane — sentinel-first (binding)](#spawned-lane--sentinel-first-binding). Open this gate via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **sentinel-only** **`MC_ASKQUESTION_V1`** — prefer one message for recap + modal. See **`../README.md`** § *Recap, structured choice, act (plan-and-deliver)*, **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`**, and **`.cursor/rules/mission-control-agent-runtime.mdc`**.
 
-**Branch first:** when [pr-plan spawn handoff detection](#pr-plan-spawn-handoff-detection) applies, use [Worktree-open gate (pr-plan spawn handoff)](#worktree-open-gate-pr-plan-spawn-handoff) below — even when `planCompleteness: complete`. Otherwise use the generic tables in this section.
+**Branch first:** when [Auto-authorize implementation (pr-plan spawn)](#auto-authorize-implementation-pr-plan-spawn) applies, **skip this entire section**. When [pr-plan spawn handoff detection](#pr-plan-spawn-handoff-detection) applies but auto-authorize does not, use [Worktree-open gate (pr-plan spawn handoff)](#worktree-open-gate-pr-plan-spawn-handoff) below — even when `planCompleteness: complete`. Otherwise use the generic tables in this section.
 
 ### Worktree-open gate (pr-plan spawn handoff)
 
