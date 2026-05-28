@@ -104,9 +104,10 @@ git diff --stat <baseRef>...HEAD
 git log --oneline <baseRef>..HEAD
 git diff <baseRef>...HEAD
 git status --short
+git status --short --ignore-submodules=dirty
 ```
 
-If `git status --short` is non-empty, continue against the committed diff but flag that local edits are not part of the reviewed cut point.
+If `git status --short` is non-empty, continue against the committed diff but evaluate dirty-tree degradation using `git status --short --ignore-submodules=dirty` (aligns with `.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc` submodule-only drift guidance). Only non-submodule local edits should be flagged as not part of the reviewed cut point.
 
 If there are zero commits ahead and no diff, stop with `failure`: there is nothing to review.
 
@@ -189,7 +190,7 @@ Set `continuationStatus`:
 
 - `terminal` when recommendation is `go` and no blocking review work remains.
 - `active` when blockers require a coding-session fix loop and developer approval is pending.
-- `partial` status with `continuationStatus: "active"` when the review ran but missing rules, dirty uncommitted edits, or incomplete anchors make the result degraded.
+- `partial` status with `continuationStatus: "active"` when the review ran but missing rules, non-submodule dirty uncommitted edits, or incomplete anchors make the result degraded.
 
 Stop after the report. Do not run `git`, `gh`, source edits, commits, pushes, or PR creation.
 
