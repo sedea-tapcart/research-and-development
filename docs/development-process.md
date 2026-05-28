@@ -73,6 +73,16 @@ Two R&D flows produce requirements upstream of **`master-plan`**. Pick **one** r
 
 **Referenced skills:** **`ad-hoc-prd`**, **`author-prd`**; missions **`plan-and-deliver/plan.mdc`** §§1–2, **`prd/plan.mdc`**.
 
+### Sedea Hub Start New Plan vs Centers dispatch
+
+| Dispatch path | `missionInputs` on Hub command | Squad Leader §4 parent **AskQuestion** |
+| --- | --- | --- |
+| **Start New Plan** on a Sedea Hub `top_level_topic` row (`parentSlug === null`) | `parentSlug` required; Hub host resolves `parentPlanPath` into `dispatch.yaml` | **Skipped** when opening message includes **`### Parent (Sedea Hub)`** and **`Parent:`** line (see **`plan-and-deliver/plan.mdc`** §4 *Hub parent in opening message*) |
+| **Centers** mission launch from Hub (no parent context) | Omitted — Hub skips `missionInputs` validation when mission `plan.mdc` has no Hub block | **Unchanged** — parent **AskQuestion** when `Parent` not in opening message |
+| Manual **`plan and deliver`** in Mission Control (no Hub queue) | N/A | **Unchanged** |
+
+**Contract:** Only **`plan and deliver`** declares **`## Hub missionInputs`** in **`plan.mdc`** (keys `parentSlug`, `parentPlanPath`). Hub host reads that block generically; Mission Control renders **Parent** in the opening message when `missionInputs` is present (merged PRs **hub-start-new-plan**, **mc-parent-opening**). This PR (**plan-deliver-hub-intake**) adds §4 skip logic and Squad Leader echo — not Hub menu or MC template code.
+
 ### PRD intake — `plan and deliver` §2 vs `prd` mission
 
 The table above chooses **how to author** a PRD. This table chooses **which mission validates or loads** requirements before **`master-plan`**.

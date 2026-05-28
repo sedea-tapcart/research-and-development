@@ -146,6 +146,20 @@ flowchart TB
 
 **Legend:** yellow = Squad Leader executable steps; blue = spawned child lanes and their spawns; purple = cadence branches outside §§1–5 (see **Cadence reference** and `development-process.md`).
 
+## Hub missionInputs
+
+Sedea Hub may dispatch **`plan and deliver`** with an optional `missionInputs` bag on `RequestDispatchMissionCommand`. The Hub host validates the bag against this block when present; missions without this section skip validation (Centers and manual dispatches unchanged).
+
+| key | required |
+| --- | --- |
+| `parentSlug` | yes |
+| `parentPlanPath` | yes |
+
+- **`parentSlug`** — operations plan slug for the roadmap topic row the developer chose (**Start New Plan** on a `top_level_topic` with `parentSlug === null`). Hub sends this key; the host resolves **`parentPlanPath`** under `.sedea/operations/.../plans/` before validation.
+- **`parentPlanPath`** — workspace-relative path to the parent `.plan.md` (host-populated from **`parentSlug`**). Mission Control renders it in the Squad Leader opening message (see **§4** *Hub parent in opening message*).
+
+**Centers vs Hub:** **Start New Plan** from Sedea Hub includes **`parentSlug`** (and resolved **`parentPlanPath`** in `dispatch.yaml`). Centers mission launch and manual **`plan and deliver`** dispatches omit **`missionInputs`** — §4 parent **AskQuestion** behavior is unchanged when no Hub parent section appears in the opening message. See **`.sedea/centers/research-and-development/docs/development-process.md`** § *Sedea Hub Start New Plan vs Centers dispatch*.
+
 ## Protocol
 
 Session command phrases are declared in `mission.yaml`. **§§1–7** define Squad Leader routing for **planning** on **`plan and deliver`**. **§8** defines Squad Leader **ship cadence oversight** and **dispatch resolution gates** while implementation/ship skills still execute as **detached** branches (see **Squad operations** — the Squad Leader does **not** spawn **`coding-session`**, **`pre-pr-review`**, **`create-pr`**, etc. from §§1–7).
@@ -301,19 +315,42 @@ Do **not** invent PRD content from the URL alone. Do **not** call **`author-prd`
 
 - **Type:** Simple skill execution
 - **Intent:** Compile the required seed block for **`master-plan`** after a readable PRD artifact exists.
-- **Inputs:** PRD reference and loaded/created PRD body from §2 or §3; optional title, parent, and related-document hints from the opening message or prior developer answers.
+- **Inputs:** PRD reference and loaded/created PRD body from §2 or §3; optional title, parent, and related-document hints from the opening message or prior developer answers; optional Hub parent from Mission Control opening message (§ *Hub parent in opening message*).
 - **Expected output:** A complete **`master-plan`** seed containing `Feature planning`, `PRD`, `Parent`, and optional `Related` entries.
 - **Next-step resolution:**
   - Required seed fields complete → continue to §5 to engage **`master-plan`**.
   - Title missing → ask the developer for the feature title, then resume this step.
-  - Parent missing or unresolved → use **AskQuestion** to collect parent slug/path or `null` for a new roadmap/root plan, then resume this step.
+  - Parent missing or unresolved **and** Hub parent not present in opening message → use **AskQuestion** to collect parent slug/path or `null` for a new roadmap/root plan, then resume this step.
+  - Parent pre-seeded from Hub (§ *Hub parent in opening message*) → **do not** run parent **AskQuestion**; continue when title and PRD are set.
   - Related documents absent → record none and continue; related documents are optional.
+
+#### Hub parent in opening message
+
+When Mission Control queued this dispatch from Sedea Hub **Start New Plan**, the Squad Leader opening message includes a **`### Parent (Sedea Hub)`** section rendered from `dispatch.yaml` **`missionInputs`** (PR 1–2 contract). Treat that section as authoritative for **`Parent`** in this §4 pass — do not ask the developer to re-enter the same parent.
+
+**Detection (opening message or first user turn on this dispatch):**
+
+1. Section marker: line `### Parent (Sedea Hub)` (exact heading).
+2. Parent line: `**Parent:** \`<slug>\`` with optional trailing ` (@\`<workspace-relative-plan-path>\`)` on the same line.
+
+**Parse rules:**
+
+| Capture | Use as seed **`Parent`** |
+| --- | --- |
+| `@path` in parentheses | That workspace-relative path (preferred when present) |
+| `` `slug` `` only | The slug (or resolve to `@.sedea/operations/.../plans/<slug>.plan.md` when path is needed for **`master-plan`**) |
+
+If both slug and path appear, prefer the **`@path`** for **`Parent`** in the seed block; echo both in the Hub acknowledgement line.
+
+**Squad Leader echo (required when Hub parent detected):** Before compiling the seed block, state one line: *Hub supplied parent: `<slug>`* (include `@path` when parsed). Do not imply the developer must confirm parent again unless they choose to revise it.
 
 **Procedure**
 
 1. Derive `Feature planning` title from the PRD heading or provided title.
 2. Set `PRD` to the original readable link/path, or the Ad-Hoc PRD document returned by the child agent.
-3. Resolve `Parent` as slug, `@path`, absolute plan path, or `null`.
+3. Resolve `Parent` as slug, `@path`, absolute plan path, or `null`:
+   - **Hub path first:** If § *Hub parent in opening message* applies, parse **`Parent`** from the opening message and apply the echo line above; **skip** parent **AskQuestion**.
+   - **Otherwise:** Use hints from the developer message; when parent is still missing or unresolved, use **AskQuestion** per **Next-step resolution**.
 4. Collect optional `Related` entries only when the developer provides them.
 5. Echo the compiled seed block for review.
 6. Preserve the seed for §5 **`master-plan`** handoff.
