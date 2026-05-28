@@ -4,8 +4,9 @@ description: >-
   Pre-PR reviewer agent (fresh spawned lane): review a committed implementation
   diff against a PR plan or free-form scope, score plan/rules/quality categories,
   propose Code Review Follow-ups when plan-anchored, and report go/no-go before PR
-  creation. Scores §7 Before deploy only; After deploy is post-merge (deploy-walk),
-  not a pre-PR blocker. Spawned by coding-session after the implementation cut point;
+  creation. Scores §7 Before deploy only; After deploy is post-merge (deploy-walk) and
+  is omitted entirely from this report (not Defer, flags, or summary). Spawned by
+  coding-session after the implementation cut point;
   coding-session obtains developer approval before any follow-up mutation.
 inputs:
   anchorType:
@@ -120,17 +121,20 @@ This skill runs **before** the PR is opened or merged. Scope is **pre-merge read
 |--------------|--------------|-------------------|
 | §§ **1–6**, § **8** | In scope for scoring and follow-ups | — |
 | § **7** `### Before deploy` | In scope — verify against diff / § 6 tests | **`coding-session`** spawns **`deploy-walk`** (`before-deploy-only`) before this review |
-| § **7** `### After deploy` | **Out of scope** for `FAIL`, `FLAG`, `proposedFollowUps`, and `Must` / `Should` | **`deploy-walk`** after merge (**development-process.md** § *Ship chain*) |
+| § **7** `### After deploy` | **Out of scope** — omit from the entire pre-PR report (see below) | **`deploy-walk`** after merge (**development-process.md** § *Ship chain*) |
 
-### §7 After deploy — forbidden findings (binding)
+### §7 After deploy — silent omission (binding)
 
-Do **not** report any of the following as blockers, flags, proposed follow-ups, or **`Must`** / **`Should`** handback items:
+**`### After deploy`** is **post-merge** work. This pre-PR pass does **not** score it and does **not** mention it anywhere in output — including under **`Defer`**, flags, blockers, proposed follow-ups, category **G** narrative, chat recap, `outputs.codingAgentHandback`, or the terminal `summary`.
 
-- Unchecked **`[ ]`** lines under **`### After deploy`** (“do step N after deploy”, “verify in production”, “run smoke after merge”, monitor/rollback checks).
+Do **not** report (and do **not** echo for awareness):
+
+- Unchecked **`[ ]`** lines under **`### After deploy`**.
 - Missing execution of **After deploy** steps before the PR exists.
-- Requests to “take care of After deploy now” or “complete §7 After deploy before PR”.
+- Requests to complete **After deploy** before PR.
+- Summary bullets such as *Post-merge production smoke via deploy-walk; not a pre-PR gate* or tags like **`[G §7 After deploy — post-merge]`**.
 
-When **`### After deploy`** has checklist items, you may list them **once** under handback **`Defer`** with prefix **`[G §7 After deploy — post-merge]`** and text such as *Run via **`deploy-walk`** after merge; not a pre-PR gate.* Do **not** duplicate each After-deploy line as separate flags.
+If the only “deferred” work you would list is post-merge deploy verification, **omit the `Defer` group entirely** from the report and leave `codingAgentHandback.Defer` empty (or omit the key).
 
 ### §7 Before deploy — scoring
 
@@ -176,7 +180,7 @@ Rules:
 3. Add optional `(target: ...)` routing hints.
 4. Do not append `FAIL` items; blockers stay in the report.
 5. Return proposed follow-ups in `outputs.proposedFollowUps`; leave `outputs.followUpsAppended` empty unless the invocation context explicitly includes prior developer approval for this exact mutation.
-6. **Exclude** every item that only restates unchecked **`### After deploy`** steps or post-merge production verification — those belong in handback **`Defer`** only (see [Pre-PR phase boundary](#pre-pr-phase-boundary-plan-anchor)), not in `proposedFollowUps`.
+6. **Exclude** every item that only restates **`### After deploy`** or post-merge production verification — omit entirely (see **§7 After deploy — silent omission** above), not in `proposedFollowUps` or handback.
 
 For `free-form`, skip file writes.
 
@@ -188,13 +192,13 @@ Report:
 2. Blockers (`FAIL`).
 3. Flags.
 4. Recommendation: `go` only when there are no `FAIL` rows.
-5. Coding-agent handback: what to fix next, with **`Must`**, **`Should`**, and **`Defer`** groups. Apply [Pre-PR phase boundary](#pre-pr-phase-boundary-plan-anchor):
+5. Coding-agent handback: what to fix next, with **`Must`** and **`Should`** groups when non-empty. Apply [Pre-PR phase boundary](#pre-pr-phase-boundary-plan-anchor):
    - **`Must`** — merge-blocking `FAIL` rows and true pre-merge gaps only.
-   - **`Should`** — pre-merge improvements; never unchecked After-deploy checklist lines.
-   - **`Defer`** — post-merge work (**`### After deploy`**, **`deploy-walk`**, production smoke). One summary bullet is enough; do not inflate Defer with every After-deploy line unless the developer asked for a full checklist echo.
-6. **Deploy test plan (§7):** when the developer reported manual §7 smoke during review, list which numbered **`### Before deploy`** steps they said passed — the coding agent should flip those lines in `targetPlanPath` only after the developer **confirms each step** in session (see **`coding-session`** § *Deploy test plan confirmations*). Do **not** ask the coding agent to execute or flag **`### After deploy`** steps in this pre-PR pass. This reviewer skill does **not** append `[x]` without that per-step confirmation.
+   - **`Should`** — pre-merge improvements only.
+   - **`Defer`** — **do not use** for **`### After deploy`**, **`deploy-walk`**, or post-merge production smoke (see **§7 After deploy — silent omission** above). Include **`Defer`** only for other genuinely deferred pre-PR-adjacent items; if none, omit the **`Defer`** section and do not populate post-merge deploy bullets in `outputs.codingAgentHandback`.
+6. **Deploy test plan (§7):** when the developer reported manual §7 smoke during review, list which numbered **`### Before deploy`** steps they said passed — the coding agent should flip those lines in `targetPlanPath` only after the developer **confirms each step** in session (see **`coding-session`** § *Deploy test plan confirmations*). Do **not** mention **`### After deploy`** in this pass. This reviewer skill does **not** append `[x]` without that per-step confirmation.
 
-The handback is advisory until the developer approves the fix pass. Do not frame **`Defer`** post-deploy items as reasons for `no-go`. Do not frame reviewer feedback as automatic authorization for **`coding-session`** to edit code. The coding agent must present the review result to the developer, **recommend** addressing relevant findings when **`actionablePrePrFindings`** applies, and open its **Review feedback approval gate** (including **Implement pre-PR review findings now (this session)** as the first option — **even when** `recommendation` is `go` but `flags` or **Must** / **Should** handback remain) before applying fixes or proceeding to Create-PR.
+The handback is advisory until the developer approves the fix pass. Do not frame reviewer feedback as automatic authorization for **`coding-session`** to edit code. The coding agent must present the review result to the developer, **recommend** addressing relevant findings when **`actionablePrePrFindings`** applies, and open its **Review feedback approval gate** (including **Implement pre-PR review findings now (this session)** as the first option — **even when** `recommendation` is `go` but `flags` or **Must** / **Should** handback remain) before applying fixes or proceeding to Create-PR.
 
 End with a child result containing:
 

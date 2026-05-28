@@ -685,7 +685,7 @@ When Mission Control delivers the **`pre-pr-review`** result:
 
 When **`actionablePrePrFindings`** is true (see [Review result aggregation](#review-result-aggregation)) — including **`recommendation: "go"`** with **`flags`** or **Must** / **Should** handback:
 
-1. Present the review summary to the developer: `recommendation`, blockers, `Must`, `Should`, `Defer`, `flags`, and any proposed follow-ups for the PR plan. **Recommend** fixing relevant findings before PR creation or re-review (same wording as [Review result aggregation](#review-result-aggregation) step 3). Treat **`Defer`** items tagged **`[G §7 After deploy — post-merge]`** (or equivalent) as **post-merge / deploy-walk** — do not promote them to `Must` or `Should`, and do not block PR creation on them.
+1. Present the review summary to the developer: `recommendation`, blockers, `Must`, `Should`, `flags`, and any proposed follow-ups for the PR plan. **Do not** surface **`Defer`** or post-merge **`### After deploy`** items — **`pre-pr-review`** omits them; drop any legacy **`[G §7 After deploy — post-merge]`** bullets if present in child outputs. **Recommend** fixing relevant findings before PR creation or re-review (same wording as [Review result aggregation](#review-result-aggregation) step 3).
 2. Use **one** **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** before making any code or plan edits (`modalTitle`: *Pre-PR review — address findings*). Required options **in this order** (omit rows marked *go-only* when `recommendation` is `no-go`):
 
 | Option id | Label (brief) | Agent action |

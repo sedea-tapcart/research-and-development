@@ -562,7 +562,7 @@ After **`pr-plan`** handoff and **`coding-session`** implementation, the happy p
 
 ##### pre-pr-review
 
-Spawned from **`coding-session`** after developer implementation approval, **commit**, and **Before deploy** **`deploy-walk`** (or documented skip). Reviews the **committed** diff + PR plan + repo rules; returns **`recommendation: go`** or blockers. Non-blockers are **`outputs.proposedFollowUps`** — **`coding-session`** presents them; plan **`## Follow-ups`** edits only after developer approval. **Pre-merge scope only:** score §7 **`### Before deploy`** against what was walked or skipped; treat **`### After deploy`** as post-merge (**`deploy-walk`** after merge) — do not flag unchecked After-deploy lines as blockers or “do this before PR”. See **`pre-pr-review/SKILL.md`** § *Pre-PR phase boundary*.
+Spawned from **`coding-session`** after developer implementation approval, **commit**, and **Before deploy** **`deploy-walk`** (or documented skip). Reviews the **committed** diff + PR plan + repo rules; returns **`recommendation: go`** or blockers. Non-blockers are **`outputs.proposedFollowUps`** — **`coding-session`** presents them; plan **`## Follow-ups`** edits only after developer approval. **Pre-merge scope only:** score §7 **`### Before deploy`** against what was walked or skipped; **`### After deploy`** is post-merge (**`deploy-walk`** after merge) — omit it entirely from the pre-PR report (not blockers, flags, **Defer**, or summary). See **`pre-pr-review/SKILL.md`** § *Pre-PR phase boundary*.
 
 ##### create-pr
 
