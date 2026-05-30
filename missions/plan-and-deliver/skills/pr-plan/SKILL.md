@@ -1,58 +1,58 @@
 ---
 name: pr-plan
 description: >-
-  Populate a PR plan body: draft §§ 1–4 (Single concern, Background, Change scope,
-  Reasoning) per Sedea's New Feature Development Process per-PR template. Mirrors
-  **phase-planner** for mode #3: scope from parent's `### PR list` item N, grounds § 4
-  in parent's `### Single-concern strategy` + `### Sequencing`, scopes § 3 from the
-  parent's changes. §§ 5–8 and deploy scaffolding stay `_TBD_` for **coding-session**
-  (and follow-up turns). Appends canonical `deploy-test-plan-verified` todo per
-  development-process.md. Target resolved per planning-target-resolution. Use under
-  mission dispatch, **pr-plan** protocol branch, natural language, or after **new-plan**
-  ignition on a `PR breakdown` child stub.
+ Populate a PR plan body: draft §§ 1–4 (Single concern, Background, Change scope,
+ Reasoning) per Sedea's New Feature Development Process per-PR template. Mirrors
+ **phase-planner** for mode #3: scope from parent's `### PR list` item N, grounds § 4
+ in parent's `### Single-concern strategy` + `### Sequencing`, scopes § 3 from the
+ parent's changes. §§ 5–8 and deploy scaffolding stay `_TBD_` for **coding-session**
+ (and follow-up turns). Appends canonical `deploy-test-plan-verified` todo per
+ development-process.md. Target resolved per planning-target-resolution. Use under
+ mission dispatch, **pr-plan** protocol branch, natural language, or after **new-plan**
+ ignition on a `PR breakdown` child stub.
 inputs:
-  targetPlanPath:
-    type: string
-    description: Path to the PR plan stub to populate.
-    required: true
-  targetPlanSlug:
-    type: string
-    description: Slug for the PR plan stub.
-    required: true
-  parentPlanPath:
-    type: string
-    description: Path to the parent plan containing the PR list row.
-    required: true
-  parentPlanSlug:
-    type: string
-    description: Slug for the parent plan.
-    required: true
-  parentIndex:
-    type: number
-    description: One-based PR list index that produced this child.
-    required: true
-  ledgerParent:
-    type: string
-    description: Ledger parent slug/path copied from the upstream agent.
-    required: false
-  upstreamSkill:
-    type: string
-    description: Skill that requested this PR plan population, usually new-plan.
-    required: false
-  parentAgentRole:
-    type: string
-    description: When new-plan-agent, report Completion (inline) to the invoker instead of AGENT_RESULT_RESPONSE_V1.
-    required: false
-  autoContinue:
-    type: boolean
-    description: When true, report implementation readiness after PR planning; this skill still does not start coding.
-    required: false
-    default: true
+ targetPlanPath:
+ type: string
+ description: Path to the PR plan stub to populate.
+ required: true
+ targetPlanSlug:
+ type: string
+ description: Slug for the PR plan stub.
+ required: true
+ parentPlanPath:
+ type: string
+ description: Path to the parent plan containing the PR list row.
+ required: true
+ parentPlanSlug:
+ type: string
+ description: Slug for the parent plan.
+ required: true
+ parentIndex:
+ type: number
+ description: One-based PR list index that produced this child.
+ required: true
+ ledgerParent:
+ type: string
+ description: Ledger parent slug/path copied from the upstream agent.
+ required: false
+ upstreamSkill:
+ type: string
+ description: Skill that requested this PR plan population, usually new-plan.
+ required: false
+ parentAgentRole:
+ type: string
+ description: When new-plan-agent, report Completion (inline) to the invoker instead of AGENT_RESULT_RESPONSE_V1.
+ required: false
+ autoContinue:
+ type: boolean
+ description: When true, report implementation readiness after PR planning; this skill still does not start coding.
+ required: false
+ default: true
 warmUpRules:
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
-  - ".sedea/centers/research-and-development/docs/development-process.md"
-  - ".sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc"
+ - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
+ - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
+ - ".sedea/centers/research-and-development/docs/development-process.md"
+ - ".sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc"
 ---
 
 # PR plan: §§ 1–4 from the parent plan
@@ -97,7 +97,7 @@ When spawned by `new-plan` with `parentAgentRole: "new-plan-agent"`, run **inlin
 
 When spawned by `new-plan` without `parentAgentRole: "new-plan-agent"` (legacy standalone populator spawn), `targetPlanPath`, `targetPlanSlug`, `parentPlanPath`, `parentPlanSlug`, and `parentIndex` are already locked. Treat missing or conflicting values as a spawn-contract failure: stop with `failure` or `partial` and report the missing field. Do not fall back to IDE focus or free-form target discovery in spawned mode.
 
-If there is no resolved target, **stop** and emit a fresh *Where we are now in the plan tree* snapshot (recap). Collect the lane pick via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **`MC_ASKQUESTION_V1`** per **30_planning-target-resolution** § *Sedea input channel* and **`../README.md`** § *Recap, structured choice, act* — **preferred:** recap + modal in one message; **legacy split:** recap only, then structured choice in the **next** assistant message. Then continue.
+If there is no resolved target, **stop** and emit a fresh *Where we are now in the plan tree* snapshot (recap). Collect the lane pick via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **30_planning-target-resolution** § *Sedea input channel* and **`../README.md`** § *Recap, structured choice, act* — **preferred:** recap + modal in one message; **legacy split:** recap only, then structured choice in the **next** assistant message. Then continue.
 
 Acknowledge in one line: *"Target plan: `<slug>`."*
 
@@ -125,9 +125,9 @@ Read the target plan's sidecar `<slug>.state.yaml` for `parent:`.
 - `parent:` does not resolve to an existing `.plan.md` under the same `.sedea/operations/.../plans/` tree → **stop:** fix sidecar before drafting.
 - Parent is a **roadmap topic** grouping plan → **stop:** children should be Master Plans, not PR plans; fix sidecar or use **`planner`**.
 - Parent resolves; read parent's dual-title block (`## 6. …` Master, `## 5. …` Phase):
-  - Heading **`PR breakdown`** → proceed.
-  - Heading **`Delivery phases`** → **stop:** use **`phase-planner`** on this file (phase child), not **`pr-plan`**.
-  - Dual-title `Delivery phases | PR breakdown` still `_TBD_` → **stop:** run **`pr-breakdown`** (or **`delivery-phases`**) on the parent first.
+ - Heading **`PR breakdown`** → proceed.
+ - Heading **`Delivery phases`** → **stop:** use **`phase-planner`** on this file (phase child), not **`pr-plan`**.
+ - Dual-title `Delivery phases | PR breakdown` still `_TBD_` → **stop:** run **`pr-breakdown`** (or **`delivery-phases`**) on the parent first.
 
 Acknowledge: *"Parent: `<parent-slug>` (mode #3 **`PR breakdown`**); proceeding."*
 
@@ -281,18 +281,18 @@ After **4a** (full stub → per-PR template **or** first time the body is recogn
 Otherwise append this list item **immediately before** `isProject:` (indentation: two spaces before `-`, four before `id` / `content` / `status`, six before each `>-` continuation line — match sibling todos):
 
 ```yaml
-  - id: deploy-test-plan-verified
-    content: >-
-      Mark done only when every Before-deploy and After-deploy step is checked
-      (`[x]`) and the deploy section `**Status:**` reads `done` (walk via `deploy-walk`,
-      or edit manually). Independent of PR merge; run `plan-reconcile` protocol branch when you want
-      reconcile/archive after merges.
-    status: pending
+ - id: deploy-test-plan-verified
+ content: >-
+ Mark done only when every Before-deploy and After-deploy step is checked
+ (`[x]`) and the deploy section `**Status:**` reads `done` (walk via `deploy-walk`,
+ or edit manually). Independent of PR merge; run `plan-reconcile` protocol branch when you want
+ reconcile/archive after merges.
+ status: pending
 ```
 
 **Byte-identical** `content: >-` text must match **development-process.md** § *Frontmatter capstone todo (`deploy-test-plan-verified`)* — if that doc block changes, update this skill in the same change set.
 
-**`StrReplace` anchor:** last existing todo's `    status: …` line + newline + `isProject:` → reinsert that status line + newline + the YAML block above + newline + `isProject:`. Append only; do not remove executor todos.
+**`StrReplace` anchor:** last existing todo's ` status: …` line + newline + `isProject:` → reinsert that status line + newline + the YAML block above + newline + `isProject:`. Append only; do not remove executor todos.
 
 Echo: *"Inserted frontmatter todo `deploy-test-plan-verified` (per development-process.md)."*
 
@@ -349,7 +349,7 @@ Per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../R
 
 #### Recap (information-only when split)
 
-When using the legacy split, do **not** include **AskQuestion**, **`MC_ASKQUESTION_V1`**, **`AGENT_RUN_REQUEST_V1`**, or **`AGENT_RESULT_RESPONSE_V1`** in the recap-only message.
+When using the legacy split, do **not** include **AskQuestion**,, **`AGENT_RUN_REQUEST_V1`**, or **`AGENT_RESULT_RESPONSE_V1`** in the recap-only message.
 
 1. A **`file://`** link to the target `.plan.md` under `.sedea/operations/.../plans/...`.
 2. One-line summary: *Drafted per-PR §§ 1–4; implementation readiness: `<ready|not ready>`.*
@@ -359,7 +359,7 @@ Do **not** echo the full §§ 1–4 body in chat unless the developer asked for 
 
 #### Structured choice — approval modal
 
-Invoke **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **`MC_ASKQUESTION_V1`** (`modalTitle`: *PR plan — next move*). When using bare **`MC_ASKQUESTION_V1`** without a phased envelope, sentinel + JSON only — no prose before the sentinel.
+Invoke **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** (`modalTitle`: *PR plan — next move*). When using without a phased envelope, sentinel + JSON only — no prose before the sentinel.
 
 Required options (brief `label`; put detail in `prompt` when needed):
 
@@ -387,25 +387,25 @@ Required options (brief `label`; put detail in `prompt` when needed):
 Run only when the developer chose **`start-coding-session`** and §5a readiness passes (or they explicitly accept starting with known blockers — still run §5d but pass `readyForImplementation: false` and list blockers in `initiatingPrompt`).
 
 1. **Resolve paths** (all absolute; never documentation placeholders):
-   - `targetPlanPath` — absolute path to the target `.plan.md` on this lane.
-   - `targetPlanSlug` — slug from filename.
-   - `parentPlanPath` / `parentPlanSlug` / `parentIndex` — from steps 1–3 when known.
-   - `ledgerParent` — parent slug from sidecar `parent:` (not a placeholder string).
-   - `repoPath` — walk up from `targetPlanPath` until **`.sedea/centers/sedea/`** exists; use the parent of **`.sedea/`** as hosting repo root.
+ - `targetPlanPath` — absolute path to the target `.plan.md` on this lane.
+ - `targetPlanSlug` — slug from filename.
+ - `parentPlanPath` / `parentPlanSlug` / `parentIndex` — from steps 1–3 when known.
+ - `ledgerParent` — parent slug from sidecar `parent:` (not a placeholder string).
+ - `repoPath` — walk up from `targetPlanPath` until **`.sedea/centers/sedea/`** exists; use the parent of **`.sedea/`** as hosting repo root.
 2. **Build `initiatingPrompt`** — one short block with required bullets:
-   - §1 single concern; §3 change-scope bullets; parent `### PR list` item **N**; `readyForImplementation` and §5a gaps; non-blocking `remainingTasks`.
-   - `planningHandoffMode: sections-1-4-complete`
-   - `sections5to8Status: TBD-by-design — child owns substantive fill; do not treat as pr-plan failure`
-   - `expectedPlanCompleteness: incomplete-until-coding-session-fills-5-8 — auto-authorize worktree when EXPECTED_SECTIONS_5_8_TBD; no second approval modal`
-   - `planningHandoffApproved: true` when `readyForImplementation: true` (layer 1 consent from §5c **Start coding session**)
+ - §1 single concern; §3 change-scope bullets; parent `### PR list` item **N**; `readyForImplementation` and §5a gaps; non-blocking `remainingTasks`.
+ - `planningHandoffMode: sections-1-4-complete`
+ - `sections5to8Status: TBD-by-design — child owns substantive fill; do not treat as pr-plan failure`
+ - `expectedPlanCompleteness: incomplete-until-coding-session-fills-5-8 — auto-authorize worktree when EXPECTED_SECTIONS_5_8_TBD; no second approval modal`
+ - `planningHandoffApproved: true` when `readyForImplementation: true` (layer 1 consent from §5c **Start coding session**)
 3. **Emit exactly one** child-spawn line (valid JSON on the same line; new UUID per spawn):
 
-   - `skillPath`: `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`
-   - `name`: `Coding session`
-   - `slug`: `coding-session-<targetPlanSlug>` (unique per dispatch)
-   - `description`: Worktree and implementation handoff after pr-plan
-   - `inputs`: `targetPlanPath`, `targetPlanSlug`, `readyForImplementation`, `planningHandoffApproved: true` (only when `readyForImplementation: true`), `planningHandoffMode: "sections-1-4-complete"` (required when `readyForImplementation: true`), `repoPath`, `ledgerParent`, `upstreamSkill: "pr-plan"`; include `parentPlanPath`, `parentPlanSlug`, `parentIndex` when known
-   - Optional `warmUpRules`: merge **`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`** if not already loaded from skill frontmatter
+ - `skillPath`: `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`
+ - `name`: `Coding session`
+ - `slug`: `coding-session-<targetPlanSlug>` (unique per dispatch)
+ - `description`: Worktree and implementation handoff after pr-plan
+ - `inputs`: `targetPlanPath`, `targetPlanSlug`, `readyForImplementation`, `planningHandoffApproved: true` (only when `readyForImplementation: true`), `planningHandoffMode: "sections-1-4-complete"` (required when `readyForImplementation: true`), `repoPath`, `ledgerParent`, `upstreamSkill: "pr-plan"`; include `parentPlanPath`, `parentPlanSlug`, `parentIndex` when known
+ - Optional `warmUpRules`: merge **`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`** if not already loaded from skill frontmatter
 
 4. Announce that this agent is waiting for the **`coding-session`** child result; **stop** — no second spawn in the same turn.
 5. Set `implementationHandoffStatus: "spawned-coding-session"` and record `spawnCorrelationId` matching the spawn request until the child terminal arrives.
@@ -463,9 +463,9 @@ Required `outputs` fields:
 - `outputs.activeLanes`, `outputs.openLedgerEntries`, `outputs.remainingTasks`
 - `outputs.continuationOwner`: `"pr-plan-agent"`
 - `outputs.continuationStatus`:
-  - `terminal` when handoff menu is complete, no **`coding-session`** child is open, parent link is trusted, and no blocking `remainingTasks` (or developer deferred/abandoned)
-  - `active` when parent link repair, fill sketches, **`coding-session`** child lane is open, or §5c menu not yet offered
-  - `terminal` with `readyForImplementation: false` only when upstream or developer marks the PR plan deferred, abandoned, or out of scope
+ - `terminal` when handoff menu is complete, no **`coding-session`** child is open, parent link is trusted, and no blocking `remainingTasks` (or developer deferred/abandoned)
+ - `active` when parent link repair, fill sketches, **`coding-session`** child lane is open, or §5c menu not yet offered
+ - `terminal` with `readyForImplementation: false` only when upstream or developer marks the PR plan deferred, abandoned, or out of scope
 
 Complete §5d spawn (when chosen) + wait announcement **before** the terminal line when spawning on a **standalone** spawned lane. Stop after the terminal line. Do not emit a second **`AGENT_RUN_REQUEST_V1`** in the same turn after the terminal line (see **`../README.md`** § *Terminal stop (normative)*). **Inline under `new-plan`:** do **not** emit the terminal line — use **`## Completion (inline)`** below.
 

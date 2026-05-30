@@ -1,88 +1,88 @@
 ---
 name: coding-session
 description: >-
-  **Coding session** protocol branch: **create** the worktree with shell **`git worktree add`**
-  only (never **`sedea_add_worktree_folder`** for creation), record worktrees and session focus
-  in the plan sidecar via plan-state.mjs, **attach** the worktree with MCP
-  **`sedea_add_worktree_folder` only** (never editor Add Folder to Workspace), then run
-  **`worktree-bootstrap`** **inline** on this lane
-  (mandatory wait before any implementation) via [`worktree-bootstrap/SKILL.md`](../worktree-bootstrap/SKILL.md).
-  On a **spawned child lane** with layer-2 approval (or **pr-plan** spawn auto-authorize),
-  **implement the anchored PR plan on this lane** in that worktree; on **prompt-only**
-  entry, emit a copy/paste-safe two-phase session prompt for a separate coding chat.
-  After implementation, run the **ship chain** (one cut-point modal: approve + commit +
-  Before deploy **deploy-walk** inline → **pre-pr-review** spawn). After PR merge, post-merge workspace cleanup (main pull, worktree remove, branch delete when remote gone) runs before After deploy **deploy-walk** inline. Plan-anchored runs validate
-  per-PR plans with plan-ws-completeness.mjs (_TBD_ in body requires completion or
-  explicit override incomplete plan). Use under mission dispatch, natural language, or
-  after planning when handing off implementation.
+ **Coding session** protocol branch: **create** the worktree with shell **`git worktree add`**
+ only (never **`sedea_add_worktree_folder`** for creation), record worktrees and session focus
+ in the plan sidecar via plan-state.mjs, **attach** the worktree with MCP
+ **`sedea_add_worktree_folder` only** (never editor Add Folder to Workspace), then run
+ **`worktree-bootstrap`** **inline** on this lane
+ (mandatory wait before any implementation) via [`worktree-bootstrap/SKILL.md`](../worktree-bootstrap/SKILL.md).
+ On a **spawned child lane** with layer-2 approval (or **pr-plan** spawn auto-authorize),
+ **implement the anchored PR plan on this lane** in that worktree; on **prompt-only**
+ entry, emit a copy/paste-safe two-phase session prompt for a separate coding chat.
+ After implementation, run the **ship chain** (one cut-point modal: approve + commit +
+ Before deploy **deploy-walk** inline → **pre-pr-review** spawn). After PR merge, post-merge workspace cleanup (main pull, worktree remove, branch delete when remote gone) runs before After deploy **deploy-walk** inline. Plan-anchored runs validate
+ per-PR plans with plan-ws-completeness.mjs (_TBD_ in body requires completion or
+ explicit override incomplete plan). Use under mission dispatch, natural language, or
+ after planning when handing off implementation.
 inputs:
-  targetPlanPath:
-    type: string
-    description: Absolute or workspace-relative path to the PR plan to implement.
-    required: false
-  targetPlanSlug:
-    type: string
-    description: Slug for the PR plan to implement.
-    required: false
-  readyForImplementation:
-    type: boolean
-    description: Optional hint from a prior **pr-plan** menu (planning handoff only). Does not authorize worktrees.
-    required: false
-  developerApprovedImplementation:
-    type: boolean
-    description: Layer 2 output — true only after an authorizing worktree-open gate choice. Not supplied by **pr-plan**.
-    required: false
-  repoPath:
-    type: string
-    description: Absolute path to the hosting repo root for a single-repo coding session.
-    required: false
-  repoPaths:
-    type: array
-    description: Absolute paths to hosting repo roots for a multi-repo coding session.
-    required: false
-    default: []
-  baseBranch:
-    type: string
-    description: Remote base branch to branch from; default origin/main unless repo rules say otherwise.
-    required: false
-    default: origin/main
-  branchName:
-    type: string
-    description: Optional explicit branch name; otherwise derive from plan slug and local branch conventions.
-    required: false
-  ledgerParent:
-    type: string
-    description: Ledger parent slug/path copied from the upstream planning agent.
-    required: false
-  upstreamSkill:
-    type: string
-    description: Optional context label (developer dispatch, snapshot, pr-plan spawn, planning skill).
-    required: false
-  planningHandoffMode:
-    type: string
-    description: >-
-      When "sections-1-4-complete" (from pr-plan §5d spawn), §§5–8 may stay _TBD_;
-      use auto-authorize or pr-plan spawn handoff gate, not executive-override framing.
-    required: false
-  planningHandoffApproved:
-    type: boolean
-    description: >-
-      Layer 1 approval from pr-plan §5c Start coding session. When true with
-      planningHandoffMode, waives worktree-open AskQuestion when §§1–4 are drafted.
-    required: false
-  promptOnly:
-    type: boolean
-    description: >-
-      When true, stop after worktree attach and emit an external session prompt only (detached
-      handoff). Default false for Mission Control spawn from pr-plan — same lane implements.
-    required: false
-    default: false
+ targetPlanPath:
+ type: string
+ description: Absolute or workspace-relative path to the PR plan to implement.
+ required: false
+ targetPlanSlug:
+ type: string
+ description: Slug for the PR plan to implement.
+ required: false
+ readyForImplementation:
+ type: boolean
+ description: Optional hint from a prior **pr-plan** menu (planning handoff only). Does not authorize worktrees.
+ required: false
+ developerApprovedImplementation:
+ type: boolean
+ description: Layer 2 output — true only after an authorizing worktree-open gate choice. Not supplied by **pr-plan**.
+ required: false
+ repoPath:
+ type: string
+ description: Absolute path to the hosting repo root for a single-repo coding session.
+ required: false
+ repoPaths:
+ type: array
+ description: Absolute paths to hosting repo roots for a multi-repo coding session.
+ required: false
+ default: []
+ baseBranch:
+ type: string
+ description: Remote base branch to branch from; default origin/main unless repo rules say otherwise.
+ required: false
+ default: origin/main
+ branchName:
+ type: string
+ description: Optional explicit branch name; otherwise derive from plan slug and local branch conventions.
+ required: false
+ ledgerParent:
+ type: string
+ description: Ledger parent slug/path copied from the upstream planning agent.
+ required: false
+ upstreamSkill:
+ type: string
+ description: Optional context label (developer dispatch, snapshot, pr-plan spawn, planning skill).
+ required: false
+ planningHandoffMode:
+ type: string
+ description: >-
+ When "sections-1-4-complete" (from pr-plan §5d spawn), §§5–8 may stay _TBD_;
+ use auto-authorize or pr-plan spawn handoff gate, not executive-override framing.
+ required: false
+ planningHandoffApproved:
+ type: boolean
+ description: >-
+ Layer 1 approval from pr-plan §5c Start coding session. When true with
+ planningHandoffMode, waives worktree-open AskQuestion when §§1–4 are drafted.
+ required: false
+ promptOnly:
+ type: boolean
+ description: >-
+ When true, stop after worktree attach and emit an external session prompt only (detached
+ handoff). Default false for Mission Control spawn from pr-plan — same lane implements.
+ required: false
+ default: false
 warmUpRules:
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
-  - ".sedea/centers/research-and-development/docs/development-process.md"
-  - ".sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc"
-  - ".sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc"
+ - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
+ - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
+ - ".sedea/centers/research-and-development/docs/development-process.md"
+ - ".sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc"
+ - ".sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc"
 ---
 
 # Coding session
@@ -121,7 +121,7 @@ Agents repeatedly call **`sedea_add_worktree_folder`** instead of **`git worktre
 
 ## Structured choice (Mission Control)
 
-Approval gates and branch picks use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **`MC_ASKQUESTION_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* — **preferred:** recap (status, diff, validation) + modal in one message; bare **`MC_ASKQUESTION_V1`** is sentinel-only. **Act** (worktrees, spawn, `git`, code edits) is always after the developer selects in the modal.
+Approval gates and branch picks use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* — **preferred:** recap (status, diff, validation) + modal in one message; legacy split uses recap then `MC_PHASED_RESPONSE_V1` in the next message. **Act** (worktrees, spawn, `git`, code edits) is always after the developer selects in the modal.
 
 On **[Spawned implementation lane](#spawned-implementation-lane)**, **this lane** edits the hosting repo under the worktree through the implementation cut point — do not tell the developer to paste a session prompt into another chat. On **prompt-only** runs, emit the external prompt and **stop** without implementing here.
 
@@ -129,7 +129,7 @@ On **[Spawned implementation lane](#spawned-implementation-lane)**, **this lane*
 
 On spawned **`coding-session`** lanes the **AskQuestion tool** is usually **unavailable**. Before the [Worktree-open gate](#worktree-open-gate), [Worktree-open gate (pr-plan spawn handoff)](#worktree-open-gate-pr-plan-spawn-handoff), [Ship cut-point gate](#ship-cut-point-gate-approve-commit-before-deploy), [Review feedback approval gate](#review-feedback-approval-gate), and [Post-create-pr handoff gate](#post-create-pr-handoff-gate) — **unless** [Auto-authorize implementation (pr-plan spawn)](#auto-authorize-implementation-pr-plan-spawn) applies (no modal; proceed to worktrees):
 
-1. **Self-check:** the assistant message **starts** with **`MC_PHASED_RESPONSE_V1`** (or sentinel-only **`MC_ASKQUESTION_V1`**) — **no** recap prose before the sentinel.
+1. **Self-check:** the assistant message **starts** with **`MC_PHASED_RESPONSE_V1`** — **no** recap prose before the sentinel.
 2. Put required recap lines in **`display.markdown`** only (see pr-plan spawn handoff recap below).
 3. Copy-paste template for pr-plan spawn **worktree-open** gate (replace `<recap>` when validation adds a line):
 
@@ -208,18 +208,18 @@ Otherwise:
 
 1. Resolve the plan’s **absolute** path. If you cannot, **stop** and ask for a path or `plan-state` linkage.
 2. From the **hosting repo root**:
-   ```bash
-   node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-ws-completeness.mjs --file "<absolute-plan-path>"
-   ```
-   - Exit **0** (`OK` / `SKIP_NOT_PER_PR`) → `planCompleteness: complete` for the worktree-open gate.
-   - Exit **1** (`INCOMPLETE`) → `planCompleteness: incomplete` — **do not** create worktrees yet; route to the worktree-open gate (pr-plan spawn handoff vs generic incomplete).
-   - When [pr-plan spawn handoff detection](#pr-plan-spawn-handoff-detection) applies, `INCOMPLETE` is **expected** (§§5–8 still `_TBD_` by design). If stdout includes `EXPECTED_SECTIONS_5_8_TBD`, treat as the normal §5d handoff. Use [Spawned from `pr-plan` (expected incomplete)](#spawned-from-pr-plan-expected-incomplete) wording — not “plan not fully populated.”
+ ```bash
+ node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-ws-completeness.mjs --file "<absolute-plan-path>"
+ ```
+ - Exit **0** (`OK` / `SKIP_NOT_PER_PR`) → `planCompleteness: complete` for the worktree-open gate.
+ - Exit **1** (`INCOMPLETE`) → `planCompleteness: incomplete` — **do not** create worktrees yet; route to the worktree-open gate (pr-plan spawn handoff vs generic incomplete).
+ - When [pr-plan spawn handoff detection](#pr-plan-spawn-handoff-detection) applies, `INCOMPLETE` is **expected** (§§5–8 still `_TBD_` by design). If stdout includes `EXPECTED_SECTIONS_5_8_TBD`, treat as the normal §5d handoff. Use [Spawned from `pr-plan` (expected incomplete)](#spawned-from-pr-plan-expected-incomplete) wording — not “plan not fully populated.”
 
 **Multi-repo:** run the script **once** on the shared plan before the worktree-open gate or auto-authorize branch.
 
 ## Auto-authorize implementation (pr-plan spawn)
 
-**Layer 2 waived** — no worktree-open **AskQuestion** / **`MC_PHASED_RESPONSE_V1`** / **`MC_ASKQUESTION_V1`** when the developer already approved **Start coding session** on the **`pr-plan`** lane and the PR plan is ready to implement.
+**Layer 2 waived** — no worktree-open **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** when the developer already approved **Start coding session** on the **`pr-plan`** lane and the PR plan is ready to implement.
 
 ### Eligibility (all required)
 
@@ -228,8 +228,8 @@ Otherwise:
 3. `inputs.promptOnly` is not `true`.
 4. `inputs.repoPath` or non-empty `inputs.repoPaths` is present.
 5. After [Pre-worktree validation](#pre-worktree-validation-plan-completeness), **either**:
-   - `planCompleteness: complete` (`plan-ws-completeness.mjs` exit **0** / `OK`), **or**
-   - `planCompleteness: incomplete` **and** stdout included `EXPECTED_SECTIONS_5_8_TBD` (§§ **1–4** drafted; §§ **5–8** may stay `_TBD_`).
+ - `planCompleteness: complete` (`plan-ws-completeness.mjs` exit **0** / `OK`), **or**
+ - `planCompleteness: incomplete` **and** stdout included `EXPECTED_SECTIONS_5_8_TBD` (§§ **1–4** drafted; §§ **5–8** may stay `_TBD_`).
 
 ### When eligibility fails
 
@@ -251,7 +251,7 @@ Otherwise:
 
 **Layer 2 — single AskQuestion** before any `git worktree add`, sidecar session write, Mission Control worktree attach, or coding-agent prompt emission — **skip** when [Auto-authorize implementation (pr-plan spawn)](#auto-authorize-implementation-pr-plan-spawn) applies. After approval, [Generic flow](#generic-flow-single-repo) step **1** is **`git worktree add` only**; step **3** is **`sedea_add_worktree_folder` only** — see [Hard rules](#hard-rules--git-worktree-vs-workbench-attach-binding).
 
-**Recap and structured choice:** Summarize completeness / plan path in **`display.markdown`** when using **`MC_PHASED_RESPONSE_V1`**. On spawned lanes, **`MC_PHASED_RESPONSE_V1` must be line 1** — see [Spawned lane — sentinel-first (binding)](#spawned-lane--sentinel-first-binding). Open this gate via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **sentinel-only** **`MC_ASKQUESTION_V1`** — prefer one message for recap + modal. See **`../README.md`** § *Recap, structured choice, act (plan-and-deliver)*, **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`**, and **`.cursor/rules/mission-control-agent-runtime.mdc`**.
+**Recap and structured choice:** Summarize completeness / plan path in **`display.markdown`** when using **`MC_PHASED_RESPONSE_V1`**. On spawned lanes, **`MC_PHASED_RESPONSE_V1` must be line 1** — see [Spawned lane — sentinel-first (binding)](#spawned-lane--sentinel-first-binding). Open this gate via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or legacy split — prefer one message for recap + modal. See **`../README.md`** § *Recap, structured choice, act (plan-and-deliver)*, **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`**, and **`.cursor/rules/mission-control-agent-runtime.mdc`**.
 
 **Branch first:** when [Auto-authorize implementation (pr-plan spawn)](#auto-authorize-implementation-pr-plan-spawn) applies, **skip this entire section**. When [pr-plan spawn handoff detection](#pr-plan-spawn-handoff-detection) applies but auto-authorize does not, use [Worktree-open gate (pr-plan spawn handoff)](#worktree-open-gate-pr-plan-spawn-handoff) below — even when `planCompleteness: complete`. Otherwise use the generic tables in this section.
 
@@ -371,46 +371,46 @@ When you emit the final session prompt for the user to paste into **a separate c
 Run only **after** [Pre-worktree validation](#pre-worktree-validation-plan-completeness) and an authorizing choice in the [Worktree-open gate](#worktree-open-gate).
 
 1. Create a worktree on a fresh branch from `origin/main` — **`git worktree add` only** (see [Hard rules](#hard-rules--git-worktree-vs-workbench-attach-binding)):
-   ```bash
-   git fetch origin main
-   git worktree add <sibling-path> -b <branch> origin/main
-   ```
-   - **Forbidden (step 1):** Do **not** call **`sedea_add_worktree_folder`** to create the worktree — MCP attach only mounts an **existing** path. Worktree creation is **`git worktree add` only**.
-   - Prefix sibling paths with the repo directory basename (see **Worktree setup** in `.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`).
-   - Always branch from **`origin/main`**, not **`main`** (same failure mode as in **efficient-pr-shipping**).
-   - Branch naming: **`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`** § *Branch naming* (primary **hosting repo** → Sedea **`7_stacked-pr-branch-naming`**; **hosting repo worktree** → `feat/`, `improve/`, `fix/`, …).
-   - **Dirty-tree gate (hosting repo)** — Before `git worktree add`, run `git status --porcelain` in the repo that receives the worktree (`HOSTING_ROOT` when branching from the primary hosting repo).
-     - **Submodule gitlink-only (non-blocking)** — When the active hosting repo pins `.sedea/` via git submodules (see **`.cursor/rules/dot-sedea.mdc`** § *Submodule pins* on the active hosting repo, for example **`sedea-ai/app`**), and **every** porcelain line is a **modified submodule gitlink** under `.sedea/` (paths under `.sedea/centers/` or `.sedea/operations/`), verify pointer-only drift before proceeding:
-       ```bash
-       git diff --stat -- <submodule-path>
-       ```
-       **Proceed** when each affected submodule shows only a **2 insertions(+), 2 deletions(-)** gitlink change and no other paths appear in that stat. Routine submodule pin updates do **not** block worktree creation.
-     - **Still blocking** — **Stop** when porcelain includes **any** path outside those `.sedea/` submodule gitlink lines (for example `extensions/`, `packages/`, other tracked application source), when `git diff --stat` shows content changes inside a submodule (not pointer-only), or when the hosting repo has non-empty porcelain that is not explained by allowed submodule gitlinks alone.
-     - Do **not** stash, commit, discard, or clean the user's WIP to clear a blocking dirty tree.
-   - If `baseBranch` input is supplied, it must be a remote branch ref such as `origin/main`; do not accept a local-only branch for worktree creation.
+ ```bash
+ git fetch origin main
+ git worktree add <sibling-path> -b <branch> origin/main
+ ```
+ - **Forbidden (step 1):** Do **not** call **`sedea_add_worktree_folder`** to create the worktree — MCP attach only mounts an **existing** path. Worktree creation is **`git worktree add` only**.
+ - Prefix sibling paths with the repo directory basename (see **Worktree setup** in `.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`).
+ - Always branch from **`origin/main`**, not **`main`** (same failure mode as in **efficient-pr-shipping**).
+ - Branch naming: **`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`** § *Branch naming* (primary **hosting repo** → Sedea **`7_stacked-pr-branch-naming`**; **hosting repo worktree** → `feat/`, `improve/`, `fix/`, …).
+ - **Dirty-tree gate (hosting repo)** — Before `git worktree add`, run `git status --porcelain` in the repo that receives the worktree (`HOSTING_ROOT` when branching from the primary hosting repo).
+ - **Submodule gitlink-only (non-blocking)** — When the active hosting repo pins `.sedea/` via git submodules (see **`.cursor/rules/dot-sedea.mdc`** § *Submodule pins* on the active hosting repo, for example **`sedea-ai/app`**), and **every** porcelain line is a **modified submodule gitlink** under `.sedea/` (paths under `.sedea/centers/` or `.sedea/operations/`), verify pointer-only drift before proceeding:
+ ```bash
+ git diff --stat -- <submodule-path>
+ ```
+ **Proceed** when each affected submodule shows only a **2 insertions(+), 2 deletions(-)** gitlink change and no other paths appear in that stat. Routine submodule pin updates do **not** block worktree creation.
+ - **Still blocking** — **Stop** when porcelain includes **any** path outside those `.sedea/` submodule gitlink lines (for example `extensions/`, `packages/`, other tracked application source), when `git diff --stat` shows content changes inside a submodule (not pointer-only), or when the hosting repo has non-empty porcelain that is not explained by allowed submodule gitlinks alone.
+ - Do **not** stash, commit, discard, or clean the user's WIP to clear a blocking dirty tree.
+ - If `baseBranch` input is supplied, it must be a remote branch ref such as `origin/main`; do not accept a local-only branch for worktree creation.
 
 2. **Record the session on the plan** (see [Sidecar state](#sidecar-state)). From the **hosting repo root**:
-   ```bash
-   node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs set-worktrees \
-     --slug <plan-slug> \
-     --json '[{"repo":"<repo-basename>","path":"<absolute-worktree-path>"}]'
-   node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs set-session \
-     --slug <plan-slug> \
-     --focus <absolute-worktree-path>
-   ```
-   Skip when the session has no plan anchor.
+ ```bash
+ node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs set-worktrees \
+ --slug <plan-slug> \
+ --json '[{"repo":"<repo-basename>","path":"<absolute-worktree-path>"}]'
+ node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs set-session \
+ --slug <plan-slug> \
+ --focus <absolute-worktree-path>
+ ```
+ Skip when the session has no plan anchor.
 
 3. **Attach the worktree in Sedea** (same workbench) — **`sedea_add_worktree_folder` only** (see [Hard rules](#hard-rules--git-worktree-vs-workbench-attach-binding)): in Mission Control, invoke MCP **`sedea_add_worktree_folder`** with JSON `{ "path": "<absolute-worktree-root>" }` (optional `"name"` for the explorer label). See **20_efficient-pr-shipping.mdc** — *Squad Leader on the main branch vs. agent sessions on worktree* and *Attach the worktree in Sedea*.
 
-   - **Forbidden (step 3):** Do **not** use editor **Add Folder to Workspace**, hand-edited **`.code-workspace`** files, or “open folder” as a substitute for **`sedea_add_worktree_folder`**. Workbench attach is **`sedea_add_worktree_folder` only** (after step 1 succeeds).
+ - **Forbidden (step 3):** Do **not** use editor **Add Folder to Workspace**, hand-edited **`.code-workspace`** files, or “open folder” as a substitute for **`sedea_add_worktree_folder`**. Workbench attach is **`sedea_add_worktree_folder` only** (after step 1 succeeds).
 
-   This MCP attach is mandatory before post-setup work. If the MCP call fails, stop with `partial`; report the worktree path and the attach error, and keep `continuationStatus: "active"` so the Squad Leader does not close the implementation lane.
+ This MCP attach is mandatory before post-setup work. If the MCP call fails, stop with `partial`; report the worktree path and the attach error, and keep `continuationStatus: "active"` so the Squad Leader does not close the implementation lane.
 
 4. **Worktree bootstrap (mandatory wait)** — see [Worktree bootstrap (inline mandatory)](#worktree-bootstrap-inline-mandatory). Run bootstrap **inline on this lane** and **wait** for `outputs.bootstrapStatus: success`. **Do not** proceed to step 5 until bootstrap succeeds — no parallel implementation.
 
 5. **Branch** per [Execution mode after worktree attach](#execution-mode-after-worktree-attach):
-   - **Spawned implementation lane** → continue with [Spawned implementation lane](#spawned-implementation-lane) (steps 1–7 there).
-   - **Prompt-only handoff** → [Prompt-only handoff](#prompt-only-handoff).
+ - **Spawned implementation lane** → continue with [Spawned implementation lane](#spawned-implementation-lane) (steps 1–7 there).
+ - **Prompt-only handoff** → [Prompt-only handoff](#prompt-only-handoff).
 
 ## Worktree bootstrap (mandatory)
 
@@ -480,7 +480,7 @@ When a protocol step **explicitly** requires a spawned bootstrap child:
 When the plan’s **Worktree setup** lists two or more repos, or the user asks for a cross-repo session:
 
 1. For **each** repo, **`git worktree add` only** with the **same branch name** (unless the plan says otherwise) — never **`sedea_add_worktree_folder`** for creation (see [Hard rules](#hard-rules--git-worktree-vs-workbench-attach-binding)).
-   - Validate every repo before creating any worktree using the same **Dirty-tree gate** as § *Generic flow* step 1. If one repo is blocking-dirty or missing the requested base branch, stop before creating a partial multi-repo session.
+ - Validate every repo before creating any worktree using the same **Dirty-tree gate** as § *Generic flow* step 1. If one repo is blocking-dirty or missing the requested base branch, stop before creating a partial multi-repo session.
 
 2. Optionally create a **`.code-workspace`** file listing each worktree folder with absolute `path` values — use only if your team uses that layout; otherwise attach **each** worktree root with **`sedea_add_worktree_folder` only** in turn (never editor **Add Folder to Workspace**).
 
@@ -512,12 +512,12 @@ Normative order on the **spawned implementation lane** — **do not** skip steps
 
 ```mermaid
 flowchart LR
-  IMPL[Implement — no commit] --> CUT[Ship cut-point gate]
-  CUT --> BDW[Inline deploy-walk — Before deploy]
-  BDW --> PPR[Spawn pre-pr-review]
-  PPR --> CPR[Create-PR handoff after go]
-  CPR --> PMC[Post-merge workspace cleanup]
-  PMC --> ADW[Inline deploy-walk — After deploy]
+ IMPL[Implement — no commit] --> CUT[Ship cut-point gate]
+ CUT --> BDW[Inline deploy-walk — Before deploy]
+ BDW --> PPR[Spawn pre-pr-review]
+ PPR --> CPR[Create-PR handoff after go]
+ CPR --> PMC[Post-merge workspace cleanup]
+ PMC --> ADW[Inline deploy-walk — After deploy]
 ```
 
 | Step | Section | Commit required? |
@@ -695,10 +695,10 @@ When Mission Control delivers the **`pre-pr-review`** result:
 
 1. Copy `blockers`, `flags`, `proposedFollowUps`, `followUpsAppended`, `codingAgentHandback`, `requiresDeveloperApproval`, `remainingTasks`, `activeLanes`, and `openLedgerEntries` into the coding-session result. Record `outputs.prePrReviewRecommendation` from the child.
 2. Compute **`actionablePrePrFindings`** — **true** when **any** of:
-   - `recommendation` is `no-go`
-   - `blockers` is non-empty
-   - `flags` is non-empty
-   - `codingAgentHandback` includes a non-empty **Must** or **Should** group (ignore **Defer**-only handback and items tagged **`[G §7 After deploy — post-merge]`**)
+ - `recommendation` is `no-go`
+ - `blockers` is non-empty
+ - `flags` is non-empty
+ - `codingAgentHandback` includes a non-empty **Must** or **Should** group (ignore **Defer**-only handback and items tagged **`[G §7 After deploy — post-merge]`**)
 3. When **`actionablePrePrFindings`** is true, **immediately recommend** addressing pre-PR review findings before PR creation or another review pass — include one explicit sentence in the recap (for example: *Pre-PR review found issues; fix the relevant items on this lane before opening a PR.*). Do not deliver a findings-only recap without that recommendation.
 4. **If `actionablePrePrFindings`** — open [Review feedback approval gate](#review-feedback-approval-gate) on **this lane** in the **same session** **before** [Create-PR handoff after go](#create-pr-handoff-after-go), **even when** `recommendation` is `go`. Do **not** jump to Create-PR or run inline **`create-pr`** in the same turn as the reviewer result.
 5. **If NOT `actionablePrePrFindings`** and `recommendation` is `go` — proceed to [Create-PR handoff after go](#create-pr-handoff-after-go). Do not make **`pre-pr-review`** run inline **`create-pr`**.
@@ -768,12 +768,12 @@ This path is the normative **`create-pr`** handoff on this lane — it **superse
 
 1. Verify the worktree branch is pushed or pushable per **efficient-pr-shipping**.
 2. Present the reviewer `go` summary, non-blocking flags, and any proposed follow-ups to the developer, then use **AskQuestion** before plan follow-up mutation or PR creation. Required options:
-   - **Approve follow-ups and create PR now**
-   - **Create PR without appending proposed follow-ups**
-   - **Revise code or plan first**
-   - **Defer PR creation**
-   - **Abandon this implementation**
-   - **More details for option _**
+ - **Approve follow-ups and create PR now**
+ - **Create PR without appending proposed follow-ups**
+ - **Revise code or plan first**
+ - **Defer PR creation**
+ - **Abandon this implementation**
+ - **More details for option _**
 3. Only **Approve follow-ups and create PR now** authorizes appending proposed follow-ups before PR creation. **Create PR without appending proposed follow-ups** authorizes only PR creation. Do not treat `pre-pr-review` `go` as developer approval to mutate the plan or open/prepare a PR.
 4. On the **developer's response turn** (not the same turn as the modal), load `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/create-pr/SKILL.md` and run it **inline on this lane** — **do not** emit **`AGENT_RUN_REQUEST_V1`** for **`create-pr`**.
 5. Construct inline context:
@@ -847,7 +847,7 @@ cd "$HOSTING_ROOT"
 OPS_ID="<operationsUserId from Mission Control warm-up or sedea_get_current_user>"
 
 node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs \
-  --operations-user-id "$OPS_ID" detect-stale-workspaces --slug <slug> --json
+ --operations-user-id "$OPS_ID" detect-stale-workspaces --slug <slug> --json
 ```
 
 When **`candidates`** is empty and sidecar **`worktrees[]`** / session focus is already clear, set `outputs.postMergeCleanupStatus: skipped_no_stale` and proceed to [After deploy deploy-walk handoff](#after-deploy-deploy-walk-handoff) on the **next** turn.
@@ -856,7 +856,7 @@ When **`candidates`** is empty and sidecar **`worktrees[]`** / session focus is 
 
 ```bash
 node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/post-reconcile-workspace-cleanup.mjs \
-  --operations-user-id "$OPS_ID" --dry-run [--slug <slug>]
+ --operations-user-id "$OPS_ID" --dry-run [--slug <slug>]
 ```
 
 Present **`actions`**, **`skippedBranches`** (when branch delete waits on remote), and **`mergedPr`** per candidate (information-only when long).
@@ -879,7 +879,7 @@ Only **`cleanup-apply`** authorizes **`--apply`**.
 
 ```bash
 node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/post-reconcile-workspace-cleanup.mjs \
-  --operations-user-id "$OPS_ID" --apply [--slug <slug>]
+ --operations-user-id "$OPS_ID" --apply [--slug <slug>]
 ```
 
 The script pulls **`origin/main`** on **`HOSTING_ROOT`**, then runs **`./scripts/rebuild-native-extensions.sh`** when that script exists and is executable (same path the cleanup script invokes on **`--apply`**).
@@ -1084,10 +1084,10 @@ Writes go through **`plan-state.mjs`** into **`<slug>.state.yaml`** next to **`<
 
 ```yaml
 worktrees:
-  - repo: <repo-basename>
-    path: <absolute-path>
+ - repo: <repo-basename>
+ path: <absolute-path>
 session:
-  focusPath: <absolute-path>
+ focusPath: <absolute-path>
 ```
 
 - Always a **list** for `worktrees`, even when length is 1.
@@ -1117,7 +1117,7 @@ Phrase a hard gate, e.g. `Warm-up first — do not read the task body below --- 
 
 1. **Workspace readiness** — **Read** the worktree **`README`** and **`CONTRIBUTING`** when present. For **readiness or pre-task checks**, follow **only** what those files say, what the **plan** explicitly links for setup, and what **`.cursor/rules/*.mdc`** files prescribe **when they describe pre-work or environment gates** (do not invent extra checks). If nothing prescribes a check, one line **Readiness: no checks in README / CONTRIBUTING / cited rules** — continue. If a prescribed check fails, **stop** and ask the user.
 2. **Verify branch:** `git branch --show-current` matches the expected branch.
-3. **Process handback** — the **developer** continues via **AskQuestion** or **`MC_ASKQUESTION_V1`** (per **30_planning-target-resolution** when a pick is required) or a separate mission dispatch per **development-process**. Name next moves with protocol branches (**`plan-reconcile`**, **`pre-pr-review`**, **`pr-review`**, rule **20** § *Commit and push cadence*).
+3. **Process handback** — the **developer** continues via **AskQuestion** (per **30_planning-target-resolution** when a pick is required) or a separate mission dispatch per **development-process**. Name next moves with protocol branches (**`plan-reconcile`**, **`pre-pr-review`**, **`pr-review`**, rule **20** § *Commit and push cadence*).
 4. **Load project rules:** `Read` every path under **Project rules**; acknowledge before continuing.
 5. **Plan file + sidecar** *(plan-anchored only)*: Plans live under **`.sedea/operations/.../plans/`**; runtime fields (`worktrees`, `prs`, `session`, `parent`, todos via scripts) follow the **`.sedea/operations/`** plan union and **`plan-state.mjs`** contracts — flip todo status only through **`plan-state.mjs`** subcommands (`set-todo-status`, `todo-start`, `todo-done`); do not hand-edit `.state.yaml` except to repair a bad state. After substantive progress on a scoped todo, update status so the Plan Board stays accurate. PR linkage after push follows **20_efficient-pr-shipping** and **`plan-state.mjs upsert-pr`**.
 

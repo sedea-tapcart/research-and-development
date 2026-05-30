@@ -1,9 +1,9 @@
 ---
 name: pr-review
 description: >-
-  Inline coding-session procedure for GitHub PR comment triage and fix loops.
-  Executed by the active coding-session agent only — not spawned, no warmUpRules.
-  Resolves comments only after developer approval.
+ Inline coding-session procedure for GitHub PR comment triage and fix loops.
+ Executed by the active coding-session agent only — not spawned, no warmUpRules.
+ Resolves comments only after developer approval.
 ---
 
 # PR Review Workflow
@@ -24,7 +24,7 @@ If Mission Control opened a session whose only intent is **`pr-review`** / *tria
 
 ## Structured choice (Mission Control)
 
-Triage and fix loops use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **`MC_ASKQUESTION_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* on the **`coding-session`** lane — **preferred:** recap (comment summary) + modal in one message. **Act** (code/plan edits) only after developer approval per this skill.
+Triage and fix loops use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* on the **`coding-session`** lane — **preferred:** recap (comment summary) + modal in one message. **Act** (code/plan edits) only after developer approval per this skill.
 
 ## Helper script
 
@@ -43,15 +43,15 @@ The script reads input from (in order): **`PR_REVIEW_INPUT`** (absolute path to 
 
 The point is a **reviewable JSON payload** and a **stable allowlisted shell command** (`python3 .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/pr-review.py` only) — **never** `printf … && python3 …` in one line.
 
-1. **First step — write the input file only**  
-   Create a temp path outside the repo, e.g. `PRR_INPUT=$(mktemp /tmp/cursor-pr-review-input.XXXXXX)` (six trailing `X`). Use the **Write** tool to write the JSON to that **absolute** path (or a **Shell** that **only** writes the file and exits — **no** `&&` to the script).
+1. **First step — write the input file only**
+ Create a temp path outside the repo, e.g. `PRR_INPUT=$(mktemp /tmp/cursor-pr-review-input.XXXXXX)` (six trailing `X`). Use the **Write** tool to write the JSON to that **absolute** path (or a **Shell** that **only** writes the file and exits — **no** `&&` to the script).
 
-2. **Second step — run the script only**  
-   A **separate** **Shell** invocation (from **`HOSTING_ROOT`**, not the worktree root alone):
+2. **Second step — run the script only**
+ A **separate** **Shell** invocation (from **`HOSTING_ROOT`**, not the worktree root alone):
 
-   `cd "$HOSTING_ROOT" && PR_REVIEW_INPUT="<absolute-path-from-step-1>" python3 .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/pr-review.py`
+ `cd "$HOSTING_ROOT" && PR_REVIEW_INPUT="<absolute-path-from-step-1>" python3 .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/pr-review.py`
 
-   No `echo`/`printf`/heredoc, no redirection, no `&&` chaining write + script on this line.
+ No `echo`/`printf`/heredoc, no redirection, no `&&` chaining write + script on this line.
 
 **Never** chain writing and executing in one shell line, for example:
 
@@ -69,10 +69,10 @@ Input format — **one object** (single command) or a **JSON array** of command 
 
 ```json
 [
-  {"command":"reply","owner":"org","repo":"repo","pr":123,"comment_id":456,"body":"**Fixed:** …"},
-  {"command":"resolve","owner":"org","repo":"repo","pr":123,"thread_id":"PRRT_..."},
-  {"command":"minimize","owner":"org","repo":"repo","pr":123,"node_id":"PRR_...","classifier":"RESOLVED"},
-  {"command":"summary","owner":"org","repo":"repo","pr":123,"body":"### PR comments addressed …"}
+ {"command":"reply","owner":"org","repo":"repo","pr":123,"comment_id":456,"body":"**Fixed:** …"},
+ {"command":"resolve","owner":"org","repo":"repo","pr":123,"thread_id":"PRRT_..."},
+ {"command":"minimize","owner":"org","repo":"repo","pr":123,"node_id":"PRR_...","classifier":"RESOLVED"},
+ {"command":"summary","owner":"org","repo":"repo","pr":123,"body":"### PR comments addressed …"}
 ]
 ```
 
@@ -108,21 +108,21 @@ Before Step 1, attempt to upsert the resolved PR number into the Plan Board side
 If the id is omitted, only `joint` plans are visible (stderr warns once). **Slug collision:** the same slug in both trees → the **user** tree wins (listed first).
 
 ```bash
-WORKTREE_ROOT="$(pwd)"   # hosting repo worktree (after cd into it)
-# HOSTING_ROOT: walk up until .sedea/centers/sedea/ or .sedea/ exists — see rule 20 § *Resolve HOSTING_ROOT*
+WORKTREE_ROOT="$(pwd)" # hosting repo worktree (after cd into it)
+# HOSTING_ROOT: walk up until .sedea/centers/sedea/.sedea/ exists — see rule 20 § *Resolve HOSTING_ROOT*
 cd "$HOSTING_ROOT"
 OPS_ID="<operationsUserId from Mission Control warm-up or sedea_get_current_user>"
 
 node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs \
-  --operations-user-id "$OPS_ID" resolve --cwd "$WORKTREE_ROOT"
+ --operations-user-id "$OPS_ID" resolve --cwd "$WORKTREE_ROOT"
 # → exit 0 prints "<slug>\t<planPath>"; exit 2 = no plan; other = error.
 
 # If resolve succeeded, upsert the PR number from Step 0 into the sidecar:
 node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs \
-  --operations-user-id "$OPS_ID" upsert-pr \
-  --slug <slug-from-resolve> \
-  --repo "$(basename "$WORKTREE_ROOT")" \
-  --number <pull_number-from-Step-0>
+ --operations-user-id "$OPS_ID" upsert-pr \
+ --slug <slug-from-resolve> \
+ --repo "$(basename "$WORKTREE_ROOT")" \
+ --number <pull_number-from-Step-0>
 ```
 
 Skip silently when `resolve` exits non-zero (session has no plan) or when `pull_number` is unknown (Step 0 fell through every branch). Never block **`pr-review`** on a helper failure — log and continue with Step 1.
@@ -133,11 +133,11 @@ Skip silently when `resolve` exits non-zero (session has no plan) or when `pull_
 
 1. Use the resolved `owner`, `repo`, and `pull_number`.
 2. Run **`pr-review.py` once** with a JSON **array** of commands (same `PR_REVIEW_INPUT` two-step workflow as above), in this order:
-   - `{"command":"review-comments",...}` — REST: all inline PR review comments (ids, bodies, paths, lines, authors). Paginated inside the script.
-   - `{"command":"pull-reviews",...}` — REST: all submitted pull request reviews (bodies, states, `node_id` for Step 5 minimize, authors).
-   - `{"command":"threads",...}` — GraphQL: thread `id`, `isResolved`, per-comment `databaseId`, `isMinimized` / `minimizedReason`, path/line (thread metadata for resolve; **merge** with `review-comments` by matching `databaseId` to REST comment `id`).
-   - `{"command":"reviews",...}` — GraphQL: top-level review `id`, `databaseId`, `state`, `isMinimized` / `minimizedReason`, author (bodies come from `pull-reviews` REST only, to keep GraphQL payloads small).
-   - `{"command":"issue-comments",...}` — REST: timeline comments on the PR issue (for prior *PR comments addressed* summaries in Step 2).
+ - `{"command":"review-comments",...}` — REST: all inline PR review comments (ids, bodies, paths, lines, authors). Paginated inside the script.
+ - `{"command":"pull-reviews",...}` — REST: all submitted pull request reviews (bodies, states, `node_id` for Step 5 minimize, authors).
+ - `{"command":"threads",...}` — GraphQL: thread `id`, `isResolved`, per-comment `databaseId`, `isMinimized` / `minimizedReason`, path/line (thread metadata for resolve; **merge** with `review-comments` by matching `databaseId` to REST comment `id`).
+ - `{"command":"reviews",...}` — GraphQL: top-level review `id`, `databaseId`, `state`, `isMinimized` / `minimizedReason`, author (bodies come from `pull-reviews` REST only, to keep GraphQL payloads small).
+ - `{"command":"issue-comments",...}` — REST: timeline comments on the PR issue (for prior *PR comments addressed* summaries in Step 2).
 3. Parse stdout: **one JSON value per array element**, each on its own line, in the same order as the input array (omit trailing commands only if you intentionally used a shorter array).
 4. Deduplicate: a comment that appears both in a top-level review body and as an inline comment counts once.
 

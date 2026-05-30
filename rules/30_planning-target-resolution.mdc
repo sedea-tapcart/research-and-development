@@ -1,10 +1,10 @@
 ---
 description: >-
-  How to resolve the target `.plan.md` when running plan-and-deliver protocol branches
-  (new-plan, phase-planner, pr-plan, delivery-phases, pr-breakdown, plan-reconcile). Resolution
-  is from session and chat context — not from IDE focused-file list. Covers resolution order,
-  snapshot emission, and "Where we are now in the plan tree" table format for planning moves
-  (§ *Sedea input channel*; § *Planning vs ship cadence*). **`planner`** handoff uses the same contract (Step 7 — AskQuestion + AGENT_RUN_REQUEST_V1).
+ How to resolve the target `.plan.md` when running plan-and-deliver protocol branches
+ (new-plan, phase-planner, pr-plan, delivery-phases, pr-breakdown, plan-reconcile). Resolution
+ is from session and chat context — not from IDE focused-file list. Covers resolution order,
+ snapshot emission, and "Where we are now in the plan tree" table format for planning moves
+ (§ *Sedea input channel*; § *Planning vs ship cadence*). **`planner`** handoff uses the same contract (Step 7 — AskQuestion + AGENT_RUN_REQUEST_V1).
 alwaysApply: true
 ---
 
@@ -14,11 +14,11 @@ Planning protocol branches act on a specific `.plan.md` under the **`.sedea/oper
 
 ## Sedea input channel (planning picks)
 
-When a turn **requires a user reply** before you continue (pick a planning branch, confirm a target plan, choose list index **N** for **`new-plan`**), collect that pick through **AskQuestion** or **`MC_ASKQUESTION_V1`** per [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](.sedea/centers/sedea/rules/2_ask-question-instructions.mdc). **Supersedes** the former *AskQuestion or numbered bullet list* option in this rule. Mission Control **AskQuestion** also exposes **free-form text** on the modal — use it for extra instruction alongside an `option` pick; do not reopen choices in prose chat.
+When a turn **requires a user reply** before you continue (pick a planning branch, confirm a target plan, choose list index **N** for **`new-plan`**), collect that pick through **AskQuestion** per [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](.sedea/centers/sedea/rules/2_ask-question-instructions.mdc). **Supersedes** the former *AskQuestion or numbered bullet list* option in this rule. Mission Control **AskQuestion** also exposes **free-form text** on the modal — use it for extra instruction alongside an `option` pick; do not reopen choices in prose chat.
 
 **Snapshot table (information-only).** The *Next viable moves* column may use **numbered rows** so the developer can read the plan tree in one glance. Those numbers are **reference labels** for the snapshot only — when a pick is required, offer the same moves as **AskQuestion** `options` (§ above).
 
-**Recap and structured choice.** When the snapshot is long, follow [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](.sedea/centers/sedea/rules/2_ask-question-instructions.mdc) § **Context and structured choice** and **`../missions/plan-and-deliver/skills/README.md`** § *Recap, structured choice, act*: **preferred** — **AskQuestion tool** or **`MC_PHASED_RESPONSE_V1`** (`display.markdown` = snapshot; `askQuestion` = one `option` per move, brief `label`, branch + target in `prompt` when needed). **Legacy split** — recap-only message, then structured choice (**AskQuestion** or sentinel-only **`MC_ASKQUESTION_V1`**) in the **next** assistant message only when 1–2 are unavailable. Do **not** stop after recap without opening the modal in the same response (phased/tool) or the immediate follow-up (split).
+**Recap and structured choice.** When the snapshot is long, follow [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](.sedea/centers/sedea/rules/2_ask-question-instructions.mdc) § **Context and structured choice** and **`../missions/plan-and-deliver/skills/README.md`** § *Recap, structured choice, act*: **preferred** — **AskQuestion tool** or **`MC_PHASED_RESPONSE_V1`** (`display.markdown` = snapshot; `askQuestion` = one `option` per move, brief `label`, branch + target in `prompt` when needed). **Legacy split** — recap-only message, then structured choice (**AskQuestion**) in the **next** assistant message only when 1–2 are unavailable. Do **not** stop after recap without opening the modal in the same response (phased/tool) or the immediate follow-up (split).
 
 ## At a glance — planning vs ship (read first)
 
@@ -167,29 +167,29 @@ Snapshots should respect **coding-session** pre-worktree validation and the work
 
 1. For each in-scope **PR plan** row, detect `_TBD_` outside fenced code in §§5–8 / deploy where applicable, or run **`plan-ws-completeness.mjs`** from **`HOSTING_ROOT`** (§ *Hosting repo cwd for scripts (canonical)* in [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](20_efficient-pr-shipping.mdc)):
 
-   ```bash
-   cd "$HOSTING_ROOT"
-   node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-ws-completeness.mjs \
-     --file "<absolute path to .plan.md>"
-   ```
+ ```bash
+ cd "$HOSTING_ROOT"
+ node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-ws-completeness.mjs \
+ --file "<absolute path to .plan.md>"
+ ```
 
-   Exit **1** (`INCOMPLETE`) means incomplete for worktree handoff even when the plan was marked planning-ready.
+ Exit **1** (`INCOMPLETE`) means incomplete for worktree handoff even when the plan was marked planning-ready.
 
-   After **`pr-plan`** §5d spawn (`planningHandoffMode: sections-1-4-complete` and `readyForImplementation: true`), exit **1** (`INCOMPLETE`) is **expected** until §§5–8 are filled on the **`coding-session`** lane. The child uses **Worktree-open gate (pr-plan spawn handoff)** — **Continue — fill §§5–8 while implementing** — not “executive override” framing (see **`coding-session/SKILL.md`** § *Spawned from pr-plan (expected incomplete)*). Optional stdout line `EXPECTED_SECTIONS_5_8_TBD` confirms §§1–4 are drafted and §§5–8 remain `_TBD_`.
+ After **`pr-plan`** §5d spawn (`planningHandoffMode: sections-1-4-complete` and `readyForImplementation: true`), exit **1** (`INCOMPLETE`) is **expected** until §§5–8 are filled on the **`coding-session`** lane. The child uses **Worktree-open gate (pr-plan spawn handoff)** — **Continue — fill §§5–8 while implementing** — not “executive override” framing (see **`coding-session/SKILL.md`** § *Spawned from pr-plan (expected incomplete)*). Optional stdout line `EXPECTED_SECTIONS_5_8_TBD` confirms §§1–4 are drafted and §§5–8 remain `_TBD_`.
 
 2. **Anchor plan** for **coding-session** matches **`plan-state.mjs resolve`** — shell **`cwd`** is **`HOSTING_ROOT`**, **`--cwd`** is the worktree when linked:
 
-   ```bash
-   cd "$HOSTING_ROOT"
-   node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs \
-     --operations-user-id <operationsUserId> resolve --cwd "$WORKTREE_ROOT"
-   ```
+ ```bash
+ cd "$HOSTING_ROOT"
+ node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs \
+ --operations-user-id <operationsUserId> resolve --cwd "$WORKTREE_ROOT"
+ ```
 
-   When not in a worktree, use the PR plan path explicitly in play. Do **not** set script paths from `ROOT="$(git rev-parse --show-toplevel)"` in a hosting repo worktree alone.
+ When not in a worktree, use the PR plan path explicitly in play. Do **not** set script paths from `ROOT="$(git rev-parse --show-toplevel)"` in a hosting repo worktree alone.
 
 3. If incomplete **and** that plan is the default **coding-session** anchor:
-   - **Detached / snapshot** entry: the **first** **AskQuestion** `option` should be finishing the PR plan sections; list **coding-session** only after completeness or with an explicit override label consistent with the **coding-session** skill.
-   - **After `pr-plan` spawn** with `planningHandoffMode: sections-1-4-complete`: do **not** imply planning failed; offer **`coding-session`** pr-plan spawn handoff options (**Continue — fill §§5–8 while implementing** first).
+ - **Detached / snapshot** entry: the **first** **AskQuestion** `option` should be finishing the PR plan sections; list **coding-session** only after completeness or with an explicit override label consistent with the **coding-session** skill.
+ - **After `pr-plan` spawn** with `planningHandoffMode: sections-1-4-complete`: do **not** imply planning failed; offer **`coding-session`** pr-plan spawn handoff options (**Continue — fill §§5–8 while implementing** first).
 
 When every in-scope PR plan passes completeness, normal ordering resumes.
 

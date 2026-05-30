@@ -1,61 +1,61 @@
 ---
 name: pre-pr-review
 description: >-
-  Pre-PR reviewer agent (fresh spawned lane): review a committed implementation
-  diff against a PR plan or free-form scope, score plan/rules/quality categories,
-  propose Code Review Follow-ups when plan-anchored, and report go/no-go before PR
-  creation. Scores §7 Before deploy only; After deploy is post-merge (deploy-walk) and
-  is omitted entirely from this report (not Defer, flags, or summary). Spawned by
-  coding-session after the implementation cut point;
-  coding-session obtains developer approval before any follow-up mutation.
+ Pre-PR reviewer agent (fresh spawned lane): review a committed implementation
+ diff against a PR plan or free-form scope, score plan/rules/quality categories,
+ propose Code Review Follow-ups when plan-anchored, and report go/no-go before PR
+ creation. Scores §7 Before deploy only; After deploy is post-merge (deploy-walk) and
+ is omitted entirely from this report (not Defer, flags, or summary). Spawned by
+ coding-session after the implementation cut point;
+ coding-session obtains developer approval before any follow-up mutation.
 inputs:
-  anchorType:
-    type: string
-    description: Review anchor type, either plan or free-form.
-    required: true
-  targetPlanPath:
-    type: string
-    description: Absolute PR plan path when anchorType is plan.
-    required: false
-  targetPlanSlug:
-    type: string
-    description: PR plan slug when anchorType is plan.
-    required: false
-  worktreePath:
-    type: string
-    description: Absolute hosting repo worktree path to review.
-    required: true
-  branchName:
-    type: string
-    description: Branch being reviewed.
-    required: true
-  baseRef:
-    type: string
-    description: Remote base ref for the review diff, usually origin/main.
-    required: true
-  projectRules:
-    type: array
-    description: Absolute .cursor/rules/*.mdc paths to read before scoring.
-    required: false
-    default: []
-  diffSummary:
-    type: object
-    description: Optional summary from coding-session, including commits, files, and line counts.
-    required: false
-  ledgerParent:
-    type: string
-    description: Ledger parent slug/path copied from the upstream implementation agent.
-    required: false
-  upstreamSkill:
-    type: string
-    description: Skill that spawned this reviewer, usually coding-session.
-    required: false
+ anchorType:
+ type: string
+ description: Review anchor type, either plan or free-form.
+ required: true
+ targetPlanPath:
+ type: string
+ description: Absolute PR plan path when anchorType is plan.
+ required: false
+ targetPlanSlug:
+ type: string
+ description: PR plan slug when anchorType is plan.
+ required: false
+ worktreePath:
+ type: string
+ description: Absolute hosting repo worktree path to review.
+ required: true
+ branchName:
+ type: string
+ description: Branch being reviewed.
+ required: true
+ baseRef:
+ type: string
+ description: Remote base ref for the review diff, usually origin/main.
+ required: true
+ projectRules:
+ type: array
+ description: Absolute .cursor/rules/*.mdc paths to read before scoring.
+ required: false
+ default: []
+ diffSummary:
+ type: object
+ description: Optional summary from coding-session, including commits, files, and line counts.
+ required: false
+ ledgerParent:
+ type: string
+ description: Ledger parent slug/path copied from the upstream implementation agent.
+ required: false
+ upstreamSkill:
+ type: string
+ description: Skill that spawned this reviewer, usually coding-session.
+ required: false
 warmUpRules:
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
-  - ".sedea/centers/research-and-development/docs/development-process.md"
-  - ".sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc"
-  - ".sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc"
+ - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
+ - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
+ - ".sedea/centers/research-and-development/docs/development-process.md"
+ - ".sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc"
+ - ".sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc"
 ---
 
 # Pre-PR Review
@@ -66,7 +66,7 @@ This pass complements, and does not replace, the later GitHub-surface **reviewer
 
 ## Structured choice (Mission Control)
 
-This skill does not own approval modals — **`coding-session`** collects developer consent before spawns. When this lane must surface a pick, use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **`MC_ASKQUESTION_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act*.
+This skill does not own approval modals — **`coding-session`** collects developer consent before spawns. When this lane must surface a pick, use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act*.
 
 ## Step 1 — Validate spawned inputs
 
@@ -193,9 +193,9 @@ Report:
 3. Flags.
 4. Recommendation: `go` only when there are no `FAIL` rows.
 5. Coding-agent handback: what to fix next, with **`Must`** and **`Should`** groups when non-empty. Apply [Pre-PR phase boundary](#pre-pr-phase-boundary-plan-anchor):
-   - **`Must`** — merge-blocking `FAIL` rows and true pre-merge gaps only.
-   - **`Should`** — pre-merge improvements only.
-   - **`Defer`** — **do not use** for **`### After deploy`**, **`deploy-walk`**, or post-merge production smoke (see **§7 After deploy — silent omission** above). Include **`Defer`** only for other genuinely deferred pre-PR-adjacent items; if none, omit the **`Defer`** section and do not populate post-merge deploy bullets in `outputs.codingAgentHandback`.
+ - **`Must`** — merge-blocking `FAIL` rows and true pre-merge gaps only.
+ - **`Should`** — pre-merge improvements only.
+ - **`Defer`** — **do not use** for **`### After deploy`**, **`deploy-walk`**, or post-merge production smoke (see **§7 After deploy — silent omission** above). Include **`Defer`** only for other genuinely deferred pre-PR-adjacent items; if none, omit the **`Defer`** section and do not populate post-merge deploy bullets in `outputs.codingAgentHandback`.
 6. **Deploy test plan (§7):** when the developer reported manual §7 smoke during review, list which numbered **`### Before deploy`** steps they said passed — the coding agent should flip those lines in `targetPlanPath` only after the developer **confirms each step** in session (see **`coding-session`** § *Deploy test plan confirmations*). Do **not** mention **`### After deploy`** in this pass. This reviewer skill does **not** append `[x]` without that per-step confirmation.
 
 The handback is advisory until the developer approves the fix pass. Do not frame reviewer feedback as automatic authorization for **`coding-session`** to edit code. The coding agent must present the review result to the developer, **recommend** addressing relevant findings when **`actionablePrePrFindings`** applies, and open its **Review feedback approval gate** (including **Implement pre-PR review findings now (this session)** as the first option — **even when** `recommendation` is `go` but `flags` or **Must** / **Should** handback remain) before applying fixes or proceeding to Create-PR.

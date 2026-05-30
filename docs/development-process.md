@@ -17,9 +17,9 @@ The six principles below are the non-negotiables. Everything in **Planning Modes
 
 1. **Top-down granularity.** Planning moves from the highest, least-granular level down to the lowest, most-granular level. We never start from a PR.
 2. **Three planning modes.** Planning happens in three modes, applied top-down:
-   - *Architectural / code design* — what the shape of the solution is.
-   - *Delivery phases* — how that shape decomposes on its way to delivery (a phase is never delivered directly — it splits further into sub-phases or into PRs).
-   - *PR breakdown* — how a **PR-ready plan** (a phase plan decided not to decompose further, or a Master Plan small enough to skip the phase layer) breaks into individual, coding-ready PRs. Optional and partial: only PR-ready plans go through this mode.
+ - *Architectural / code design* — what the shape of the solution is.
+ - *Delivery phases* — how that shape decomposes on its way to delivery (a phase is never delivered directly — it splits further into sub-phases or into PRs).
+ - *PR breakdown* — how a **PR-ready plan** (a phase plan decided not to decompose further, or a Master Plan small enough to skip the phase layer) breaks into individual, coding-ready PRs. Optional and partial: only PR-ready plans go through this mode.
 3. **Each level has its own set of plans.** A planning level in the hierarchy is not a single document; it is a set of plans that share that level's granularity.
 4. **Small chunks, fast to production.** We plan and deliver small chunks of work. Chunks that are ready ship to production as soon as possible — we do not batch.
 5. **Forward planning is partial by design.** We do not require everything to be planned before the first chunks go out. Later levels are planned just-in-time as earlier chunks land.
@@ -59,15 +59,15 @@ One decision before **`planner`**. Squad Leader procedure: **`.sedea/centers/res
 
 ```mermaid
 flowchart TD
-  START[Requirements before planner] --> HAS{Readable PRD exists?}
-  HAS -->|yes file URL path| PAD[plan and deliver §1 opt 1 → §2]
-  HAS -->|no short blurb on plan and deliver| ADHOC[§1 opt 2 → spawn ad-hoc-prd]
-  HAS -->|no full structured doc| PRD[prd create prd / manage prd]
-  HAS -->|URL blocked in §2| AQ[plan and deliver §2 AskQuestion]
-  PRD --> LATER[New plan and deliver + @path]
-  ADHOC --> SEED[§4 seed → §5 spawn planner]
-  PAD --> SEED
-  LATER --> PAD
+ START[Requirements before planner] --> HAS{Readable PRD exists?}
+ HAS -->|yes file URL path| PAD[plan and deliver §1 opt 1 → §2]
+ HAS -->|no short blurb on plan and deliver| ADHOC[§1 opt 2 → spawn ad-hoc-prd]
+ HAS -->|no full structured doc| PRD[prd create prd / manage prd]
+ HAS -->|URL blocked in §2| AQ[plan and deliver §2 AskQuestion]
+ PRD --> LATER[New plan and deliver + @path]
+ ADHOC --> SEED[§4 seed → §5 spawn planner]
+ PAD --> SEED
+ LATER --> PAD
 ```
 
 | Route | When | Mission / phrase | Artifact | Next |
@@ -157,7 +157,7 @@ Labels reuse numbers and § symbols across documents. **Read the owning doc** be
 - **`.plan.md` files** — Standalone plan files at each hierarchy level (Master Plan, phase plans, PR plans); canonical location is under `.sedea/operations/**/plans/**`.
 - **PRD** — Product (or feature) Requirements Document — the prime input for the one-shot **Master Plan** (mode #1). **Which authoring flow** (`prd` mission vs **`plan and deliver`** + **`ad-hoc-prd`**) is decided in § *PRD routing (canonical)* above — not by filename alone.
 - **Git worktree** — Isolated worktree used by the **`coding-session`** protocol branch when spinning up a coding agent.
-- **Protocol** — The **plan and deliver** mission (`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`, command phrase *plan and deliver*) — protocol branches and skills under `missions/plan-and-deliver/skills/` implement this document's cadence. 
+- **Protocol** — The **plan and deliver** mission (`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`, command phrase *plan and deliver*) — protocol branches and skills under `missions/plan-and-deliver/skills/` implement this document's cadence.
 
 ### Protocol branches
 
@@ -218,12 +218,12 @@ A **Master Plan** operates at feature granularity. It has these sections only �
 2. **Benefits.** Short bullet points covering only the *why* — benefits to merchants or their customers, cost / effort reductions for the system, user-experience improvements. Follow the short-bullet rule from the bullet-style convention above.
 3. **Related features.** Short bullet points capturing how this feature relates to others touching the same parts of the system. Per related feature, list the relationship type and what it implies for **delivery** or **scope**. **Ordering / concurrency** — *follows*, *precedes*, or *concurrent*, with the implied synchronization need (order, shared surface, rollout coupling). **Scope** — *narrows scope*, *widens scope*, or *shifts scope*, with a few words on *how* (less this feature must own, more it must cover, or boundaries / ownership that move). One bullet may combine ordering and scope when both apply. Follows the short-bullet rule.
 4. **Architectural design.** One or more diagrams showing what the implementation will look like. Pick the diagram type(s) that best fit the feature:
-   - **Component / architecture chart** — service topology, module boundaries, dependency direction.
-   - **Flow chart** — control flow or data flow through new logic.
-   - **Sequence diagram** — interactions between services, processes, or actors over time.
-   - **State diagram** — lifecycle / state-machine changes.
-   - **ER / schema diagram** — data model or database changes.
-   - …whatever conveys the change most clearly.
+ - **Component / architecture chart** — service topology, module boundaries, dependency direction.
+ - **Flow chart** — control flow or data flow through new logic.
+ - **Sequence diagram** — interactions between services, processes, or actors over time.
+ - **State diagram** — lifecycle / state-machine changes.
+ - **ER / schema diagram** — data model or database changes.
+ - …whatever conveys the change most clearly.
 5. **Changes.** Short bullet points listing what changes, how, and where, scoped at the feature level. Follows the short-bullet rule. Immediately after the change bullets, the **`planner`** protocol branch appends a **`### Decomposition assessment`** subsection (same short-bullet + one-line recommendation pattern as phase plans — see mode #2 below). That block records **kinds of change**, **PR count band**, **sequencing / coupling**, a **routing recommendation** (`Delivery phases`, multi-PR `PR breakdown`, or single-PR `PR breakdown`), and **confidence**, so **developer** can choose "Delivery Phase" or "PR Breakdown" with evidence before § 6 is drafted. After that block, **`planner`** appends **`### Complexity score (plan-scope signal)`** using the **table + overall score + band** shape and counting rules defined in **`planner`** Step 6c (**low** ≤ 10, **medium** 11–20, **high** > 20, where the score is the max of the three table rows). **High** means pause **§6 decomposition** (spawn route) until the plan is narrowed or split along merchant/customer outcomes (see the protocol branch).
 6. **Delivery phases | PR breakdown.** Dual-title section: the heading is `Delivery phases` when the feature decomposes into one or more phase plans, or `PR breakdown` when the feature is small enough to break directly into PRs without an intermediate phase layer. When the heading is `Delivery phases`, the body is a **short numbered list** (see the **§ 6 / § 5 contents rule** below the Phase plan template in mode #2). Most features land on `Delivery phases`; tiny features that don't need a phase layer land on `PR breakdown` and skip mode #2 entirely. Until this section is drafted, its body may stay `_TBD_` **or** follow the **assessment-before-dual-title** pattern in the **§ 6 / § 5 contents rule** (assessment block already present from § 5, dual-title list still `_TBD_`).
 7. **Caveats.** *Optional — omit if there are none.* Anything that needs special attention — known exceptions, edge cases, risks, or coupling that isn't obvious from the diagram or change list. Follows the short-bullet rule from the bullet-style convention above (developer-primary; one short bullet per concern is more scannable than a paragraph).
@@ -256,17 +256,17 @@ A **phase plan** is a standalone plan file that fills in one entry of a parent p
 Every plan ends in a **dual-title section** — § 6 in the Master Plan, § 5 in a Phase plan — whose heading is one of two values, and whose body shape is determined by the heading:
 
 - **Heading = `Delivery phases`** (the plan decomposes into child phases): a **short numbered list** — use Markdown ordered list syntax (`1.`, `2.`, `3.`, …), **one numbered item per child phase**. Under each numbered item, three nested sub-bullets (unordered `-` bullets are fine):
-  - Sub-bullet 1: the child's decomposition decision — `Delivery phases` or `PR breakdown` (matches the child plan's own dual-title heading).
-  - Sub-bullet 2: a one-line scope sentence (paraphrased from the child plan's § 2 Scope).
-  - Sub-bullet 3: a Markdown link to the child plan's `.plan.md` file.
+ - Sub-bullet 1: the child's decomposition decision — `Delivery phases` or `PR breakdown` (matches the child plan's own dual-title heading).
+ - Sub-bullet 2: a one-line scope sentence (paraphrased from the child plan's § 2 Scope).
+ - Sub-bullet 3: a Markdown link to the child plan's `.plan.md` file.
 
-  List index **N** (1-based ordered list) is what the developer picks via **AskQuestion** or **`MC_ASKQUESTION_V1`** (one `option` per index) when spawning a child via **`new-plan`**: keep list order and numbering in sync with `## N.` phase headings in the parent plan when you add those headings (same **N**, same sequence). Follows the short-bullet rule (each sub-bullet is one short line).
+ List index **N** (1-based ordered list) is what the developer picks via **AskQuestion** (one `option` per index) when spawning a child via **`new-plan`**: keep list order and numbering in sync with `## N.` phase headings in the parent plan when you add those headings (same **N**, same sequence). Follows the short-bullet rule (each sub-bullet is one short line).
 
 - **Heading = `PR breakdown`** (the plan is PR-ready and decomposes directly into PRs): the mode #3 set-level content — Single-concern strategy + Sequencing + **PR list**. The **PR list** sub-section is itself a **short numbered list** mirroring the Delivery phases shape (one numbered item per PR, with the PR's slug or short title bolded on the item line so **`new-plan`** can seed the child name from item **N**). See mode #3 below for the full set-level template, including the two sub-bullets each numbered item carries.
 
 A short **optional intro paragraph** (one or two sentences) is allowed immediately under the heading and before the entries — useful when the decomposition needs a one-line framing the reader can't infer from the entries alone (e.g. "phases run in two parallel tracks"). Skip it when the entries speak for themselves; an empty intro is preferred over filler.
 
-A non-PR-ready plan thus *only* lists short summaries pointing at child plans — never inlines a child's body. To break a child entry out into its own plan file, the developer picks list index **N** via **AskQuestion** or **`MC_ASKQUESTION_V1`** per **30_planning-target-resolution** § *Sedea input channel*; the agent runs the **`new-plan`** protocol branch (**Development tools** § *Protocol branches*) with the parent plan resolved from chat context per **`.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`**. **N** is the ordered-list index from the parent's numbered list of children — `Delivery phases` body when the heading is `Delivery phases`, or the `### PR list` sub-section when the heading is `PR breakdown`. **`new-plan`** seeds the child plan's name from the bolded item title on item **N**'s line (indexed-child mode). **Indexed-child stub:** the child file uses a **generic** scaffold (`## Overview`, `## Phasing`, `## Out of scope`) until **`phase-planner`** or **`pr-plan`** replaces the body with the Phase plan or per-PR template — that two-step split is intentional.
+A non-PR-ready plan thus *only* lists short summaries pointing at child plans — never inlines a child's body. To break a child entry out into its own plan file, the developer picks list index **N** via **AskQuestion** per **30_planning-target-resolution** § *Sedea input channel*; the agent runs the **`new-plan`** protocol branch (**Development tools** § *Protocol branches*) with the parent plan resolved from chat context per **`.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`**. **N** is the ordered-list index from the parent's numbered list of children — `Delivery phases` body when the heading is `Delivery phases`, or the `### PR list` sub-section when the heading is `PR breakdown`. **`new-plan`** seeds the child plan's name from the bolded item title on item **N**'s line (indexed-child mode). **Indexed-child stub:** the child file uses a **generic** scaffold (`## Overview`, `## Phasing`, `## Out of scope`) until **`phase-planner`** or **`pr-plan`** replaces the body with the Phase plan or per-PR template — that two-step split is intentional.
 
 #### Depth-first plan-tree traversal (indexed spawn)
 
@@ -334,14 +334,14 @@ When a PR-ready plan's dual-title section is titled `PR breakdown` and populated
 
 1. **Single-concern strategy.** 1–2 sentences on how this PR-ready plan keeps each PR single-concern (Strategy #6) — typically: "every PR maps to exactly one user-visible behavior change or one internal contract change; no PR mixes concerns". Optionally followed by a short bullet list of concerns that were tempting to bundle but were intentionally split (short-bullet rule per the convention above).
 2. **Sequencing.** How PRs relate in time — **this subsection is the machine-readable gate** for depth-first PR expansion (see **Depth-first plan-tree traversal** above). Pick whichever form conveys it most clearly:
-   - Bullet list grouped by stage: *Stage 1 (sequential): PR 1 → PR 2; Stage 2 (parallel): PR 3, PR 4*. Numbers match the `### PR list` ordering so cross-references resolve at a glance. Label each stage **`(sequential)`** or **`(parallel)`** so agents can parse blocking vs concurrent PRs.
-   - Small dependency diagram (Mermaid graph or similar) — optional supplement; the staged bullet form remains authoritative for **`new-plan`** eligibility when both exist.
-   When the bullet form is used, follows the short-bullet rule.
+ - Bullet list grouped by stage: *Stage 1 (sequential): PR 1 → PR 2; Stage 2 (parallel): PR 3, PR 4*. Numbers match the `### PR list` ordering so cross-references resolve at a glance. Label each stage **`(sequential)`** or **`(parallel)`** so agents can parse blocking vs concurrent PRs.
+ - Small dependency diagram (Mermaid graph or similar) — optional supplement; the staged bullet form remains authoritative for **`new-plan`** eligibility when both exist.
+ When the bullet form is used, follows the short-bullet rule.
 3. **PR list.** A **short numbered list** — use Markdown ordered list syntax (`1.`, `2.`, `3.`, …), one numbered item per PR, in roughly the sequencing order from the **Sequencing** sub-section above. A **single numbered item** is valid when the whole plan ships as one coding-ready PR (then **`new-plan`** indexed spawn for item **1** → per-PR plan → **`pr-plan`**). Each numbered item carries the PR's slug or short title on the item line, **bolded** so the **`new-plan`** protocol branch (digit-only **N** in session) can read it as the new plan's name; under each numbered item, two nested sub-bullets (unordered `-` bullets are fine):
-   - Sub-bullet 1: **Single concern.** A one-line single-concern summary — this is the per-PR § 1 sentence repeated here so **a reviewer agent** can scan the set in one glance.
-   - Sub-bullet 2: **Plan.** A Markdown link to the standalone PR plan file, or _TBD_ until **`new-plan`** creates the child for item **N** (indexed spawn).
+ - Sub-bullet 1: **Single concern.** A one-line single-concern summary — this is the per-PR § 1 sentence repeated here so **a reviewer agent** can scan the set in one glance.
+ - Sub-bullet 2: **Plan.** A Markdown link to the standalone PR plan file, or _TBD_ until **`new-plan`** creates the child for item **N** (indexed spawn).
 
-   The index **N** is the digit-only indexed-child argument to **`new-plan`** — invoking **`new-plan`** with the parent locked and **N**=`3` on a parent plan whose dual-title section is `PR breakdown` spawns the standalone PR plan file for the third numbered item. This section is **carved out** of the short-bullet rule on the **Single concern** sub-bullet — that bullet inherits the per-PR Single-concern sentence and is full prose, not 2–5 words. The bolded item line itself follows the short-bullet rule (a slug or 2–5-word title).
+ The index **N** is the digit-only indexed-child argument to **`new-plan`** — invoking **`new-plan`** with the parent locked and **N**=`3` on a parent plan whose dual-title section is `PR breakdown` spawns the standalone PR plan file for the third numbered item. This section is **carved out** of the short-bullet rule on the **Single concern** sub-bullet — that bullet inherits the per-PR Single-concern sentence and is full prose, not 2–5 words. The bolded item line itself follows the short-bullet rule (a slug or 2–5-word title).
 
 #### Per-PR plan template
 
@@ -351,63 +351,63 @@ Each PR's standalone plan file has these sections only — sections 1–7 are re
 2. **Background.** 2–3 sentences narrowly scoped to this PR — the relevant prior state of the codebase, and the gap, decision, or upstream change this PR is responding to. Oriented for **a reviewer agent** reading the PR cold *and* for **a coding agent** in a **fresh pre-PR reviewer agent session**: enough context that **they** can understand *why this PR exists* without opening the parent plan. Do **not** restate the broader feature / phase context — **a coding agent** must stay focused on the single concern; this section only carries the narrow slice of context needed for the PR description.
 3. **Change scope.** Short bullet list of what changes, how, and where. Follows the short-bullet rule from the bullet-style convention above — terseness is the contract for **a coding agent**: anything outside this list is outside the PR. (This is a section where the LLM corollary still resolves to short bullets, because each bullet names a code-level concept the agent can ground on.)
 4. **Reasoning.** Why this PR makes the choices it does, in two parts. The bullet-length rule does **not** apply here — items are full sentences, since each entry needs to make the reasoning unambiguous for **a reviewer agent** (via the PR description), for **a coding agent** relaying to **a PR-creating agent**, and for **a coding agent** in a **fresh pre-PR reviewer agent session**.
-   - **Why this approach.** The design decisions made in this PR and *why each was made*. Capture the *because* for every non-obvious choice — naming, layering, where logic is placed, what is reused vs introduced, what is kept backwards-compatible.
-   - **Considered & rejected.** Alternatives that were considered but not taken, each with the reason it was rejected. This gives **a reviewer agent** maximum signal and the same signal to **a coding agent** in a **fresh pre-PR reviewer agent session**: capturing "we considered X and rejected it because Y" short-circuits "did you think about X?" comments and lets **a reviewer agent** give actionable feedback on the chosen path.
+ - **Why this approach.** The design decisions made in this PR and *why each was made*. Capture the *because* for every non-obvious choice — naming, layering, where logic is placed, what is reused vs introduced, what is kept backwards-compatible.
+ - **Considered & rejected.** Alternatives that were considered but not taken, each with the reason it was rejected. This gives **a reviewer agent** maximum signal and the same signal to **a coding agent** in a **fresh pre-PR reviewer agent session**: capturing "we considered X and rejected it because Y" short-circuits "did you think about X?" comments and lets **a reviewer agent** give actionable feedback on the chosen path.
 5. **Repo rules impact.** Short bullet list for **a coding agent** — which **`.cursor/rules/*.mdc`** files in the **hosting repo** (the repo that receives this PR) should be **added or updated** after the code change lands, and **one line each** on *what* guidance to add or adjust (new boundary, deployment constraint, error-handling pattern, layout rule, …). Follows the short-bullet rule; paths are relative to that repo's root. When this PR does not warrant any rule change, write a single bullet: `_None — no repo rule updates required for this PR._` This section is **plan-first** for long-lived agent guidance (see **`.sedea/centers/research-and-development/rules/40_maintain-rules.mdc`**); it is **not** required to duplicate the GitHub PR description body unless **a coding agent** chooses to surface it under "Notes for the reviewer".
 
-   **Align hosting-repo rules before commit and push.** The §5 list is not only planning intent — it is the **coding checklist against the hosting-repo diff**. Before asking for review or running rule **20** § *Commit and push cadence*, **a coding agent** reconciles every §5 bullet with the branch: bullets that call for **update** / **extend** / **add** a named **`.cursor/rules/*.mdc`** file must have the corresponding edit **in the same PR** (preferred) or an explicit follow-up commit on the same branch before merge; bullets that say **no file edit** / **verify only** / **skip unless …** are satisfied by confirming the code obeys the existing rule (no `.mdc` change). If a rule edit is genuinely deferred, **revise §5 in the plan** in the same window so a **fresh pre-PR reviewer agent session** and **reviewer-agents** do not see plan ↔ repo drift.
+ **Align hosting-repo rules before commit and push.** The §5 list is not only planning intent — it is the **coding checklist against the hosting-repo diff**. Before asking for review or running rule **20** § *Commit and push cadence*, **a coding agent** reconciles every §5 bullet with the branch: bullets that call for **update** / **extend** / **add** a named **`.cursor/rules/*.mdc`** file must have the corresponding edit **in the same PR** (preferred) or an explicit follow-up commit on the same branch before merge; bullets that say **no file edit** / **verify only** / **skip unless …** are satisfied by confirming the code obeys the existing rule (no `.mdc` change). If a rule edit is genuinely deferred, **revise §5 in the plan** in the same window so a **fresh pre-PR reviewer agent session** and **reviewer-agents** do not see plan ↔ repo drift.
 6. **Tests to write.** Check this repo's specific rule for writing tests if exists. If the rule does not exist write: *No testing rules exist for this repo.*
 7. **Deploy test plan.** Two **numbered GFM task lists** (Markdown `1. [ ]`, `2. [ ]`, `3. [ ]` — *not* dash bullets, *not* bare numbered items without checkboxes), under a **`**Status:**`** lifecycle marker. Section shape:
 
-   ```markdown
-   ## 7. Deploy test plan
+ ```markdown
+ ## 7. Deploy test plan
 
-   **Status:** drafted *(YYYY-MM-DD: PR plan drafted.)*
+ **Status:** drafted *(YYYY-MM-DD: PR plan drafted.)*
 
-   ### Before deploy
+ ### Before deploy
 
-   1. [ ] First step.
-   2. [ ] Second step.
+ 1. [ ] First step.
+ 2. [ ] Second step.
 
-   ### After deploy
+ ### After deploy
 
-   1. [ ] First post-deploy check.
-   2. [ ] Second post-deploy check.
-   ```
+ 1. [ ] First post-deploy check.
+ 2. [ ] Second post-deploy check.
+ ```
 
-   The **`**Status:**`** line tracks the section's lifecycle: `drafted` (PR plan written, nothing deployed yet) → `deployed` (PR landed in the target env; After-deploy steps unlocked) → `done` (all checks complete). Each transition appends a dated `*(YYYY-MM-DD: <note>)*` entry; history is **append-only** and serves as the audit trail for what was verified when. The **`deploy-walk`** protocol branch drives this lifecycle: it **auto-runs** agent-executable steps (tests, scripts, automatable checks) and flips boxes on pass; **manual** steps are presented for the developer with agent assistance. Plans authored without the lifecycle marker still validate (legacy form), but `deploy-walk` will surface the missing-marker case as a flag and recommend adding it.
+ The **`**Status:**`** line tracks the section's lifecycle: `drafted` (PR plan written, nothing deployed yet) → `deployed` (PR landed in the target env; After-deploy steps unlocked) → `done` (all checks complete). Each transition appends a dated `*(YYYY-MM-DD: <note>)*` entry; history is **append-only** and serves as the audit trail for what was verified when. The **`deploy-walk`** protocol branch drives this lifecycle: it **auto-runs** agent-executable steps (tests, scripts, automatable checks) and flips boxes on pass; **manual** steps are presented for the developer with agent assistance. Plans authored without the lifecycle marker still validate (legacy form), but `deploy-walk` will surface the missing-marker case as a flag and recommend adding it.
 
-   **Sub-sections:**
-   - **Before deploy** — what to verify locally / in staging before merging the PR.
-   - **After deploy** — what to verify in production after the PR ships (smoke checks, monitors / alerts to watch, rollback trigger conditions).
+ **Sub-sections:**
+ - **Before deploy** — what to verify locally / in staging before merging the PR.
+ - **After deploy** — what to verify in production after the PR ships (smoke checks, monitors / alerts to watch, rollback trigger conditions).
 
-   The bullet-length rule does **not** apply here: items can be full sentences, since each step needs to be unambiguous for **a coding agent** or the on-call. Numbering is required so reviewers and a **fresh pre-PR reviewer agent session** can reference each step by index (e.g. *"flag § 7 After-deploy 3"*) without counting; the same convention applies to § 8 Caveats. The `[ ]` / `[x]` checkbox is the contract the **`deploy-walk`** protocol branch uses — *no* checkbox means the step won't be picked up by `deploy-walk <N> done` and the step has to be tracked manually. Prefer **agent-executable** wording for automatable checks (named test command, script path, curl with URL) and reserve **manual** phrasing for UI, production dashboards, and judgment calls — see **`deploy-walk/SKILL.md`** § *Agent-executable vs manual steps*.
+ The bullet-length rule does **not** apply here: items can be full sentences, since each step needs to be unambiguous for **a coding agent** or the on-call. Numbering is required so reviewers and a **fresh pre-PR reviewer agent session** can reference each step by index (e.g. *"flag § 7 After-deploy 3"*) without counting; the same convention applies to § 8 Caveats. The `[ ]` / `[x]` checkbox is the contract the **`deploy-walk`** protocol branch uses — *no* checkbox means the step won't be picked up by `deploy-walk <N> done` and the step has to be tracked manually. Prefer **agent-executable** wording for automatable checks (named test command, script path, curl with URL) and reserve **manual** phrasing for UI, production dashboards, and judgment calls — see **`deploy-walk/SKILL.md`** § *Agent-executable vs manual steps*.
 
-   **What NOT to include.** § 7 is the **PR-specific delta** on top of the baseline development process — anything covered by always-on rules, standing alerts, or the hosting repo’s **standing** pre-review commands (README, CONTRIBUTING, CI defaults, etc.) does not belong here. Center docs do **not** name hosting-repo rule paths; discover that repo’s baseline from its own docs when implementing. Specifically:
+ **What NOT to include.** § 7 is the **PR-specific delta** on top of the baseline development process — anything covered by always-on rules, standing alerts, or the hosting repo’s **standing** pre-review commands (README, CONTRIBUTING, CI defaults, etc.) does not belong here. Center docs do **not** name hosting-repo rule paths; discover that repo’s baseline from its own docs when implementing. Specifically:
 
-   - **Standing verify / review commands** — Do **not** paste the hosting repo’s normal lint/build/test (or equivalent) pre-review bar into § 7. § 7 captures what is **different for this PR** beyond that standing bar. Do **not** assume another hosting repo’s pipelines or copy baseline commands from this center doc.
-   - **Local smoke curls when integration tests cover the same surface.** If § 6 Tests to write includes an integration test that exercises the new endpoint / handler / job, do not also list a `curl http://localhost:<port>/...` step in **Before deploy**. The integration test is the contract; a localhost curl is a strictly weaker version of it. List a local smoke curl only when there is no integration test (because the surface is hard to integration-test) or when the curl exercises a real external dependency the integration test mocks.
+ - **Standing verify / review commands** — Do **not** paste the hosting repo’s normal lint/build/test (or equivalent) pre-review bar into § 7. § 7 captures what is **different for this PR** beyond that standing bar. Do **not** assume another hosting repo’s pipelines or copy baseline commands from this center doc.
+ - **Local smoke curls when integration tests cover the same surface.** If § 6 Tests to write includes an integration test that exercises the new endpoint / handler / job, do not also list a `curl http://localhost:<port>/...` step in **Before deploy**. The integration test is the contract; a localhost curl is a strictly weaker version of it. List a local smoke curl only when there is no integration test (because the surface is hard to integration-test) or when the curl exercises a real external dependency the integration test mocks.
 
-   When applying these exclusions leaves a section empty (e.g. **Before deploy** with no PR-specific prep), write the section as a single italic line — *"None — covered by § 6 tests and the hosting repo’s standing pre-review checks (not duplicated here)."* — rather than leaving it blank.
+ When applying these exclusions leaves a section empty (e.g. **Before deploy** with no PR-specific prep), write the section as a single italic line — *"None — covered by § 6 tests and the hosting repo’s standing pre-review checks (not duplicated here)."* — rather than leaving it blank.
 
-   **Frontmatter capstone todo (`deploy-test-plan-verified`).** Every PR plan's YAML `todos:` list must include one entry **after** implementation todos, **before** `isProject:`:
+ **Frontmatter capstone todo (`deploy-test-plan-verified`).** Every PR plan's YAML `todos:` list must include one entry **after** implementation todos, **before** `isProject:`:
 
-   ```yaml
-   todos:
-     - id: deploy-test-plan-verified
-       content: >-
-         Mark done only when every Before-deploy and After-deploy step is checked
-         (`[x]`) and the deploy section `**Status:**` reads `done` (walk via `deploy-walk`,
-         or edit manually). Independent of PR merge; run `plan-reconcile` protocol branch when you want
-         reconcile/archive after merges.
-       status: pending
-   ```
+ ```yaml
+ todos:
+ - id: deploy-test-plan-verified
+ content: >-
+ Mark done only when every Before-deploy and After-deploy step is checked
+ (`[x]`) and the deploy section `**Status:**` reads `done` (walk via `deploy-walk`,
+ or edit manually). Independent of PR merge; run `plan-reconcile` protocol branch when you want
+ reconcile/archive after merges.
+ status: pending
+ ```
 
-   In real files **`todos:` already exists** — append only the **new** list item (same indentation as sibling todos: two spaces before `-`, four before `content` / `status`, six before each `>-` continuation line) after the last implementation todo, before `isProject:`.
+ In real files **`todos:` already exists** — append only the **new** list item (same indentation as sibling todos: two spaces before `-`, four before `content` / `status`, six before each `>-` continuation line) after the last implementation todo, before `isProject:`.
 
-   - **Purpose** — Plan Board and developers see a single row that stays `pending` until the deploy checklist is fully verified, even when every § 7 box is already `[x]` on disk (e.g. if someone edited Markdown without running **`deploy-walk`**). The todo is the **capstone**: mark `done` only in sync with `**Status:**` `done`.
-   - **Who flips it** — The **`deploy-walk`** protocol branch flips this todo from `pending` → `done` in the **same turn** as the `StrReplace` that sets `**Status:**` `deployed` → `done` after the last After-deploy checkbox (see that protocol branch's *Frontmatter capstone* subsection). If you close the walk manually (edit the plan file without `deploy-walk`), flip the todo yourself.
-   - **`plan-reconcile` is not auto-triggered.** Finishing the deploy walk (or this todo) does **not** run `plan-reconcile` protocol branch. **`plan-reconcile`** reconciles **merged** PRs, archive candidates, and follow-ups triage — a different cadence. Run `plan-reconcile` yourself when linked PRs have merged and you want reconcile/archive. See the **`plan-reconcile`** protocol branch *When to trigger* guardrail.
+ - **Purpose** — Plan Board and developers see a single row that stays `pending` until the deploy checklist is fully verified, even when every § 7 box is already `[x]` on disk (e.g. if someone edited Markdown without running **`deploy-walk`**). The todo is the **capstone**: mark `done` only in sync with `**Status:**` `done`.
+ - **Who flips it** — The **`deploy-walk`** protocol branch flips this todo from `pending` → `done` in the **same turn** as the `StrReplace` that sets `**Status:**` `deployed` → `done` after the last After-deploy checkbox (see that protocol branch's *Frontmatter capstone* subsection). If you close the walk manually (edit the plan file without `deploy-walk`), flip the todo yourself.
+ - **`plan-reconcile` is not auto-triggered.** Finishing the deploy walk (or this todo) does **not** run `plan-reconcile` protocol branch. **`plan-reconcile`** reconciles **merged** PRs, archive candidates, and follow-ups triage — a different cadence. Run `plan-reconcile` yourself when linked PRs have merged and you want reconcile/archive. See the **`plan-reconcile`** protocol branch *When to trigger* guardrail.
 8. **Caveats.** *Optional — omit if there are none.* Free-form bullets for exceptions, risks, or agent-relevant warnings (e.g. feature-flag dependencies, schema-migration timing, rollback caveats). The short-bullet rule does **not** apply here: bullets may be full sentences, since this section faces **a coding agent** (implementation + **fresh pre-PR reviewer agent session**) and **a reviewer agent** — **a coding agent** carries Caveats into the PR description's "Notes for the reviewer" field (GitHub UI label), and **a reviewer agent** needs the concern spelled out unambiguously. (This is the divergence from mode #1 / mode #2 Caveats, which are developer-only and do follow the short-bullet rule.)
 
 Sections 1, 2, 3, 4, 6, 7, and 8 (when present) flow into the PR description that **a coding agent** has **a PR-creating agent** write — single concern → PR title and summary; Background → "Context"; Change scope → "What changed"; Reasoning → "Why this approach" and "Alternatives considered"; Tests to write → "Tests"; Deploy test plan → "Verification / deploy plan"; Caveats → "Notes for the reviewer" (for **a reviewer agent** and for a **fresh pre-PR reviewer agent session**). Section **5 (Repo rules impact)** is primarily for **coding + workspace rules** alignment; it may be summarized in the PR description optionally but its contract is to list **which** rule files to touch — and **those hosting-repo `.mdc` edits land with the code before merge** unless §5 explicitly defers them (see **Align hosting-repo rules before commit and push** above).
@@ -432,33 +432,33 @@ Logical **milestones** — **not** strict spawn order. **`pr-review`** is usuall
 
 ```mermaid
 flowchart TB
-  classDef branch fill:#f0fdf4,stroke:#16a34a,color:#14532d
+ classDef branch fill:#f0fdf4,stroke:#16a34a,color:#14532d
 
-  subgraph plan["Planning"]
-    PRD[PRD] --> MPB[planner]:::branch
-    MPB --> DEC[delivery-phases or pr-breakdown]:::branch
-    DEC --> CHILD[new-plan → phase-planner or pr-plan]:::branch
-  end
+ subgraph plan["Planning"]
+ PRD[PRD] --> MPB[planner]:::branch
+ MPB --> DEC[delivery-phases or pr-breakdown]:::branch
+ DEC --> CHILD[new-plan → phase-planner or pr-plan]:::branch
+ end
 
-  subgraph pre["Pre-merge ship — detached lanes"]
-    CSB[coding-session]:::branch
-    PPRB[pre-pr-review]:::branch
-    CPRB[create-pr]:::branch
-    REVB[pr-review]:::branch
-    CHILD --> CSB
-    CSB -.->|inline before-deploy| DWB
-    CSB --> PPRB
-    CSB -.->|inline create-pr| CPRB
-    CSB -.->|inline pr-review| REVB
-  end
+ subgraph pre["Pre-merge ship — detached lanes"]
+ CSB[coding-session]:::branch
+ PPRB[pre-pr-review]:::branch
+ CPRB[create-pr]:::branch
+ REVB[pr-review]:::branch
+ CHILD --> CSB
+ CSB -.->|inline before-deploy| DWB
+ CSB --> PPRB
+ CSB -.->|inline create-pr| CPRB
+ CSB -.->|inline pr-review| REVB
+ end
 
-  subgraph post["Post-merge — reconcile not auto-chained"]
-    DWB[deploy-walk]:::branch
-    RECB[plan-reconcile]:::branch
-    CSB -.->|inline after-merge| DWB
-    CSB -.->|inline reconcile| RECB
-    DWB -.->|not auto-chained| RECB
-  end
+ subgraph post["Post-merge — reconcile not auto-chained"]
+ DWB[deploy-walk]:::branch
+ RECB[plan-reconcile]:::branch
+ CSB -.->|inline after-merge| DWB
+ CSB -.->|inline reconcile| RECB
+ DWB -.->|not auto-chained| RECB
+ end
 ```
 
 ### Hosting repo development loop (planning + ship + feedback)
@@ -466,60 +466,60 @@ flowchart TB
 ```mermaid
 ---
 config:
-  layout: elk
+ layout: elk
 ---
 flowchart TD
-    %% Upstream setup section (visually outside the loop)
-    subgraph Setup["Upstream Planning"]
-      direction LR
-      A["[Ad-Hoc] PRD"] --> B[Master Plan]
-    end
+ %% Upstream setup section (visually outside the loop)
+ subgraph Setup["Upstream Planning"]
+ direction LR
+ A["[Ad-Hoc] PRD"] --> B[Master Plan]
+ end
 
-    %% Main circular development cycle
-    subgraph Cycle["Hosting repo Development Loop"]
-      direction TB
-      C[Next Phase Decomposition] --> D[PRs Breakdown]
-      D --> E[coding-session]
+ %% Main circular development cycle
+ subgraph Cycle["Hosting repo Development Loop"]
+ direction TB
+ C[Next Phase Decomposition] --> D[PRs Breakdown]
+ D --> E[coding-session]
 
-      subgraph S1["Feedback Collection"]
-        direction TB
-        G1[Implementation Follow-ups]
-        G2[Code Review Follow-ups]
-        G3[New Ideas from Teammates]
-        G4[Customer Feedback]
-      end
+ subgraph S1["Feedback Collection"]
+ direction TB
+ G1[Implementation Follow-ups]
+ G2[Code Review Follow-ups]
+ G3[New Ideas from Teammates]
+ G4[Customer Feedback]
+ end
 
-      E --> PPR[pre-pr-review]
-      E -.->|inline create-pr| CPR[create-pr]
-      E -.->|inline pr-review| PRV[pr-review]
-      E -.->|after merge| DW[deploy-walk]
-      DW -.->|not auto-chained| REC[plan-reconcile]
-      REC --> S1 --> H[Collect Feedback]
-      H --> I[Plan Updates]
-    end
+ E --> PPR[pre-pr-review]
+ E -.->|inline create-pr| CPR[create-pr]
+ E -.->|inline pr-review| PRV[pr-review]
+ E -.->|after merge| DW[deploy-walk]
+ DW -.->|not auto-chained| REC[plan-reconcile]
+ REC --> S1 --> H[Collect Feedback]
+ H --> I[Plan Updates]
+ end
 
-    %% Link setup to main loop
-    B --> C
+ %% Link setup to main loop
+ B --> C
 
-    %% Classes for color consistency
-    classDef indigo fill:#eef2ff,stroke:#818cf8,color:#1e1b4b
-    classDef teal fill:#f0fdfa,stroke:#2dd4bf,color:#1e1b4b
-    classDef violet fill:#f5f3ff,stroke:#a78bfa,color:#1e1b4b
-    classDef orange fill:#fff7ed,stroke:#fb923c,color:#1e1b4b
-    classDef fuchsia fill:#fdf4ff,stroke:#e879f9,color:#1e1b4b
-    classDef green fill:#f0fdf4,stroke:#4ade80,color:#1e1b4b
-    classDef yellow fill:#fefce8,stroke:#facc15,color:#1e1b4b
-    classDef rose fill:#fff1f2,stroke:#fb7185,color:#1e1b4b
+ %% Classes for color consistency
+ classDef indigo fill:#eef2ff,stroke:#818cf8,color:#1e1b4b
+ classDef teal fill:#f0fdfa,stroke:#2dd4bf,color:#1e1b4b
+ classDef violet fill:#f5f3ff,stroke:#a78bfa,color:#1e1b4b
+ classDef orange fill:#fff7ed,stroke:#fb923c,color:#1e1b4b
+ classDef fuchsia fill:#fdf4ff,stroke:#e879f9,color:#1e1b4b
+ classDef green fill:#f0fdf4,stroke:#4ade80,color:#1e1b4b
+ classDef yellow fill:#fefce8,stroke:#facc15,color:#1e1b4b
+ classDef rose fill:#fff1f2,stroke:#fb7185,color:#1e1b4b
 
-    class A indigo
-    class B teal
-    class C violet
-    class D orange
-    class E fuchsia
-    class PPR,CPR,PRV,DW,REC fuchsia
-    class S1 green
-    class H yellow
-    class I rose
+ class A indigo
+ class B teal
+ class C violet
+ class D orange
+ class E fuchsia
+ class PPR,CPR,PRV,DW,REC fuchsia
+ class S1 green
+ class H yellow
+ class I rose
 ```
 
 **Diagram legend.** **`coding-session`** covers worktree setup and the **coding agent** implementation pass. **Pre-merge:** spawn **`pre-pr-review`**; **`create-pr`** and **`pr-review`** are **inline on `coding-session`**. **Post-merge:** **`deploy-walk`** and **`plan-reconcile`** inline on **`coding-session`**; **`plan-reconcile`** requires a **separate explicit start** — finishing **`deploy-walk` does not auto-run reconcile** (dotted *not auto-chained*). See **Cadence reference** and **`plan-and-deliver/plan.mdc`**. Feedback and **Plan Updates** close the iteration; they are not substitutes for ship branches.
@@ -569,7 +569,7 @@ After **`pr-plan`** handoff (or an approved per-PR plan), implementation runs on
 
 **Do not** — see rule **30** § *Agent checklist (planning vs ship — do not conflate)*.
 
-**Canonical skill:** `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`  
+**Canonical skill:** `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`
 **Squad Leader §8:** host sync from ship child terminals updates the leader dispatch automatically — no manual recap. See **`plan.mdc`** §8 *Mission Control host sync*.
 
 #### Coding Session
@@ -716,9 +716,9 @@ cd "$HOSTING_ROOT"
 OPS_ID="<operationsUserId>"
 
 node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs \
-  --operations-user-id "$OPS_ID" backfill-prs-from-body --slug <slug> --dry-run
+ --operations-user-id "$OPS_ID" backfill-prs-from-body --slug <slug> --dry-run
 node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs \
-  --operations-user-id "$OPS_ID" backfill-prs-from-body --all --dry-run
+ --operations-user-id "$OPS_ID" backfill-prs-from-body --all --dry-run
 ```
 
 ## Out of scope

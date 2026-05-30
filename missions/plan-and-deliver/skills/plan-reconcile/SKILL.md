@@ -1,46 +1,46 @@
 ---
 name: plan-reconcile
 description: >-
-  Inline coding-session procedure for plan-state.mjs reconcile (PR-tracked archival),
-  archive candidates, follow-ups triage, and post-ship workspace cleanup. Executed by
-  the active coding-session agent only — not spawned, no warmUpRules.
+ Inline coding-session procedure for plan-state.mjs reconcile (PR-tracked archival),
+ archive candidates, follow-ups triage, and post-ship workspace cleanup. Executed by
+ the active coding-session agent only — not spawned, no warmUpRules.
 inputs:
-  targetPlanPath:
-    type: string
-    description: Absolute PR plan path that may be reconciled after PR merge and deploy verification.
-    required: false
-  targetPlanSlug:
-    type: string
-    description: PR plan slug that may be reconciled after PR merge and deploy verification.
-    required: false
-  prUrl:
-    type: string
-    description: Merged PR URL associated with the plan.
-    required: false
-  prNumber:
-    type: number
-    description: Merged PR number associated with the plan.
-    required: false
-  prState:
-    type: string
-    description: PR state from coding-session; must be merged for inline reconcile from ship chain.
-    required: false
-  deployStatus:
-    type: string
-    description: Deploy status from deploy-walk; must be done for inline reconcile from ship chain.
-    required: false
-  deployTodoStatus:
-    type: string
-    description: deploy-test-plan-verified todo status; must be done for inline reconcile from ship chain.
-    required: false
-  ledgerParent:
-    type: string
-    description: Ledger parent slug/path copied from coding-session.
-    required: false
-  upstreamSkill:
-    type: string
-    description: Invoker skill — must be coding-session when inline.
-    required: false
+ targetPlanPath:
+ type: string
+ description: Absolute PR plan path that may be reconciled after PR merge and deploy verification.
+ required: false
+ targetPlanSlug:
+ type: string
+ description: PR plan slug that may be reconciled after PR merge and deploy verification.
+ required: false
+ prUrl:
+ type: string
+ description: Merged PR URL associated with the plan.
+ required: false
+ prNumber:
+ type: number
+ description: Merged PR number associated with the plan.
+ required: false
+ prState:
+ type: string
+ description: PR state from coding-session; must be merged for inline reconcile from ship chain.
+ required: false
+ deployStatus:
+ type: string
+ description: Deploy status from deploy-walk; must be done for inline reconcile from ship chain.
+ required: false
+ deployTodoStatus:
+ type: string
+ description: deploy-test-plan-verified todo status; must be done for inline reconcile from ship chain.
+ required: false
+ ledgerParent:
+ type: string
+ description: Ledger parent slug/path copied from coding-session.
+ required: false
+ upstreamSkill:
+ type: string
+ description: Invoker skill — must be coding-session when inline.
+ required: false
 ---
 
 # Plan reconcile
@@ -61,7 +61,7 @@ Script-backed flow: **`plan-state.mjs`** owns YAML and file moves; the agent dec
 
 ## Structured choice (Mission Control)
 
-Dry-run reports, archive candidates, and follow-up triage use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **`MC_ASKQUESTION_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* — **preferred:** recap + modal in one message; bare **`MC_ASKQUESTION_V1`** is sentinel-only. **Act** (`plan-state.mjs archive`, file moves) is after the developer selects.
+Dry-run reports, archive candidates, and follow-up triage use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* — **preferred:** recap + modal in one message; legacy split uses recap then `MC_PHASED_RESPONSE_V1` in the next message. **Act** (`plan-state.mjs archive`, file moves) is after the developer selects.
 
 ## When this skill runs
 
@@ -86,12 +86,12 @@ All **`plan-state.mjs`** invocations run from **`HOSTING_ROOT`** (the hosting re
 **`--operations-user-id <id>`** is **required before the subcommand** for user-scoped plans (same value as Mission Control **`operationsUserId`**). Without it, only **`joint`** plans are visible. See [`.sedea/centers/research-and-development/rules/31_operations-user-id.mdc`](../../../../rules/31_operations-user-id.mdc) and rule **20** § *Hosting repo cwd for scripts (canonical)*.
 
 ```bash
-# HOSTING_ROOT: walk up until .sedea/centers/sedea/ or .sedea/ exists
+# HOSTING_ROOT: walk up until .sedea/centers/sedea/.sedea/ exists
 cd "$HOSTING_ROOT"
 OPS_ID="<operationsUserId from Mission Control warm-up or sedea_get_current_user>"
 
 node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs \
-  --operations-user-id "$OPS_ID" <subcommand> …
+ --operations-user-id "$OPS_ID" <subcommand> …
 ```
 
 Plans and sidecars live only under the **`.sedea/operations/`** union — **`.sedea/operations/joint/plans/`** and **`.sedea/operations/<operationsUserId>/plans/`** (literal **`joint`**). Do **not** use **`~/.cursor/plans/`** for Sedea hosting repo plans.
@@ -105,7 +105,7 @@ cd "$HOSTING_ROOT"
 OPS_ID="<operationsUserId from Mission Control warm-up or sedea_get_current_user>"
 
 node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs \
-  --operations-user-id "$OPS_ID" reconcile --dry-run
+ --operations-user-id "$OPS_ID" reconcile --dry-run
 ```
 
 This queries **`gh pr view`** for every sidecar **`prs[]`** entry without moving files or appending parent bullets. The printed report has three buckets:
@@ -132,7 +132,7 @@ Only **Approve PR-tracked reconcile mutations** authorizes:
 cd "$HOSTING_ROOT"
 
 node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs \
-  --operations-user-id "$OPS_ID" reconcile
+ --operations-user-id "$OPS_ID" reconcile
 ```
 
 If the developer skips PR-tracked reconcile, do not run non-dry-run `reconcile`; continue only to read-only `list-candidates` and developer-selected archive work. If the developer aborts, stop with `continuationStatus: "active"` and no archive mutations.
@@ -143,24 +143,24 @@ If the developer skips PR-tracked reconcile, do not run non-dry-run `reconcile`;
 cd "$HOSTING_ROOT"
 
 node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs \
-  --operations-user-id "$OPS_ID" list-candidates --json
+ --operations-user-id "$OPS_ID" list-candidates --json
 ```
 
 Emits a JSON array of plans reconcile could not auto-decide. Schema per entry:
 
 ```json
 {
-  "slug": "…",
-  "planPath": "/abs",
-  "parent": "…" | null,
-  "name": "…",
-  "todos": { "total": n, "done": n, "pending": 0, "in_progress": 0, "cancelled": 0, "allDone": true },
-  "shipSignal": {
-    "kind": "pr-body" | "no-pr-body",
-    "label": "org/repo#540" | "…",
-    "prs": [{ "evidence": "link" | "bare", "orgRepo": "…" | null, "number": n, "url": "…" | null }]
-  },
-  "suggestedSignal": "…"
+ "slug": "…",
+ "planPath": "/abs",
+ "parent": "…" | null,
+ "name": "…",
+ "todos": { "total": n, "done": n, "pending": 0, "in_progress": 0, "cancelled": 0, "allDone": true },
+ "shipSignal": {
+ "kind": "pr-body" | "no-pr-body",
+ "label": "org/repo#540" | "…",
+ "prs": [{ "evidence": "link" | "bare", "orgRepo": "…" | null, "number": n, "url": "…" | null }]
+ },
+ "suggestedSignal": "…"
 }
 ```
 
@@ -226,9 +226,9 @@ For each slug the user picked that is **not** in the **`postponed:`** set from s
 cd "$HOSTING_ROOT"
 
 node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs \
-  --operations-user-id "$OPS_ID" archive \
-  --slug <slug> \
-  --signal "<signal-text>"
+ --operations-user-id "$OPS_ID" archive \
+ --slug <slug> \
+ --signal "<signal-text>"
 ```
 
 Signal selection:
@@ -258,7 +258,7 @@ cd "$HOSTING_ROOT"
 OPS_ID="<operationsUserId from Mission Control warm-up or sedea_get_current_user>"
 
 node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs \
-  --operations-user-id "$OPS_ID" detect-stale-workspaces [--slug <slug>] --json
+ --operations-user-id "$OPS_ID" detect-stale-workspaces [--slug <slug>] --json
 ```
 
 Each candidate includes `worktreePath`, `repo`, `branch`, `mergedPr` (when sidecar **`prs[]`** exists), and `reason`.
@@ -267,7 +267,7 @@ Each candidate includes `worktreePath`, `repo`, `branch`, `mergedPr` (when sidec
 
 ```bash
 node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/post-reconcile-workspace-cleanup.mjs \
-  --operations-user-id "$OPS_ID" --dry-run [--slug <slug>]
+ --operations-user-id "$OPS_ID" --dry-run [--slug <slug>]
 ```
 
 Present the JSON **`actions`** list to the developer (information-only turn when the report is long).
@@ -290,7 +290,7 @@ Only **`cleanup-apply`** authorizes **`--apply`**.
 
 ```bash
 node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/post-reconcile-workspace-cleanup.mjs \
-  --operations-user-id "$OPS_ID" --apply [--slug <slug>]
+ --operations-user-id "$OPS_ID" --apply [--slug <slug>]
 ```
 
 The script runs **`git worktree remove`**, deletes local feature branches when PR merged **and** remote head is gone (not merge-base heuristics), **`git pull origin <defaultBranch>`** on **`HOSTING_ROOT`**, **`./scripts/rebuild-native-extensions.sh`** when present (so the developer can reload the window), and **`plan-state.mjs prune-sessions --all`**.

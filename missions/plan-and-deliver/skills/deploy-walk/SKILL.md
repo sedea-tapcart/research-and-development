@@ -1,64 +1,64 @@
 ---
 name: deploy-walk
 description: >-
-  Inline coding-session procedure to walk a PR plan's `## N. Deploy test plan` section
-  one step at a time. Executed by the active coding-session agent only — not spawned,
-  no warmUpRules. Agent-executable steps run without approval; manual steps print
-  numbered step-by-step testing instructions for the developer. Three-state lifecycle
-  in `**Status:**`; capstone todo when done.
-  Does not auto-run plan-reconcile.
+ Inline coding-session procedure to walk a PR plan's `## N. Deploy test plan` section
+ one step at a time. Executed by the active coding-session agent only — not spawned,
+ no warmUpRules. Agent-executable steps run without approval; manual steps print
+ numbered step-by-step testing instructions for the developer. Three-state lifecycle
+ in `**Status:**`; capstone todo when done.
+ Does not auto-run plan-reconcile.
 inputs:
-  targetPlanPath:
-    type: string
-    description: Absolute PR plan path containing the deploy test plan.
-    required: true
-  targetPlanSlug:
-    type: string
-    description: PR plan slug.
-    required: true
-  prUrl:
-    type: string
-    description: GitHub PR URL that was merged.
-    required: false
-  prNumber:
-    type: number
-    description: GitHub PR number that was merged.
-    required: false
-  repoUrl:
-    type: string
-    description: Git repository URL.
-    required: false
-  branchName:
-    type: string
-    description: Feature branch that produced the PR (worktree or post-merge verification).
-    required: false
-  mergeSha:
-    type: string
-    description: Merge commit SHA for deployment verification.
-    required: false
-  mergedAt:
-    type: string
-    description: Timestamp when the PR merged.
-    required: false
-  ledgerParent:
-    type: string
-    description: Ledger parent slug/path copied from coding-session.
-    required: false
-  upstreamSkill:
-    type: string
-    description: Skill that invokes deploy verification inline — `coding-session` (Before deploy pre-merge or After deploy post-merge).
-    required: false
-  worktreePath:
-    type: string
-    description: Absolute worktree path (required when inline on coding-session).
-    required: false
-  deployWalkScope:
-    type: string
-    description: >-
-      `before-deploy-only` when inline from coding-session pre-merge — walk only
-      `### Before deploy` while Status stays `drafted`; do not run After deploy or
-      `deploy-walk deployed`. Omit for full post-merge walk (typical After-deploy inline).
-    required: false
+ targetPlanPath:
+ type: string
+ description: Absolute PR plan path containing the deploy test plan.
+ required: true
+ targetPlanSlug:
+ type: string
+ description: PR plan slug.
+ required: true
+ prUrl:
+ type: string
+ description: GitHub PR URL that was merged.
+ required: false
+ prNumber:
+ type: number
+ description: GitHub PR number that was merged.
+ required: false
+ repoUrl:
+ type: string
+ description: Git repository URL.
+ required: false
+ branchName:
+ type: string
+ description: Feature branch that produced the PR (worktree or post-merge verification).
+ required: false
+ mergeSha:
+ type: string
+ description: Merge commit SHA for deployment verification.
+ required: false
+ mergedAt:
+ type: string
+ description: Timestamp when the PR merged.
+ required: false
+ ledgerParent:
+ type: string
+ description: Ledger parent slug/path copied from coding-session.
+ required: false
+ upstreamSkill:
+ type: string
+ description: Skill that invokes deploy verification inline — `coding-session` (Before deploy pre-merge or After deploy post-merge).
+ required: false
+ worktreePath:
+ type: string
+ description: Absolute worktree path (required when inline on coding-session).
+ required: false
+ deployWalkScope:
+ type: string
+ description: >-
+ `before-deploy-only` when inline from coding-session pre-merge — walk only
+ `### Before deploy` while Status stays `drafted`; do not run After deploy or
+ `deploy-walk deployed`. Omit for full post-merge walk (typical After-deploy inline).
+ required: false
 ---
 
 # Deploy walk-through
@@ -86,7 +86,7 @@ See [Agent-executable vs manual steps](#agent-executable-vs-manual-steps).
 
 ## Structured choice (Mission Control)
 
-Target picks, deploy-with-gaps, and closure gates use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **`MC_ASKQUESTION_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* — **preferred:** recap + modal in one message; bare **`MC_ASKQUESTION_V1`** is sentinel-only. **Act** (checkbox flips, status lines) follows developer selection or explicit deploy-walk commands.
+Target picks, deploy-with-gaps, and closure gates use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* — **preferred:** recap + modal in one message; legacy split uses recap then `MC_PHASED_RESPONSE_V1` in the next message. **Act** (checkbox flips, status lines) follows developer selection or explicit deploy-walk commands.
 
 When run **inline** on **`coding-session`** (pre-merge **Before deploy** or post-merge **After deploy**), this procedure owns deploy verification status and reports it via **`## Completion (inline)`** to the coding-session agent; it does not run implementation, PR review, or plan reconciliation.
 
@@ -226,7 +226,7 @@ Resolution order (highest confidence first):
 3. **Most recent agent recommendation.** The agent's last turn proposed a **deploy-walk** step command against a specific plan (e.g. *"Reply `deploy-walk present 4` when ready"*).
 4. **Single candidate in chat context.** Exactly one PR plan was read / referenced in the recent chat window — use it.
 5. **Multiple candidates.** Stop and use **AskQuestion** listing PR plans with at least one unchecked `[ ]` in their `## N. Deploy test plan`. The **developer** picks; subsequent commands stick with that plan.
-6. **No candidate.** Stop with: *"**deploy-walk** needs a target PR plan. Per **planning-target-resolution** and **`../README.md`** § *Recap, structured choice, act*, emit a fresh "Where we are now in the plan tree" snapshot, then collect the lane pick via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **`MC_ASKQUESTION_V1`** (§ *Sedea input channel* — prefer recap + modal in one message), then re-invoke."*
+6. **No candidate.** Stop with: *"**deploy-walk** needs a target PR plan. Per **planning-target-resolution** and **`../README.md`** § *Recap, structured choice, act*, emit a fresh "Where we are now in the plan tree" snapshot, then collect the lane pick via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** (§ *Sedea input channel* — prefer recap + modal in one message), then re-invoke."*
 
 The IDE focused-file list (host-injected **open and recently viewed files** metadata) is **not** consulted.
 
@@ -265,8 +265,8 @@ Find the Nth numbered item in the active sub-section (regex `^N\. \[[ x]\] `). T
 - If the box is already `[x]`, reply: *"Step N is already checked: \"{verbatim step line}\". To re-walk it explicitly, reply `deploy-walk present before <N>` or `deploy-walk present after <N>`. Otherwise, reply `deploy-walk present <N+1>` to continue."* If N+1 is `[ ]` and agent-executable, you may run [Autonomous agent-executable pass](#autonomous-agent-executable-pass) from N+1 without waiting.
 - If the box is `[ ]` and has a prior `*(YYYY-MM-DD: Blocked — {reason})*` annotation, surface it: *"Previously blocked: {reason} (YYYY-MM-DD). Has the blocker cleared?"* Then classify — re-run if agent-executable and developer cleared the blocker; else present as manual.
 - If the box is `[ ]` and clean, **classify**:
-  - **Agent-executable** — run per [Agent-executable vs manual steps](#agent-executable-vs-manual-steps); on pass flip and auto-advance; on fail block or assist.
-  - **Manual** — present with numbered **Testing steps** per § *Step 4 — Step presentation contract* and stop.
+ - **Agent-executable** — run per [Agent-executable vs manual steps](#agent-executable-vs-manual-steps); on pass flip and auto-advance; on fail block or assist.
+ - **Manual** — present with numbered **Testing steps** per § *Step 4 — Step presentation contract* and stop.
 
 ### `deploy-walk <N> done` / `deploy-walk <N> done: <note>` — flip box, advance hint
 
@@ -281,11 +281,11 @@ After the edit, **check whether step N was the last `[ ]` in the active sub-sect
 
 - If `### Before deploy` is now fully `[x]` and Status is `drafted`, the confirmation reply ends with: *"All Before-deploy steps complete. When you've actually deployed, reply `deploy-walk deployed` (or `deploy-walk deployed: {note}`) to flip status and unlock After-deploy steps."*
 - If `### After deploy` is now fully `[x]` and Status is `deployed`, stop after marking the step and ask the developer for explicit closure approval with **AskQuestion**. Required options:
-  - **Approve deploy checklist closure**
-  - **Review deploy checklist first**
-  - **Leave status deployed**
-  - **More details for option _**
-  Only **Approve deploy checklist closure** authorizes the Status `deployed → done` flip and the **Frontmatter capstone** `deploy-test-plan-verified` `pending → done` mutation. Do not treat the final step's `done` command as approval for the larger deploy lifecycle closeout.
+ - **Approve deploy checklist closure**
+ - **Review deploy checklist first**
+ - **Leave status deployed**
+ - **More details for option _**
+ Only **Approve deploy checklist closure** authorizes the Status `deployed → done` flip and the **Frontmatter capstone** `deploy-test-plan-verified` `pending → done` mutation. Do not treat the final step's `done` command as approval for the larger deploy lifecycle closeout.
 - Otherwise, if step N+1 is **agent-executable**, continue [Autonomous agent-executable pass](#autonomous-agent-executable-pass) in the same turn (no `deploy-walk present` wait).
 - If step N+1 is **manual**, append: *"Marked {Before or After}-deploy step N done. Next (manual): step N+1 — \"{verbatim next unchecked step line}\". Reply `deploy-walk present <N+1>` when ready, or report results for agent-assisted commands."*
 
@@ -317,11 +317,11 @@ Pre-conditions:
 
 - Status must currently be `drafted`. If `deployed` or `done`, reply: *"Status is already `{current}`. To override, reply `deploy-walk deployed force` (**developer** escape hatch — only use if the plan's lifecycle drifted from reality)."* (Skill's `force` branch is identical to the normal branch; the gate is the **developer**'s confirmation.)
 - If any `[ ]` boxes remain in `### Before deploy`, do **not** flip status yet. Use **AskQuestion** to confirm whether the developer wants to deploy with unchecked Before-deploy steps. Required options:
-  - **Proceed to deployed with unchecked Before-deploy steps**
-  - **Review Before-deploy steps first**
-  - **Block deploy transition**
-  - **More details for option _**
-  Only **Proceed to deployed with unchecked Before-deploy steps** authorizes the status mutation. If approved, include a note listing unchecked indexes in the confirmation so the omission is auditable.
+ - **Proceed to deployed with unchecked Before-deploy steps**
+ - **Review Before-deploy steps first**
+ - **Block deploy transition**
+ - **More details for option _**
+ Only **Proceed to deployed with unchecked Before-deploy steps** authorizes the status mutation. If approved, include a note listing unchecked indexes in the confirmation so the omission is auditable.
 
 `StrReplace` on the Status line:
 
@@ -446,22 +446,22 @@ Only after the developer approves **Approve deploy checklist closure**, when thi
 
 ```
 old_string:
-  - id: deploy-test-plan-verified
-    content: >-
-      Mark done only when every Before-deploy and After-deploy step is checked
-      (`[x]`) and the deploy section `**Status:**` reads `done` (walk via `deploy-walk`,
-      or edit manually). Independent of PR merge; run `plan-reconcile` protocol branch when you want
-      reconcile/archive after merges.
-    status: pending
+ - id: deploy-test-plan-verified
+ content: >-
+ Mark done only when every Before-deploy and After-deploy step is checked
+ (`[x]`) and the deploy section `**Status:**` reads `done` (walk via `deploy-walk`,
+ or edit manually). Independent of PR merge; run `plan-reconcile` protocol branch when you want
+ reconcile/archive after merges.
+ status: pending
 
 new_string:
-  - id: deploy-test-plan-verified
-    content: >-
-      Mark done only when every Before-deploy and After-deploy step is checked
-      (`[x]`) and the deploy section `**Status:**` reads `done` (walk via `deploy-walk`,
-      or edit manually). Independent of PR merge; run `plan-reconcile` protocol branch when you want
-      reconcile/archive after merges.
-    status: done
+ - id: deploy-test-plan-verified
+ content: >-
+ Mark done only when every Before-deploy and After-deploy step is checked
+ (`[x]`) and the deploy section `**Status:**` reads `done` (walk via `deploy-walk`,
+ or edit manually). Independent of PR merge; run `plan-reconcile` protocol branch when you want
+ reconcile/archive after merges.
+ status: done
 ```
 
 - If the `old_string` block is **not found** (plan lacks the todo, or `content:` was edited and no longer matches), **do not** fail the Status flip — the deploy section is already correct. Reply with a **flag**: *"Could not find canonical `deploy-test-plan-verified` block — add it per **`pr-plan`** § 4a-bis (or hand-insert), then set `status: done` to match § 7."* Optionally append the canonical block with `status: done` immediately before `isProject:` if the plan has zero deploy-capstone todo.

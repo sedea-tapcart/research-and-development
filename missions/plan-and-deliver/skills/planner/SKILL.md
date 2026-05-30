@@ -1,43 +1,43 @@
 ---
 name: planner
 description: >-
-  Take a PRD and scaffold a Master Plan file under `.sedea/operations/<operationsUserId>/plans/`,
-  pre-populated with sections 1 through 5 (Background, Benefits, Related
-  features, Architectural design, Changes — including `### Decomposition
-  assessment` and `### Complexity score (plan-scope signal)` under § 5) per
-  Sedea's New Feature Development Process Master Plan template. Computes a
-  complexity score from §4–§5; when **high**, stops and recommends user-journey
-  splits before `delivery-phases`/`pr-breakdown`. Section 6 (Delivery phases | PR breakdown)
-  and section 7 (Caveats) stay as TBD stubs for follow-up turns. Use when the user
-  opens a fresh planning chat from the "feature plan: design + changes"
-  plan-board prompt, or says "planner" / "draft a master plan".
+ Take a PRD and scaffold a Master Plan file under `.sedea/operations/<operationsUserId>/plans/`,
+ pre-populated with sections 1 through 5 (Background, Benefits, Related
+ features, Architectural design, Changes — including `### Decomposition
+ assessment` and `### Complexity score (plan-scope signal)` under § 5) per
+ Sedea's New Feature Development Process Master Plan template. Computes a
+ complexity score from §4–§5; when **high**, stops and recommends user-journey
+ splits before `delivery-phases`/`pr-breakdown`. Section 6 (Delivery phases | PR breakdown)
+ and section 7 (Caveats) stay as TBD stubs for follow-up turns. Use when the user
+ opens a fresh planning chat from the "feature plan: design + changes"
+ plan-board prompt, or says "planner" / "draft a master plan".
 inputs:
-  seedBlock:
-    type: string
-    description: Complete planner seed block (Master Plan handoff) containing Feature planning, PRD, Parent, and optional Related entries.
-    required: true
-  featurePlanningTitle:
-    type: string
-    description: Human-readable feature title copied into the Master Plan name and H1.
-    required: true
-  prdRef:
-    type: string
-    description: Readable PRD URL, workspace @path, or absolute path.
-    required: true
-  parent:
-    type: string
-    description: Parent plan slug/path, or null when creating a new top-level plan.
-    required: true
-  related:
-    type: array
-    description: Optional related document entries with role and link/path.
-    required: false
-    default: []
+ seedBlock:
+ type: string
+ description: Complete planner seed block (Master Plan handoff) containing Feature planning, PRD, Parent, and optional Related entries.
+ required: true
+ featurePlanningTitle:
+ type: string
+ description: Human-readable feature title copied into the Master Plan name and H1.
+ required: true
+ prdRef:
+ type: string
+ description: Readable PRD URL, workspace @path, or absolute path.
+ required: true
+ parent:
+ type: string
+ description: Parent plan slug/path, or null when creating a new top-level plan.
+ required: true
+ related:
+ type: array
+ description: Optional related document entries with role and link/path.
+ required: false
+ default: []
 warmUpRules:
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
-  - ".sedea/centers/research-and-development/docs/development-process.md"
-  - ".sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc"
+ - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
+ - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
+ - ".sedea/centers/research-and-development/docs/development-process.md"
+ - ".sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc"
 ---
 
 # Planner: §§ 1–5 from the PRD
@@ -142,12 +142,12 @@ For every repo path returned in 3a, in turn:
 3. **Skip linked worktrees.** Compare `git -C <repo-path> rev-parse --show-toplevel` (symlinks resolved) to `<repo-path>`. If they differ, the workspace path is a linked worktree, not the primary hosting repo — Git refuses to check out the same branch in two worktrees, so trying to switch would only produce noise. Say *"<repo>: linked worktree, can't share its branch with the primary hosting repo — leaving as-is."* and continue.
 4. **Check out and fast-forward.** When both checks pass:
 
-   ```bash
-   git -C <repo-path> checkout <default-branch>
-   git -C <repo-path> pull --ff-only origin <default-branch>
-   ```
+ ```bash
+ git -C <repo-path> checkout <default-branch>
+ git -C <repo-path> pull --ff-only origin <default-branch>
+ ```
 
-   If `--ff-only` fails (the local branch has diverged from `origin/<branch>`), say *"<repo>: local `<branch>` has diverged from `origin/<branch>` — leaving as-is for manual resolution."* and continue. Never use `--rebase`, `--no-ff`, or a plain `pull`; diverged branches are the user's call, not the agent's.
+ If `--ff-only` fails (the local branch has diverged from `origin/<branch>`), say *"<repo>: local `<branch>` has diverged from `origin/<branch>` — leaving as-is for manual resolution."* and continue. Never use `--rebase`, `--no-ff`, or a plain `pull`; diverged branches are the user's call, not the agent's.
 
 After processing every repo, surface a one-line summary before moving to 3c so the user can spot a stale tree *before* the rules are loaded:
 
@@ -162,12 +162,12 @@ For every repo the user picked:
 1. List all files matching `<repo>/.cursor/rules/*.mdc` (use Glob).
 2. For each, read its frontmatter description (or first paragraph if no description).
 3. Read **in full** every rule whose description suggests it informs the *shape* of new code. Architecture-relevant categories include, but are not limited to:
-   - Source layout / module boundaries / where things live.
-   - Service topology / cross-service contracts / shared infrastructure.
-   - Data flow / replication / messaging / queues.
-   - Schema / migrations / data model.
-   - Domain-specific architecture conventions (orchestration, message generators, flows).
-   - Health, deployment, and long-lived-release rules when they constrain *where* code lives.
+ - Source layout / module boundaries / where things live.
+ - Service topology / cross-service contracts / shared infrastructure.
+ - Data flow / replication / messaging / queues.
+ - Schema / migrations / data model.
+ - Domain-specific architecture conventions (orchestration, message generators, flows).
+ - Health, deployment, and long-lived-release rules when they constrain *where* code lives.
 4. Skip rules that are purely about ops, secrets, test fixtures, logging style, or test-only patterns. When unsure, err on loading.
 
 After loading, list — grouped per repo — the rules you loaded, one per line, so the user can verify coverage. If the user says "also load X", load X. If the user says "drop Y", drop Y.
@@ -200,9 +200,9 @@ Use the title in line 1 to keep yourself grounded. Then resolve the PRD body:
 - **Local file** (`@<path>` or absolute path): Read tool, **no offset, no limit**.
 - **Confluence URL** or **Google Docs URL**: WebFetch. If WebFetch returns auth-required / 401 / 403 (the doc is private and not publicly readable), say:
 
-  > "I can't fetch <link> directly — it's behind auth. Either make the doc world-readable, paste the PRD body inline below, or save it as a file under the workspace and reattach with `@<path>`."
+ > "I can't fetch <link> directly — it's behind auth. Either make the doc world-readable, paste the PRD body inline below, or save it as a file under the workspace and reattach with `@<path>`."
 
-  Wait for the user to provide the body.
+ Wait for the user to provide the body.
 
 **Fail-fast on missing slots.** Before fetching anything, sanity-check the first message:
 
@@ -277,8 +277,8 @@ If the PRD or the loaded architectural rules strongly imply a topic (e.g. push-r
 - **Slug base**: lowercase the title, replace spaces with `_` (or `-` to match sibling convention in the target folder).
 - **Slug suffix**: 8-char random hex (`crypto.randomBytes(4).toString('hex')` equivalent).
 - **Filename**:
-  - Parent is a roadmap topic → `.sedea/operations/<operationsUserId>/plans/<slug>.plan.md`.
-  - Parent is `null` (new roadmap topic root) → `.sedea/operations/<operationsUserId>/plans/roadmap-topics/<slug>.plan.md`.
+ - Parent is a roadmap topic → `.sedea/operations/<operationsUserId>/plans/<slug>.plan.md`.
+ - Parent is `null` (new roadmap topic root) → `.sedea/operations/<operationsUserId>/plans/roadmap-topics/<slug>.plan.md`.
 - **Sidecar**: `<same-dir>/<slug>.state.yaml`.
 
 ### 5c — Write the plan file (Master Plan template body)
@@ -290,9 +290,9 @@ Write `<slug>.plan.md` with the **full** Master Plan layout. Every section that 
 name: <PRD title>
 overview: <one-line overview synthesised from the PRD>
 todos:
-  - id: review-initial-draft
-    content: Review §§ 1–5 (Background, Benefits, Related features, Architectural design, Changes) drafted from the PRD.
-    status: pending
+ - id: review-initial-draft
+ content: Review §§ 1–5 (Background, Benefits, Related features, Architectural design, Changes) drafted from the PRD.
+ status: pending
 isProject: false
 ---
 
@@ -473,7 +473,7 @@ When the band is **high**:
 1. **Do not** offer **§ 6 decomposition** (inline **`delivery-phases`** / **`pr-breakdown`**) in **AskQuestion** until the **overall score** is **≤ 20** — routing on this file as-is risks an oversized § 6.
 2. **Do** tell the user explicitly to **pause decomposition** until scope is narrower (revise §§ 4–5, or split the feature).
 3. **Split guidance (required)** — Propose **2–4** concrete slices framed as **user journeys / outcomes** for merchants or their customers (e.g. *"Merchants can configure campaign guardrails before launch"*, *"Shoppers see compliant previews in the app"*). Each slice should be shippable as a **separate planning conversation** (its own Master Plan under the same roadmap topic, or a future **Delivery phases** item that is outcome-titled). **Avoid** recommending splits that are only **topology** ("frontend vs backend", "this API vs that API", "repo A vs repo B") unless you **pair** each slice with **who gains what** so the human can still reason in hosting repo terms.
-4. Offer structured choice via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **`MC_ASKQUESTION_V1`** (per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`**) for **revise §4**, **revise §5**, optional **draft Caveats**, or **commit plans** — prefer one message with journey-split recap + modal when possible.
+4. Offer structured choice via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** (per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`**) for **revise §4**, **revise §5**, optional **draft Caveats**, or **commit plans** — MUST use one message (AskQuestion or phased) with journey-split recap + modal when possible.
 
 When band is **low** or **medium**, proceed to **Step 7**; the status line in Step 7a must mention complexity (e.g. *"Complexity: medium (overall score = 12) — §6 decomposition available in next AskQuestion."*).
 
@@ -500,11 +500,11 @@ Do **not** draft section 6 (`Delivery phases | PR breakdown`) or section 7 (Cave
 
 After **Echo to chat** (§§1–5 + complexity table), end with **one short status line only** (plan path, band, overall score). **Do not** embed the next-move menu in prose blockquotes.
 
-When using the **legacy split** (see **`../README.md`** § *Recap, structured choice, act*), do **not** invoke **AskQuestion** in the same message as the full section echo. **Preferred:** combine recap + next-move modal in one message via **AskQuestion tool** or **`MC_PHASED_RESPONSE_V1`** (`display.markdown` for status; `askQuestion` for options).
+When using the **legacy split** (see **`../README.md`** § *Recap, structured choice, act*), do **not** invoke **AskQuestion** in the same message as the full section echo. **Required:** combine recap + next-move modal in one message via **AskQuestion tool** or **`MC_PHASED_RESPONSE_V1`** (`display.markdown` for status; `askQuestion` for options).
 
 ### Step 7b — Structured choice: primary next moves
 
-Invoke **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **`MC_ASKQUESTION_V1`**. On the legacy split, run structured choice in a **separate** assistant message after step **7a** recap. Build options from plan state and Step 6c band.
+Invoke **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**. On the legacy split, run structured choice in a **separate** assistant message after step **7a** recap. Build options from plan state and Step 6c band.
 
 **Phase-planner child active (binding):** When **`activeLanes`** (from inline **`delivery-phases`** / **`new-plan`** merge or bubbled **`AGENT_RESULT_RESPONSE_V1`**) includes **`continuationOwner: "phase-planner-agent"`** with **`continuationStatus: "active"`** for a **`Delivery phases`** row, **do not** offer **`route-6`**, **`expand-eligible-pr`**, **`expand-next-phase`**, or other phase-scoped decomposition options for that row on this **Master Plan** lane. Acknowledge in one line (phase slug, child lane id when known) and tell the developer to continue on the **phase-planner** child lane. Re-offer Step **7b** master-plan options only after **`phaseShipComplete`** for that phase or explicit defer/abandon — see **`phase-planner`** § *Phase delivery ownership*.
 
@@ -548,14 +548,14 @@ Do **not** omit **`draft-7`** when all phases are shipped but §7 was never draf
 
 ### Step 7c — One choice per turn
 
-Execute **only** what the user selected in **AskQuestion** (or the matching **`option`** from **`MC_ASKQUESTION_V1`**). Multi-step work requires explicit multi-action approval in one user message.
+Execute **only** what the user selected in **AskQuestion** (or the matching **`option`** from). Multi-step work requires explicit multi-action approval in one user message.
 
 #### Route §6 decomposition (`route-6`)
 
-1. **Structured choice** — **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **`MC_ASKQUESTION_V1`**: **Delivery phases** vs **PR breakdown** (align with **`### Decomposition assessment`** when possible). Prefer one message; legacy split only when phased/tool unavailable.
+1. **Structured choice** — **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**: **Delivery phases** vs **PR breakdown** (align with **`### Decomposition assessment`** when possible). Prefer one message; split only when a long draft was sent in the prior message.
 2. Load and follow the chosen skill **inline** on this lane (see **Inline handoff** above):
-   - `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/delivery-phases/SKILL.md` — `routeLock: "delivery-phases"`
-   - `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-breakdown/SKILL.md` — `routeLock: "pr-breakdown"`
+ - `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/delivery-phases/SKILL.md` — `routeLock: "delivery-phases"`
+ - `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-breakdown/SKILL.md` — `routeLock: "pr-breakdown"`
 3. Pass inline context: `targetPlanPath`, `targetPlanSlug`, `parentAgentRole: "master-plan-agent"`, `ledgerParent: <masterPlanSlug>`, `complexityBand`, `complexityScore`, `decompositionAssessment`, `routeLock`.
 4. When the inline skill returns **`## Completion (inline)`** fields, merge `activeLanes`, `openLedgerEntries`, `spawnedPlans`, `remainingTasks`, **`expandEligibleIndices`**, and **`expandNextEligibleIndex`** into this skill’s ledger. If the inline skill opened **`phase-planner`** child lanes or **`coding-session`** from inline **`pr-plan`**, wait on this lane for their **`AGENT_RESULT_RESPONSE_V1`** deliveries per that skill’s aggregation step, then continue **`planner`** Step **7b** — **do not** emit child lanes for **`delivery-phases`**, **`pr-breakdown`**, or **`new-plan`**.
 
@@ -576,7 +576,7 @@ Draft **`## 7. Caveats (optional)`** inline from PRD + §§1–5 (+ §6 when alr
 
 ##### §7 approval gate (turn 2 — structured choice)
 
-On the **next** assistant turn after §7 was written, use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **`MC_ASKQUESTION_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`**:
+On the **next** assistant turn after §7 was written, use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`**:
 
 | Option id (example) | Label (brief) | Action |
 |---------------------|---------------|--------|

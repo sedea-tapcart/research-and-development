@@ -1,76 +1,76 @@
 ---
 name: pr-breakdown
 description: >-
-  Decompose a target Master Plan or Phase plan into PRs (mode #3 set-level) under
-  Sedea's New Feature Development Process. Verifies template stage, ensures
-  **`### Decomposition assessment`** exists (inserts if missing), gates
-  **Delivery phases** vs multi-PR vs single-PR **PR breakdown**, then drafts
-  **`### Single-concern strategy`**, **`### Sequencing`**, and **`### PR list`**.
-  Child PR stubs and **`Plan:`** lines follow **new-plan** indexed handoff (inline under **planner**; spawned when standalone); per-PR
-  §§ 1–4 follow **pr-plan**. Target resolved per
-  planning-target-resolution. Use under mission dispatch, **pr-breakdown**
-  protocol branch, or natural language (decompose into PRs, draft PR breakdown).
+ Decompose a target Master Plan or Phase plan into PRs (mode #3 set-level) under
+ Sedea's New Feature Development Process. Verifies template stage, ensures
+ **`### Decomposition assessment`** exists (inserts if missing), gates
+ **Delivery phases** vs multi-PR vs single-PR **PR breakdown**, then drafts
+ **`### Single-concern strategy`**, **`### Sequencing`**, and **`### PR list`**.
+ Child PR stubs and **`Plan:`** lines follow **new-plan** indexed handoff (inline under **planner**; spawned when standalone); per-PR
+ §§ 1–4 follow **pr-plan**. Target resolved per
+ planning-target-resolution. Use under mission dispatch, **pr-breakdown**
+ protocol branch, or natural language (decompose into PRs, draft PR breakdown).
 inputs:
-  targetPlanPath:
-    type: string
-    description: Absolute or workspace-relative path to the Master Plan or Phase plan being decomposed.
-    required: true
-  targetPlanSlug:
-    type: string
-    description: Slug for the target plan.
-    required: true
-  parentAgentRole:
-    type: string
-    description: Upstream owner that invoked this skill inline, usually master-plan-agent or phase-planner-agent.
-    required: false
-  ledgerParent:
-    type: string
-    description: Slug/path of the ledger parent entry the Squad Leader tracks.
-    required: false
-  complexityBand:
-    type: string
-    description: Plan-scope complexity band copied from the upstream plan, when available.
-    required: false
-  complexityScore:
-    type: number
-    description: Plan-scope complexity score copied from the upstream plan, when available.
-    required: false
-  decompositionAssessment:
-    type: string
-    description: Current Decomposition assessment block from the upstream plan.
-    required: false
-  routeLock:
-    type: string
-    description: Optional upstream-selected route. When set to pr-breakdown, do not route back to delivery-phases unless the assessment creates a blocking conflict.
-    required: false
-  prBreakdownShape:
-    type: string
-    description: Optional upstream route detail for PR breakdown, single or multi.
-    required: false
-  hoistFromPhasePath:
-    type: string
-    description: >-
-      When set, scope single-PR breakdown from this phase plan file; targetPlanPath
-      must be the decomposition ancestor (parent of that phase), not the phase plan.
-    required: false
-  hoistFromPhaseSlug:
-    type: string
-    description: Slug of the phase plan being hoisted (must match hoistFromPhasePath).
-    required: false
-  scopeParentIndex:
-    type: number
-    description: One-based Delivery phases index on the target ancestor for the hoisted phase row.
-    required: false
-  decomposeOnPhasePlan:
-    type: boolean
-    description: When true, allow single-PR pr-breakdown on a phase plan target (override hoist).
-    required: false
-    default: false
+ targetPlanPath:
+ type: string
+ description: Absolute or workspace-relative path to the Master Plan or Phase plan being decomposed.
+ required: true
+ targetPlanSlug:
+ type: string
+ description: Slug for the target plan.
+ required: true
+ parentAgentRole:
+ type: string
+ description: Upstream owner that invoked this skill inline, usually master-plan-agent or phase-planner-agent.
+ required: false
+ ledgerParent:
+ type: string
+ description: Slug/path of the ledger parent entry the Squad Leader tracks.
+ required: false
+ complexityBand:
+ type: string
+ description: Plan-scope complexity band copied from the upstream plan, when available.
+ required: false
+ complexityScore:
+ type: number
+ description: Plan-scope complexity score copied from the upstream plan, when available.
+ required: false
+ decompositionAssessment:
+ type: string
+ description: Current Decomposition assessment block from the upstream plan.
+ required: false
+ routeLock:
+ type: string
+ description: Optional upstream-selected route. When set to pr-breakdown, do not route back to delivery-phases unless the assessment creates a blocking conflict.
+ required: false
+ prBreakdownShape:
+ type: string
+ description: Optional upstream route detail for PR breakdown, single or multi.
+ required: false
+ hoistFromPhasePath:
+ type: string
+ description: >-
+ When set, scope single-PR breakdown from this phase plan file; targetPlanPath
+ must be the decomposition ancestor (parent of that phase), not the phase plan.
+ required: false
+ hoistFromPhaseSlug:
+ type: string
+ description: Slug of the phase plan being hoisted (must match hoistFromPhasePath).
+ required: false
+ scopeParentIndex:
+ type: number
+ description: One-based Delivery phases index on the target ancestor for the hoisted phase row.
+ required: false
+ decomposeOnPhasePlan:
+ type: boolean
+ description: When true, allow single-PR pr-breakdown on a phase plan target (override hoist).
+ required: false
+ default: false
 warmUpRules:
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
-  - ".sedea/centers/research-and-development/docs/development-process.md"
-  - ".sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc"
+ - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
+ - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
+ - ".sedea/centers/research-and-development/docs/development-process.md"
+ - ".sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc"
 ---
 
 # PR breakdown — mode #3 decomposition
@@ -113,7 +113,7 @@ When **`hoistFromPhasePath`** is set (**step 3.6**), **K = 1**; also pass `hoist
 
 The skill operates on a **target** `.plan.md` resolved before this skill runs, per [`30_planning-target-resolution.mdc`](../../../../rules/30_planning-target-resolution.mdc) § *Resolution order*. Acknowledge the target slug in one line when this skill starts (e.g. *Target plan: `<slug>` (from prior structured choice).*). Resolve targets from session, snapshot, or explicit path — **planning-target-resolution** is normative. Do **not** infer the target from the IDE’s focused-file list alone.
 
-If there is no resolved target, **stop** and emit a fresh *Where we are now in the plan tree* snapshot (recap). Collect the lane pick via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **`MC_ASKQUESTION_V1`** per **30_planning-target-resolution** § *Sedea input channel* and **`../README.md`** § *Recap, structured choice, act* — **preferred:** recap + modal in one message; **legacy split:** recap only, then structured choice in the **next** assistant message. Then continue.
+If there is no resolved target, **stop** and emit a fresh *Where we are now in the plan tree* snapshot (recap). Collect the lane pick via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **30_planning-target-resolution** § *Sedea input channel* and **`../README.md`** § *Recap, structured choice, act* — **preferred:** recap + modal in one message; **legacy split:** recap only, then structured choice in the **next** assistant message. Then continue.
 
 Acknowledge in one line: *"Target plan: `<slug>`."*
 
@@ -122,7 +122,7 @@ Acknowledge in one line: *"Target plan: `<slug>`."*
 - **`kind: roadmap_topic`** or the file is clearly a **roadmap topic** → **stop** with: *"This is a roadmap topic. Roadmap topics do not decompose into PRs here. Open a child Master Plan and run **`pr-breakdown`** on that plan."*
 - Body has **`## Single concern`** (PR plan template) → **stop** with: *"This is a PR plan. PR plans are leaves; they are not decomposed with **`pr-breakdown`**. Use **`coding-session`** or **`pr-review`** as appropriate."*
 - Master Plan or Phase plan → proceed.
-- Ambiguous (stub with no distinguishing sections yet) → use **AskQuestion** or **`MC_ASKQUESTION_V1`** with one `option` per stage (Master Plan, Phase plan, PR plan); if not Master or Phase plan, **stop**.
+- Ambiguous (stub with no distinguishing sections yet) → use **AskQuestion** with one `option` per stage (Master Plan, Phase plan, PR plan); if not Master or Phase plan, **stop**.
 
 Acknowledge: *"Stage: <Master Plan | Phase plan>; proceeding."*
 
@@ -176,9 +176,9 @@ Run when **`hoistFromPhasePath`** and **`scopeParentIndex`** are set and **`prBr
 2. Read the **target** (ancestor) plan. Locate **`## 6. Delivery phases`** (Master) or **`## 5. Delivery phases`** (Phase parent). If the ancestor dual-title is still `Delivery phases | PR breakdown` with `_TBD_` list, **stop** — run **`delivery-phases`** on the ancestor first, then re-enter hoist.
 3. Match **`scopeParentIndex`** to the numbered row whose **`Plan:`** links the hoisted phase plan (or whose title matches **`hoistFromPhaseSlug`** / phase `name:`). If no row matches, return `partial` and report the index mismatch.
 4. **`StrReplace`** on the ancestor — update **only** that row:
-   - Set the **Decomposition decision** sub-bullet to **`PR breakdown`**.
-   - If the row has a single **`Plan:`** line pointing at the phase plan, rename the label to **`Phase plan:`** (keep the phase link) and add a sibling sub-bullet **`Plan:`** with `_TBD_` (or `_TBD_` spawn placeholder) for the PR plan **`new-plan`** will create.
-   - If the row already has separate **`Phase plan:`** / **`Plan:`** lines, set **`Plan:`** to `_TBD_` only when the PR link is still missing.
+ - Set the **Decomposition decision** sub-bullet to **`PR breakdown`**.
+ - If the row has a single **`Plan:`** line pointing at the phase plan, rename the label to **`Phase plan:`** (keep the phase link) and add a sibling sub-bullet **`Plan:`** with `_TBD_` (or `_TBD_` spawn placeholder) for the PR plan **`new-plan`** will create.
+ - If the row already has separate **`Phase plan:`** / **`Plan:`** lines, set **`Plan:`** to `_TBD_` only when the PR link is still missing.
 5. **`StrReplace`** on the phase plan — under **`## 5. Delivery phases | PR breakdown`**, replace `_TBD_` with a short hoisted note (one paragraph): PR breakdown is authored on ancestor **`<ancestor-slug>`** row **N**; do not draft a § 5 **`PR breakdown`** list on this phase file.
 6. Draft the single-PR set-level block (**`### Single-concern strategy`**, **`### Sequencing`**, **`### PR list`** with **K = 1**) using **step 5s**, grounded in the **phase** plan scope from step 1. **Do not** retitle the ancestor's top-level § 6 / § 5 from **`Delivery phases`** to **`PR breakdown`** — the hoisted PR is row-scoped on the ancestor list.
 7. Store the drafted block in working notes for step 6 approval, or write it under a comment block in chat only until approved — **preferred:** proceed to **step 6** with `hoistPendingWrite: true` and present the draft for approval before **`new-plan`** spawn.
@@ -194,8 +194,8 @@ Before **AskQuestion** (step 4) or before drafting set-level **`PR breakdown`** 
 
 1. If the plan body **already contains** the heading **`### Decomposition assessment`**, **read it** and acknowledge one line in chat — do **not** duplicate it.
 2. Otherwise **infer** the same dimensions as **[`phase-planner` / § 4g — `### Decomposition assessment`](../phase-planner/SKILL.md)** (kinds of change, PR count band, sequencing / coupling, routing recommendation, confidence) — from the same inputs you will use in step 5a (Master: §§ 4–5; Phase: §§ 2–4). Then **`StrReplace`** insert the full **`### Decomposition assessment`** block **immediately above** the dual-title heading (`## 6. …` or `## 5. …`):
-   - Use a unique `old_string` anchor of the form `## <N>. Delivery phases \| PR breakdown\n\n_TBD_` **or** `## <N>. PR breakdown\n\n_TBD_` (match the file exactly — include the chosen heading line).
-   - `new_string` is: `### Decomposition assessment` + blank line + bullet lines + blank line + the same `## <N>. …` heading + `\n\n_TBD_`.
+ - Use a unique `old_string` anchor of the form `## <N>. Delivery phases \| PR breakdown\n\n_TBD_` **or** `## <N>. PR breakdown\n\n_TBD_` (match the file exactly — include the chosen heading line).
+ - `new_string` is: `### Decomposition assessment` + blank line + bullet lines + blank line + the same `## <N>. …` heading + `\n\n_TBD_`.
 
 Do **not** remove an existing assessment authored by **`phase-planner`** / **`planner`** unless the **developer** asked to replace it.
 
@@ -209,7 +209,7 @@ When the skill was spawned with `routeLock: "pr-breakdown"` (or with `parentAgen
 - If it recommends `PR breakdown` multi-PR, or the recommendation is ambiguous but PR-ready, use `pr_breakdown_multi`.
 - If it strongly recommends `Delivery phases`, stop and surface the conflict to the developer: continue with PR breakdown anyway, switch to `delivery-phases`, or revise the assessment. Do not silently bounce to `delivery-phases`.
 
-When no upstream route lock exists, use **AskQuestion** or **`MC_ASKQUESTION_V1`** to ask:
+When no upstream route lock exists, use **AskQuestion** to ask:
 
 > How should this plan recurse next? Use **`### Decomposition assessment`** as the default if you agree with it.
 
@@ -316,7 +316,7 @@ Do **not** mirror the full **`PR breakdown`** body in chat (no duplicated headin
 
 Count **K** from numbered rows under **`### PR list`** before the approval modal (`K = 1` is valid on the single-PR path). If **K = 0**, treat as drafting failure — do not open structured-choice spawn paths; return failure or partial per **Completion (spawned)** / standalone handoff.
 
-Do **not** include **AskQuestion**, **`MC_ASKQUESTION_V1`**, **`AGENT_RESULT_RESPONSE_V1`**, or **`AGENT_RUN_REQUEST_V1`** in this recap-only pass unless you combine recap + approval into one message via **`MC_PHASED_RESPONSE_V1`** (then skip a separate step-5d-only message).
+Do **not** include  **AskQuestion**, **`AGENT_RESULT_RESPONSE_V1`**, or **`AGENT_RUN_REQUEST_V1`** in this recap-only pass unless you combine recap + approval into one message via **`MC_PHASED_RESPONSE_V1`** (then skip a separate step-5d-only message).
 
 ## Step 6 — Hand back with next-move options
 
@@ -326,11 +326,11 @@ Do **not** include **AskQuestion**, **`MC_ASKQUESTION_V1`**, **`AGENT_RESULT_RES
 
 **Preferred:** **AskQuestion tool** (brief recap allowed in the same message) or **`MC_PHASED_RESPONSE_V1`** with recap in `display.markdown` and options in `askQuestion` — one assistant message.
 
-**Legacy split (when the tool and phased envelope are unavailable):** send the step **5d** recap, then a **separate** message with **AskQuestion** or **sentinel-only** **`MC_ASKQUESTION_V1`** (no prose before the sentinel).
+**Legacy split (when the tool and phased envelope are unavailable):** send the step **5d** recap, then a **separate** message with `MC_PHASED_RESPONSE_V1`** (sentinel-first; no recap prose before the sentinel).
 
-Collect the developer’s choice via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **`MC_ASKQUESTION_V1`** only in the structured-choice message — not in the same message as spawns or **`AGENT_RESULT_RESPONSE_V1`**.
+Collect the developer’s choice via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** only in the structured-choice message — not in the same message as spawns or **`AGENT_RESULT_RESPONSE_V1`**.
 
-- When using bare **`MC_ASKQUESTION_V1`** (no phased envelope), the structured-choice message must contain **only** the sentinel line and JSON object — **no** prose, plan recap, or markdown fences before or between the sentinel and JSON.
+- When using (no phased envelope), the structured-choice message must contain **only** the sentinel line and JSON object — **no** prose, plan recap, or markdown fences before or between the sentinel and JSON.
 - Put every choosable path in **`options`** (`id` / `label`). Do **not** duplicate those choices as a numbered prose menu in the same turn.
 
 Required **`options`** (adapt labels; keep **K** visible in the **`prompt`** when helpful):
@@ -365,7 +365,7 @@ Do not return terminal **success** upstream until every indexed row has returned
 
 ## Step 6a — Follow-up turns
 
-When the **developer** asks to revise the **`PR breakdown`** block, re-read that section, apply edits via `StrReplace`, then repeat **recap** (link + one-line **K** summary only) and **structured choice** — prefer **`MC_PHASED_RESPONSE_V1`** or **AskQuestion** for recap + modal in one message; do **not** combine a full section echo with bare **`MC_ASKQUESTION_V1`** in one message.
+When the **developer** asks to revise the **`PR breakdown`** block, re-read that section, apply edits via `StrReplace`, then repeat **recap** (link + one-line **K** summary only) and **structured choice** — prefer **`MC_PHASED_RESPONSE_V1`** or **AskQuestion** for recap + modal in one message; do **not** combine a full section echo with in one message.
 
 When the **developer** chooses hand off or populate children in standalone use, run **`new-plan`** inline or emit child-spawn requests for **`new-plan`** / **`pr-plan`** instead of impersonating those skills’ full procedures in the same turn. Stop after handoff if the result is needed for the next step.
 
@@ -394,7 +394,7 @@ Only return `continuationStatus: "terminal"` when every row is explicitly `compl
 
 ## One primary choice per turn — surface observations
 
-Match the discipline in **`planner`**, **`delivery-phases`**, and **`phase-planner`**: perform exactly what was chosen; scope stays on the chosen pass. If you notice gaps (Changes bullets that do not map to a PR, sequencing tension, assessment vs draft mismatch), list short **numbered observations** in the chat reply (information-only). When you need an explicit accept/skip decision on flags, use **AskQuestion** or **`MC_ASKQUESTION_V1`** with one `option` per flag plus **More details for option _**.
+Match the discipline in **`planner`**, **`delivery-phases`**, and **`phase-planner`**: perform exactly what was chosen; scope stays on the chosen pass. If you notice gaps (Changes bullets that do not map to a PR, sequencing tension, assessment vs draft mismatch), list short **numbered observations** in the chat reply (information-only). When you need an explicit accept/skip decision on flags, use **AskQuestion** with one `option` per flag plus **More details for option _**.
 
 ## Scope guard
 

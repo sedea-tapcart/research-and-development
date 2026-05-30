@@ -1,79 +1,79 @@
 ---
 name: new-plan
 description: >-
-  Scaffold a new `.plan.md` plus `.state.yaml` sidecar under the `.sedea/operations/`
-  plan union (joint or per-user `operationsUserId` `plans/`), with required frontmatter
-  (name, overview, todos, isProject) and `parent` only in the sidecar. Resolves
-  parent per planning-target-resolution; confirms parent before write except on
-  indexed child spawn when parent + index N are already locked by session context.
-  After an indexed handoff, may run **pr-plan** inline or spawn **phase-planner**. When run inline from
-  **delivery-phases** or **pr-breakdown** under **planner**, reports Completion (inline) to the invoker.
-  When spawned from an upstream decomposition agent that already approved the parent list, skips the child-stub populator approval
-  modal and runs the populator immediately. Use under mission dispatch or
-  when the developer asks to scaffold a plan via **new-plan** (standalone) or expand
-  a parent list item **N** (indexed-child) from a numbered dual-title list.
+ Scaffold a new `.plan.md` plus `.state.yaml` sidecar under the `.sedea/operations/`
+ plan union (joint or per-user `operationsUserId` `plans/`), with required frontmatter
+ (name, overview, todos, isProject) and `parent` only in the sidecar. Resolves
+ parent per planning-target-resolution; confirms parent before write except on
+ indexed child spawn when parent + index N are already locked by session context.
+ After an indexed handoff, may run **pr-plan** inline or spawn **phase-planner**. When run inline from
+ **delivery-phases** or **pr-breakdown** under **planner**, reports Completion (inline) to the invoker.
+ When spawned from an upstream decomposition agent that already approved the parent list, skips the child-stub populator approval
+ modal and runs the populator immediately. Use under mission dispatch or
+ when the developer asks to scaffold a plan via **new-plan** (standalone) or expand
+ a parent list item **N** (indexed-child) from a numbered dual-title list.
 inputs:
-  mode:
-    type: string
-    description: Creation mode. Use indexed-child when expanding a parent list row; use standalone for ordinary new plans.
-    required: false
-    default: standalone
-  parentPlanPath:
-    type: string
-    description: Parent plan path. Required when mode is indexed-child.
-    required: false
-  parentPlanSlug:
-    type: string
-    description: Parent plan slug. Required when mode is indexed-child.
-    required: false
-  index:
-    type: number
-    description: One-based child index from the parent's Delivery phases or PR list. Required when mode is indexed-child.
-    required: false
-  childKind:
-    type: string
-    description: Expected child body type, usually phase-planner or pr-plan. Required when mode is indexed-child.
-    required: false
-  requestedPopulatorSkill:
-    type: string
-    description: Optional populator skill to spawn after the child stub is wired.
-    required: false
-  decompositionKind:
-    type: string
-    description: Parent decomposition kind that produced this child, usually delivery-phases or pr-breakdown.
-    required: false
-  ledgerParent:
-    type: string
-    description: Ledger parent slug/path copied from the upstream decomposition agent.
-    required: false
-  upstreamSkill:
-    type: string
-    description: Skill that requested this child creation.
-    required: false
-  parentAgentRole:
-    type: string
-    description: When delivery-phases-agent or pr-breakdown-agent, report Completion (inline) to the invoker instead of AGENT_RESULT_RESPONSE_V1.
-    required: false
-  hoistFromPhase:
-    type: boolean
-    description: >-
-      When true with childKind pr-plan, allow indexed PR child under a Delivery phases
-      parent row (single-PR hoist from phase-planner); requires hoistFromPhasePath.
-    required: false
-    default: false
-  hoistFromPhasePath:
-    type: string
-    description: Phase plan path whose §§ 2–4 scope the hoisted PR plan.
-    required: false
-  hoistFromPhaseSlug:
-    type: string
-    description: Slug of the hoisted phase plan.
-    required: false
+ mode:
+ type: string
+ description: Creation mode. Use indexed-child when expanding a parent list row; use standalone for ordinary new plans.
+ required: false
+ default: standalone
+ parentPlanPath:
+ type: string
+ description: Parent plan path. Required when mode is indexed-child.
+ required: false
+ parentPlanSlug:
+ type: string
+ description: Parent plan slug. Required when mode is indexed-child.
+ required: false
+ index:
+ type: number
+ description: One-based child index from the parent's Delivery phases or PR list. Required when mode is indexed-child.
+ required: false
+ childKind:
+ type: string
+ description: Expected child body type, usually phase-planner or pr-plan. Required when mode is indexed-child.
+ required: false
+ requestedPopulatorSkill:
+ type: string
+ description: Optional populator skill to spawn after the child stub is wired.
+ required: false
+ decompositionKind:
+ type: string
+ description: Parent decomposition kind that produced this child, usually delivery-phases or pr-breakdown.
+ required: false
+ ledgerParent:
+ type: string
+ description: Ledger parent slug/path copied from the upstream decomposition agent.
+ required: false
+ upstreamSkill:
+ type: string
+ description: Skill that requested this child creation.
+ required: false
+ parentAgentRole:
+ type: string
+ description: When delivery-phases-agent or pr-breakdown-agent, report Completion (inline) to the invoker instead of AGENT_RESULT_RESPONSE_V1.
+ required: false
+ hoistFromPhase:
+ type: boolean
+ description: >-
+ When true with childKind pr-plan, allow indexed PR child under a Delivery phases
+ parent row (single-PR hoist from phase-planner); requires hoistFromPhasePath.
+ required: false
+ default: false
+ hoistFromPhasePath:
+ type: string
+ description: Phase plan path whose §§ 2–4 scope the hoisted PR plan.
+ required: false
+ hoistFromPhaseSlug:
+ type: string
+ description: Slug of the hoisted phase plan.
+ required: false
 warmUpRules:
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
-  - ".sedea/centers/research-and-development/docs/development-process.md"
-  - ".sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc"
+ - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
+ - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
+ - ".sedea/centers/research-and-development/docs/development-process.md"
+ - ".sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc"
 ---
 
 # New plan
@@ -122,15 +122,15 @@ The regular parent-confirmation gate below is **skipped** when that pre-resoluti
 **Stub vs full template.** Indexed-child files use the **generic** scaffold in *Write the plan template* below (`## Overview`, `## Phasing`, `## Out of scope`). **`phase-planner`** or **`pr-plan`** replaces that body with the Phase or per-PR template — intentional two-step split; see **`.sedea/centers/research-and-development/docs/development-process.md`** (§ *§ 6 / § 5 contents rule*, **Indexed-child stub** paragraph).
 
 1. **Read item N** from the parent’s dual-title section. Where the numbered list lives depends on the section heading:
-   - **`Delivery phases`** (mode #2): the numbered list is the body of `## 6. Delivery phases` (Master Plan) or `## 5. Delivery phases` (Phase plan).
-   - **`PR breakdown`** (mode #3): the numbered list is only under `### PR list` inside `## 6. PR breakdown` (Master) or `## 5. PR breakdown` (Phase). Ignore `### Single-concern strategy` and `### Sequencing` for index resolution.
+ - **`Delivery phases`** (mode #2): the numbered list is the body of `## 6. Delivery phases` (Master Plan) or `## 5. Delivery phases` (Phase plan).
+ - **`PR breakdown`** (mode #3): the numbered list is only under `### PR list` inside `## 6. PR breakdown` (Master) or `## 5. PR breakdown` (Phase). Ignore `### Single-concern strategy` and `### Sequencing` for index resolution.
 
-   The **seed** for the child title is the **bolded title** on item **N**’s first line — strip the list marker (`1. `, …) and `**` markers. **Display title** (`name:` + H1) uses **sentence case** plus optional `<N>. ` prefix per § **Slug and filename** / **Write the plan template** → **Rules**. **Slug base** for filenames normalizes from the **raw** bolded string (before sentence case).
+ The **seed** for the child title is the **bolded title** on item **N**’s first line — strip the list marker (`1. `, …) and `**` markers. **Display title** (`name:` + H1) uses **sentence case** plus optional `<N>. ` prefix per § **Slug and filename** / **Write the plan template** → **Rules**. **Slug base** for filenames normalizes from the **raw** bolded string (before sentence case).
 2. **Validate the requested child kind against the parent heading.**
-   - `Delivery phases` parent heading requires `childKind: "phase-planner"` and `requestedPopulatorSkill: "phase-planner"` when a populator is requested.
-   - `PR breakdown` parent heading requires `childKind: "pr-plan"` and `requestedPopulatorSkill: "pr-plan"` when a populator is requested.
-   - **Hoist exception:** when `hoistFromPhase: true` and `hoistFromPhasePath` are set, allow `childKind: "pr-plan"` under a **`Delivery phases`** parent for the indexed row **N** that owns the hoisted phase (single-PR hoist from **`phase-planner`**). Require `requestedPopulatorSkill: "pr-plan"` when a populator is requested. Read scope from the phase plan at **`hoistFromPhasePath`** for titling; the parent's **`Plan:`** sub-bullet (not **`Phase plan:`**) receives the new PR link after write.
-   - If the requested kind conflicts with the parent heading and the hoist exception does not apply, stop with `failure`; do not create a child file.
+ - `Delivery phases` parent heading requires `childKind: "phase-planner"` and `requestedPopulatorSkill: "phase-planner"` when a populator is requested.
+ - `PR breakdown` parent heading requires `childKind: "pr-plan"` and `requestedPopulatorSkill: "pr-plan"` when a populator is requested.
+ - **Hoist exception:** when `hoistFromPhase: true` and `hoistFromPhasePath` are set, allow `childKind: "pr-plan"` under a **`Delivery phases`** parent for the indexed row **N** that owns the hoisted phase (single-PR hoist from **`phase-planner`**). Require `requestedPopulatorSkill: "pr-plan"` when a populator is requested. Read scope from the phase plan at **`hoistFromPhasePath`** for titling; the parent's **`Plan:`** sub-bullet (not **`Phase plan:`**) receives the new PR link after write.
+ - If the requested kind conflicts with the parent heading and the hoist exception does not apply, stop with `failure`; do not create a child file.
 3. **Capture the exact `Plan:` placeholder for item N.** The selected row must contain exactly one `Plan:` line that is still pending. Accept `_TBD`, `_TBD_`, or a clear spawn-hint placeholder after `Plan:`. If the row has no `Plan:` line, has multiple `Plan:` lines, or already links a `.plan.md`, stop with `partial` and report the row problem; do not create a duplicate child.
 4. **Capture parent row prose for the child stub.** When item **N** includes sub-bullets per the dev-process **§ 6 / § 5 contents rule** (decomposition decision, scope sentence, `Plan:`), treat that text as **already reviewed on the parent** — copy the scope sentence (and optional decomposition line) into the child `overview:` and `## Overview` when writing the stub. Do **not** ask the developer to re-approve that prose.
 
@@ -142,8 +142,8 @@ The regular parent-confirmation gate below is **skipped** when that pre-resoluti
 - Requested `childKind` conflicts with the parent heading — stop; fix the upstream spawn request.
 - Item **N** already has a linked `Plan:` target — stop with `partial`; report the existing target instead of creating a duplicate.
 - **Depth-first eligibility failed** — stop with `partial` or `failure` and one-line reason:
-  - **`Delivery phases` parent:** index **N > 1** and phase **N−1** is not **ship-complete** on §8 (`shipPhase: done`, `rowStatus: closed`, or explicit defer/abandon on the leader dispatch). See **development-process.md** § *Depth-first plan-tree traversal* and **30_planning-target-resolution** § *Depth-first expansion eligibility*.
-  - **`PR breakdown` parent:** index **N** is not in the eligible set parsed from **`### Sequencing`** (prior sequential PR or prior parallel stage not ship-complete).
+ - **`Delivery phases` parent:** index **N > 1** and phase **N−1** is not **ship-complete** on §8 (`shipPhase: done`, `rowStatus: closed`, or explicit defer/abandon on the leader dispatch). See **development-process.md** § *Depth-first plan-tree traversal* and **30_planning-target-resolution** § *Depth-first expansion eligibility*.
+ - **`PR breakdown` parent:** index **N** is not in the eligible set parsed from **`### Sequencing`** (prior sequential PR or prior parallel stage not ship-complete).
 - **N ≥ 36** — stop with the wide-branching message (single-character filename prefix supports items **1–35**).
 
 **Non-indexed name on the same pre-resolved parent:** if the session supplies a **free-text child name** instead of digit-only **N**, use that string as the plan name (sentence case rules apply); keep the parent from context; still skip the confirmation gate only when resolution rules say the parent is already locked.
@@ -161,11 +161,11 @@ A plan without a parent is a **top-level topic** (top-level plan: `parent: null`
 1. **Explicit in session or message** — slug, path under `plans/`, or absolute `.sedea/operations/.../*.plan.md`.
 2. **Session anchor** — from hosting repo root:
 
-   ```bash
-   node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs resolve --cwd "$PWD"
-   ```
+ ```bash
+ node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs resolve --cwd "$PWD"
+ ```
 
-   Exit **0** means `$PWD` is inside a worktree listed in some plan’s sidecar; that plan is a strong passive parent candidate. Optional scope: **`--operations-user-id <id>`** before the subcommand (Mission Control **`operationsUserId`** in agent runs); if omitted, only `joint` plans are searched.
+ Exit **0** means `$PWD` is inside a worktree listed in some plan’s sidecar; that plan is a strong passive parent candidate. Optional scope: **`--operations-user-id <id>`** before the subcommand (Mission Control **`operationsUserId`** in agent runs); if omitted, only `joint` plans are searched.
 3. **Recent chat references** — last turns name a slug or absolute plan path.
 4. **Nothing resolved** — ask the developer for a parent slug, or the literal `null` for a **top-level topic** (top-level plan, `parent: null`).
 
@@ -203,9 +203,9 @@ Two artefacts in one skill turn.
 name: <display name>
 overview: <one-line overview the user gave, or inferred from the name>
 todos:
-  - id: <first_todo_slug>
-    content: <describe the first concrete step>
-    status: pending
+ - id: <first_todo_slug>
+ content: <describe the first concrete step>
+ status: pending
 isProject: false
 ---
 
@@ -249,13 +249,13 @@ Always write the sidecar. `parent:` required; use YAML `null` unquoted for a **t
 
 1. **Indexed spawn only — parent `Plan:` placeholder.** Under item **N** in `Delivery phases` or `### PR list`, replace the `_TBD` placeholder line for `Plan:` (whatever exact placeholder the parent template used — often a spawn hint at the same indent as sibling bullets) with a **relative** Markdown link to the child file: `[<sentence-cased title without N. prefix>](<slug>.plan.md)` (same directory as the parent plan). If the placeholder is already filled, one-line note and continue.
 
-   Use the exact `Plan:` line captured during indexed-child validation as the `old_string`; include enough surrounding row context to replace only item **N**. The replacement must preserve the original indentation and label shape, changing only the pending target after `Plan:`. After replacement, read the parent file back and verify:
+ Use the exact `Plan:` line captured during indexed-child validation as the `old_string`; include enough surrounding row context to replace only item **N**. The replacement must preserve the original indentation and label shape, changing only the pending target after `Plan:`. After replacement, read the parent file back and verify:
 
-   - item **N** has exactly one `Plan:` link;
-   - the link target is the relative child filename just created;
-   - no sibling item changed.
+ - item **N** has exactly one `Plan:` link;
+ - the link target is the relative child filename just created;
+ - no sibling item changed.
 
-   If verification fails, return `partial` with `remainingTasks` that names `plan-reconcile`; do not proceed to the populator spawn until the parent link is trustworthy.
+ If verification fails, return `partial` with `remainingTasks` that names `plan-reconcile`; do not proceed to the populator spawn until the parent link is trustworthy.
 
 2. **Link the child** using an absolute `file://` URL to the real path under `.sedea/operations/.../plans/...` so the developer can open it.
 
@@ -279,53 +279,53 @@ Set `outputs.populatorApprovalStatus: "waived-upstream"` and one line: *Parent l
 - `requestedPopulatorSkill` is absent (stub-only create).
 - The developer explicitly chose **Revise child stub first** or **Defer population** on a prior turn (re-open step 3).
 
-3. **Populator approval gate (indexed spawn only — when not auto-authorized).** If this skill was spawned with `requestedPopulatorSkill` and [Auto-authorize populator](#auto-authorize-populator-upstream-decomposition-spawn) does **not** apply, present the created child stub and verified parent `Plan:` link to the developer before spawning the populator. Collect approval via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **`MC_ASKQUESTION_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* — **preferred:** stub link + modal in one message. Required options:
-   - **Approve child stub and populate now**
-   - **Revise child stub first**
-   - **Defer population**
-   - **Abandon this child**
-   - **More details for option _**
+3. **Populator approval gate (indexed spawn only — when not auto-authorized).** If this skill was spawned with `requestedPopulatorSkill` and [Auto-authorize populator](#auto-authorize-populator-upstream-decomposition-spawn) does **not** apply, present the created child stub and verified parent `Plan:` link to the developer before spawning the populator. Collect approval via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* — **preferred:** stub link + modal in one message. Required options:
+ - **Approve child stub and populate now**
+ - **Revise child stub first**
+ - **Defer population**
+ - **Abandon this child**
+ - **More details for option _**
 
-   Only **Approve child stub and populate now** authorizes populator handoff (inline **`pr-plan`** or spawn **`phase-planner`**). If the developer defers, return `partial` or `success` with `continuationStatus: "active"` and a `remainingTasks` item naming the deferred populator.
+ Only **Approve child stub and populate now** authorizes populator handoff (inline **`pr-plan`** or spawn **`phase-planner`**). If the developer defers, return `partial` or `success` with `continuationStatus: "active"` and a `remainingTasks` item naming the deferred populator.
 
-   **Do not** open this gate when auto-authorize applies — proceed to step 4 in the same turn after the stub and `Plan:` link verify.
+ **Do not** open this gate when auto-authorize applies — proceed to step 4 in the same turn after the stub and `Plan:` link verify.
 
 4. **Populator handoff (indexed spawn only).** When `requestedPopulatorSkill` is set and either auto-authorize applies **or** the developer approved step 3, hand off after the child stub and parent `Plan:` line are written and verified (do **not** stop for a stub-approval modal when auto-authorized).
 
-   **`pr-plan`** (`childKind: "pr-plan"` or parent **`PR breakdown`**):
+ **`pr-plan`** (`childKind: "pr-plan"` or parent **`PR breakdown`**):
 
-   1. Run **`pr-plan`** **inline** on this lane per [Inline handoff](#inline-handoff--new-plan--pr-plan-step-4).
-   2. Merge inline completion fields; set `outputs.populatorSkill: "pr-plan"`, `outputs.populatorStatus` from inline handoff.
-   3. If inline **`pr-plan`** offered the §5c handoff menu or spawned **`coding-session`**, keep `continuationStatus: "active"` on this lane — follow-up turns continue inline **`pr-plan`** (§5c–§5e) before terminal **`AGENT_RESULT_RESPONSE_V1`**.
-   4. Do **not** emit **`AGENT_RUN_REQUEST_V1`** for **`pr-plan`**.
+ 1. Run **`pr-plan`** **inline** on this lane per [Inline handoff](#inline-handoff--new-plan--pr-plan-step-4).
+ 2. Merge inline completion fields; set `outputs.populatorSkill: "pr-plan"`, `outputs.populatorStatus` from inline handoff.
+ 3. If inline **`pr-plan`** offered the §5c handoff menu or spawned **`coding-session`**, keep `continuationStatus: "active"` on this lane — follow-up turns continue inline **`pr-plan`** (§5c–§5e) before terminal **`AGENT_RESULT_RESPONSE_V1`**.
+ 4. Do **not** emit **`AGENT_RUN_REQUEST_V1`** for **`pr-plan`**.
 
-   **`phase-planner`** (`childKind: "phase-planner"` or parent **`Delivery phases`**):
+ **`phase-planner`** (`childKind: "phase-planner"` or parent **`Delivery phases`**):
 
-   1. Emit exactly one child-spawn request for `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/phase-planner/SKILL.md`.
-   2. Inputs: `targetPlanPath`, `targetPlanSlug`, `parentPlanPath`, `parentPlanSlug`, `parentIndex`, `ledgerParent`, `upstreamSkill: "new-plan"`.
-   3. Announce that this agent is waiting for the **`phase-planner`** child result and stop.
+ 1. Emit exactly one child-spawn request for `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/phase-planner/SKILL.md`.
+ 2. Inputs: `targetPlanPath`, `targetPlanSlug`, `parentPlanPath`, `parentPlanSlug`, `parentIndex`, `ledgerParent`, `upstreamSkill: "new-plan"`.
+ 3. Announce that this agent is waiting for the **`phase-planner`** child result and stop.
 
-   **`pr-breakdown`**, nested decomposition, and **`plan-reconcile`** happen in their own mission steps after this skill finishes. If a center populator `SKILL.md` is ever absent, end after stub + parent link and point at **`development-process.md`**.
+ **`pr-breakdown`**, nested decomposition, and **`plan-reconcile`** happen in their own mission steps after this skill finishes. If a center populator `SKILL.md` is ever absent, end after stub + parent link and point at **`development-process.md`**.
 
 5. **Aggregate spawned `phase-planner` result.** When Mission Control delivers a **`phase-planner`** child result (spawned path only), match by correlation id first, then by `outputs.targetPlanPath` / `outputs.targetPlanSlug`.
 
-   - **`continuationOwner: "phase-planner-agent"`** and **`continuationStatus: "active"`** → keep this `new-plan` result **`active`**; merge `remainingTasks`, `activeLanes`, and `openLedgerEntries`; report **`## Completion (inline)`** to the invoker as **wait-state only** (acknowledge — developer continues on the **phase-planner** child lane). Do **not** set invoker `terminal` or re-open **`planner`** §6 menus for this phase.
-   - **`outputs.phaseShipComplete: true`** → merge ship fields; invoker may mark the parent row **`ship-complete`** and offer expand upstream per **`delivery-phases`** step **6b**.
-   - `success` with **`continuationStatus: "terminal"`** and **`phaseShipComplete`** or explicit defer/abandon only → set this `new-plan` result to `terminal`; include the child plan in `spawnedPlans`.
-   - `partial` → keep this `new-plan` result `active`; copy the populator `remainingTasks`, `activeLanes`, and `openLedgerEntries`.
-   - `failure`, `aborted`, or `abandoned` → return the same status upstream with the child stub path and the populator errors; the upstream decomposition agent decides retry/defer/abandon for that row.
-   - Missing or malformed populator outputs → return `partial` and keep the row open; silence is not completion.
+ - **`continuationOwner: "phase-planner-agent"`** and **`continuationStatus: "active"`** → keep this `new-plan` result **`active`**; merge `remainingTasks`, `activeLanes`, and `openLedgerEntries`; report **`## Completion (inline)`** to the invoker as **wait-state only** (acknowledge — developer continues on the **phase-planner** child lane). Do **not** set invoker `terminal` or re-open **`planner`** §6 menus for this phase.
+ - **`outputs.phaseShipComplete: true`** → merge ship fields; invoker may mark the parent row **`ship-complete`** and offer expand upstream per **`delivery-phases`** step **6b**.
+ - `success` with **`continuationStatus: "terminal"`** and **`phaseShipComplete`** or explicit defer/abandon only → set this `new-plan` result to `terminal`; include the child plan in `spawnedPlans`.
+ - `partial` → keep this `new-plan` result `active`; copy the populator `remainingTasks`, `activeLanes`, and `openLedgerEntries`.
+ - `failure`, `aborted`, or `abandoned` → return the same status upstream with the child stub path and the populator errors; the upstream decomposition agent decides retry/defer/abandon for that row.
+ - Missing or malformed populator outputs → return `partial` and keep the row open; silence is not completion.
 
-   **Forbidden:** treating §§ 1–4 draft completion or route approval on **`phase-planner`** as **`new-plan` terminal** when the child still owns inline decomposition or ship work (**`phase-planner`** § *Phase delivery ownership*).
+ **Forbidden:** treating §§ 1–4 draft completion or route approval on **`phase-planner`** as **`new-plan` terminal** when the child still owns inline decomposition or ship work (**`phase-planner`** § *Phase delivery ownership*).
 
 5b. **Aggregate `coding-session` child result (inline `pr-plan` path).** When inline **`pr-plan`** spawned **`coding-session`** (§5d) and Mission Control delivers the child result:
 
-   1. Match by `correlationId` from inline **`pr-plan`** `spawnCorrelationId`, then `outputs.targetPlanPath` / `outputs.targetPlanSlug`.
-   2. Merge child `activeLanes`, `openLedgerEntries`, and `remainingTasks` into this skill’s ledger.
-   3. Continue inline **`pr-plan`** §5e semantics on this lane (summarize for the developer; re-offer handoff when appropriate).
-   4. When child **`outputs.prShipComplete`** is **`true`**: set **`outputs.prShipComplete: true`**, echo **`parentPlanPath`**, **`parentPlanSlug`**, **`parentIndex`** from this skill’s indexed spawn **`inputs`** (and child when present); merge **`shipPhase`**, **`rowStatus`**, **`mainPullStatus`**, **`archivedSlugs`**. Report these in **`## Completion (inline)`** to the invoker (**`pr-breakdown`** / **`phase-planner`** / standalone **`new-plan`** parent).
-   5. **Re-emit / propagate:** **Inline** under **`pr-breakdown`** or **`phase-planner`**: return **`## Completion (inline)`** with ship fields so the decomposition skill marks **`childRows[N].status: ship-complete`** and may offer **`expand-eligible`** on the next turn. **Standalone spawned `new-plan`:** re-emit **`AGENT_RESULT_RESPONSE_V1`** (same **`correlationId`**) with merged **`outputs`** before stopping.
-   6. Return `partial` or `active` while the child lane is open; `terminal` only when inline **`pr-plan`** handoff is complete and no **`coding-session`** child remains open — **`prShipComplete`** may still leave the invoker **`active`** until upstream expand runs.
+ 1. Match by `correlationId` from inline **`pr-plan`** `spawnCorrelationId`, then `outputs.targetPlanPath` / `outputs.targetPlanSlug`.
+ 2. Merge child `activeLanes`, `openLedgerEntries`, and `remainingTasks` into this skill’s ledger.
+ 3. Continue inline **`pr-plan`** §5e semantics on this lane (summarize for the developer; re-offer handoff when appropriate).
+ 4. When child **`outputs.prShipComplete`** is **`true`**: set **`outputs.prShipComplete: true`**, echo **`parentPlanPath`**, **`parentPlanSlug`**, **`parentIndex`** from this skill’s indexed spawn **`inputs`** (and child when present); merge **`shipPhase`**, **`rowStatus`**, **`mainPullStatus`**, **`archivedSlugs`**. Report these in **`## Completion (inline)`** to the invoker (**`pr-breakdown`** / **`phase-planner`** / standalone **`new-plan`** parent).
+ 5. **Re-emit / propagate:** **Inline** under **`pr-breakdown`** or **`phase-planner`**: return **`## Completion (inline)`** with ship fields so the decomposition skill marks **`childRows[N].status: ship-complete`** and may offer **`expand-eligible`** on the next turn. **Standalone spawned `new-plan`:** re-emit **`AGENT_RESULT_RESPONSE_V1`** (same **`correlationId`**) with merged **`outputs`** before stopping.
+ 6. Return `partial` or `active` while the child lane is open; `terminal` only when inline **`pr-plan`** handoff is complete and no **`coding-session`** child remains open — **`prShipComplete`** may still leave the invoker **`active`** until upstream expand runs.
 
 6. **Non-indexed spawns:** no populator handoff table — suggest filling stubs or choosing the next **protocol branch** via **AskQuestion** / **`MC_PHASED_RESPONSE_V1`** per **30_planning-target-resolution** § *Sedea input channel* and **`../README.md`** § *Recap, structured choice, act*.
 

@@ -1,44 +1,44 @@
 ---
 name: ad-hoc-prd
 description: >-
-  Scaffold a minimal Ad-Hoc PRD (bugs / small improvements) as
-  `ad_hoc_<slug>_<hex>.ad-hoc-prd.md` under **personal operations docs only:**
-  `.sedea/operations/<operationsUserId>/docs/` (never `joint/docs/`).
-  Ad-Hoc PRD is upstream root input for **`planner`**; no existing `.plan.md`
-  link is required. For **Ad-Hoc PRD creator** agent sessions — explicit
-  mission dispatch or upstream agent only. Does not edit
-  `.plan.md` files or run/spawn **`planner`**.
+ Scaffold a minimal Ad-Hoc PRD (bugs / small improvements) as
+ `ad_hoc_<slug>_<hex>.ad-hoc-prd.md` under **personal operations docs only:**
+ `.sedea/operations/<operationsUserId>/docs/` (never `joint/docs/`).
+ Ad-Hoc PRD is upstream root input for **`planner`**; no existing `.plan.md`
+ link is required. For **Ad-Hoc PRD creator** agent sessions — explicit
+ mission dispatch or upstream agent only. Does not edit
+ `.plan.md` files or run/spawn **`planner`**.
 inputs:
-  createIntent:
-    type: boolean
-    description: True when the upstream protocol selected the ad-hoc PRD branch.
-    required: true
-  title:
-    type: string
-    description: Non-empty title for the Ad-Hoc PRD.
-    required: false
-  details:
-    type: string
-    description: Change-request description used to draft Problem, Desired outcome, and Proposed solution.
-    required: true
-  operationsUserId:
-    type: string
-    description: Operations user id supplied by Mission Control; required for user-private docs.
-    required: true
-  sourceSummary:
-    type: string
-    description: Optional short summary of where this ad-hoc request came from.
-    required: false
-  roadmapHints:
-    type: array
-    description: Optional roadmap, related slug, or worktree hints from the upstream protocol.
-    required: false
-    default: []
+ createIntent:
+ type: boolean
+ description: True when the upstream protocol selected the ad-hoc PRD branch.
+ required: true
+ title:
+ type: string
+ description: Non-empty title for the Ad-Hoc PRD.
+ required: false
+ details:
+ type: string
+ description: Change-request description used to draft Problem, Desired outcome, and Proposed solution.
+ required: true
+ operationsUserId:
+ type: string
+ description: Operations user id supplied by Mission Control; required for user-private docs.
+ required: true
+ sourceSummary:
+ type: string
+ description: Optional short summary of where this ad-hoc request came from.
+ required: false
+ roadmapHints:
+ type: array
+ description: Optional roadmap, related slug, or worktree hints from the upstream protocol.
+ required: false
+ default: []
 warmUpRules:
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
-  - ".sedea/centers/research-and-development/docs/development-process.md"
-  - ".sedea/centers/research-and-development/rules/10_plan-naming-convention.mdc"
+ - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
+ - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
+ - ".sedea/centers/research-and-development/docs/development-process.md"
+ - ".sedea/centers/research-and-development/rules/10_plan-naming-convention.mdc"
 ---
 
 # Ad-Hoc PRD
@@ -58,7 +58,7 @@ warmUpRules:
 3. **Details** — non-empty change-request body.
 4. **Operations user id** — Mission Control supplied `operationsUserId`.
 
-If any required field is missing in spawned mode, stop with `partial` and report `outputs.missingFields`; do not invent a title, write under `joint`, or continue with a guessed operations path. In standalone mode, collect missing **title** / **details** via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **`MC_ASKQUESTION_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act*.
+If any required field is missing in spawned mode, stop with `partial` and report `outputs.missingFields`; do not invent a title, write under `joint`, or continue with a guessed operations path. In standalone mode, collect missing **title** / **details** via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act*.
 
 **Details:** Payload text — change-request description, thread excerpt, labeled context — use to draft **§1 Problem**, **§2 Desired outcome**, and **§3 Proposed solution**. If thin, use concise **TBD** bullets and say what to confirm.
 
@@ -92,14 +92,14 @@ Create **`docs/`** under that segment if missing.
 2. **Use** **§ Ad-Hoc PRD file shape (template)** below — no external template file.
 3. **Filename:** `ad_hoc_<slugified-title>_<8-hex>.ad-hoc-prd.md` — slugify title (lowercase, non-alphanumerics → `_`, collapse repeats, max ~48 chars) + `_<random 8 hex>` (`crypto.randomBytes(4).toString('hex')` or equivalent).
 4. **Write** under **`.sedea/operations/<operationsUserId>/docs/`**:
-   - `# <Title>` — handoff title (not the filename).
-   - **`Master Plan:`** line — `_TBD_` plus one sentence that **`planner`** will create the `.plan.md` from this Ad-Hoc PRD and the developer should paste or link that path here when it exists (do **not** invent a plan path).
-   - **`## 1–3`** sections filled from handoff details; `_TBD_` where unavoidable + say what is missing.
-5. **Present for approval** — Recap the new file (workspace / `file://` link, one-line summary of §§1–3). Use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **`MC_ASKQUESTION_V1`** per **`../README.md`** § *Recap, structured choice, act* and **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`**. Minimum options:
-   - **Approve PRD** — developer accepts this Ad-Hoc PRD for **`planner`** input
-   - **Revise PRD** — edit the `.ad-hoc-prd.md` on this lane, then return to step 5
-   - **More details for option _**
-   Do **not** treat the write alone as developer approval. Mention optional **manual move** to **`joint/docs/`** only if **the developer** wants shared visibility.
+ - `# <Title>` — handoff title (not the filename).
+ - **`Master Plan:`** line — `_TBD_` plus one sentence that **`planner`** will create the `.plan.md` from this Ad-Hoc PRD and the developer should paste or link that path here when it exists (do **not** invent a plan path).
+ - **`## 1–3`** sections filled from handoff details; `_TBD_` where unavoidable + say what is missing.
+5. **Present for approval** — Recap the new file (workspace / `file://` link, one-line summary of §§1–3). Use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`../README.md`** § *Recap, structured choice, act* and **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`**. Minimum options:
+ - **Approve PRD** — developer accepts this Ad-Hoc PRD for **`planner`** input
+ - **Revise PRD** — edit the `.ad-hoc-prd.md` on this lane, then return to step 5
+ - **More details for option _**
+ Do **not** treat the write alone as developer approval. Mention optional **manual move** to **`joint/docs/`** only if **the developer** wants shared visibility.
 6. **On approve** — Set `outputs.developerApprovedPrd: true`, ensure `prdRef` / `prdPath` / `prdTitle` reflect the approved file, then emit the terminal **`AGENT_RESULT_RESPONSE_V1`** with `continuationStatus: terminal` and `continuationOwner: "squad-leader"`.
 7. **On revise** — Apply edits to the Ad-Hoc PRD file, then repeat step 5 until the developer approves or abandons (report `aborted` / `abandoned` only when they clearly stop).
 

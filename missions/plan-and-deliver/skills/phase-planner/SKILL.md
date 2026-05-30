@@ -1,54 +1,54 @@
 ---
 name: phase-planner
 description: >-
-  Populate a phase plan body: draft §§ 1–4 (Background, Scope, Code design,
-  Changes) plus **`### Decomposition assessment`** before the dual-title § 5,
-  per Sedea's New Feature Development Process (mode #2). Pulls scope from the
-  parent's `Delivery phases` item N, reuses the parent's diagrams with this phase
-  highlighted, and infers phase-scoped Changes. § 5 list body and § 6 Caveats
-  stay `_TBD_` for inline **`delivery-phases`** / **`pr-breakdown`** on this lane. Target resolved per
-  planning-target-resolution. Use under mission dispatch, **`phase-planner`** protocol
-  branch, natural language, or after **`new-plan`** ignition on a `Delivery phases`
-  child stub.
+ Populate a phase plan body: draft §§ 1–4 (Background, Scope, Code design,
+ Changes) plus **`### Decomposition assessment`** before the dual-title § 5,
+ per Sedea's New Feature Development Process (mode #2). Pulls scope from the
+ parent's `Delivery phases` item N, reuses the parent's diagrams with this phase
+ highlighted, and infers phase-scoped Changes. § 5 list body and § 6 Caveats
+ stay `_TBD_` for inline **`delivery-phases`** / **`pr-breakdown`** on this lane. Target resolved per
+ planning-target-resolution. Use under mission dispatch, **`phase-planner`** protocol
+ branch, natural language, or after **`new-plan`** ignition on a `Delivery phases`
+ child stub.
 inputs:
-  targetPlanPath:
-    type: string
-    description: Path to the phase plan stub to populate.
-    required: true
-  targetPlanSlug:
-    type: string
-    description: Slug for the phase plan stub.
-    required: true
-  parentPlanPath:
-    type: string
-    description: Path to the parent plan containing the Delivery phases row.
-    required: true
-  parentPlanSlug:
-    type: string
-    description: Slug for the parent plan.
-    required: true
-  parentIndex:
-    type: number
-    description: One-based Delivery phases index that produced this child.
-    required: true
-  ledgerParent:
-    type: string
-    description: Ledger parent slug/path copied from the upstream agent.
-    required: false
-  upstreamSkill:
-    type: string
-    description: Skill that requested this phase population, usually new-plan.
-    required: false
-  autoContinue:
-    type: boolean
-    description: When true, run the next decomposition branch inline after population if parent hint and assessment agree.
-    required: false
-    default: true
+ targetPlanPath:
+ type: string
+ description: Path to the phase plan stub to populate.
+ required: true
+ targetPlanSlug:
+ type: string
+ description: Slug for the phase plan stub.
+ required: true
+ parentPlanPath:
+ type: string
+ description: Path to the parent plan containing the Delivery phases row.
+ required: true
+ parentPlanSlug:
+ type: string
+ description: Slug for the parent plan.
+ required: true
+ parentIndex:
+ type: number
+ description: One-based Delivery phases index that produced this child.
+ required: true
+ ledgerParent:
+ type: string
+ description: Ledger parent slug/path copied from the upstream agent.
+ required: false
+ upstreamSkill:
+ type: string
+ description: Skill that requested this phase population, usually new-plan.
+ required: false
+ autoContinue:
+ type: boolean
+ description: When true, run the next decomposition branch inline after population if parent hint and assessment agree.
+ required: false
+ default: true
 warmUpRules:
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
-  - ".sedea/centers/research-and-development/docs/development-process.md"
-  - ".sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc"
+ - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
+ - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
+ - ".sedea/centers/research-and-development/docs/development-process.md"
+ - ".sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc"
 ---
 
 # Phase plan: §§ 1–4 from the parent plan
@@ -75,7 +75,7 @@ The skill operates on a **target** `.plan.md` resolved before this skill runs, p
 
 When spawned by `new-plan`, `targetPlanPath`, `targetPlanSlug`, `parentPlanPath`, `parentPlanSlug`, and `parentIndex` are already locked. Treat missing or conflicting values as a spawn-contract failure: stop with `failure` or `partial` and report the missing field. Do not fall back to IDE focus or free-form target discovery in spawned mode.
 
-If there is no resolved target, **stop** and emit a fresh *Where we are now in the plan tree* snapshot (recap). Collect the lane pick via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **`MC_ASKQUESTION_V1`** per **30_planning-target-resolution** § *Sedea input channel* and **`../README.md`** § *Recap, structured choice, act* — **preferred:** recap + modal in one message; **legacy split:** recap only, then structured choice in the **next** assistant message. Then continue.
+If there is no resolved target, **stop** and emit a fresh *Where we are now in the plan tree* snapshot (recap). Collect the lane pick via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **30_planning-target-resolution** § *Sedea input channel* and **`../README.md`** § *Recap, structured choice, act* — **preferred:** recap + modal in one message; **legacy split:** recap only, then structured choice in the **next** assistant message. Then continue.
 
 Acknowledge in one line: *"Target plan: `<slug>`."*
 
@@ -104,9 +104,9 @@ Read the target plan's sidecar `<slug>.state.yaml` for `parent:`. Apply:
 - `parent: <slug>` does not resolve to an existing `.plan.md` under the same `.sedea/operations/.../plans/` tree as this target (`plan-state resolve` / parent absolute path) → **stop** with: *"Sidecar `parent: <slug>` doesn't resolve to an existing plan. Fix the sidecar before drafting."*
 - Parent is a **roadmap topic** top-level plan (`parent:` points at a plan whose process role is roadmap grouping) → **stop** with: *"Phase plans hang under Master / Phase parents in **`Delivery phases`**. Fix the sidecar parent, or use the **`planner`** protocol branch if this file should be a Master Plan."*
 - Parent resolves; read parent's body. Locate parent's dual-title section (`## 6. ...` for Master Plan parent, `## 5. ...` for Phase plan parent) and apply:
-  - Heading is `Delivery phases` → proceed.
-  - Heading is `PR breakdown` → **stop** with: *"Parent plan's decomposition is `PR breakdown`, so its children are PR plans, not phase plans. Use the **`pr-plan`** protocol branch to populate this plan's body instead."*
-  - Heading is the dual-title `Delivery phases | PR breakdown` (decomposition pending) → **stop** with: *"Parent plan hasn't decomposed yet — its dual-title section is `Delivery phases | PR breakdown` / `_TBD_`. Decompose the parent first via **`delivery-phases`**, then return to this plan."*
+ - Heading is `Delivery phases` → proceed.
+ - Heading is `PR breakdown` → **stop** with: *"Parent plan's decomposition is `PR breakdown`, so its children are PR plans, not phase plans. Use the **`pr-plan`** protocol branch to populate this plan's body instead."*
+ - Heading is the dual-title `Delivery phases | PR breakdown` (decomposition pending) → **stop** with: *"Parent plan hasn't decomposed yet — its dual-title section is `Delivery phases | PR breakdown` / `_TBD_`. Decompose the parent first via **`delivery-phases`**, then return to this plan."*
 
 Acknowledge: *"Parent: `<parent-slug>` (mode #2 `Delivery phases`); proceeding."*
 
@@ -239,18 +239,18 @@ For Mermaid diagrams: re-emit the parent's diagram with this phase's nodes / edg
 ```mermaid
 %% reused from parent plan § <4|3>; phase highlight via classDef
 flowchart LR
-  classDef phaseTouch fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e,stroke-width:2px
-  classDef phaseNew fill:#dcfce7,stroke:#16a34a,color:#14532d,stroke-dasharray: 5 5
+ classDef phaseTouch fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e,stroke-width:2px
+ classDef phaseNew fill:#dcfce7,stroke:#16a34a,color:#14532d,stroke-dasharray: 5 5
 
-  subgraph Legend["Legend"]
-    LegendTouch["Touched in this phase<br/>(other nodes unchanged)"]
-    LegendNew["Introduced in this phase"]
-  end
+ subgraph Legend["Legend"]
+ LegendTouch["Touched in this phase<br/>(other nodes unchanged)"]
+ LegendNew["Introduced in this phase"]
+ end
 
-  <parent's diagram source, verbatim or trimmed>
+ <parent's diagram source, verbatim or trimmed>
 
-  class <node1>,<node2>,LegendTouch phaseTouch
-  class <newNode1>,LegendNew phaseNew
+ class <node1>,<node2>,LegendTouch phaseTouch
+ class <newNode1>,LegendNew phaseNew
 ```
 
 `phaseTouch` marks existing-in-parent nodes this phase modifies; `phaseNew` marks nodes this phase introduces (dashed border = "doesn't exist yet"). Adjust the class names / colors to match repo conventions if any are loaded in scope.
@@ -398,7 +398,7 @@ When this skill is running as a spawned child and `autoContinue` is not `false`,
 - `pr-breakdown-multi` → load and follow **`pr-breakdown/SKILL.md`** on **this** phase plan with `prBreakdownShape: "multi"`. **`pr-breakdown`** honors **`### Sequencing`** for parallel vs sequential PR expand.
 - `pr-breakdown-single` → follow **§ 5a-hoist** (ancestor target + inline hoist); do **not** run **`pr-breakdown`** on this phase file.
 
-Before handoff, present the drafted phase plan body and the route signal to the developer via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **`MC_ASKQUESTION_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* — **preferred:** brief recap + modal in one message; bare **`MC_ASKQUESTION_V1`** must be sentinel-only (no prose before the sentinel). Required options:
+Before handoff, present the drafted phase plan body and the route signal to the developer via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* — **preferred:** brief recap + modal in one message; legacy split must use `MC_PHASED_RESPONSE_V1` sentinel-first in the next message. Required options:
 
 - **Approve phase plan and route**
 - **Revise phase plan first**

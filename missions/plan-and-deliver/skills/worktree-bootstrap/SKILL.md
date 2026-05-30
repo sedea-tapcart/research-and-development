@@ -1,54 +1,54 @@
 ---
 name: worktree-bootstrap
 description: >-
-  Run scripts/bootstrap-worktree-dev.sh on a fresh git worktree after Mission
-  Control attach. Normative path: **inline** on the **`coding-session`** lane — the parent
-  waits for bootstrap success before any implementation. Spawned execution is an exception
-  only when a protocol step explicitly requires a child lane. Does not commit, spawn
-  deploy-walk, or run the ship chain — those wait for bootstrap success on the parent.
-  Does not implement product code on open PRs, or edit plan files unless the spawner
-  requests a skip attestation path.
+ Run scripts/bootstrap-worktree-dev.sh on a fresh git worktree after Mission
+ Control attach. Normative path: **inline** on the **`coding-session`** lane — the parent
+ waits for bootstrap success before any implementation. Spawned execution is an exception
+ only when a protocol step explicitly requires a child lane. Does not commit, spawn
+ deploy-walk, or run the ship chain — those wait for bootstrap success on the parent.
+ Does not implement product code on open PRs, or edit plan files unless the spawner
+ requests a skip attestation path.
 inputs:
-  worktreePath:
-    type: string
-    description: Absolute path to the git worktree root (WORKTREE_ROOT).
-    required: true
-  hostingRoot:
-    type: string
-    description: Absolute path to the hosting repo that contains scripts/bootstrap-worktree-dev.sh (HOSTING_ROOT).
-    required: true
-  targetPlanPath:
-    type: string
-    description: Absolute or workspace-relative PR plan path when plan-anchored.
-    required: false
-  targetPlanSlug:
-    type: string
-    description: PR plan slug when plan-anchored.
-    required: false
-  branchName:
-    type: string
-    description: Feature branch name in the worktree.
-    required: false
-  bootstrapSkipFlags:
-    type: array
-    description: >-
-      Optional --skip-* flags (for example --skip-electron) only when the developer
-      attested partial setup on the parent lane before spawn.
-    required: false
-    default: []
-  ledgerParent:
-    type: string
-    description: Ledger parent slug/path copied from coding-session.
-    required: false
-  upstreamSkill:
-    type: string
-    description: Skill that spawned this lane — usually coding-session.
-    required: false
+ worktreePath:
+ type: string
+ description: Absolute path to the git worktree root (WORKTREE_ROOT).
+ required: true
+ hostingRoot:
+ type: string
+ description: Absolute path to the hosting repo that contains scripts/bootstrap-worktree-dev.sh (HOSTING_ROOT).
+ required: true
+ targetPlanPath:
+ type: string
+ description: Absolute or workspace-relative PR plan path when plan-anchored.
+ required: false
+ targetPlanSlug:
+ type: string
+ description: PR plan slug when plan-anchored.
+ required: false
+ branchName:
+ type: string
+ description: Feature branch name in the worktree.
+ required: false
+ bootstrapSkipFlags:
+ type: array
+ description: >-
+ Optional --skip-* flags (for example --skip-electron) only when the developer
+ attested partial setup on the parent lane before spawn.
+ required: false
+ default: []
+ ledgerParent:
+ type: string
+ description: Ledger parent slug/path copied from coding-session.
+ required: false
+ upstreamSkill:
+ type: string
+ description: Skill that spawned this lane — usually coding-session.
+ required: false
 warmUpRules:
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
-  - ".sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc"
-  - ".cursor/rules/dot-sedea.mdc"
+ - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
+ - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
+ - ".sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc"
+ - ".cursor/rules/dot-sedea.mdc"
 ---
 
 # Worktree bootstrap
@@ -70,7 +70,7 @@ Then invoke **`worktree-bootstrap`** inline with **`worktreePath`** and **`hosti
 
 ## Structured choice (Mission Control)
 
-This skill does not own approval modals. When the script fails and a retry path needs a developer pick, use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **`MC_ASKQUESTION_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act*.
+This skill does not own approval modals. When the script fails and a retry path needs a developer pick, use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act*.
 
 ## Step 1 — Validate inputs
 

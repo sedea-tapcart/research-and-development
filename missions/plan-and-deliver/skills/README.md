@@ -38,11 +38,11 @@ Mission Control delivery for skills that mix long plan output with structured us
 | Stage | Purpose | Notes |
 |-------|---------|--------|
 | **Recap** | Plan link, one-line summary, optional short recap | Prefer one message with structured choice (AskQuestion tool or `MC_PHASED_RESPONSE_V1`) |
-| **Structured choice** | Modal approval / gates | No bare `MC_ASKQUESTION_V1` after recap prose in the same message |
+| **Structured choice** | Modal approval / gates | No `MC_PHASED_RESPONSE_V1` after recap prose in the same message |
 | **Parked continuation** | User leaves chat (PR/diff/CI) before next step | Open modal **before** end turn — rule **2** § External-wait; forbid prose “wait for user/developer” |
 | **Act** | Spawn, terminal result, implementation | After the user selects in the modal |
 
-**Normative:** Every skill in this mission that collects a pick, approval, or ship gate MUST follow the precedence table in **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** § **Context and structured choice**. Do **not** use “Turn A/B” or similar implementation labels in developer-facing chat.
+**Normative:** Every skill in this mission that collects a pick, approval, or ship gate **must** close the choice turn with the **AskQuestion tool** or **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** § **Context and structured choice** and § **`MC_PHASED_RESPONSE_V1` wire format (binding)**. **Forbidden:** prose-only exit, prose menus, or “wait for the developer” without a modal. Do **not** use “Turn A/B” or similar implementation labels in developer-facing chat.
 
 **Authoring new or updated skills (binding):**
 
@@ -64,7 +64,7 @@ Mission Control delivery for skills that mix long plan output with structured us
 
 **Lane pick (no resolved target):** emit *Where we are now in the plan tree* snapshot, then structured choice per **30_planning-target-resolution** § *Sedea input channel* (phased or split — not prose menus).
 
-**Spawned child lanes:** Cloud/spawned agents usually lack the native AskQuestion tool. On structured-choice turns, **`MC_PHASED_RESPONSE_V1` must be line 1** — recap only in **`display.markdown`**, never prose before the sentinel. See **`.cursor/rules/mission-control-agent-runtime.mdc`** § *Spawned child lanes — sentinel-first (binding)* and **`coding-session/SKILL.md`** § *Structured choice* for gate templates.
+**Spawned child lanes:** Cloud/spawned agents lack the native AskQuestion tool. **Every choice turn** **must** emit **`MC_PHASED_RESPONSE_V1`** (sentinel line **1**, recap in **`display.markdown`**, options in **`askQuestion`**) or split per rule **2** priority **3**. Wire format: rule **2** § **`MC_PHASED_RESPONSE_V1` wire format (binding)**. Gate templates: **`coding-session/SKILL.md`** § *Spawned lane — sentinel-first (binding)*.
 
 ## Planning spawn (Squad Leader §3, §5, decomposition tree)
 
@@ -234,9 +234,9 @@ When you add, rename, or remove a protocol branch under `missions/plan-and-deliv
 1. **`center.yaml`** — add or remove the repo-relative path under that mission's **`skillEntries`** (and **`development-process.md`** § *Protocol branches* when the branch is user-facing).
 2. **Verify** from the hosting repo root:
 
-   ```bash
-   node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/verify-skill-manifest.mjs
-   ```
+ ```bash
+ node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/verify-skill-manifest.mjs
+ ```
 
 3. **plan-and-deliver only** — if the skill is **spawned**, ensure **`warmUpRules`** includes `missions/plan-and-deliver/plan.mdc`, this README, and the usual rules per § *Default warm-up* above; add **`## Completion (spawned)`** + host protocol line when applicable.
 

@@ -2,43 +2,43 @@
 name: author-prd
 description: Gather evidence and draft or update a flexible Product or Feature Requirements Document.
 inputs:
-  prdTitle:
-    type: string
-    description: Human-friendly PRD title.
-    required: true
-  prdDescription:
-    type: string
-    description: Problem, users, goals, or scope summary collected by the Squad Leader before spawn.
-    required: true
-  operation:
-    type: string
-    description: Either create or manage.
-    required: true
-  targetPath:
-    type: string
-    description: Output path for create mode or existing PRD path for manage mode.
-    required: false
-  sourceMaterials:
-    type: array
-    description: Seed materials from Squad Leader intake (step 2.5); author-prd extends the ledger for remaining gaps.
-    required: false
-    default: []
-  sectionPolicy:
-    type: object
-    description: Map of PRD sections to mandatory, important, optional, or not applicable.
-    required: false
-  existingPrdBody:
-    type: string
-    description: Existing PRD content when operation is manage.
-    required: false
-  operationsUserId:
-    type: string
-    description: Current Mission Control operations user id for user-private operations paths.
-    required: true
+ prdTitle:
+ type: string
+ description: Human-friendly PRD title.
+ required: true
+ prdDescription:
+ type: string
+ description: Problem, users, goals, or scope summary collected by the Squad Leader before spawn.
+ required: true
+ operation:
+ type: string
+ description: Either create or manage.
+ required: true
+ targetPath:
+ type: string
+ description: Output path for create mode or existing PRD path for manage mode.
+ required: false
+ sourceMaterials:
+ type: array
+ description: Seed materials from Squad Leader intake (step 2.5); author-prd extends the ledger for remaining gaps.
+ required: false
+ default: []
+ sectionPolicy:
+ type: object
+ description: Map of PRD sections to mandatory, important, optional, or not applicable.
+ required: false
+ existingPrdBody:
+ type: string
+ description: Existing PRD content when operation is manage.
+ required: false
+ operationsUserId:
+ type: string
+ description: Current Mission Control operations user id for user-private operations paths.
+ required: true
 warmUpRules:
-  - ".sedea/centers/research-and-development/missions/prd/plan.mdc"
-  - ".sedea/centers/research-and-development/docs/development-process.md"
-  - ".sedea/centers/research-and-development/rules/31_operations-user-id.mdc"
+ - ".sedea/centers/research-and-development/missions/prd/plan.mdc"
+ - ".sedea/centers/research-and-development/docs/development-process.md"
+ - ".sedea/centers/research-and-development/rules/31_operations-user-id.mdc"
 ---
 
 # Skill: author-prd
@@ -61,43 +61,43 @@ Gather evidence, calibrate section policy, and draft or update a Product or Feat
 ## Procedure
 
 1. Validate the operation:
-   - `create` drafts a new PRD.
-   - `manage` updates or reviews an existing PRD.
-   - `create` always resolves output under `.sedea/operations/<operationsUserId>/docs/`; do not create PRDs under `.sedea/operations/joint/docs/`.
+ - `create` drafts a new PRD.
+ - `manage` updates or reviews an existing PRD.
+ - `create` always resolves output under `.sedea/operations/<operationsUserId>/docs/`; do not create PRDs under `.sedea/operations/joint/docs/`.
 1b. **Leader intake guard** (spawned from **prd** mission only):
-   - If `prdDescription` is missing or empty → end with `failure` and ask the Squad Leader to complete **plan.mdc** step **2.5** (do not draft).
-   - When `sourceMaterials` is empty and the user did not explicitly choose **no sources yet** on the leader lane → run step 3 (evidence loop) before drafting; **do not** infer goals, requirements, or acceptance criteria from `prdTitle` alone.
-   - Treat `prdDescription` and leader `sourceMaterials` as authoritative seeds; ask only for gaps mandatory sections still lack.
+ - If `prdDescription` is missing or empty → end with `failure` and ask the Squad Leader to complete **plan.mdc** step **2.5** (do not draft).
+ - When `sourceMaterials` is empty and the user did not explicitly choose **no sources yet** on the leader lane → run step 3 (evidence loop) before drafting; **do not** infer goals, requirements, or acceptance criteria from `prdTitle` alone.
+ - Treat `prdDescription` and leader `sourceMaterials` as authoritative seeds; ask only for gaps mandatory sections still lack.
 2. Initialize a source ledger:
-   - start from `prdDescription`, `sourceMaterials`, and any documents, URLs, notes, paths, excerpts, screenshots, thoughts, or related artifacts from the Squad Leader handoff.
-   - leave the ledger empty when no seed materials were supplied.
-   - preserve attribution so claims can be traced back to sources.
-   - list unreadable or unavailable seed sources as blockers or caveats.
+ - start from `prdDescription`, `sourceMaterials`, and any documents, URLs, notes, paths, excerpts, screenshots, thoughts, or related artifacts from the Squad Leader handoff.
+ - leave the ledger empty when no seed materials were supplied.
+ - preserve attribution so claims can be traced back to sources.
+ - list unreadable or unavailable seed sources as blockers or caveats.
 3. Run the evidence-gathering loop:
-   - use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **`MC_ASKQUESTION_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** § **Context and structured choice** to ask for documents, URLs, write-ups, thoughts, screenshots, mocks, user or stakeholder evidence, implementation constraints, and related PRDs when needed — put each choosable path in modal `options`, not prose menus.
-   - read local files and `@path` references completely.
-   - fetch readable URLs when available; if a URL is inaccessible, ask for an accessible copy or pasted content.
-   - extract candidate facts into the source ledger after each added material.
-   - stop collecting only when mandatory sections have enough evidence, or when the user explicitly says no more material is available.
+ - use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** § **Context and structured choice** to ask for documents, URLs, write-ups, thoughts, screenshots, mocks, user or stakeholder evidence, implementation constraints, and related PRDs when needed — put each choosable path in modal `options`, not prose menus.
+ - read local files and `@path` references completely.
+ - fetch readable URLs when available; if a URL is inaccessible, ask for an accessible copy or pasted content.
+ - extract candidate facts into the source ledger after each added material.
+ - stop collecting only when mandatory sections have enough evidence, or when the user explicitly says no more material is available.
 4. Calibrate section policy:
-   - use caller-provided policy when present.
-   - ask the user to classify sections when their importance is unclear or when policy affects planning readiness.
-   - otherwise apply the default policy below.
-   - do not require optional sections when they are not relevant.
+ - use caller-provided policy when present.
+ - ask the user to classify sections when their importance is unclear or when policy affects planning readiness.
+ - otherwise apply the default policy below.
+ - do not require optional sections when they are not relevant.
 5. Identify gaps and ask targeted questions:
-   - identify product problem, users, goals, non-goals, requirements, dependencies, risks, rollout, and acceptance criteria.
-   - ask targeted follow-up questions for missing mandatory content.
-   - report important-section gaps and ask whether to gather more data, mark them optional/not applicable, or carry them as visible gaps.
-   - mark contradictions and missing mandatory information as open questions until resolved.
+ - identify product problem, users, goals, non-goals, requirements, dependencies, risks, rollout, and acceptance criteria.
+ - ask targeted follow-up questions for missing mandatory content.
+ - report important-section gaps and ask whether to gather more data, mark them optional/not applicable, or carry them as visible gaps.
+ - mark contradictions and missing mandatory information as open questions until resolved.
 6. Draft or update the PRD:
-   - keep section ordering stable unless the existing PRD uses a clearly intentional structure.
-   - retain useful existing content in `manage` mode.
-   - omit optional sections that have no supporting evidence.
-   - include `TBD` only when the gap is intentionally surfaced for review.
+ - keep section ordering stable unless the existing PRD uses a clearly intentional structure.
+ - retain useful existing content in `manage` mode.
+ - omit optional sections that have no supporting evidence.
+ - include `TBD` only when the gap is intentionally surfaced for review.
 7. Run completeness review:
-   - mandatory gaps block `planningReadiness: ready`.
-   - important gaps are reported but do not always block planning.
-   - optional gaps do not block planning.
+ - mandatory gaps block `planningReadiness: ready`.
+ - important gaps are reported but do not always block planning.
+ - optional gaps do not block planning.
 8. Write the document when an output path is resolved, then re-read it and verify the required sections.
 9. End the skill run per **`## Completion (spawned)`** (spawned lane) or **`## Completion (inline)`** (same-lane run). Do not emit **`MC_DISPATCH_RESOLVED_V1`** — dispatch closure is the PRD Squad Leader only.
 

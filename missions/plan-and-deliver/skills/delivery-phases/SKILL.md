@@ -1,52 +1,52 @@
 ---
 name: delivery-phases
 description: >-
-  Decompose a target Master Plan or Phase plan into delivery phases (mode #2
-  of Sedea's New Feature Development Process). Verifies template stage, loads
-  development-process § 2 + § 6/§ 5 contents rule, gates Delivery phases vs PR
-  breakdown when the dual-title body is _TBD_, then drafts the parent's dual-title
-  section as Delivery phases with a numbered child list. Child stubs and Plan:
-  links follow **new-plan** indexed handoff (inline under **planner**; spawned when standalone); bodies follow **phase-planner**. Target
-  resolved per planning-target-resolution. Use under mission dispatch, **delivery-phases**
-  protocol branch, or natural language (decompose phases, draft delivery phases).
+ Decompose a target Master Plan or Phase plan into delivery phases (mode #2
+ of Sedea's New Feature Development Process). Verifies template stage, loads
+ development-process § 2 + § 6/§ 5 contents rule, gates Delivery phases vs PR
+ breakdown when the dual-title body is _TBD_, then drafts the parent's dual-title
+ section as Delivery phases with a numbered child list. Child stubs and Plan:
+ links follow **new-plan** indexed handoff (inline under **planner**; spawned when standalone); bodies follow **phase-planner**. Target
+ resolved per planning-target-resolution. Use under mission dispatch, **delivery-phases**
+ protocol branch, or natural language (decompose phases, draft delivery phases).
 inputs:
-  targetPlanPath:
-    type: string
-    description: Absolute or workspace-relative path to the Master Plan or Phase plan being decomposed.
-    required: true
-  targetPlanSlug:
-    type: string
-    description: Slug for the target plan.
-    required: true
-  parentAgentRole:
-    type: string
-    description: Upstream owner that invoked this skill inline, usually master-plan-agent or phase-planner-agent.
-    required: false
-  ledgerParent:
-    type: string
-    description: Slug/path of the ledger parent entry the Squad Leader tracks.
-    required: false
-  complexityBand:
-    type: string
-    description: Plan-scope complexity band copied from the upstream plan, when available.
-    required: false
-  complexityScore:
-    type: number
-    description: Plan-scope complexity score copied from the upstream plan, when available.
-    required: false
-  decompositionAssessment:
-    type: string
-    description: Current Decomposition assessment block from the upstream plan.
-    required: false
-  routeLock:
-    type: string
-    description: Optional upstream-selected route. When set to delivery-phases, skip the decision gate.
-    required: false
+ targetPlanPath:
+ type: string
+ description: Absolute or workspace-relative path to the Master Plan or Phase plan being decomposed.
+ required: true
+ targetPlanSlug:
+ type: string
+ description: Slug for the target plan.
+ required: true
+ parentAgentRole:
+ type: string
+ description: Upstream owner that invoked this skill inline, usually master-plan-agent or phase-planner-agent.
+ required: false
+ ledgerParent:
+ type: string
+ description: Slug/path of the ledger parent entry the Squad Leader tracks.
+ required: false
+ complexityBand:
+ type: string
+ description: Plan-scope complexity band copied from the upstream plan, when available.
+ required: false
+ complexityScore:
+ type: number
+ description: Plan-scope complexity score copied from the upstream plan, when available.
+ required: false
+ decompositionAssessment:
+ type: string
+ description: Current Decomposition assessment block from the upstream plan.
+ required: false
+ routeLock:
+ type: string
+ description: Optional upstream-selected route. When set to delivery-phases, skip the decision gate.
+ required: false
 warmUpRules:
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
-  - ".sedea/centers/research-and-development/docs/development-process.md"
-  - ".sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc"
+ - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
+ - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
+ - ".sedea/centers/research-and-development/docs/development-process.md"
+ - ".sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc"
 ---
 
 # Delivery phases — mode #2 decomposition
@@ -87,7 +87,7 @@ When **`parentAgentRole`** is **`master-plan-agent`** or **`phase-planner-agent`
 
 The skill operates on a **target** `.plan.md` resolved before this skill runs, per [`30_planning-target-resolution.mdc`](../../../../rules/30_planning-target-resolution.mdc) § *Resolution order*. Acknowledge the target slug in one line when this skill starts (e.g. *Target plan: `<slug>` (from prior structured choice).*). Resolve targets from session, snapshot, or explicit path — **planning-target-resolution** is normative. Do **not** infer the target from the IDE’s focused-file list alone.
 
-If there is no resolved target, **stop** and emit a fresh *Where we are now in the plan tree* snapshot (recap). Collect the lane pick via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **`MC_ASKQUESTION_V1`** per **30_planning-target-resolution** § *Sedea input channel* and **`../README.md`** § *Recap, structured choice, act* — **preferred:** recap + modal in one message; **legacy split:** recap only, then structured choice in the **next** assistant message. Then continue.
+If there is no resolved target, **stop** and emit a fresh *Where we are now in the plan tree* snapshot (recap). Collect the lane pick via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **30_planning-target-resolution** § *Sedea input channel* and **`../README.md`** § *Recap, structured choice, act* — **preferred:** recap + modal in one message; **legacy split:** recap only, then structured choice in the **next** assistant message. Then continue.
 
 Acknowledge in one line: *"Target plan: `<slug>`."*
 
@@ -96,7 +96,7 @@ Acknowledge in one line: *"Target plan: `<slug>`."*
 - **`kind: roadmap_topic`** or the file is clearly a **roadmap topic** (top-level grouping of Master Plans) → **stop** with: *"This is a roadmap topic. Roadmap topics do not decompose into delivery phases here. Open a child Master Plan under this topic and run **`delivery-phases`** on that plan."*
 - Body has **`## Single concern`** (PR plan template) → **stop** with: *"This is a PR plan. PR plans are leaves; they are not decomposed with **`delivery-phases`**. Use **`coding-session`** or **`pr-review`** as appropriate."*
 - Master Plan (`## 4. Architectural design` + dual-title `## 6. …`) or Phase plan (`## 1. Background` … `## 5. …` dual-title) → proceed.
-- Ambiguous (stub with no distinguishing sections yet) → use **AskQuestion** or **`MC_ASKQUESTION_V1`** with one `option` per stage (Master Plan, Phase plan, PR plan); if not Master or Phase plan, **stop**.
+- Ambiguous (stub with no distinguishing sections yet) → use **AskQuestion** with one `option` per stage (Master Plan, Phase plan, PR plan); if not Master or Phase plan, **stop**.
 
 Acknowledge: *"Stage: <Master Plan | Phase plan>; proceeding."*
 
@@ -128,7 +128,7 @@ Acknowledge the state in one line.
 
 When the skill was spawned with `routeLock: "delivery-phases"` (or with `parentAgentRole: "master-plan-agent"` or `"phase-planner-agent"` after the developer chose **Delivery phases**), the decision is already made upstream. Acknowledge *"Route locked: Delivery phases."* and skip directly to Step 5. Do not ask the developer to choose `Delivery phases` vs `PR breakdown` again.
 
-When no upstream route lock exists, use **AskQuestion** or **`MC_ASKQUESTION_V1`** to ask:
+When no upstream route lock exists, use **AskQuestion** to ask:
 
 > How does this plan decompose? Most features use a phase layer; small work (on the order of a few PRs) can skip the phase layer and break directly into PRs.
 
@@ -191,7 +191,7 @@ After step **5c**, finish the **recap-only** pass with **only**:
 
 Do **not** mirror the full **`Delivery phases`** body in chat. Count **K** from numbered rows before the approval modal.
 
-Do **not** include **AskQuestion**, **`MC_ASKQUESTION_V1`**, **`AGENT_RESULT_RESPONSE_V1`**, or **`AGENT_RUN_REQUEST_V1`** in this recap-only pass unless you combine recap + approval into one message via **`MC_PHASED_RESPONSE_V1`** (then skip a separate step-5d-only message).
+Do **not** include  **AskQuestion**, **`AGENT_RESULT_RESPONSE_V1`**, or **`AGENT_RUN_REQUEST_V1`** in this recap-only pass unless you combine recap + approval into one message via **`MC_PHASED_RESPONSE_V1`** (then skip a separate step-5d-only message).
 
 ## Step 6 — Hand back with next-move options
 
@@ -201,11 +201,11 @@ Do **not** include **AskQuestion**, **`MC_ASKQUESTION_V1`**, **`AGENT_RESULT_RES
 
 **Preferred:** **AskQuestion tool** (brief recap allowed in the same message) or **`MC_PHASED_RESPONSE_V1`** with recap in `display.markdown` and options in `askQuestion` — one assistant message.
 
-**Legacy split (when the tool and phased envelope are unavailable):** send the step **5d** recap, then a **separate** message with **AskQuestion** or **sentinel-only** **`MC_ASKQUESTION_V1`** (no prose before the sentinel).
+**Legacy split (when the tool and phased envelope are unavailable):** send the step **5d** recap, then a **separate** message with `MC_PHASED_RESPONSE_V1`** (sentinel-first; no recap prose before the sentinel).
 
-Collect the developer’s choice via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**, or **`MC_ASKQUESTION_V1`** only in the structured-choice message — not in the same message as spawns or **`AGENT_RESULT_RESPONSE_V1`**.
+Collect the developer’s choice via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** only in the structured-choice message — not in the same message as spawns or **`AGENT_RESULT_RESPONSE_V1`**.
 
-- When using bare **`MC_ASKQUESTION_V1`** (no phased envelope), the structured-choice message must contain **only** the sentinel line and JSON object — **no** prose, plan recap, or markdown fences before or between the sentinel and JSON.
+- When using (no phased envelope), the structured-choice message must contain **only** the sentinel line and JSON object — **no** prose, plan recap, or markdown fences before or between the sentinel and JSON.
 - Put every choosable path in **`options`** (`id` / `label`). Do **not** duplicate choices as a numbered prose menu in the same turn.
 
 Required **`options`** (adapt labels; keep **K** visible in the **`prompt`** when helpful):
@@ -276,7 +276,7 @@ Only return `continuationStatus: "terminal"` when every row is explicitly `compl
 
 ## One primary choice per turn — surface observations
 
-Match the discipline in **`planner`** and **`phase-planner`**: perform exactly what was chosen; scope stays on the chosen pass. If you notice gaps (diagram vs phase boundary, duplicate wording, phase count vs assessment), list short **numbered observations** in the chat reply (information-only); the developer addresses them on the next turn or folds them into a revise pass. When you need an explicit accept/skip decision on flags, use **AskQuestion** or **`MC_ASKQUESTION_V1`** with one `option` per flag plus **More details for option _**.
+Match the discipline in **`planner`** and **`phase-planner`**: perform exactly what was chosen; scope stays on the chosen pass. If you notice gaps (diagram vs phase boundary, duplicate wording, phase count vs assessment), list short **numbered observations** in the chat reply (information-only); the developer addresses them on the next turn or folds them into a revise pass. When you need an explicit accept/skip decision on flags, use **AskQuestion** with one `option` per flag plus **More details for option _**.
 
 ## Scope guard
 
