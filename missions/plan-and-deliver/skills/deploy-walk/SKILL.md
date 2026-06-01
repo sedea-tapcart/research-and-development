@@ -223,7 +223,7 @@ Resolution order (highest confidence first):
 
 1. **Explicit slug in the command.** `deploy-walk present 1_server_side_preview_endpoint_f4fe9ae9 3` — use the named slug verbatim (with or without the `_<hex>` suffix; match against `name:` frontmatter or filename stem).
 2. **Mid-walk continuation.** Same chat already invoked `deploy-walk present <M>` against a specific plan; continue with that plan unless the **developer** names a different one.
-3. **Most recent agent recommendation.** The agent's last turn proposed a **deploy-walk** step command against a specific plan (e.g. *"Reply `deploy-walk present 4` when ready"*).
+3. **Most recent agent recommendation.** The agent's last turn listed a **deploy-walk** step command in **`display.markdown`** or structured-choice **`options`** against a specific plan.
 4. **Single candidate in chat context.** Exactly one PR plan was read / referenced in the recent chat window — use it.
 5. **Multiple candidates.** Stop and use **AskQuestion** listing PR plans with at least one unchecked `[ ]` in their `## N. Deploy test plan`. The **developer** picks; subsequent commands stick with that plan.
 6. **No candidate.** Stop with: *"**deploy-walk** needs a target PR plan. Per **planning-target-resolution** and **`../README.md`** § *Recap, structured choice, act*, emit a fresh "Where we are now in the plan tree" snapshot, then collect the lane pick via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** (§ *Sedea input channel* — prefer recap + modal in one message), then re-invoke."*
@@ -258,11 +258,13 @@ If the Deploy test plan section uses **dash bullets** (`- ...`) instead of numbe
 
 Each command has its own contract. After agent-executable auto-runs, you may chain multiple steps in one turn. When a **manual** step is presented, the walk is **blocked**, or a lifecycle gate applies, close with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** (step status + next action) — do **not** prose-only “stop and wait for the next user message.”
 
+**Turn completion (binding):** When the assistant turn ends, **always** emit structured choice per [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](.sedea/centers/sedea/rules/2_ask-question-instructions.mdc) § **Turn completion invariant**. Put recap and suggested next walk actions in **`display.markdown`**; mirror each choosable path in **`options`** (for example *Present step N+1*, *Mark deployed*, *Step N done*, *Deploy walk status*). The developer may still type **`deploy-walk …`** commands in chat, but **forbidden** as the sole turn ending: “reply when ready”, “tell me when done”, or command hints without a modal.
+
 ### `deploy-walk present <N>` — process step N
 
 Find the Nth numbered item in the active sub-section (regex `^N\. \[[ x]\] `). Then:
 
-- If the box is already `[x]`, reply: *"Step N is already checked: \"{verbatim step line}\". To re-walk it explicitly, reply `deploy-walk present before <N>` or `deploy-walk present after <N>`. Otherwise, reply `deploy-walk present <N+1>` to continue."* If N+1 is `[ ]` and agent-executable, you may run [Autonomous agent-executable pass](#autonomous-agent-executable-pass) from N+1 without waiting.
+- If the box is already `[x]`, recap the checked step in **`display.markdown`**, then close with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`**: re-walk step N (before/after), present step N+1, or **More details for option _**. If N+1 is `[ ]` and agent-executable, you may run [Autonomous agent-executable pass](#autonomous-agent-executable-pass) from N+1 without waiting.
 - If the box is `[ ]` and has a prior `*(YYYY-MM-DD: Blocked — {reason})*` annotation, surface it: *"Previously blocked: {reason} (YYYY-MM-DD). Has the blocker cleared?"* Then classify — re-run if agent-executable and developer cleared the blocker; else present as manual.
 - If the box is `[ ]` and clean, **classify**:
  - **Agent-executable** — run per [Agent-executable vs manual steps](#agent-executable-vs-manual-steps); on pass flip and auto-advance; on fail block or assist.
@@ -279,7 +281,7 @@ If `{note}` is omitted in `deploy-walk <N> done`, append `*(YYYY-MM-DD: done.)*`
 
 After the edit, **check whether step N was the last `[ ]` in the active sub-section**:
 
-- If `### Before deploy` is now fully `[x]` and Status is `drafted`, the confirmation reply ends with: *"All Before-deploy steps complete. When you've actually deployed, reply `deploy-walk deployed` (or `deploy-walk deployed: {note}`) to flip status and unlock After-deploy steps."*
+- If `### Before deploy` is now fully `[x]` and Status is `drafted`, close with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`**: *Mark deployed* (runs **`deploy-walk deployed`**), *Review Before-deploy checklist*, or **More details for option _** — include the verbatim first After-deploy step in **`display.markdown`** when helpful.
 - If `### After deploy` is now fully `[x]` and Status is `deployed`, stop after marking the step and ask the developer for explicit closure approval with **AskQuestion**. Required options:
  - **Approve deploy checklist closure**
  - **Review deploy checklist first**
@@ -287,7 +289,7 @@ After the edit, **check whether step N was the last `[ ]` in the active sub-sect
  - **More details for option _**
  Only **Approve deploy checklist closure** authorizes the Status `deployed → done` flip and the **Frontmatter capstone** `deploy-test-plan-verified` `pending → done` mutation. Do not treat the final step's `done` command as approval for the larger deploy lifecycle closeout.
 - Otherwise, if step N+1 is **agent-executable**, continue [Autonomous agent-executable pass](#autonomous-agent-executable-pass) in the same turn (no `deploy-walk present` wait).
-- If step N+1 is **manual**, append: *"Marked {Before or After}-deploy step N done. Next (manual): step N+1 — \"{verbatim next unchecked step line}\". Reply `deploy-walk present <N+1>` when ready, or report results for agent-assisted commands."*
+- If step N+1 is **manual**, close with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`**: *Present step N+1* (equivalent to **`deploy-walk present <N+1>`**), report agent-assisted results, or **More details for option _** — put the verbatim next unchecked step line in **`display.markdown`**.
 
 ### `deploy-walk <N> skip: <reason>` — strike + flip
 
@@ -328,7 +330,7 @@ Pre-conditions:
 - `old_string`: `**Status:** drafted {existing-history}` (the full current line, including all prior `*(...)*` entries).
 - `new_string`: `**Status:** deployed {existing-history} *(YYYY-MM-DD HH:MM: deployed.)*` (or with the user's note in place of `deployed.`). Time uses 24-hour `HH:MM` from the agent's clock context.
 
-Confirmation reply also previews the first After-deploy step: *"Status flipped: `drafted → deployed` at {YYYY-MM-DD HH:MM}. After-deploy now active. First step: \"{verbatim first step line}\". Reply `deploy-walk present 1` when ready."*
+After status flip, close with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`**: *Present After-deploy step 1* (equivalent to **`deploy-walk present 1`**), *Deploy walk status*, or **More details for option _** — put the verbatim first After-deploy step line in **`display.markdown`**.
 
 If `### After deploy` has no `[ ]` items at all (it's empty by design or already all `[x]` — unusual), reply: *"Status flipped: `drafted → deployed`. No `### After deploy` steps remain. Deploy checklist closure still requires approval."* Then run the same **Approve deploy checklist closure** gate used by the last After-deploy `done` branch before flipping `deployed → done` or changing `deploy-test-plan-verified` to `done`.
 
@@ -382,7 +384,7 @@ Use a **blockquote** or plain lines for the presentation shell — **do not** pu
 >
 > ---
 >
-> **Manual step** — follow **Testing steps** in order. When done, reply `deploy-walk <N> done`, `deploy-walk <N> done: <note>`, `deploy-walk <N> skip: <reason>`, or `deploy-walk <N> block: <reason>`. Ask me anything while you work.
+> **Manual step** — follow **Testing steps** in order. Close this turn with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`**: step done, step skip (with reason), step blocked (with reason), or **More details for option _** — put equivalent **`deploy-walk <N> done` / `skip` / `block`** command text in **`display.markdown`** or option labels when helpful.
 
 ### Testing steps authoring rules
 
@@ -477,7 +479,7 @@ When the user runs `deploy-walk present <N>` (no `before` / `after`), pick the s
 |---|---|
 | `drafted` | `### Before deploy` step N. If N exceeds Before's count, surface: *"Step N doesn't exist in `### Before deploy` (only Y items). After deploy, continue in `### After deploy` with `deploy-walk present after` using step index (N − Y)."* |
 | `deployed` | `### After deploy` step N. If N exceeds After's count, same pattern. |
-| `done` | One-line summary, no edit. *"All deploy steps complete (Before {X}/{X}, After {A}/{A}, status `done`). To re-walk a step, reply `deploy-walk present before <N>` or `deploy-walk present after <N>` explicitly."* |
+| `done` | One-line summary in **`display.markdown`**, then structured choice: re-walk a step (before/after), **Deploy walk status**, or **More details for option _** — do not prose-only stop.
 | missing | Heuristic fallback (any `[ ]` in Before → Before; else After) plus a flag noting the missing Status marker. |
 
 `deploy-walk present before <N>` and `deploy-walk present after <N>` always work regardless of status — they're the explicit out-of-order escape hatch. If they hit a sub-section the status disagrees with (e.g. `deploy-walk present after 1` while Status is `drafted`), surface a one-line warning at the top of the step presentation:
@@ -497,7 +499,7 @@ No blocking — the **developer** is in control.
 7. **User wants to revert a `[x]` to `[ ]`.** Not a built-in command. If they ask, do the inverse `StrReplace` manually (flip `[x]` → `[ ]` and trim the trailing `*(...)*` note). Surface this as an unusual case — usually the right move is a fresh `deploy-walk <N> done` with a new note explaining what changed.
 8. **Deploy walk on a non-PR plan (Master Plan, Phase plan, etc.).** Master Plans and Phase plans don't have `## N. Deploy test plan` sections — they have dual-title decomposition sections. If the user runs **deploy-walk** against one, stop with: *"Plan `{slug}` is a Master Plan, Phase plan, or Roadmap topic (pick which), which doesn't have a `## N. Deploy test plan` section. **deploy-walk** only walks PR plans (per-PR template § 7 / § 6). Did you mean a child PR plan?"*
 9. **Roll-back.** Out of scope for v1. If a deploy fails and the user wants to flip status back to `drafted`, they edit the Status line manually.
-10. **Long agent-executable chains.** If more than ~5 agent-executable steps remain, you may stop after a batch with a one-line recap (*"Steps 1–5 auto-passed; step 6 is manual — presenting now."*) and continue on the next developer message — do not silently skip steps.
+10. **Long agent-executable chains.** If more than ~5 agent-executable steps remain, you may stop after a batch with a one-line recap in **`display.markdown`** (*"Steps 1–5 auto-passed; step 6 is manual — presenting now."*) and either continue presenting step 6 in the same turn or close with structured choice per **Turn completion (binding)** above — do not silently skip steps or end the turn without a modal.
 
 ## Scope guard
 

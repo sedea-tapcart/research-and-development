@@ -193,7 +193,7 @@ After emitting **`AGENT_RESULT_RESPONSE_V1`**, **stop on that lane** for the cur
 
 > Stop after the terminal line.
 
-**Per-skill procedure stops** (e.g. “Stop after the step 5 handoff block”, “Stop after spawning and announce wait”) apply **before** the terminal line — they gate mid-skill work, not replace this rule. When both appear, order is: complete the gated step → emit **`AGENT_RESULT_RESPONSE_V1`** → **stop**.
+**Per-skill procedure stops** (e.g. “Stop after the step 5 handoff block”, “Stop after spawning, announce wait, and close with structured choice”) apply **before** the terminal line — they gate mid-skill work, not replace this rule or **Turn completion invariant**. When both appear, order is: complete the gated step → emit **`AGENT_RESULT_RESPONSE_V1`** (when spawned) with **`MC_PHASED_RESPONSE_V1`** on the same message when the turn ends → **stop**.
 
 | Skill | Explicit “Stop after the terminal line” in `## Completion (spawned)`? | Notes |
 |-------|------------------------------------------------------------------------|--------|

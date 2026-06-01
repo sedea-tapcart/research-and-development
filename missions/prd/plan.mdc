@@ -49,7 +49,7 @@ flowchart TD
 - `intent`: Match the opening command to the PRD mission behavior.
 - `inputs`: Opening user message and `mission.yaml` command phrase inventory.
 - `expected output`: Intent label `create-prd` or `manage-prd`.
-- `next-step resolution`: If the command phrase matches, continue to step 2. If it does not match or the intent is ambiguous, stop and ask the user to confirm the intended PRD action.
+- `next-step resolution`: If the command phrase matches, continue to step 2. If it does not match or the intent is ambiguous, close with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** to confirm the intended PRD action.
 - `branch predicates`:
   - Opening message starts with `create prd` (case-insensitive) -> intent `create-prd`.
   - Opening message starts with `manage prd` (case-insensitive) -> intent `manage-prd`.
@@ -149,6 +149,7 @@ flowchart TD
 - `inputs`: Review decision from step 4, PRD path, title, section policy, gaps, open questions, and planning handoff recommendation.
 - `expected output`: Concise result with PRD path or reference, readiness for **`plan and deliver`** on center **research-and-development** (Mission Control command phrase), missing information, and whether the dispatch is resolved, partial, aborted, or abandoned.
 - `next-step resolution`: Terminal when the PRD is approved or explicitly accepted as partial. Resumable when more sources, policy decisions, or user review are required.
+- `default/fallback behavior`: Recap PRD path, readiness, and gaps in **`display.markdown`** or brief prose, then close with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** (propose **`MC_DISPATCH_RESOLVED_V1`**, revise PRD, start **`plan and deliver`**, or **More details for option _**) — do not prose-only finish without structured choice.
 - `terminal vs resumable state`:
   - `resolved` when the PRD is approved and mandatory completeness sections are satisfied.
   - `partial` when the user accepts known gaps or important sections remain incomplete.

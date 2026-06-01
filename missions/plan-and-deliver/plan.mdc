@@ -459,7 +459,7 @@ Related (optional):
   - New phase or PR plan is spawned → add it to the closure ledger as open.
   - Downstream child result reports active continuation → acknowledge status and keep that lane open.
   - Downstream child result reports terminal completion for a registered phase or PR plan → mark that ledger entry closed.
-  - Any child result reports failure, aborted, or abandoned → mark the ledger blocked and ask the developer whether to retry, revise scope, accept partial resolution, or abandon.
+  - Any child result reports failure, aborted, or abandoned → mark the ledger blocked and close with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`**: retry, revise scope, accept partial resolution, or abandon.
   - Planning ledger has no open or blocked entries and every planning lane is terminal → continue **§8** (do **not** propose **`resolved`** here if ship work remains).
 
 **Planning ledger rules**

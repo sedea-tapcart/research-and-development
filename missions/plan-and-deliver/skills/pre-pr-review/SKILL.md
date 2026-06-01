@@ -227,7 +227,7 @@ Set `continuationStatus`:
 - `active` when blockers require a coding-session fix loop and developer approval is pending.
 - `partial` status with `continuationStatus: "active"` when the review ran but missing rules, non-submodule dirty uncommitted edits, or incomplete anchors make the result degraded.
 
-Stop after the report. Do not run `git`, `gh`, source edits, commits, pushes, or PR creation.
+After the report, close **this turn** with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** per **Squad Leader bubble-up** below — the report is not a valid turn end alone. Do not run `git`, `gh`, source edits, commits, pushes, or PR creation.
 
 ## Squad Leader bubble-up (detached lanes)
 

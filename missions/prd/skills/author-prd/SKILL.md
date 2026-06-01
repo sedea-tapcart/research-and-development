@@ -258,7 +258,7 @@ Status guidance:
 - `failure` — no usable PRD artifact (write blocked, invalid inputs after retries); populate `errors`.
 - `aborted` / `abandoned` — user or agent stopped before a deliverable PRD.
 
-Stop after the terminal line. Do not spawn downstream planning agents from this skill.
+On spawned lanes, put **`MC_PHASED_RESPONSE_V1`** on **line 1** and **`AGENT_RESULT_RESPONSE_V1`** on the **last line** of the same message when the turn ends (rule **2** § *Same message as spawn terminal*). Stop after the terminal line. Do not spawn downstream planning agents from this skill.
 
 ## Completion (inline)
 

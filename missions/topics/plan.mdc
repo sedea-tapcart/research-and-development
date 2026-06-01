@@ -40,7 +40,7 @@ flowchart TD
 - `intent`: Match the opening command to the Topics mission behavior.
 - `inputs`: Opening user message and `mission.yaml` command phrase inventory.
 - `expected output`: Intent label `create-topic` when the command phrase is `create topic`, matched case-insensitively.
-- `next-step resolution`: If the command phrase matches, continue to step 2. If it does not match or the intent is ambiguous, stop and ask the user to confirm the intended Topics action.
+- `next-step resolution`: If the command phrase matches, continue to step 2. If it does not match or the intent is ambiguous, close with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** to confirm the intended Topics action.
 - `branch predicates`:
   - Opening message starts with `create topic` (case-insensitive) -> intent `create-topic`.
   - Otherwise -> invalid or unsupported command for this mission.
@@ -56,11 +56,11 @@ flowchart TD
 - `ordered actions`:
   1. Remove the matched command prefix from the opening message.
   2. Treat the remaining text as the initial `topicName` when present.
-  3. Ask the user for `topicName` if missing.
-  4. Ask the user for `topicDescription` if missing.
-  5. Ask whether `storageScope` is `user` or `joint` if missing; `user` maps to `.sedea/operations/<operationsUserId>/plans/roadmap-topics/`, and `joint` maps to `.sedea/operations/joint/plans/roadmap-topics/`. Those `roadmap-topics/` folders live in the operations repository and are **created on the first `create topic` write** for that scope when absent — they are not shipped inside the center repo.
+  3. Collect missing **`topicName`** via **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** when not in the opening message.
+  4. Collect missing **`topicDescription`** the same way.
+  5. Collect **`storageScope`** (`user` or `joint`) via structured choice when missing; `user` maps to `.sedea/operations/<operationsUserId>/plans/roadmap-topics/`, and `joint` maps to `.sedea/operations/joint/plans/roadmap-topics/`. Those `roadmap-topics/` folders live in the operations repository and are **created on the first `create topic` write** for that scope when absent — they are not shipped inside the center repo.
   6. Accept `objectives` as optional; if none are supplied, pass an empty list to the skill.
-- `valid early-exit conditions`: Stop without running the skill if the user declines to provide a topic name, description, or storage scope.
+- `valid early-exit conditions`: Close with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** (retry intake or abandon) without running the skill if the user declines to provide a topic name, description, or storage scope.
 
 ### 3. Create topic plan (inline skill)
 
@@ -85,4 +85,5 @@ flowchart TD
   - `creationStatus: created`, files verified, user done → propose **`MC_DISPATCH_RESOLVED_V1`** with `status: resolved`.
   - `creationStatus: partial` or non-empty `remainingTasks` → propose **`partial`** when the user closes, or stay active for follow-up.
   - Hard failure or user abandon → propose **`aborted`** or **`abandoned`** with explicit `summary`.
+- `default/fallback behavior`: Recap plan path, sidecar path, and `remainingTasks` in **`display.markdown`** or brief prose, then close with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** before proposing **`MC_DISPATCH_RESOLVED_V1`** — do not prose-only finish without structured choice.
 - `terminal vs resumable state`: Mission ledger `resolved` when `creationStatus` is `created` and both files exist; `partial` when input collection or write verification is incomplete. Dispatch closes only after user confirms resolution on the **`MC_DISPATCH_RESOLVED_V1`** card (see **4_mission.mdc**).

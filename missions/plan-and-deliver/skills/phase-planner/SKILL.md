@@ -445,7 +445,7 @@ Recap content:
 
 When the developer asks to revise § N, re-read that section and apply edits via `StrReplace`; echo the result; re-offer structured choice (prefer phased or AskQuestion in one message) when a pick is required.
 
-When they choose **`delivery-phases`** or **`pr-breakdown`** via **AskQuestion**, run the chosen skill **inline** on this lane per **§ 5b** / **§ 5a-hoist** and [Inline handoff](#inline-handoff--phase-planner--delivery-phases--pr-breakdown-step-5b--5a-hoist). Do **not** emit **`AGENT_RUN_REQUEST_V1`** for those skills. Stop after handoff if **`phase-planner`** or **`coding-session`** child lanes need aggregation per step **5e**.
+When they choose **`delivery-phases`** or **`pr-breakdown`** via **AskQuestion**, run the chosen skill **inline** on this lane per **§ 5b** / **§ 5a-hoist** and [Inline handoff](#inline-handoff--phase-planner--delivery-phases--pr-breakdown-step-5b--5a-hoist). Do **not** emit **`AGENT_RUN_REQUEST_V1`** for those skills. When the handoff ends the assistant turn while waiting for **`phase-planner`** or **`coding-session`** child results per step **5e**, close with structured choice per [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](.sedea/centers/sedea/rules/2_ask-question-instructions.mdc) § **Turn completion invariant** — do not prose-only stop after handoff.
 
 ## Step 5e — Aggregate downstream result
 
@@ -502,7 +502,7 @@ This skill writes the **body** of the target phase plan — replacing the **`new
 
 Wrong template stops live in step 1a — use **`planner`** or **`pr-plan`** protocol branches when the file is a Master Plan or PR plan.
 
-Stop after the handoff block in step 5, or after inline decomposition handoff and any child-lane wait announcement.
+Complete the step 5 handoff block, inline decomposition handoff, and any child-lane wait announcement **before** the terminal line when spawned. When a wait ends the assistant turn, close with structured choice per [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](.sedea/centers/sedea/rules/2_ask-question-instructions.mdc) § **Turn completion invariant** — then stop after the terminal line when applicable (see **`../README.md`** § *Terminal stop (normative)*).
 
 ## Completion (spawned)
 
