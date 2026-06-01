@@ -140,6 +140,21 @@ MC_PHASED_RESPONSE_V1
 
 Default **`<recap>`** for pr-plan spawn: *Planning handoff complete (§§1–4). §§5–8 fill on this lane during implementation.*
 
+### Prose-only ship handoff forbidden (binding)
+
+On spawned **`coding-session`** lanes, Mission Control opens the AskQuestion UI only when **StreamFinal** parses the **AskQuestion tool** or a valid **`MC_PHASED_RESPONSE_V1`** block (`parsePhasedResponseFromAssistantText` in `extensions/mission-control/src/shared/phasedResponseParse.ts`). Prose menus do **not** open a modal.
+
+**Forbidden** when [Ship cut-point gate](#ship-cut-point-gate-approve-commit-before-deploy) preconditions are met (bootstrap success, implementation ready for developer review, or the developer asks *what's next* / *ready for review* while the ship chain is waiting at cut-point):
+
+| Anti-pattern | Why it fails |
+|--------------|--------------|
+| *Stay advisory until you pick …* / *I'll wait until you …* | Prose handoff — conduct **1** § *No idle handoff*; rule **2** § *Turn completion invariant* |
+| *Pick Ship cut-point* / *tell me to push* without **`MC_PHASED_RESPONSE_V1`** | User cannot click options — same |
+| Recap + diff summary **without** phased envelope on the **same** turn | **No modal** — agent failure |
+| Redirect cut-point to Squad Leader or another tab | § *Post-reload / cold session* — cut-point runs **on this lane** |
+
+**Required instead:** emit **`MC_PHASED_RESPONSE_V1`** (sentinel line **1**; recap in **`display.markdown`**; ship options in **`askQuestion`**) per § *Spawned lane — ship cut-point sentinel*. Use **Default continuation options** from rule **2** only when **no** ship gate is open.
+
 ### Post-reload / cold session (binding)
 
 After Mission Control reload or window restart on **this** spawned **`coding-session`** lane:
@@ -541,7 +556,7 @@ flowchart LR
 | 6 | [After deploy deploy-walk handoff](#after-deploy-deploy-walk-handoff) | **No** — post-merge cleanup done or skipped |
 | 7 | [Post–After deploy remainder authorization](#post-after-deploy-remainder-authorization) | **No** — one batch or per-step approval before tail ship work |
 
-**Forbidden on this lane:** `git commit` before ship cut-point approval; **`git commit`**, Before deploy **`deploy-walk`**, or ship cut-point while `outputs.bootstrapStatus` is `pending` or `failed`; spawn **`pre-pr-review`** while the tree is dirty; run inline **`create-pr`** before steps 2–3 complete; treat ad-hoc Before-deploy checkbox edits as a substitute for step 2 inline **`deploy-walk`** when §7 has unchecked Before-deploy items; **three separate AskQuestions** for approve → commit → Before deploy when [Combined authorization](#combined-authorization) applies.
+**Forbidden on this lane:** `git commit` before ship cut-point approval; **`git commit`**, Before deploy **`deploy-walk`**, or ship cut-point while `outputs.bootstrapStatus` is `pending` or `failed`; spawn **`pre-pr-review`** while the tree is dirty; run inline **`create-pr`** before steps 2–3 complete; treat ad-hoc Before-deploy checkbox edits as a substitute for step 2 inline **`deploy-walk`** when §7 has unchecked Before-deploy items; **three separate AskQuestions** for approve → commit → Before deploy when [Combined authorization](#combined-authorization) applies; prose-only ship cut-point handoff (*pick Ship cut-point*, *stay advisory*, *tell me when*) without parseable **`MC_PHASED_RESPONSE_V1`** on that turn.
 
 ## Ship cut-point gate (approve, commit, Before deploy)
 
@@ -556,6 +571,18 @@ When implementation is **ready for developer review** (or the developer signals 
 2. When plan-anchored, **read** §7 **`### Before deploy`** and note in the recap: empty / all `[x]` / *N* unchecked Before-deploy steps (list step numbers when ≤5).
 3. Tell the developer to review in the **IDE diff** (SCM: working tree, staged, and unstaged) and/or `git diff` / `git diff --cached` as appropriate. Do **not** treat “implementation done” chat as diff review.
 4. **Do not** run `git commit`, `git push`, inline **`deploy-walk`**, spawn **`pre-pr-review`**, or inline **`create-pr`** in the same assistant turn as this gate's modal.
+
+### Orientation vs ship cut-point (binding)
+
+Per **`.sedea/centers/sedea/rules/5_alignment-safeguard.mdc`** § *Pre-assessment*, *What's next?* / *what now?* are orientational **only** when the lane is **not** blocked on a ship gate.
+
+When **any** applies, the turn is **not** orientation-only — open [Ship cut-point gate](#ship-cut-point-gate-approve-commit-before-deploy) **in the same assistant message** (phased envelope, not prose recap alone):
+
+- Implementation is **ready for developer review** (or the developer signals *ready for review* / *review my changes*).
+- The transcript shows implementation edits finished and the ship chain has **not** yet received a cut-point modal selection.
+- The developer asks *what's next?*, *what now?*, or similar while the above holds.
+
+Answer orientation **inside** **`display.markdown`** and ship **`askQuestion`** together — do **not** defer the modal to a later turn.
 
 ### Combined authorization
 
@@ -600,6 +627,15 @@ MC_PHASED_RESPONSE_V1
 ```
 
 Omit **`commit-only-skip-before-deploy`** when Before deploy is already satisfied; omit commit options when the tree is clean and use `spawn-before-deploy-walk` instead.
+
+### Pre-send self-check (ship cut-point)
+
+Before ending a turn that opens [Ship cut-point gate](#ship-cut-point-gate-approve-commit-before-deploy):
+
+1. First non-whitespace character is **`M`** of **`MC_PHASED_RESPONSE_V1`** (spawned lane — sentinel-first).
+2. JSON includes **`version`: 1**, **`display.markdown`**, **`askQuestion.questions`** with ≥1 option (`id` + `label`) matching [Combined authorization](#combined-authorization) for this tree state.
+3. Recap includes `git status --short` summary and Before-deploy §7 state when plan-anchored.
+4. Message contains **no** prose-only *advisory* / *pick in chat* / *I'll wait* closing — if any check fails, fix before send.
 
 ### Act after ship cut-point pick
 
