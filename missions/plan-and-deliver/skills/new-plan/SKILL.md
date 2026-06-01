@@ -306,7 +306,7 @@ Set `outputs.populatorApprovalStatus: "waived-upstream"` and one line: *Parent l
 
  1. Emit exactly one child-spawn request for `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/phase-planner/SKILL.md`.
  2. Inputs: `targetPlanPath`, `targetPlanSlug`, `parentPlanPath`, `parentPlanSlug`, `parentIndex`, `ledgerParent`, `upstreamSkill: "new-plan"`.
- 3. Announce that this agent is waiting for the **`phase-planner`** child result and stop.
+ 3. Emit **`AGENT_RUN_REQUEST_V1`**, announce waiting for the **`phase-planner`** child result, and close the turn with structured choice per [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](.sedea/centers/sedea/rules/2_ask-question-instructions.mdc) § **Turn completion invariant**.
 
  **`pr-breakdown`**, nested decomposition, and **`plan-reconcile`** happen in their own mission steps after this skill finishes. If a center populator `SKILL.md` is ever absent, end after stub + parent link and point at **`development-process.md`**.
 

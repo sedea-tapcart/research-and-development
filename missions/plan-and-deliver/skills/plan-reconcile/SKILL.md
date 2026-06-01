@@ -61,7 +61,7 @@ Script-backed flow: **`plan-state.mjs`** owns YAML and file moves; the agent dec
 
 ## Structured choice (Mission Control)
 
-Dry-run reports, archive candidates, and follow-up triage use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* — **preferred:** recap + modal in one message; legacy split uses recap then `MC_PHASED_RESPONSE_V1` in the next message. **Act** (`plan-state.mjs archive`, file moves) is after the developer selects.
+Dry-run reports, archive candidates, and follow-up triage use **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* — recap + modal in **one turn** when practical. **Act** (`plan-state.mjs archive`, file moves) is after the developer selects.
 
 ## When this skill runs
 

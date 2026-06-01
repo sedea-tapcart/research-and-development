@@ -228,7 +228,7 @@ flowchart TD
 
 This subsection is the **Squad Leader** contract for §§3, 5, 6, and 7. Sedea host behavior is defined in **`.sedea/centers/sedea/rules/4_mission.mdc`** (spawn invocation, agent session closure). **Planning** child lanes use each skill’s **`## Completion (spawned)`**; **ship** lanes use the same terminal line with field lists in domain sections (see **`missions/plan-and-deliver/skills/README.md`** § Planning spawn, § Ship spawn, § Inline-only).
 
-**Host vs “wait.”** Mission Control does **not** block the parent turn while a child runs. **Wait** means: announce that you are waiting for a child result, emit **`AGENT_RUN_REQUEST_V1`**, then **stop** further protocol work on the leader lane until Mission Control delivers a silent UserSend that begins with **`Mission Control: agent-result-response delivered.`** Follow the response-protocol footer in that message before §6, §7, or another spawn.
+**Host vs “wait.”** Mission Control does **not** block the parent turn while a child runs. **Wait** means: emit **`AGENT_RUN_REQUEST_V1`**, announce that you are waiting for a child result, then **stop** further protocol work on the leader lane until Mission Control delivers a silent UserSend that begins with **`Mission Control: agent-result-response delivered.`** When that stop ends the assistant turn, **close with structured choice** per [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](.sedea/centers/sedea/rules/2_ask-question-instructions.mdc) § **Turn completion invariant** and [`.sedea/centers/sedea/skills/README.md`](../../sedea/skills/README.md) § *Concurrency contract* — do not prose-only announce wait. Follow the response-protocol footer in the delivered message before §6, §7, or another spawn.
 
 **§3 resume (Ad-Hoc PRD agent).** After each `AGENT_RESULT_RESPONSE_V1` for §3:
 
@@ -236,8 +236,8 @@ This subsection is the **Squad Leader** contract for §§3, 5, 6, and 7. Sedea h
 |-------|--------|
 | `outputs.continuationOwner: ad-hoc-prd-agent` and `outputs.continuationStatus: active` | **Acknowledge only** on the leader lane — PRD approval / revision runs on the **Ad-Hoc PRD** child lane (see **`ad-hoc-prd`** steps 5–7). Do **not** duplicate approval **AskQuestion** here. |
 | `outputs.continuationStatus: terminal` and `outputs.developerApprovedPrd: true` with `prdRef` | Continue to §4 with the approved Ad-Hoc PRD |
-| `outputs.continuationStatus: terminal` without `developerApprovedPrd: true` | Stop; child should not have closed as terminal without approval — ask developer to continue on the child lane or retry §3 |
-| `status: partial` / missing `prdRef` / missing required inputs | Stop; collect missing fields on the appropriate lane or retry per **`ad-hoc-prd`** **`## Completion (spawned)`** |
+| `outputs.continuationStatus: terminal` without `developerApprovedPrd: true` | Close with **AskQuestion** on the leader lane: retry §3, continue on child lane, or abandon branch — do not prose-only stop |
+| `status: partial` / missing `prdRef` / missing required inputs | Close with **AskQuestion** to collect missing fields or retry per **`ad-hoc-prd`** **`## Completion (spawned)`** — appropriate lane owns collection |
 
 **§5 resume (Master Plan agent).** Before §6, validate the child result against **`planner`** **`## Completion (spawned)`**:
 
@@ -336,8 +336,8 @@ Do **not** invent PRD content from the URL alone. Do **not** call **`author-prd`
 
 1. Compile child inputs from §1: `createIntent: true`, `title` when known, `details` from the ad-hoc task description, `operationsUserId` from Mission Control context, and any optional roadmap or related hints.
 2. Emit exactly one `AGENT_RUN_REQUEST_V1` request for the **Ad-Hoc PRD agent** using the `ad-hoc-prd` skill path and compiled inputs.
-3. Announce that the **Squad Leader** is waiting for the child lane because **`planner`** requires a **developer-approved** PRD artifact.
-4. Stop protocol execution until Mission Control delivers `AGENT_RESULT_RESPONSE_V1` for the same `correlationId`.
+3. Announce that the **Squad Leader** is waiting for the child lane because **`planner`** requires a **developer-approved** PRD artifact; close the turn with structured choice per [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](.sedea/centers/sedea/rules/2_ask-question-instructions.mdc) § **Turn completion invariant**.
+4. Stop protocol execution until Mission Control delivers `AGENT_RESULT_RESPONSE_V1` for the same `correlationId` (host delivers as silent UserSend).
 5. Apply **§3 resume** above. The **Ad-Hoc PRD agent** owns recap, **AskQuestion** approval, and revision (skill steps 5–7) — do **not** run a duplicate approval gate on the leader lane.
 6. Continue to §4 only when the child result is `continuationStatus: terminal`, `outputs.developerApprovedPrd: true`, and `outputs.prdRef` is readable. Do not treat the first post-write child result (`continuationStatus: active`) as approval.
 

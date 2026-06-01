@@ -86,7 +86,7 @@ See [Agent-executable vs manual steps](#agent-executable-vs-manual-steps).
 
 ## Structured choice (Mission Control)
 
-Target picks, deploy-with-gaps, and closure gates use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* — **preferred:** recap + modal in one message; legacy split uses recap then `MC_PHASED_RESPONSE_V1` in the next message. **Act** (checkbox flips, status lines) follows developer selection or explicit deploy-walk commands.
+Target picks, deploy-with-gaps, and closure gates use **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* — recap + modal in **one turn** when practical; rule **2** priority **3** split only when a long recap was already sent. **Act** (checkbox flips, status lines) follows developer selection or explicit deploy-walk commands.
 
 When run **inline** on **`coding-session`** (pre-merge **Before deploy** or post-merge **After deploy**), this procedure owns deploy verification status and reports it via **`## Completion (inline)`** to the coding-session agent; it does not run implementation, PR review, or plan reconciliation.
 
@@ -266,7 +266,7 @@ Find the Nth numbered item in the active sub-section (regex `^N\. \[[ x]\] `). T
 - If the box is `[ ]` and has a prior `*(YYYY-MM-DD: Blocked — {reason})*` annotation, surface it: *"Previously blocked: {reason} (YYYY-MM-DD). Has the blocker cleared?"* Then classify — re-run if agent-executable and developer cleared the blocker; else present as manual.
 - If the box is `[ ]` and clean, **classify**:
  - **Agent-executable** — run per [Agent-executable vs manual steps](#agent-executable-vs-manual-steps); on pass flip and auto-advance; on fail block or assist.
- - **Manual** — present with numbered **Testing steps** per § *Step 4 — Step presentation contract* and stop.
+ - **Manual** — present with numbered **Testing steps** per § *Step 4 — Step presentation contract*, then close with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** (step done / blocked / skip / more-details) — do not prose-only stop.
 
 ### `deploy-walk <N> done` / `deploy-walk <N> done: <note>` — flip box, advance hint
 

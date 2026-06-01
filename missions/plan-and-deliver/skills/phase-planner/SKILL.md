@@ -75,7 +75,7 @@ The skill operates on a **target** `.plan.md` resolved before this skill runs, p
 
 When spawned by `new-plan`, `targetPlanPath`, `targetPlanSlug`, `parentPlanPath`, `parentPlanSlug`, and `parentIndex` are already locked. Treat missing or conflicting values as a spawn-contract failure: stop with `failure` or `partial` and report the missing field. Do not fall back to IDE focus or free-form target discovery in spawned mode.
 
-If there is no resolved target, **stop** and emit a fresh *Where we are now in the plan tree* snapshot (recap). Collect the lane pick via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **30_planning-target-resolution** § *Sedea input channel* and **`../README.md`** § *Recap, structured choice, act* — **preferred:** recap + modal in one message; **legacy split:** recap only, then structured choice in the **next** assistant message. Then continue.
+If there is no resolved target, **stop** and emit a fresh *Where we are now in the plan tree* snapshot with **`AskQuestion`** or **`MC_PHASED_RESPONSE_V1`** in **one turn** per **30_planning-target-resolution** § *Sedea input channel* and **`../README.md`** § *Recap, structured choice, act* (`display.markdown` + `askQuestion`). **Obsolete:** recap-only turn without structured choice. Then continue.
 
 Acknowledge in one line: *"Target plan: `<slug>`."*
 
@@ -398,7 +398,7 @@ When this skill is running as a spawned child and `autoContinue` is not `false`,
 - `pr-breakdown-multi` → load and follow **`pr-breakdown/SKILL.md`** on **this** phase plan with `prBreakdownShape: "multi"`. **`pr-breakdown`** honors **`### Sequencing`** for parallel vs sequential PR expand.
 - `pr-breakdown-single` → follow **§ 5a-hoist** (ancestor target + inline hoist); do **not** run **`pr-breakdown`** on this phase file.
 
-Before handoff, present the drafted phase plan body and the route signal to the developer via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* — **preferred:** brief recap + modal in one message; legacy split must use `MC_PHASED_RESPONSE_V1` sentinel-first in the next message. Required options:
+Before handoff, present the drafted phase plan body and the route signal via **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** in **one turn** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* (`display.markdown` + `askQuestion`). Required options:
 
 - **Approve phase plan and route**
 - **Revise phase plan first**
@@ -424,7 +424,7 @@ Per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../R
 - `display.markdown` — file link, parent decomposition hint, optional one-line assessment summary (not a full re-echo of §§ 1–4 if step **4f** already echoed them)
 - `askQuestion` — route and follow-up options below
 
-**Legacy split:** **recap-only** message (items 1–2), then **structured-choice-only** message.
+**Obsolete:** **recap-only** message (items 1–2) with structured choice deferred — use **`MC_PHASED_RESPONSE_V1`** (items 1–2 in `display.markdown` + `askQuestion` same turn) or **AskQuestion tool** with brief recap.
 
 Recap content:
 

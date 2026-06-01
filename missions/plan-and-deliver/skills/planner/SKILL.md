@@ -491,7 +491,7 @@ Do **not** draft section 6 (`Delivery phases | PR breakdown`) or section 7 (Cave
 
 ## Step 7 — Next moves (AskQuestion + inline decomposition)
 
-§§ 1–5 are drafted (including **`### Complexity score`**); §6 and §7 stay `_TBD_` until the user chooses next moves. Collect each next-move pick per **`.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`** § *Sedea input channel* and **`../README.md`** § *Recap, structured choice, act* — **preferred:** recap + **AskQuestion** / **`MC_PHASED_RESPONSE_V1`** in one message; **legacy split:** recap (§7a), then structured choice (§7b). Execute **one** chosen action per turn.
+ §§ 1–5 are drafted (including **`### Complexity score`**); §6 and §7 stay `_TBD_` until the user chooses next moves. Collect each next-move pick per **`.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`** § *Sedea input channel* and **`../README.md`** § *Recap, structured choice, act* — **`AskQuestion`** or **`MC_PHASED_RESPONSE_V1`** in **one turn** (`display.markdown` + `askQuestion`). Execute **one** chosen action per turn.
 
 §6 decomposition runs **`delivery-phases`** or **`pr-breakdown`** **inline on this lane** (no child lane for those skills). §7 **Caveats** is drafted **inline** in this skill when the user selects that option.
 
@@ -501,11 +501,11 @@ Do **not** draft section 6 (`Delivery phases | PR breakdown`) or section 7 (Cave
 
 After **Echo to chat** (§§1–5 + complexity table), end with **one short status line only** (plan path, band, overall score). **Do not** embed the next-move menu in prose blockquotes.
 
-When using the **legacy split** (see **`../README.md`** § *Recap, structured choice, act*), do **not** invoke **AskQuestion** in the same message as the full section echo. **Required:** combine recap + next-move modal in one message via **AskQuestion tool** or **`MC_PHASED_RESPONSE_V1`** (`display.markdown` for status; `askQuestion` for options). On the **initial §§1–5 draft turn**, include **`MC_PHASED_RESPONSE_V1`** in the **same** message as **`AGENT_RESULT_RESPONSE_V1`** — phased **line 1**, terminal **last line** (rule **2** § *Same message as spawn terminal*).
+When the full section echo is too long for one message, use rule **2** priority **3** split only: prior message = echo; **next** message = **`MC_PHASED_RESPONSE_V1`** sentinel-first with Step **7b** options — never a prose-only follow-up. On the **initial §§1–5 draft turn**, include **`MC_PHASED_RESPONSE_V1`** in the **same** message as **`AGENT_RESULT_RESPONSE_V1`** — phased **line 1**, terminal **last line** (rule **2** § *Same message as spawn terminal*).
 
 ### Step 7b — Structured choice: primary next moves
 
-Invoke **AskQuestion**, **`MC_PHASED_RESPONSE_V1`**. On the legacy split, run structured choice in a **separate** assistant message after step **7a** recap. Build options from plan state and Step 6c band.
+Invoke **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** in the **same turn** as step **7a** recap when practical. **Obsolete:** structured choice in a **separate** assistant message after step **7a** without a phased sentinel on that follow-up. Build options from plan state and Step 6c band.
 
 **Phase-planner child active (binding):** When **`activeLanes`** (from inline **`delivery-phases`** / **`new-plan`** merge or bubbled **`AGENT_RESULT_RESPONSE_V1`**) includes **`continuationOwner: "phase-planner-agent"`** with **`continuationStatus: "active"`** for a **`Delivery phases`** row, **do not** offer **`route-6`**, **`expand-eligible-pr`**, **`expand-next-phase`**, or other phase-scoped decomposition options for that row on this **Master Plan** lane. Acknowledge in one line (phase slug, child lane id when known) and tell the developer to continue on the **phase-planner** child lane. Re-offer Step **7b** master-plan options only after **`phaseShipComplete`** for that phase or explicit defer/abandon — see **`phase-planner`** § *Phase delivery ownership*.
 
