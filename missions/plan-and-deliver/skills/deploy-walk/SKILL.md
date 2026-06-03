@@ -126,9 +126,9 @@ When `upstreamSkill` is **`coding-session`** and `deployWalkScope` is **`before-
 | **Forbidden** | `deploy-walk deployed` / `deploy-walk deployed: …` (no `drafted → deployed` flip pre-merge) |
 | **Forbidden** | `deploy-walk present after <N>` or walking **`### After deploy`** |
 | **Forbidden** | **Frontmatter capstone** `deploy-test-plan-verified` → `done` (full checklist not complete pre-merge) |
-| **Terminal** | `beforeDeployStatus: complete`; `deployStatus: drafted` (unchanged); `afterDeployStatus: incomplete` or `unknown` — hand back to **`coding-session`** for [Pre-PR review authorization](../coding-session/SKILL.md#pre-pr-review-authorization) |
+| **Terminal** | `beforeDeployStatus: complete`; `deployStatus: drafted` (unchanged); `afterDeployStatus: incomplete` or `unknown` — hand back to **`coding-session`** for [Auto-spawn pre-pr-review](../coding-session/SKILL.md#auto-spawn-pre-pr-review) |
 | **Blocked** | Any Before-deploy step remains `[ ]` without skip/block resolution → report `blockedStep` in inline outputs |
-| **Handback** | Parent **`coding-session`** continues to [Pre-PR review authorization](../coding-session/SKILL.md#pre-pr-review-authorization) — not **`create-pr`** |
+| **Handback** | Parent **`coding-session`** continues to [Auto-spawn pre-pr-review](../coding-session/SKILL.md#auto-spawn-pre-pr-review) — not **`create-pr`** |
 
 Use `worktreePath` / `worktreeName` from inline context for command context in step presentations. PR merge fields (`prUrl`, `mergeSha`, …) are optional and usually absent.
 

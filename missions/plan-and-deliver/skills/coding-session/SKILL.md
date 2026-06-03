@@ -11,7 +11,7 @@ description: >-
  **implement the anchored PR plan on this lane** in that worktree; on **prompt-only**
  entry, emit a copy/paste-safe two-phase session prompt for a separate coding chat.
  After implementation, run the **ship chain** (one cut-point modal: approve + commit +
- Before deploy **deploy-walk** inline → **pre-pr-review** spawn). After PR merge, post-merge workspace cleanup (main pull, worktree remove, drop local worktree name ref when remote is gone) runs before After deploy **deploy-walk** inline. Plan-anchored runs validate
+ Before deploy **deploy-walk** inline → **auto-spawn pre-pr-review** → **auto inline create-pr** on clean **go** → **auto post-merge cleanup** when merged → After deploy **deploy-walk** inline). Plan-anchored runs validate
  per-PR plans with plan-ws-completeness.mjs (_TBD_ in body requires completion or
  explicit override incomplete plan). Use under mission dispatch, natural language, or
  after planning when handing off implementation.
@@ -82,14 +82,13 @@ warmUpRules:
   - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
   - ".sedea/centers/research-and-development/docs/development-process.md"
   - ".sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc"
-  - ".sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc"
 ---
 
 # Coding session
 
 Hand off a unit of work into a **dedicated git worktree**, with the worktree visible in the **same Sedea workbench** (multi-root workspace), not a second editor process. Worktree **creation** is **`git worktree add` only**; workbench **attach** is **`sedea_add_worktree_folder` only** — see [Hard rules — git worktree vs workbench attach (binding)](#hard-rules--git-worktree-vs-workbench-attach-binding). **Execution mode** after setup depends on entry path — see [Execution mode after worktree attach](#execution-mode-after-worktree-attach).
 
-**Owns:** per-PR plan §§ **5–8** during implementation (repo rules impact, tests, deploy plan, caveats); `git worktree add`, `plan-state.mjs set-worktrees` / `set-session`, Mission Control worktree attach, **mandatory inline worktree bootstrap** on this lane ([Worktree bootstrap (inline mandatory)](#worktree-bootstrap-inline-mandatory) — wait for `outputs.bootstrapStatus: success` before implementation), pre-worktree validation + worktree-open gate; **spawned-lane implementation** or curated **prompt-only** session prompt emission; [Ship chain after implementation](#ship-chain-after-implementation-coding-session-lane) ([Ship cut-point gate](#ship-cut-point-gate-approve-commit-before-deploy) — one modal approve + commit + Before deploy **`deploy-walk`** inline → **`pre-pr-review`** → **`create-pr`** → [Post-merge workspace cleanup](#post-merge-workspace-cleanup) → After deploy **`deploy-walk`** inline).
+**Owns:** per-PR plan §§ **5–8** during implementation (repo rules impact, tests, deploy plan, caveats); `git worktree add`, `plan-state.mjs set-worktrees` / `set-session`, Mission Control worktree attach, **mandatory inline worktree bootstrap** on this lane ([Worktree bootstrap (inline mandatory)](#worktree-bootstrap-inline-mandatory) — wait for `outputs.bootstrapStatus: success` before implementation), pre-worktree validation + worktree-open gate; **spawned-lane implementation** or curated **prompt-only** session prompt emission; [Ship chain after implementation](#ship-chain-after-implementation-coding-session-lane) ([Ship cut-point gate](#ship-cut-point-gate-approve-commit-before-deploy) — one modal approve + commit + Before deploy **`deploy-walk`** inline → **auto-spawn **`pre-pr-review`** → **auto inline **`create-pr`** on clean **go** → **auto** [Post-merge workspace cleanup](#post-merge-workspace-cleanup) when merged → After deploy **`deploy-walk`** inline).
 
 **Out of scope:** drafting per-PR §§ **1–4** ( **`pr-plan`** ); implementing hosting repo code when this run is **prompt-only** (see [Prompt-only handoff](#prompt-only-handoff)); opening PRs from the planning lane; **`plan-reconcile`** archive cadence except where this skill references it for cleanup narrative.
 
@@ -129,7 +128,7 @@ On **[Spawned implementation lane](#spawned-implementation-lane)**, **this lane*
 
 ### Spawned lane — sentinel-first (binding)
 
-On spawned **`coding-session`** lanes, **in order to use the AskQuestion modal**, use **`MC_PHASED_RESPONSE_V1`** for gates (sentinel-first). Before the [Worktree-open gate](#worktree-open-gate), [Worktree-open gate (pr-plan spawn handoff)](#worktree-open-gate-pr-plan-spawn-handoff), [Ship cut-point gate](#ship-cut-point-gate-approve-commit-before-deploy), [Pre-PR review authorization](#pre-pr-review-authorization), [Review feedback approval gate](#review-feedback-approval-gate), [Create-PR handoff after go](#create-pr-handoff-after-go), [Post-create-pr handoff gate](#post-create-pr-handoff-gate), and any turn that **awaits a developer pick** before the next **Act** — **unless** [Auto-authorize implementation (pr-plan spawn)](#auto-authorize-implementation-pr-plan-spawn) applies (no modal; proceed to worktrees):
+On spawned **`coding-session`** lanes, **in order to use the AskQuestion modal**, use **`MC_PHASED_RESPONSE_V1`** for gates (sentinel-first). Before the [Worktree-open gate](#worktree-open-gate), [Worktree-open gate (pr-plan spawn handoff)](#worktree-open-gate-pr-plan-spawn-handoff), [Ship cut-point gate](#ship-cut-point-gate-approve-commit-before-deploy), [Review feedback approval gate](#review-feedback-approval-gate), [Create-PR handoff after go](#create-pr-handoff-after-go) (exceptional — when **`actionablePrePrFindings`** or developer chose **`proceed-create-pr`**), [Post-create-pr handoff gate](#post-create-pr-handoff-gate), and any turn that **awaits a developer pick** before the next **Act** — **unless** [Auto-authorize implementation (pr-plan spawn)](#auto-authorize-implementation-pr-plan-spawn) or [Auto-spawn pre-pr-review](#auto-spawn-pre-pr-review) / [Inline create-pr (auto on clean go)](#inline-create-pr-auto-on-clean-go) / [Post-merge workspace cleanup](#post-merge-workspace-cleanup) auto-advance applies (no modal; proceed):
 
 1. **Self-check:** the assistant message **starts** with **`MC_PHASED_RESPONSE_V1`** — **no** recap prose before the sentinel.
 2. Put required recap lines in **`display.markdown`** only (see pr-plan spawn handoff recap below).
@@ -146,7 +145,7 @@ Default **`<recap>`** for pr-plan spawn: *Planning handoff complete (§§1–4).
 
 On spawned **`coding-session`** lanes, Mission Control opens the AskQuestion UI only when **StreamFinal** parses the **AskQuestion tool** or a valid **`MC_PHASED_RESPONSE_V1`** block (`parsePhasedResponseFromAssistantText` in `extensions/mission-control/src/shared/phasedResponseParse.ts`). Prose menus do **not** open a modal.
 
-**Forbidden** when any ship gate awaits a developer pick (cut-point, pre-PR auth, create-PR, post-create-PR, or § *Every developer-await turn*):
+**Forbidden** when any ship gate awaits a developer pick (cut-point, review feedback, exceptional create-PR, post-create-PR, or § *Every developer-await turn*):
 
 | Anti-pattern | Why it fails |
 |--------------|--------------|
@@ -167,9 +166,8 @@ On spawned **`coding-session`** lanes, **any** assistant turn where the develope
 | Worktree / implementation | [Worktree-open gate](#worktree-open-gate) |
 | Review-ready / commit / Before deploy | [Ship cut-point gate](#ship-cut-point-gate-approve-commit-before-deploy) |
 | Before deploy manual step | § [Before deploy deploy-walk handoff](#before-deploy-deploy-walk-handoff) step 4 |
-| Spawn **`pre-pr-review`** | [Pre-PR review authorization](#pre-pr-review-authorization) |
 | Pre-PR findings | [Review feedback approval gate](#review-feedback-approval-gate) |
-| Open PR | [Create-PR handoff after go](#create-pr-handoff-after-go) |
+| Open PR (exceptional) | [Create-PR handoff after go](#create-pr-handoff-after-go) — only when **`actionablePrePrFindings`** or developer chose **`proceed-create-pr`** |
 | **After `gh pr create` succeeds** | [Post-create-pr handoff gate](#post-create-pr-handoff-gate) — **same turn**, not prose-only PR URL |
 | Waiting on child **`pre-pr-review`** | Structured choice before turn ends (rule **2** § *Default continuation options* or defer) |
 
@@ -578,22 +576,26 @@ Normative order on the **spawned implementation lane** — **do not** skip steps
 flowchart LR
  IMPL[Implement — no commit] --> CUT[Ship cut-point gate]
  CUT --> BDW[Inline deploy-walk — Before deploy]
- BDW --> PPR[Spawn pre-pr-review]
- PPR --> CPR[Create-PR handoff after go]
- CPR --> PMC[Post-merge workspace cleanup]
-  PMC --> ADW[Inline deploy-walk — After deploy]
-  ADW --> REM[Post–After deploy remainder authorization]
+ BDW --> PPR[Auto-spawn pre-pr-review]
+ PPR --> FB{actionable findings?}
+ FB -->|yes| RFG[Review feedback gate]
+ FB -->|no go| CPR[Auto inline create-pr]
+ RFG --> CPR
+ CPR --> MERGE[Wait merge]
+ MERGE --> PMC[Auto post-merge cleanup]
+ PMC --> ADW[Inline deploy-walk — After deploy]
+ ADW --> REM[Post–After deploy remainder authorization]
 ```
 
-| Step | Section | Commit required? |
-|------|---------|------------------|
-| 1 | [Ship cut-point gate](#ship-cut-point-gate-approve-commit-before-deploy) | **No** for review — combined modal covers approve + commit + Before deploy inline |
-| 2 | [Before deploy deploy-walk handoff](#before-deploy-deploy-walk-handoff) | **Yes** — after cut-point **Act** (commit when needed, then inline walk) |
-| 3 | [Pre-PR review handoff](#pre-pr-review-handoff) | **Yes** — Before deploy resolved or skipped |
-| 4 | [Create-PR handoff after go](#create-pr-handoff-after-go) | After **`pre-pr-review`** **go** |
-| 5 | [Post-merge workspace cleanup](#post-merge-workspace-cleanup) | **No** — after **`prState: merged`**, before After deploy |
-| 6 | [After deploy deploy-walk handoff](#after-deploy-deploy-walk-handoff) | **No** — post-merge cleanup done or skipped |
-| 7 | [Post–After deploy remainder authorization](#post-after-deploy-remainder-authorization) | **No** — one batch or per-step approval before tail ship work |
+| Step | Section | Commit required? | Modal? |
+|------|---------|------------------|--------|
+| 1 | [Ship cut-point gate](#ship-cut-point-gate-approve-commit-before-deploy) | **No** for review — combined modal covers approve + commit + Before deploy inline | **Yes** |
+| 2 | [Before deploy deploy-walk handoff](#before-deploy-deploy-walk-handoff) | **Yes** — after cut-point **Act** (commit when needed, then inline walk) | **No** (manual §7 step only) |
+| 3 | [Auto-spawn pre-pr-review](#auto-spawn-pre-pr-review) + [Pre-PR review handoff](#pre-pr-review-handoff) | **Yes** — Before deploy resolved or skipped | **No** — auto-spawn on next turn |
+| 4 | [Inline create-pr (auto on clean go)](#inline-create-pr-auto-on-clean-go) or [Create-PR handoff after go](#create-pr-handoff-after-go) | After **`pre-pr-review`** **go** | **No** on clean **go**; **Yes** when **`actionablePrePrFindings`** or **`proceed-create-pr`** |
+| 5 | [Post-merge workspace cleanup](#post-merge-workspace-cleanup) | **No** — after **`prState: merged`**, before After deploy | **No** — auto **`--apply`** when authorized; modal on failure/unclear ownership only |
+| 6 | [After deploy deploy-walk handoff](#after-deploy-deploy-walk-handoff) | **No** — post-merge cleanup done or skipped | **No** (manual §7 step only) |
+| 7 | [Post–After deploy remainder authorization](#post-after-deploy-remainder-authorization) | **No** — one batch or per-step approval before tail ship work | **Yes** when inventory non-empty |
 
 **Forbidden on this lane:** `git commit` before ship cut-point approval; **`git commit`**, Before deploy **`deploy-walk`**, or ship cut-point while `outputs.bootstrapStatus` is `pending` or `failed`; spawn **`pre-pr-review`** while the tree is dirty; run inline **`create-pr`** before steps 2–3 complete; treat ad-hoc Before-deploy checkbox edits as a substitute for step 2 inline **`deploy-walk`** when §7 has unchecked Before-deploy items; **three separate AskQuestions** for approve → commit → Before deploy when [Combined authorization](#combined-authorization) applies; prose-only ship cut-point handoff (*pick Ship cut-point*, *stay advisory*, *tell me when*) without parseable **`MC_PHASED_RESPONSE_V1`** on that turn.
 
@@ -646,7 +648,7 @@ Use **one** **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** (`modalTitle`: *Codin
 
 Option ids **`commit-only`** and **`commit-push`** satisfy rule **6** git layer **on the pick turn** — run commit/push on the **developer's response turn** only, not in the same assistant turn as the modal.
 
-**When Before deploy is already satisfied** (empty, *None*, or all `[x]`) but the tree is dirty, use **one** modal (`modalTitle`: *Coding session — approve and commit*) with **`commit-only`** / **`commit-push`** / **`more-changes`** / **`defer`** / **`more-details`** — then [Pre-PR review authorization](#pre-pr-review-authorization), not inline deploy-walk.
+**When Before deploy is already satisfied** (empty, *None*, or all `[x]`) but the tree is dirty, use **one** modal (`modalTitle`: *Coding session — approve and commit*) with **`commit-only`** / **`commit-push`** / **`more-changes`** / **`defer`** / **`more-details`** — then [Auto-spawn pre-pr-review](#auto-spawn-pre-pr-review) on the **next** turn when preconditions pass, not inline deploy-walk.
 
 **When the tree is clean** and Before-deploy items remain, use **one** modal with:
 
@@ -658,9 +660,9 @@ Option ids **`commit-only`** and **`commit-push`** satisfy rule **6** git layer 
 | `defer` | Defer ship chain |
 | `more-details` | More details for option _ |
 
-**Free-form** (no plan anchor): combined approve + commit modal only — **`commit-only`** / **`commit-push`** / **`more-changes`** / **`defer`** / **`more-details`** — then [Pre-PR review authorization](#pre-pr-review-authorization).
+**Free-form** (no plan anchor): combined approve + commit modal only — **`commit-only`** / **`commit-push`** / **`more-changes`** / **`defer`** / **`more-details`** — then [Auto-spawn pre-pr-review](#auto-spawn-pre-pr-review) on the **next** turn when preconditions pass.
 
-Do **not** use option labels that say *run pre-pr-review* or *create PR* here — those belong in [Pre-PR review authorization](#pre-pr-review-authorization).
+Do **not** use option labels that say *run pre-pr-review* or *create PR* here — those steps auto-advance after cut-point **Act** and Before deploy (see [Auto-spawn pre-pr-review](#auto-spawn-pre-pr-review)).
 
 ### Spawned lane — ship cut-point sentinel (binding)
 
@@ -684,15 +686,15 @@ Before ending a turn that opens [Ship cut-point gate](#ship-cut-point-gate-appro
 
 ### Act after ship cut-point pick
 
-Run on the **developer's response turn** after a cut-point pick — **not** in the same assistant turn as the modal (same rule as [Pre-PR review authorization](#pre-pr-review-authorization)).
+Run on the **developer's response turn** after a cut-point pick — **not** in the same assistant turn as the modal.
 
 | Pick | Actions (in order) |
 |------|---------------------|
-| **`commit-only`** / **`commit-push`** (Before deploy unchecked) | 1. **`git commit`** if `git status --short` is non-empty · 2. Verify clean tree · 3. [Before deploy deploy-walk handoff](#before-deploy-deploy-walk-handoff) inline (no second modal) · 4. Continue to [Pre-PR review authorization](#pre-pr-review-authorization) when Before deploy satisfied (same or next turn) |
-| **`commit-only-skip-before-deploy`** | 1. **`git commit`** if dirty · 2. Append dated skip note under §7 or **`## Follow-ups`** · 3. [Pre-PR review authorization](#pre-pr-review-authorization) |
-| **`commit-only`** / **`commit-push`** (Before deploy satisfied or free-form) | 1. **`git commit`** if dirty · 2. Verify clean · 3. [Pre-PR review authorization](#pre-pr-review-authorization) |
+| **`commit-only`** / **`commit-push`** (Before deploy unchecked) | 1. **`git commit`** if `git status --short` is non-empty · 2. Verify clean tree · 3. [Before deploy deploy-walk handoff](#before-deploy-deploy-walk-handoff) inline (no second modal) · 4. [Auto-spawn pre-pr-review](#auto-spawn-pre-pr-review) when Before deploy satisfied (same or next turn) |
+| **`commit-only-skip-before-deploy`** | 1. **`git commit`** if dirty · 2. Append dated skip note under §7 or **`## Follow-ups`** · 3. [Auto-spawn pre-pr-review](#auto-spawn-pre-pr-review) |
+| **`commit-only`** / **`commit-push`** (Before deploy satisfied or free-form) | 1. **`git commit`** if dirty · 2. Verify clean · 3. [Auto-spawn pre-pr-review](#auto-spawn-pre-pr-review) |
 | **`spawn-before-deploy-walk`** | [Before deploy deploy-walk handoff](#before-deploy-deploy-walk-handoff) inline |
-| **`skip-before-deploy`** | Dated skip note · [Pre-PR review authorization](#pre-pr-review-authorization) |
+| **`skip-before-deploy`** | Dated skip note · [Auto-spawn pre-pr-review](#auto-spawn-pre-pr-review) |
 
 If commit fails or tree stays dirty after commit, stop with `partial` — do not run inline **`deploy-walk`** or spawn **`pre-pr-review`**.
 
@@ -715,7 +717,7 @@ Run from [Act after ship cut-point pick](#act-after-ship-cut-point-pick) when th
 
 When `targetPlanPath` resolves to a PR plan:
 
-1. **Read** §7 **`### Before deploy`**. If empty, only *None — …*, or every item is `[x]`, note in one line and continue to [Pre-PR review authorization](#pre-pr-review-authorization).
+1. **Read** §7 **`### Before deploy`**. If empty, only *None — …*, or every item is `[x]`, note in one line and continue to [Auto-spawn pre-pr-review](#auto-spawn-pre-pr-review).
 2. When any **`[ ]`** Before-deploy items remain, load `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/deploy-walk/SKILL.md` and run it **inline on this lane** — **do not** emit **`AGENT_RUN_REQUEST_V1`** for **`deploy-walk`**.
 
 **Inline context:**
@@ -729,36 +731,28 @@ When `targetPlanPath` resolves to a PR plan:
 | `upstreamSkill` | `"coding-session"` |
 
 3. Follow **`deploy-walk`** procedure (including autonomous agent-executable pass for Before deploy). Merge **`## Completion (inline)`** into coding-session `outputs` (`beforeDeployStatus`, `deployStatus`, `shipPhase`, `rowStatus`, `remainingTasks`, …).
-4. When `beforeDeployStatus` is `complete`, all Before-deploy boxes are `[x]` or explicitly skipped, continue to [Pre-PR review authorization](#pre-pr-review-authorization) on the **next** turn (or same turn when the walk finishes without a pending manual step). If a **manual** step awaits developer input, keep `continuationStatus: "active"` on this lane and close with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** (step status + continue-walk / skip / more-details) — do not prose-only “resume via next message”; do not spawn **`pre-pr-review`** until Before deploy is satisfied or documented skip.
+4. When `beforeDeployStatus` is `complete`, all Before-deploy boxes are `[x]` or explicitly skipped, continue to [Auto-spawn pre-pr-review](#auto-spawn-pre-pr-review) on the **next** turn (or same turn when the walk finishes without a pending manual step). If a **manual** step awaits developer input, keep `continuationStatus: "active"` on this lane and close with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** (step status + continue-walk / skip / more-details) — do not prose-only “resume via next message”; do not spawn **`pre-pr-review`** until Before deploy is satisfied or documented skip.
 5. Do **not** wait for a child **`AGENT_RESULT_RESPONSE_V1`** — there is no **`deploy-walk`** child lane.
 
 **Legacy / exceptional second modal:** use a separate **AskQuestion** for inline walk **only** when the developer returns mid-chain without a prior cut-point pick (for example after *more-changes* and a new review pass) and Before-deploy items remain — same options as [Combined authorization](#combined-authorization) Before-deploy rows (`spawn-before-deploy-walk`, `skip-before-deploy`, …). **Do not** use this when the combined cut-point modal already ran in the same review pass.
 
-## Pre-PR review authorization
+## Auto-spawn pre-pr-review
 
-Run **after** commit + [Before deploy deploy-walk handoff](#before-deploy-deploy-walk-handoff) (or documented skip). Use **one** **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** (`modalTitle`: *Coding session — pre-PR review*) — on spawned lanes, **sentinel-first** per § *Every developer-await turn*.
+Run **after** commit + [Before deploy deploy-walk handoff](#before-deploy-deploy-walk-handoff) (or documented skip). **No authorization modal** — developer approval at [Ship cut-point gate](#ship-cut-point-gate-approve-commit-before-deploy) (approve + commit + Before deploy) is sufficient to spawn **`pre-pr-review`**.
 
-| Option id (illustrative) | Label (brief) |
-|--------------------------|---------------|
-| `proceed-pre-pr-review` | Proceed — spawn pre-pr-review |
-| `more-changes` | More changes before review |
-| `defer-review` | Defer pre-PR review |
-| `more-details` | More details for option _ |
+**Auto-advance:** When [Pre-PR review handoff preconditions](#review-handoff-preconditions) all pass, proceed directly to [Pre-PR review handoff](#pre-pr-review-handoff) on the **next** turn — one-line recap in prose or prior turn output, then emit spawn. Do **not** open a separate *Coding session — pre-PR review* modal.
 
-Only **`proceed-pre-pr-review`** (or the **same user message** explicitly authorizing *run pre-pr-review* per rule **20**) authorizes [Pre-PR review handoff](#pre-pr-review-handoff).
+**Defer / more changes:** When the developer says *more changes*, *defer review*, or equivalent **before** spawn runs, stop auto-advance and route to [Spawned implementation lane](#spawned-implementation-lane) or keep `continuationStatus: active` with structured choice per rule **2** § *Default continuation options*.
 
-Do **not** spawn **`pre-pr-review`** in the same assistant turn as the authorization modal.
+**Forbidden:** treating ship cut-point approval as insufficient for spawn; opening the legacy pre-PR authorization modal when preconditions pass.
 
-### Spawned lane — pre-PR authorization sentinel (binding)
+### Legacy pre-PR authorization modal (removed)
 
-```
-MC_PHASED_RESPONSE_V1
-{"version":1,"display":{"markdown":"<recap>"},"askQuestion":{"modalTitle":"Coding session — pre-PR review","questions":[{"id":"pre-pr-auth","prompt":"Spawn pre-pr-review for this worktree?","allowMultiple":false,"options":[{"id":"proceed-pre-pr-review","label":"Proceed — spawn pre-pr-review"},{"id":"more-changes","label":"More changes before review"},{"id":"defer-review","label":"Defer pre-PR review"},{"id":"more-details","label":"More details for option _"}]}]}}
-```
+The former **Pre-PR review authorization** gate (`proceed-pre-pr-review`) is **obsolete**. Do not emit its sentinel or options unless mission completeness triage directs a temporary workaround.
 
 ## Pre-PR review handoff
 
-This skill spawns **`pre-pr-review`** only **after** [Ship chain after implementation](#ship-chain-after-implementation-coding-session-lane) cut-point **Act**, [Before deploy deploy-walk handoff](#before-deploy-deploy-walk-handoff) (or skip), and [Pre-PR review authorization](#pre-pr-review-authorization) approve spawn.
+This skill spawns **`pre-pr-review`** only **after** [Ship chain after implementation](#ship-chain-after-implementation-coding-session-lane) cut-point **Act**, [Before deploy deploy-walk handoff](#before-deploy-deploy-walk-handoff) (or skip), and [Auto-spawn pre-pr-review](#auto-spawn-pre-pr-review) preconditions pass — **without** a separate authorization modal.
 
 ### Review handoff preconditions
 
@@ -766,11 +760,10 @@ Before spawning **`pre-pr-review`**:
 
 1. [Ship cut-point gate](#ship-cut-point-gate-approve-commit-before-deploy) completed — developer approved implementation via combined modal or equivalent; [Commit execution](#commit-execution-internal) completed when the tree was dirty — at least one commit in the worktree when there were changes to land.
 2. [Before deploy deploy-walk handoff](#before-deploy-deploy-walk-handoff) completed or skipped — **do not** spawn **`pre-pr-review`** while unchecked Before-deploy items remain without inline walk/skip documentation.
-3. [Pre-PR review authorization](#pre-pr-review-authorization) — developer chose **`proceed-pre-pr-review`** (or same-message authorization per rule **20**).
-4. `git status --short` in the worktree is empty. Uncommitted edits are invisible to the committed review diff, so do not spawn the reviewer while dirty.
-5. `git log --oneline <baseRef>..HEAD` shows at least one commit.
-6. `git diff <baseRef>...HEAD` is non-empty.
-7. For plan-anchored runs, `plan-state.mjs resolve --cwd "<worktreePath>"` or supplied inputs identify the PR plan.
+3. `git status --short` in the worktree is empty. Uncommitted edits are invisible to the committed review diff, so do not spawn the reviewer while dirty.
+4. `git log --oneline <baseRef>..HEAD` shows at least one commit.
+5. `git diff <baseRef>...HEAD` is non-empty.
+6. For plan-anchored runs, `plan-state.mjs resolve --cwd "<worktreePath>"` or supplied inputs identify the PR plan.
 
 If any precondition fails, stop with `partial`, keep `continuationStatus: "active"`, and report the missing ship-chain step. Do not silently commit, push, skip Before deploy, or spawn review.
 
@@ -801,8 +794,8 @@ When Mission Control delivers the **`pre-pr-review`** result:
  - `flags` is non-empty
  - `codingAgentHandback` includes a non-empty **Must** or **Should** group (ignore **Defer**-only handback and items tagged **`[G §7 After deploy — post-merge]`**)
 3. When **`actionablePrePrFindings`** is true, **immediately recommend** addressing pre-PR review findings before PR creation or another review pass — include one explicit sentence in the recap (for example: *Pre-PR review found issues; fix the relevant items on this lane before opening a PR.*). Do not deliver a findings-only recap without that recommendation.
-4. **If `actionablePrePrFindings`** — open [Review feedback approval gate](#review-feedback-approval-gate) on **this lane** in the **same session** **before** [Create-PR handoff after go](#create-pr-handoff-after-go), **even when** `recommendation` is `go`. Do **not** jump to Create-PR or run inline **`create-pr`** in the same turn as the reviewer result.
-5. **If NOT `actionablePrePrFindings`** and `recommendation` is `go` — proceed to [Create-PR handoff after go](#create-pr-handoff-after-go). Do not make **`pre-pr-review`** run inline **`create-pr`**.
+4. **If `actionablePrePrFindings`** — open [Review feedback approval gate](#review-feedback-approval-gate) on **this lane** in the **same session** **before** [Inline create-pr (auto on clean go)](#inline-create-pr-auto-on-clean-go) or [Create-PR handoff after go](#create-pr-handoff-after-go), **even when** `recommendation` is `go`. Do **not** jump to inline **`create-pr`** in the same turn as the reviewer result.
+5. **If NOT `actionablePrePrFindings`** and `recommendation` is `go` — proceed to [Inline create-pr (auto on clean go)](#inline-create-pr-auto-on-clean-go) on the **next** turn. Do not make **`pre-pr-review`** run inline **`create-pr`**. Do **not** open [Create-PR handoff after go](#create-pr-handoff-after-go) on clean **go**.
 6. If review failed, was aborted, or was abandoned, keep the ledger entry blocked until the developer retries, defers, or abandons the review.
 
 ### Review feedback approval gate
@@ -817,7 +810,7 @@ When **`actionablePrePrFindings`** is true (see [Review result aggregation](#rev
 | `fix-now-session` | Implement pre-PR review findings now (this session) | Continue on **this coding-session lane** in the attached worktree; implement reviewer `Must` items and any `Should` items the developer affirms before edits; keep `continuationStatus: "active"` |
 | `apply-must` | Apply Must fixes only | Edit only blocker / `Must` items on this lane |
 | `apply-must-should` | Apply Must + Should fixes | Edit blocker / `Must` and `Should` items on this lane |
-| `proceed-create-pr` | Proceed to create PR (skip fixes for now) | *go-only* — on **next** turn, open [Create-PR handoff after go](#create-pr-handoff-after-go); no code edits this pick |
+| `proceed-create-pr` | Proceed to create PR (skip fixes for now) | *go-only* — on **next** turn, [Inline create-pr (auto on clean go)](#inline-create-pr-auto-on-clean-go); no code edits this pick |
 | `revise-scope` | Revise review scope | Clarify or challenge findings before code edits |
 | `defer` | Defer / abandon review fixes | Keep ledger blocked or mark the PR plan deferred/abandoned per developer choice |
 | `more-details` | More details for option _ | Elaborate; ask again |
@@ -843,7 +836,7 @@ Run on the **developer's response turn** — **not** in the same assistant turn 
 | Pick | Actions |
 |------|---------|
 | **`fix-now-session`**, **`apply-must`**, **`apply-must-should`** | Implement approved scope on this lane; then [Ship cut-point gate](#ship-cut-point-gate-approve-commit-before-deploy) when fixes are ready |
-| **`proceed-create-pr`** | Open [Create-PR handoff after go](#create-pr-handoff-after-go) (requires prior `recommendation: "go"`) |
+| **`proceed-create-pr`** | Run [Inline create-pr (auto on clean go)](#inline-create-pr-auto-on-clean-go) or [Create-PR handoff after go](#create-pr-handoff-after-go) on **next** turn (requires prior `recommendation: "go"`) |
 | **`revise-scope`**, **`more-details`** | Clarify; re-open feedback gate |
 | **`defer`** | Stop ship chain per developer choice |
 
@@ -852,23 +845,42 @@ Run on the **developer's response turn** — **not** in the same assistant turn 
 When the developer says *open a PR*, *create a pull request*, or similar **before** **`pre-pr-review`** returns **`go`** and the **Create-PR handoff after go** gate:
 
 1. **Do not** call `gh pr create` or surface GitHub `pull/new/` URLs (rule **20** § *PR creation* and § *User phrases → required handoff*) except when executing inline **`create-pr`** after that gate approves.
-2. State the required order: implementation → [Ship cut-point gate](#ship-cut-point-gate-approve-commit-before-deploy) (approve, commit, Before deploy **`deploy-walk`** inline when applicable) → spawn **`pre-pr-review`** → on **`go`**, **Create-PR handoff after go** → run **`create-pr`** **inline** on this lane.
+2. State the required order: implementation → [Ship cut-point gate](#ship-cut-point-gate-approve-commit-before-deploy) (approve, commit, Before deploy **`deploy-walk`** inline when applicable) → auto-spawn **`pre-pr-review`** → on clean **`go`**, [Inline create-pr (auto on clean go)](#inline-create-pr-auto-on-clean-go).
 3. If they only pushed and expect a PR, confirm whether **`pre-pr-review`** has run; first-push cadence does **not** skip the inline **`create-pr`** procedure.
+
+### Inline create-pr (auto on clean go)
+
+When **`pre-pr-review`** returns `recommendation: "go"` **and** **`actionablePrePrFindings`** is **false** — **no Create-PR modal**. On the **next** turn after the reviewer result (not the same turn as the result):
+
+1. One-line recap: reviewer **`go`**, no Must/Should/blockers, optional non-actionable flags noted.
+2. Verify the worktree is pushed or pushable per **efficient-pr-shipping**.
+3. Load `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/create-pr/SKILL.md` and run it **inline on this lane** — **do not** emit **`AGENT_RUN_REQUEST_V1`** for **`create-pr`**.
+
+**Default authorization:** clean **`go`** authorizes PR creation **without appending proposed follow-ups** (`followUpsAppended: false`). Do **not** open [Create-PR handoff after go](#create-pr-handoff-after-go) on this path.
+
+Construct inline context:
+
+| Inline context field | Value |
+|----------------------|--------|
+| `targetPlanPath` / `targetPlanSlug` | From coding-session state when plan-anchored |
+| `worktreePath`, `worktreeName`, `baseRef`, `repoUrl` | From worktree / git |
+| `diffSummary` | Commits, files, changes since base |
+| `prePrReviewRecommendation` | `"go"` |
+| `prePrReviewFlags`, `followUpsAppended` | From **`pre-pr-review`** outputs; **`followUpsAppended: false`** unless developer later chooses follow-up append at [Create-PR handoff after go](#create-pr-handoff-after-go) |
+| `ledgerParent` | From coding-session ledger when present |
+| `upstreamSkill` | `"coding-session"` |
+
+4. Follow **`create-pr`** gates and procedure (`gh pr create` when authorized). Merge **`## Completion (inline)`** into coding-session `outputs`.
+5. **Same assistant turn** — when step **4** completes with a PR URL/number, open [Post-create-pr handoff gate](#post-create-pr-handoff-gate) before **StreamFinal** (unchanged).
+
+**Forbidden:** opening *Coding session — create PR* modal on clean **`go`**; treating reviewer **`go`** alone as follow-up append consent.
 
 ### Create-PR handoff after go
 
-When **`pre-pr-review`** returns `recommendation: "go"` **and** either:
-
-- **`actionablePrePrFindings`** was false (clean `go`), **or**
-- the developer chose **`proceed-create-pr`** at [Review feedback approval gate](#review-feedback-approval-gate), **or**
-- the developer completed a fix pass and the **subsequent** **`pre-pr-review`** returned `go` with no **`actionablePrePrFindings`**
-
-**Do not** open this gate in the same turn as the reviewer result when **`actionablePrePrFindings`** is true — use the feedback gate first.
-
-This path is the normative **`create-pr`** handoff on this lane — it **supersedes** rule **20** § *Commit and push cadence* step 5 prompt-only wording when both apply.
+**Exceptional path only** — use when **`actionablePrePrFindings`** was **true** and the developer chose **`proceed-create-pr`**, or when the developer explicitly requests follow-up append / defer / revise before PR creation after a clean **`go`**. Clean **`go`** without findings uses [Inline create-pr (auto on clean go)](#inline-create-pr-auto-on-clean-go) instead — **do not** open this gate on that path.
 
 1. Verify the worktree is pushed or pushable per **efficient-pr-shipping**.
-2. Present the reviewer `go` summary, non-blocking flags, and any proposed follow-ups in **`display.markdown`**, then use **one** **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** (`modalTitle`: *Coding session — create PR*) — on spawned lanes, **sentinel-first**. Required **`options`** (map labels to ids below):
+2. Present the reviewer `go` summary, flags, and proposed follow-ups in **`display.markdown`**, then use **one** **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** (`modalTitle`: *Coding session — create PR*) — on spawned lanes, **sentinel-first**. Required **`options`**:
 
 | Option id | Label (brief) |
 |-----------|---------------|
@@ -878,29 +890,20 @@ This path is the normative **`create-pr`** handoff on this lane — it **superse
 | `defer-pr` | Defer PR creation |
 | `abandon` | Abandon this implementation |
 | `more-details` | More details for option _ |
-3. Only **`approve-followups-create-pr`** authorizes appending proposed follow-ups before PR creation. **`create-pr-no-followups`** authorizes only PR creation. Do not treat `pre-pr-review` `go` as developer approval to mutate the plan or open/prepare a PR.
+
+3. Only **`approve-followups-create-pr`** authorizes appending proposed follow-ups before PR creation. **`create-pr-no-followups`** authorizes only PR creation.
 
 ### Spawned lane — create-PR handoff sentinel (binding)
+
+Use **only** for [Create-PR handoff after go](#create-pr-handoff-after-go) — **not** for clean **`go`** auto path.
 
 ```
 MC_PHASED_RESPONSE_V1
 {"version":1,"display":{"markdown":"<recap>"},"askQuestion":{"modalTitle":"Coding session — create PR","questions":[{"id":"create-pr-gate","prompt":"Create the pull request now?","allowMultiple":false,"options":[{"id":"approve-followups-create-pr","label":"Approve follow-ups and create PR now"},{"id":"create-pr-no-followups","label":"Create PR without appending proposed follow-ups"},{"id":"revise-first","label":"Revise code or plan first"},{"id":"defer-pr","label":"Defer PR creation"},{"id":"abandon","label":"Abandon this implementation"},{"id":"more-details","label":"More details for option _"}]}]}}
 ```
-4. On the **developer's response turn** (not the same turn as the modal), load `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/create-pr/SKILL.md` and run it **inline on this lane** — **do not** emit **`AGENT_RUN_REQUEST_V1`** for **`create-pr`**.
-5. Construct inline context:
 
-| Inline context field | Value |
-|----------------------|--------|
-| `targetPlanPath` / `targetPlanSlug` | From coding-session state when plan-anchored |
-| `worktreePath`, `worktreeName`, `baseRef`, `repoUrl` | From worktree / git |
-| `diffSummary` | Commits, files, changes since base |
-| `prePrReviewRecommendation` | `"go"` |
-| `prePrReviewFlags`, `followUpsAppended` | From **`pre-pr-review`** outputs and developer pick |
-| `ledgerParent` | From coding-session ledger when present |
-| `upstreamSkill` | `"coding-session"` |
-
-6. Follow **`create-pr`** gates and procedure (`gh pr create` when authorized). Merge **`## Completion (inline)`** into coding-session `outputs` (`prUrl`, `prNumber`, `shipPhase`, `rowStatus`, `prState`, `remainingTasks`, …).
-7. **Same assistant turn** — when step **6** completes with a PR URL/number (or prompt-only partial), **still** open [Post-create-pr handoff gate](#post-create-pr-handoff-gate) on **this lane** before **StreamFinal**. Put `prUrl` / `prNumber` in **`display.markdown`** and ship **`askQuestion`** per § *Spawned lane — post-create-pr sentinel*. **Forbidden:** ending the turn with only *PR created* / link prose and deferring the modal to a later turn. Keep `continuationStatus: "active"`. Do **not** auto-start inline **`pr-review`** or inline **`deploy-walk`** without the developer pick. Do **not** wait for a child **`AGENT_RESULT_RESPONSE_V1`** — there is no **`create-pr`** child lane.
+4. On the **developer's response turn** (not the same turn as the modal), load **`create-pr/SKILL.md`** and run inline per steps in [Inline create-pr (auto on clean go)](#inline-create-pr-auto-on-clean-go) with `followUpsAppended` per pick.
+5. **Same assistant turn** as inline **`create-pr`** completion — open [Post-create-pr handoff gate](#post-create-pr-handoff-gate) before **StreamFinal**.
 
 ### Post-create-pr handoff gate
 
@@ -936,14 +939,26 @@ Run on the **developer's response turn** — **not** in the same assistant turn 
 | Pick | Actions |
 |------|---------|
 | **`start-pr-review`** | [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) |
-| **`check-pr-status`** | Query PR state; update `outputs`; when **`merged`**, route to [Post-merge workspace cleanup](#post-merge-workspace-cleanup) on **next** turn (or re-open gate if still open) |
-| **`spawn-after-deploy-walk`** | [Post-merge workspace cleanup](#post-merge-workspace-cleanup) on **next** turn when merge confirmed; then [After deploy deploy-walk handoff](#after-deploy-deploy-walk-handoff) after cleanup completes or is skipped |
+| **`check-pr-status`** | Query PR state; update `outputs`; when **`merged`**, run [Post-merge workspace cleanup](#post-merge-workspace-cleanup) **auto-apply** on **next** turn |
+| **`spawn-after-deploy-walk`** | When merge confirmed: [Post-merge workspace cleanup](#post-merge-workspace-cleanup) **auto-apply** on **next** turn, then [After deploy deploy-walk handoff](#after-deploy-deploy-walk-handoff) after cleanup completes or is skipped |
 | **`defer-ship`** | Stop with recap; `continuationStatus: active` |
 | **`more-details`** | Clarify; re-open gate |
 
 ### Post-merge workspace cleanup
 
-Run on this lane **after** `prState: merged` **and before** [After deploy deploy-walk handoff](#after-deploy-deploy-walk-handoff). Normative entry: [Act after post-create-pr pick](#act-after-post-create-pr-pick) (**`spawn-after-deploy-walk`** or **`check-pr-status`** → merged), or explicit developer message (*pull main*, *remove worktree*, *post-merge cleanup*) when merge is already confirmed.
+Run on this lane **after** `prState: merged` **and before** [After deploy deploy-walk handoff](#after-deploy-deploy-walk-handoff). Normative entry: [Act after post-create-pr pick](#act-after-post-create-pr-pick) (**`spawn-after-deploy-walk`** or **`check-pr-status`** → merged), explicit developer message (*pull main*, *remove worktree*, *post-merge cleanup*), or **auto-apply** when merge is confirmed and ownership preconditions pass.
+
+**Auto-apply (default):** When `prState: merged` and § *Worktree removal ownership* preconditions hold for **this pass’s** **`WORKTREE_ROOT`**, run detect → dry-run recap (one line or **`display.markdown`** when long) → MCP detach → **`--apply`** on the **next** turn **without** a cleanup authorization modal. Label the action in recap as *Run post-merge worktree cleanup now* when reporting to the developer.
+
+**Modal required only when:**
+
+| Condition | Action |
+|-----------|--------|
+| **`detect-stale-workspaces`** returns no candidates and sidecar already clear | One line; proceed to After deploy — no modal |
+| **`--apply`** partial failure, rebuild failure, or ownership unclear | Structured choice: retry **`--apply`**, skip cleanup, more-details |
+| Developer explicitly says *defer cleanup* or *skip cleanup* | Honor defer; optional modal if ambiguous |
+
+**Legacy cleanup authorization modal** (`cleanup-apply` / `cleanup-skip` pick before **`--apply`**) is **obsolete** when auto-apply preconditions pass. Do not block After deploy on a cleanup modal when detect + ownership authorize apply.
 
 **Worktree removal ownership (binding).** **Do not remove worktrees you do not own.** Apply **`sedea_remove_worktree_folder`**, **`git worktree remove`**, and any cleanup script **`--apply`** **only** to **this pass’s** **`WORKTREE_ROOT`** when **all** preconditions in [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § *Worktree ownership* and [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc) § *Worktree removal ownership (binding)* hold. **`WORKTREE_ROOT`** must be the exact path from **this pass’s** **`git worktree add`** — **not** inferred from **`git worktree list`**, sidecar **`worktrees[]`**, or stale entries alone. **Forbidden:** repo-wide **`git worktree prune`**; removing paths another developer, dispatch, lane, or session created; **`git worktree remove`** on **`HOSTING_ROOT`**; hand-deleting directories while still mounted. **`git worktree list` is read-only** when ownership is unclear — stop and use structured choice. **`post-reconcile-workspace-cleanup.mjs --apply`** removes **only** candidates from **`detect-stale-workspaces`** for **this plan/session** after the gate above.
 
@@ -977,16 +992,18 @@ node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/p
  --operations-user-id "$OPS_ID" --dry-run [--slug <slug>]
 ```
 
-Present **`actions`**, **`skippedWorktreeNames`** (when worktree name ref cleanup waits on remote), and **`mergedPr`** per candidate in the **same turn** as the required **AskQuestion** before **`--apply`** — use **`display.markdown`** when long.
+Present **`actions`**, **`skippedWorktreeNames`** (when worktree name ref cleanup waits on remote), and **`mergedPr`** per candidate in recap when dry-run output is non-trivial. **When auto-apply applies**, proceed to **`--apply`** on the **next** turn without waiting for **`cleanup-apply`** selection.
+
+**Exceptional modal** (ownership unclear, partial prior apply, or developer requested defer):
 
 | Option id (illustrative) | Label (brief) |
 |--------------------------|---------------|
-| `cleanup-apply` | Run post-merge cleanup (worktree + pull main + rebuild extensions + worktree name ref when eligible) |
+| `cleanup-apply` | Run post-merge cleanup now |
 | `cleanup-skip` | Skip cleanup — proceed to After deploy walk |
 | `cleanup-dry-run-only` | Dry-run only — no git mutations |
 | `more-details` | More details for option _ |
 
-Only **`cleanup-apply`** authorizes **`--apply`**.
+Only **`cleanup-apply`** authorizes **`--apply`** when this exceptional modal opens.
 
 **Apply (after MCP detach):**
 
@@ -1006,7 +1023,7 @@ The script pulls **`origin/main`** on **`HOSTING_ROOT`**, then runs **`./scripts
 4. When **`nativeExtensionsRebuildStatus`** is **`success`**, tell the developer in one line: native extensions rebuilt on **`HOSTING_ROOT`** — use **Developer: Reload Window** before After deploy verification. When rebuild **`failed`**, report stderr and keep `postMergeCleanupStatus: partial`; offer retry or **`cleanup-skip`** before After deploy.
 5. On **next** turn, continue to [After deploy deploy-walk handoff](#after-deploy-deploy-walk-handoff). Do **not** run inline **`deploy-walk`** (After deploy) in the same assistant turn as cleanup **`--apply`**.
 
-**Spawned lane — post-merge cleanup sentinel (binding):** **In order to use the AskQuestion modal**, emit **`MC_PHASED_RESPONSE_V1`** with the same option ids (`modalTitle`: *Coding session — post-merge cleanup*).
+**Spawned lane — post-merge cleanup sentinel (binding):** Use **`MC_PHASED_RESPONSE_V1`** **only** for the exceptional modal above — **not** on the default auto-apply path.
 
 ### After deploy deploy-walk handoff
 

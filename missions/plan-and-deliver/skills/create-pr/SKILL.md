@@ -69,7 +69,7 @@ If Mission Control opened a session whose only intent is **`create-pr`** / *open
 
 1. **Stop** — do not run gates or **`gh pr create`**.
 2. Tell the developer **`create-pr`** is **inline-only** on the **`coding-session`** lane.
-3. Direct them to open or return to **`coding-session`** (detached phrase, snapshot, or **`plan and deliver`** ship path) and complete the ship chain through **`pre-pr-review`** → **Create-PR handoff after go** in [`coding-session/SKILL.md`](../coding-session/SKILL.md).
+3. Direct them to open or return to **`coding-session`** (detached phrase, snapshot, or **`plan and deliver`** ship path) and complete the ship chain through **`pre-pr-review`** → inline **`create-pr`** on clean **go** in [`coding-session/SKILL.md`](../coding-session/SKILL.md).
 
 **Execution owner:** the active **coding-session agent** runs this skill inline. Do **not** spawn a separate PR-creating child lane. The coding-session lane has worktree, worktree name ref, diff, PR plan, pre-PR review outputs, and developer approvals needed to open a PR safely.
 
@@ -85,7 +85,7 @@ Gates use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sed
 
 ## Relationship to rule 20 (`gh pr create`)
 
-**`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`** forbids **`gh pr create`** on planning, Squad Leader, **`pre-pr-review`**, and other non-ship lanes. **Exception:** the active **`coding-session`** agent **while executing this skill inline** after pre-PR **go** and developer approval in **Create-PR handoff after go** may call `gh pr create` when gates pass and push/creation is authorized.
+**`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`** forbids **`gh pr create`** on planning, Squad Leader, **`pre-pr-review`**, and other non-ship lanes. **Exception:** the active **`coding-session`** agent **while executing this skill inline** after pre-PR clean **`go`** (auto path) or exceptional Create-PR gate may call `gh pr create` when gates pass and push/creation is authorized.
 
 ## Gate
 

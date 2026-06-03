@@ -60,7 +60,7 @@ Mission Control delivery for skills that mix long plan output with structured us
 | **`phase-planner`** | §4f echo / §5c link + route modal | §5b spawn / §5d follow-up |
 | **`new-plan`** | stub + parent link + populator gate | populator spawn |
 
-**Ship and ops skills:** **`coding-session`** (worktree-open, inline bootstrap wait, pre-PR spawn, inline **create-pr**, inline **deploy-walk**, inline **plan-reconcile**), **`worktree-bootstrap`**, **`pre-pr-review`** — structured choice for gates; recap for status, diff, or dry-run report only. Prefer **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** when recap and modal belong in one message.
+**Ship and ops skills:** **`coding-session`** (worktree-open, inline bootstrap wait, **auto** pre-PR spawn after cut-point + Before deploy, **auto** inline **create-pr** on clean **go**, **auto** post-merge cleanup when merged, inline **deploy-walk**, inline **plan-reconcile**), **`worktree-bootstrap`**, **`pre-pr-review`** — structured choice for gates that still require a developer pick (cut-point, review feedback, post-create-PR, remainder); recap for status, diff, or dry-run report only. Prefer **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** when recap and modal belong in one message.
 
 **Lane pick (no resolved target):** emit *Where we are now in the plan tree* snapshot, then structured choice per **30_planning-target-resolution** § *Sedea input channel* (phased or split — not prose menus).
 
@@ -233,10 +233,10 @@ Every **spawned** plan-and-deliver skill lists the paths below in frontmatter **
 
 - `.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`
 
-**Ship skills** (`coding-session`, `pre-pr-review`) also include:
+**Ship skills** also include:
 
 - `.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`
-- `.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`
+- `.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc` — **`pre-pr-review`** spawn only; **`coding-session`** omits rule **30** from frontmatter (256 KiB warm-up cap); use `inputs.targetPlanPath` and explicit `Read` of rule **30** when resolving ambiguous `.sedea` paths
 
 **`pr-review`** and **`create-pr`** are inline-only — **no** frontmatter **`warmUpRules`**; they run **only** on the active **`coding-session`** lane (which includes this README and rule **20**). Do not dispatch **`pr-review`** or **`create-pr`** as standalone skill sessions.
 

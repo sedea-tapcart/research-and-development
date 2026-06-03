@@ -639,7 +639,7 @@ Spawned from **`coding-session`** after developer implementation approval, **com
 
 ##### create-pr
 
-**Inline** on the active **`coding-session`** lane when pre-PR review is **go** and the developer approves at **Create-PR handoff after go**. Builds reviewer-complete PR description; opens GitHub PR when authorized. Planning and other lanes must **not** run **`gh pr create`**. Post-PR lifecycle (merge checks, After-deploy **`deploy-walk`**, **`plan-reconcile`**) is owned by **`coding-session`**. See **`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/create-pr/SKILL.md`**.
+**Inline** on the active **`coding-session`** lane when pre-PR review is clean **go** (auto path) or exceptional Create-PR gate approves. Builds reviewer-complete PR description; opens GitHub PR when authorized. Planning and other lanes must **not** run **`gh pr create`**. Post-PR lifecycle (merge checks, auto post-merge cleanup, After-deploy **`deploy-walk`**, **`plan-reconcile`**) is owned by **`coding-session`**. See **`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/create-pr/SKILL.md`**.
 
 ##### pr-review
 
