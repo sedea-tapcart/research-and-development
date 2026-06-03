@@ -1,5 +1,5 @@
 ---
-description: "Ship PRs fast — parallel worktrees, one PR per worktree, single concern per PR, agent-only PR creation, never auto-PR. Loaded by a coding agent; covers commit and push cadence, branch naming, comprehensive PR descriptions, and worktree setup conventions."
+description: "Ship PRs fast — parallel worktrees, one PR per worktree, single concern per PR, agent-only PR creation, never auto-PR. Loaded by a coding agent; covers commit and push cadence, worktree naming, comprehensive PR descriptions, and worktree setup conventions."
 alwaysApply: true
 ---
 
@@ -7,11 +7,15 @@ alwaysApply: true
 
 Sedea's workflow for shipping multi-PR plans fast.
 
-## Squad Leader on the main branch vs. agent sessions on worktree
+## Git governance (worktree-only)
+
+User-facing git execution for implementation and ship uses **worktrees** only — not **`git checkout -b`** on the primary hosting clone. Each PR maps to one worktree; the **worktree name** is the `-b` argument on **`git worktree add`** (see [`.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc`](.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc)). **Attach order:** shell **`git worktree add`** → **`sedea_add_worktree_folder`** → tracked edits; detach **`sedea_remove_worktree_folder`** before **`git worktree remove`** per [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) and rule **6**.
+
+## Squad Leader on HOSTING_ROOT vs agent sessions in worktrees
 
 There are two kinds of agent sessions:
 
-- **Squad Leader is the main session** — stays on `main`, handles lightweight tasks that do not need a branch because they do not alter code:
+- **Squad Leader is the main session** — stays on **`HOSTING_ROOT`** (primary hosting clone, usually on `main`), handles lightweight tasks that do not need a worktree because they do not alter tracked hosting-repo code:
   - Planning and plan updates
   - Coordinating and spawning agent sessions
 - **Agent sessions** — each uses a dedicated worktree to make changes on the code:
@@ -75,15 +79,15 @@ When creating a multi-PR plan, **maximize the number of PRs that can be worked o
 
 - Prefer slicing by vertical feature or module so PRs don't touch the same files.
 - Explicitly mark each PR as **independent** or list its dependency (e.g. "depends on PR 2").
-- Independent PRs all branch from `main`; a dependent PR branches from `main` only after its prerequisite merges.
+- Independent PRs each get a worktree from `origin/main`; a dependent PR gets a new worktree from `origin/main` only after its prerequisite merges.
 
 ## One PR per worktree, many worktrees in parallel
 
 We work with **git worktrees** (one per PR) so we can have several PRs in flight in parallel via Mission Control and **coding-session** agent work (one session per worktree).
 
 - Inside any single worktree, implement **at most one PR** at a time.
-- Do **not** put commits for separate planned PRs on the same branch.
-- Do **not** stack branches or PRs unless the developer explicitly asks for it.
+- Do **not** put commits for separate planned PRs in the same worktree.
+- Do **not** stack worktrees or PRs unless the developer explicitly asks for it.
 - When a PR is done, open it for review; the next independent PR is already being worked on in another worktree.
 
 ## Review before commit
@@ -93,7 +97,7 @@ After implementing changes, **stop**. Do not `git add`, `git commit`, or `git pu
 - Present a summary of what changed and ask for next steps using `AskQuestion`. 
 - This applies to **all** workflows: feature PRs, PR comment fixes, and any other code changes.
 - **Pre-review verification (hosting repo):** Before the summary and review modal / ship cut-point, complete **pre-review verification** prescribed by applicable **hosting-repo** **`.cursor/rules/*.mdc`** files. Resolve which rules apply from the PR plan **§5**, **Project rules** curation in **`coding-session`**, or rules already loaded from the worktree — per [`.sedea/centers/research-and-development/rules/40_maintain-rules.mdc`](40_maintain-rules.mdc). Do **not** duplicate hosting-repo commands in center rules or skills. Do not open developer review until prescribed verification passes (**exit 0**); fix failures and re-run.
-- The exceptions are creating branches and worktrees (fine without confirmation). The coding agent must not silently commit. After developer approves implementation, `coding-session` commits (with explicit consent), runs **Before deploy** via inline **`deploy-walk`** when applicable, then spawns the `pre-pr-review` reviewer lane.
+- The exceptions are creating worktrees (fine without confirmation). The coding agent must not silently commit. After developer approves implementation, `coding-session` commits (with explicit consent), runs **Before deploy** via inline **`deploy-walk`** when applicable, then spawns the `pre-pr-review` reviewer lane.
 
 **Sedea git gate (same message):** This section is a **workflow** pause — it does **not** replace [`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`](.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc). Agents must satisfy **both** layers in § *Ship git consent (workflow + Sedea gate)* below.
 
@@ -124,8 +128,8 @@ Planning-tree picks use [`.sedea/centers/research-and-development/rules/30_plann
 | *Proceed*, *next stage*, *looks good*, *run pre-pr-review*, *approved cut point* (workflow only) | **Yes** | **No** — unless the **same user message** also says *commit* (or equivalent) | **No** — unless the **same message** says *push* or *commit and push* |
 | *Approve implementation* / *ready for pre-PR* (workflow only — not yet committed) | **Yes** — advance to commit gate per **`coding-session`** | **No** — unless the **same message** also says *commit* | **No** |
 | *Committed* / *ready for pre-PR review* (after implementation approval + commit + Before deploy when applicable) | **Yes** — e.g. spawn **`pre-pr-review`** per **`coding-session`** | **No** — unless the **same message** authorizes a **new** *commit* | **No** — until the **same message** says *push* |
-| *commit*, *land the branch*, *create a commit* in **same user message** | **Yes** | **Yes** (if there are changes to commit; skip if tree clean per cadence) | **No** — unless the message also says *push* |
-| *push*, *commit and push*, *publish the branch* in **same user message** | **Yes** | **Yes** when commit is included or already done | **Yes** |
+| *commit*, *land the worktree*, *create a commit* in **same user message** | **Yes** | **Yes** (if there are changes to commit; skip if tree clean per cadence) | **No** — unless the message also says *push* |
+| *push*, *commit and push*, *publish the worktree* in **same user message** | **Yes** | **Yes** when commit is included or already done | **Yes** |
 
 If **AskQuestion** approved a workflow step in a **prior** turn, wait for a **new** user message containing *commit* / *push* before running git write commands. Do **not** treat *Approve follow-ups and create PR now* ( **`coding-session`** Create-PR gate) as *commit* or *push* consent.
 
@@ -160,7 +164,7 @@ Start **`plan-reconcile`** separately: developer phrase on active **`coding-sess
 |------|--------------------------|---------|
 | **`coding-session`** running **`create-pr` inline** | **Yes** — sole supported opener | Load **`create-pr/SKILL.md`** on this lane after Create-PR gate (§ *Create-PR handoff after go* in [`coding-session/SKILL.md`](../missions/plan-and-deliver/skills/coding-session/SKILL.md)) |
 | **`coding-session`** (other steps) | **No** | Complete ship order through **`pre-pr-review`** → Create-PR gate → inline **`create-pr`** |
-| **Other lanes** (Squad Leader, planning, `pre-pr-review`, `pr-review`, `planner`, …) | **No** | Prepare branch/context; direct developer to **`coding-session`** ship chain or emit copy-paste prompt — never open from the current lane |
+| **Other lanes** (Squad Leader, planning, `pre-pr-review`, `pr-review`, `planner`, …) | **No** | Prepare worktree/context; direct developer to **`coding-session`** ship chain or emit copy-paste prompt — never open from the current lane |
 
 **Developer accountability:** the developer decides **when** to open a PR and approves creation in the ship chain; **`coding-session`** runs inline **`create-pr`** (including `gh pr create` when authorized). Other lanes prepare context and hand off — they do not open GitHub themselves.
 
@@ -183,11 +187,11 @@ This rule covers **chat output**, not just tool calls. After `git push`, do **no
 
 Every multi-PR plan must end with a **Worktree setup** section containing copy-pasteable commands. Use the repo's directory name as a prefix for sibling worktree directories.
 
-Canonical form for creating a worktree on a fresh branch:
+Canonical form for creating a worktree with a new worktree name:
 
 ```bash
 git fetch origin main
-git worktree add <path> -b <branch> origin/main
+git worktree add <absolute-path> -b <worktree-name> origin/main
 ```
 
 **Attach the worktree in Sedea.** In Mission Control chat, invoke the MCP tool **`sedea_add_worktree_folder` only** with JSON `{ "path": "<absolute-worktree-root>" }` and, if you want a custom explorer label, an optional `"name"` field. Use an **absolute** `path` (resolve with `git worktree list`, or `cd` into the worktree and expand to a full path); relative paths are unreliable. Mission Control mirrors the tool into the workbench so the folder appears as a workspace root. **Forbidden:** editor **Add Folder to Workspace**, hand-edited **`.code-workspace`** attach, or calling **`sedea_add_worktree_folder`** **before** **`git worktree add`** succeeds. See [`coding-session/SKILL.md`](../missions/plan-and-deliver/skills/coding-session/SKILL.md) § *Hard rules — git worktree vs workbench attach (binding)*.
@@ -225,9 +229,9 @@ flowchart TD
 | **`full`** | Default; cold primary; submodule/auth unknown; **`vscode/src`** edits | `./scripts/bootstrap-worktree-dev.sh "$WORKTREE_ROOT"` |
 | **`extensions-only-link`** | Warm primary; overlay **`extensions-only-link`**; extension / rule / doc work only | `./scripts/bootstrap-worktree-dev.sh "$WORKTREE_ROOT" --extensions-only --link-vsc-build-artifacts-from "$HOSTING_ROOT"` |
 
-**Submodule preconditions:** **`--extensions-only`** skips submodule init. Acceptable only when **`.sedea/`** is already populated in the worktree or you seed from primary and attest **`--skip-submodules`**. Full bootstrap fetches submodule SHAs from the **committed** gitlink on the branch you branched from — not from the primary working tree. Push order: [`.cursor/rules/dot-sedea.mdc`](.cursor/rules/dot-sedea.mdc) § *Push before worktrees (mandatory)* and § *Operations submodule pin-drift*.
+**Submodule preconditions:** **`--extensions-only`** skips submodule init. Acceptable only when **`.sedea/`** is already populated in the worktree or you seed from primary and attest **`--skip-submodules`**. Full bootstrap fetches submodule SHAs from the **committed** gitlink on the worktree's base ref — not from the primary working tree. Push order: [`.cursor/rules/dot-sedea.mdc`](.cursor/rules/dot-sedea.mdc) § *Push before worktrees (mandatory)* and § *Operations submodule pin-drift*.
 
-**Branch skew:** After **`git pull`** on the primary clone, linked **`vscode/out`** may advance while the worktree branch lags. Re-run **`rebuild-native-extensions.sh`** in the worktree when extension sources change; unfetchable submodule SHA → fix push order before retry.
+**Worktree skew:** After **`git pull`** on the primary clone, linked **`vscode/out`** may advance while the worktree ref lags. Re-run **`rebuild-native-extensions.sh`** in the worktree when extension sources change; unfetchable submodule SHA → fix push order before retry.
 
 **Launch from worktree (after bootstrap success):**
 
@@ -245,9 +249,9 @@ Hub activation must reference **`$WORKTREE_ROOT/extensions/`**, not the primary 
 
 **Detach merged worktrees from the workbench.** After a PR merges, on the **`coding-session`** lane run [Post-merge workspace cleanup](../missions/plan-and-deliver/skills/coding-session/SKILL.md#post-merge-workspace-cleanup) **before** After deploy `deploy-walk`: invoke **`sedea_remove_worktree_folder`** with JSON `{ "path": "<same-absolute-worktree-root>" }` so Sedea drops that workspace root (not the primary folder at index 0). Prefer calling this **before** `git worktree remove` so the explorer does not point at a deleted tree. Pull **`origin/main`** on **`HOSTING_ROOT`** in the same cleanup pass, then run **`./scripts/rebuild-native-extensions.sh`** when present so extension builds match **`main`** before **Developer: Reload Window**.
 
-Use `origin/main`, **not** `main` — `git worktree add … main` (and `git fetch origin main:main`) fails with `fatal: refusing to fetch into branch 'refs/heads/main'` when `main` is already checked out in the current worktree.
+Use `origin/main`, **not** `main` — `git worktree add … main` (and `git fetch origin main:main`) fails when `main` is already checked out in another worktree.
 
-- For each **independent** PR, emit a `git worktree add … -b <branch> origin/main` command. These can be created and worked on immediately.
+- For each **independent** PR, emit a `git worktree add … -b <worktree-name> origin/main` command. These can be created and worked on immediately.
 - For each **dependent** PR, emit the command but comment that it should be created only after the predecessor merges.
 - Include cleanup for after PRs merge: for each retired worktree, **`sedea_remove_worktree_folder`** with that worktree's **absolute** path (Mission Control first), then **`git worktree remove`** and **`git worktree prune`**.
 - In the **Worktree setup** narrative, after each `git worktree add`, tell the Squad Leader to invoke **`sedea_add_worktree_folder`** with that worktree's **absolute** path, then let **coding-session** run **`worktree-bootstrap` inline** (mandatory wait before implementation) per [`coding-session/SKILL.md`](../missions/plan-and-deliver/skills/coding-session/SKILL.md) § *Worktree bootstrap (inline mandatory)*.
@@ -269,13 +273,13 @@ Run all **`plan-state.mjs`** invocations per § *Hosting repo cwd for scripts (c
 Per **[`30_planning-target-resolution.mdc`](30_planning-target-resolution.mdc)** § *Planning vs ship cadence*:
 
 - **PR comment triage** — **`pr-review`** ([`pr-review/SKILL.md`](../missions/plan-and-deliver/skills/pr-review/SKILL.md)) via **AskQuestion**, natural language (*triage PR comments*, *run pr-review*), or **coding-session** when PR context is already loaded.
-- **Commit and push** — **AskQuestion** or natural language in the **same user message** that requests *commit* and/or *push* (per **[`6_git-commit-push-gate.mdc`](.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc)**), e.g. *commit and push*, *land the branch*.
+- **Commit and push** — **AskQuestion** or natural language in the **same user message** that requests *commit* and/or *push* (per **[`6_git-commit-push-gate.mdc`](.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc)**), e.g. *commit and push*, *land the worktree*.
 
 ### Steps
 
 Apply § *Hosting repo cwd for scripts (canonical)* for every script invocation in this cadence (`HOSTING_ROOT`, `WORKTREE_ROOT`, `OPS_ID`).
 
-1. **Commit** (step 1). **Skip this step if `git status --short` is empty** — typical when the branch is already committed after **`pre-pr-review`** **go**. Do not amend the previous commit and do not pass `--allow-empty`; just proceed to step 2.
+1. **Commit** (step 1). **Skip this step if `git status --short` is empty** — typical when the worktree is already committed after **`pre-pr-review`** **go**. Do not amend the previous commit and do not pass `--allow-empty`; just proceed to step 2.
 2. Push to remote.
 3. **PR comment reconciliation (`pr-review` → this cadence).** This step is **only** [`pr-review`](../missions/plan-and-deliver/skills/pr-review/SKILL.md) **Step 5 — GitHub only** (not Steps 1–4). When this coding session already ran that skill’s Steps 1–4 (per-comment dispositions in the Step 4 report) and **GitHub** reply / resolve / minimize / summary from Step 5 has **not** run yet, the **commit and push cadence is incomplete** until Step 5 runs — **same agent turn**, immediately after the push succeeds (so the summary can cite `git rev-parse --short HEAD` in the **worktree**). Execute from **`HOSTING_ROOT`**: `cd "$HOSTING_ROOT" && python3 .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/pr-review.py` (two-step `PR_REVIEW_INPUT` per that skill). If thread IDs or PR identity are missing from context, re-run that skill’s **Step 1** script array for the same PR, then Step 5. If there was no `pr-review` triage in this chat, **skip step 3 entirely** — do not run the script.
 4. **Link the PR to its plan sidecar.** After push (and after step 3 when applicable), attempt to upsert the PR number into the Plan Board sidecar so `plan-reconcile` can later archive the plan when all linked PRs merge. Run with **`cd "$HOSTING_ROOT"`** and **`--operations-user-id` before the subcommand** (`WORKTREE_ROOT` = hosting repo worktree where commit/push ran):
@@ -290,8 +294,9 @@ Apply § *Hosting repo cwd for scripts (canonical)* for every script invocation 
      --operations-user-id "$OPS_ID" resolve --cwd "$WORKTREE_ROOT"
    # → prints "<slug>\t<planPath>" on exit 0.
 
-   # Does an open PR already exist for this branch? (run in worktree)
-   gh -C "$WORKTREE_ROOT" pr list --head "$(git -C "$WORKTREE_ROOT" branch --show-current)" --json number --jq '.[0].number // empty'
+   # Does an open PR already exist for this worktree? (--head = worktree name from git worktree add -b)
+   WORKTREE_NAME="<worktree-name>"   # same string as -b on git worktree add; from plan Worktree setup or sedea rule 7
+   gh -C "$WORKTREE_ROOT" pr list --head "$WORKTREE_NAME" --json number --jq '.[0].number // empty'
    # → prints a number on stdout, or nothing (first push, a PR-creating agent not yet invoked).
 
    # If both resolved: upsert into sidecar prs[] (idempotent).
@@ -305,10 +310,10 @@ Apply § *Hosting repo cwd for scripts (canonical)* for every script invocation 
    Skip silently when `resolve` exits non-zero (session with no plan) or `gh pr list` returns empty (first push — the PR will appear after inline **`create-pr`** on **`coding-session`**; the **next** commit-and-push pass picks it up). Never block this cadence on a helper failure — log and continue with the remaining steps. **Exit code 3** from `upsert-pr` means the resolved plan is not a PR plan (the helper refuses to link PRs onto Master / Phase / top-level topic / stub plans, since sidecar `prs[]` is reconcile-tracked); surface the helper's stderr message verbatim so the user can fix the worktree → plan linkage, then continue with the remaining steps.
 
    The [`pr-review` protocol branch](../missions/plan-and-deliver/skills/pr-review/SKILL.md) runs the same `upsert-pr` call at its Step 0 (after the PR is resolved) as a belt-and-braces linker for cases where no follow-up commit-and-push pass ever happens — `pr-review` triage that ends with all comments skipped (no commit, no push), quiet PRs with zero reviewer rounds, or single-commit PRs merged straight from GitHub. **`pr-review`** and this cadence upserts are idempotent against each other.
-5. Check if this is the **first push** for the branch (e.g. `git push` output contains `[new branch]`, or `gh pr list` in step 4 returned empty). If so, **`create-pr`** handoff is mandatory — not prompted by a separate user option. The handoff **replaces** any GitHub create-PR URL.
+5. Check if this is the **first push** for the worktree (e.g. `git push` output contains `[new branch]` for the worktree ref, or `gh pr list` in step 4 returned empty). If so, **`create-pr`** handoff is mandatory — not prompted by a separate user option. The handoff **replaces** any GitHub create-PR URL.
    - **Active `coding-session` lane** — follow that skill's ship chain: first-push alone does **not** open a PR from this cadence step. After **`pre-pr-review`** returns `go` and the developer approves PR creation in **Create-PR handoff after go**, run **`create-pr`** **inline** per [`coding-session/SKILL.md`](../missions/plan-and-deliver/skills/coding-session/SKILL.md) — do **not** paste a prompt-only substitute when the inline procedure is authorized. If pre-PR review has not run yet, do not skip to prompt-only PR creation; run the cut point and **`pre-pr-review`** first.
    - **Other lanes** — generate a copy-paste PR prompt per **`create-pr/SKILL.md`** § *PR prompt fallback*, or direct the developer to **`coding-session`** ship chain.
-   On subsequent pushes, only commit/push/reconcile/upsert — skip **`create-pr`** handoff until a new first-push branch needs a PR.
+   On subsequent pushes, only commit/push/reconcile/upsert — skip **`create-pr`** handoff until a new first-push worktree needs a PR.
 
 6. **Leader §8 host sync (detached lanes).** This cadence usually runs on **`coding-session`** or another **detached** lane — not on the **plan and deliver** Squad Leader dispatch. The leader §8 table does **not** auto-update from commit/push, `upsert-pr`, or **`pr-review`** reconciliation on this lane alone.
 
@@ -328,7 +333,7 @@ Apply § *Hosting repo cwd for scripts (canonical)* for every script invocation 
 
 **Examples — pick the block that matches the hosting repo.** Do not mix patterns on one repo.
 
-Example A — **hosting repo** (root contains `.sedea/centers/sedea/`; stacked PRs on `main` per [`.sedea/centers/sedea/rules/7_stacked-pr-branch-naming.mdc`](.sedea/centers/sedea/rules/7_stacked-pr-branch-naming.mdc)):
+Example A — **hosting repo** (root contains `.sedea/centers/sedea/`; stacked PRs on `main` per [`.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc`](.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc)):
 
 ```
 ## Worktree setup
@@ -366,13 +371,18 @@ git worktree add ../user-auth-feat-token-auth -b feat/token-auth origin/main
 # sedea_add_worktree_folder — absolute path
 ```
 
-## New branch from `main`
+## New worktree from `origin/main`
+
+Do **not** use **`git checkout -b`** on the primary hosting clone for implementation. Create a sibling worktree from **`HOSTING_ROOT`**:
 
 ```bash
-git checkout main && git pull origin main && git checkout -b <branch-name>
+cd "$HOSTING_ROOT"
+git fetch origin main
+git worktree add <absolute-path> -b <worktree-name> origin/main
+# Mission Control: sedea_add_worktree_folder — absolute path to <absolute-path>
 ```
 
-If a PR depends on an unmerged predecessor, **wait** for that predecessor to merge into `main` before starting the dependent branch (unless the developer explicitly requests stacking).
+If a PR depends on an unmerged predecessor, **wait** for that predecessor to merge into `main` before creating the dependent worktree (unless the developer explicitly requests stacking).
 
 ## Keep PRs small and focused
 
@@ -407,7 +417,7 @@ Break work down recursively until each piece is a **PR leaf**: one reviewable **
 - **Plan tree vs. git worktree** — The **plan** is a tree of intent: **planner** roots and nested `.plan.md` files (e.g. `parent:` links), with YAML **todos** in each file for **agents** (the Plan Board sidebar lists **plan files only**, not todo rows). **Git worktrees** are execution: at most one active PR per worktree ([One PR per worktree](#one-pr-per-worktree-many-worktrees-in-parallel)). **Each parallel PR** should map to **one leaf plan file** (and honest todos inside that file for the agent) so status stays honest.
 - **Child plans** — If one `.plan.md` gets too deep or cross-repo, add a **linked child plan**. The parent keeps a short **Plan map** (bullets or Mermaid) listing child slugs and roles.
 - **Contract drift** — If a leaf PR invalidates the breakdown, **update the parent plan** (diagram + todos) before spawning more worktrees so the tree stays the source of truth.
-- **Splitting an existing pile** — When splitting after the fact: get explicit approval before branch, commit, or push; save a recoverable snapshot (`git stash create` + `git update-ref refs/backup/pre-split-<timestamp> …`); stage named paths or hunks only (no `git add .` / `git add -A`); use Mermaid when multiple slices. After push, complete **`coding-session`** ship chain through inline **`create-pr`** — never open a PR from other lanes (see **PR creation — inline `create-pr` on `coding-session`** above).
+- **Splitting an existing pile** — When splitting after the fact: get explicit approval before worktree edits, commit, or push; save a recoverable snapshot (`git stash create` + `git update-ref refs/backup/pre-split-<timestamp> …`); stage named paths or hunks only (no `git add .` / `git add -A`); use Mermaid when multiple slices. After push, complete **`coding-session`** ship chain through inline **`create-pr`** — never open a PR from other lanes (see **PR creation — inline `create-pr` on `coding-session`** above).
 
 ### Planning and validation (diagrams)
 
@@ -447,23 +457,23 @@ Every description starter (including on the first push in this cadence) should c
 - **Plan lineage (when applicable)** — one line with plan slug or path (e.g. `.sedea/operations/**/plans/<slug>.plan.md`) and, if useful, "see Mermaid in plan" so intent is not trapped in chat.
 - **Verification pointer** — how to confirm behavior (which tests or observable behavior); still no separate "test plan" essay.
 
-## Branch naming
+## Worktree naming
 
-Names apply to the **hosting repo worktree** that receives the code change, not necessarily the hosting repo that holds `.sedea/` for planning scripts. **Worktree setup examples** above are split by repo type — use Example A or B, not both.
+Names apply to the **hosting repo** (or separate repo) worktree that receives the code change — the **`-b`** argument on **`git worktree add`**, not necessarily the repo where `.sedea/` planning scripts run. **Worktree setup examples** above are split by repo type — use Example A or B, not both.
 
 ### Hosting repo (primary, sedea-ai/app and equivalents)
 
-When the **hosting repo** root contains `.sedea/centers/sedea/` on the active workbench — follow **[`.sedea/centers/sedea/rules/7_stacked-pr-branch-naming.mdc`](.sedea/centers/sedea/rules/7_stacked-pr-branch-naming.mdc)** ([`0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) defines the hosting repo).
+When the **hosting repo** root contains `.sedea/centers/sedea/` on the active workbench — follow **[`.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc`](.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc)** ([`0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) defines the hosting repo).
 
 - Stacked integration on `main`: **`<prefix>/<NN>-<slug>`** with exactly two digits (`01`–`99`). Default prefix for a new stack is **`feat`** unless the plan or developer names another prefix.
 - **Invalid on hosting stacked workflow:** `feat/token-auth`, `improve/logger`, `feature/01-foo` — missing `NN`, wrong prefix family, or non-kebab slug.
-- Rename locally **before first push** if the branch name is wrong ([`7_stacked-pr-branch-naming.mdc`](.sedea/centers/sedea/rules/7_stacked-pr-branch-naming.mdc) § *Before the first git push*).
+- Rename the worktree ref locally **before first push** if the worktree name is wrong ([`7_stacked-pr-worktree-naming.mdc`](.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc) § *Before the first git push*).
 
 Benefit-style prefixes (`improve/`, `simplify/`, …) from [`10_plan-naming-convention.mdc`](10_plan-naming-convention.mdc) may use **`<NN>-`** on the primary **hosting repo** when the stack explicitly requires it (e.g. `improve/02-logger`).
 
-### Hosting repo worktree
+### Separate hosting repo worktree
 
-When the worktree is a **hosting repo worktree** (separate repository from the primary hosting repo), use descriptive kebab-case on **that** repo:
+When the worktree is a **separate repository** from the primary hosting repo (e.g. `user-auth`), use descriptive kebab-case worktree names on **that** repo:
 
 - `feat/<short-description>` — new features
 - `improve/<short-description>` — improvements (or a more specific verb prefix like `simplify/`, `harden/`, `speedup/`; see [`10_plan-naming-convention.mdc`](10_plan-naming-convention.mdc))
@@ -471,7 +481,7 @@ When the worktree is a **hosting repo worktree** (separate repository from the p
 
 No two-digit stack index unless that repo's own rules or an explicit stacked-PR plan requires it.
 
-If that repo ships branch-naming rules under `.sedea/centers/<centerSlug>/rules/` or `.cursor/rules/`, follow those for that worktree.
+If that repo ships worktree-naming rules under `.sedea/centers/<centerSlug>/rules/` or `.cursor/rules/`, follow those for that worktree.
 
 ## Review passes (two roles)
 

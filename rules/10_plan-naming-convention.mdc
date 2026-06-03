@@ -1,18 +1,18 @@
 ---
-description: "Naming conventions for plans, branches, PRs, chat titles, and commits — forbid the r-word, always name the benefit"
+description: "Naming conventions for plans, worktree names, PRs, chat titles, and commits — forbid the r-word, always name the benefit"
 alwaysApply: true
 ---
 
 # Plan & PR naming
 
-Applies to **plan filenames and headings**, **branch names**, **PR titles and descriptions**, **chat titles**, and **commit messages** across all repos.
+Applies to **plan filenames and headings**, **worktree names** (`-b` on `git worktree add`), **PR titles and descriptions**, **chat titles**, and **commit messages** across all repos.
 
 ## Forbidden word: r-e-f-a-c-t-o-r (and its forms)
 
 Do not emit this word or any inflection of it (noun, verb, gerund, participle) in any artifact generated for this repo. It reads as busy-work with no stated value — every such change leaves the code, system, or process in a **better shape**, so name that outcome instead.
 
 - Use a specific verb: **improve**, **simplify**, **consolidate**, **harden**, **speed up**, **de-duplicate**, **decouple**, **rename-for-clarity**.
-- Branch prefix: `improve/<desc>` (or a more specific prefix — `simplify/<desc>`, `harden/<desc>`, `speedup/<desc>`, `decouple/<desc>`). Never the forbidden prefix.
+- Worktree name prefix: `improve/<desc>` (or a more specific prefix — `simplify/<desc>`, `harden/<desc>`, `speedup/<desc>`, `decouple/<desc>`). Never the forbidden prefix.
 - If a tool or template forces the forbidden word, rename the artifact before creating it rather than propagating the word downstream.
 
 ## Always state what, how, **and benefit**
@@ -40,10 +40,10 @@ decouple: lift shopify client out of push-shared so ai-campaign-orchestrator can
 ```
 
 ```
-# BAD branch name
+# BAD worktree name
 <forbidden>/logger
 
-# GOOD branch names
+# GOOD worktree names
 improve/logger-structured-fields
 simplify/logger
 ```
@@ -62,16 +62,16 @@ simplify/logger
 foot-guns eliminated, future work unblocked>
 ```
 
-## Branch names (which repo?)
+## Worktree names (which repo?)
 
-Branch naming depends on the **hosting repo worktree** that receives the code change, not necessarily the hosting repo where `.sedea/` planning scripts run.
+Worktree naming depends on the **hosting repo** that receives the code change, not necessarily the hosting repo where `.sedea/` planning scripts run. The **worktree name** is the `-b` argument to **`git worktree add`**.
 
 | Hosting repo | Pattern | Authority |
 |--------------|---------|-----------|
-| **Hosting repo** (root contains `.sedea/centers/sedea/`, e.g. `sedea-ai/app`) | `<prefix>/<NN>-<slug>` — two-digit stack index required when the team uses stacked PRs on `main` | [`.sedea/centers/sedea/rules/7_stacked-pr-branch-naming.mdc`](.sedea/centers/sedea/rules/7_stacked-pr-branch-naming.mdc) and [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](20_efficient-pr-shipping.mdc) § *Branch naming* |
-| **Hosting repo worktree** (e.g. `user-auth`, `payments-web`) | `improve/<desc>`, `simplify/<desc>`, `harden/<desc>`, `fix/<desc>`, etc. — benefit-named prefix, **no** `NN` unless that repo's own rules require stacking | This rule § *Forbidden word* and *GOOD branch names* above |
+| **Hosting repo** (root contains `.sedea/centers/sedea/`, e.g. `sedea-ai/app`) | `<prefix>/<NN>-<slug>` — two-digit stack index required when the team uses stacked PRs on `main` | [`.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc`](.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc) and [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](20_efficient-pr-shipping.mdc) § *Worktree naming* |
+| **Separate hosting repo worktree** (e.g. `user-auth`, `payments-web`) | `improve/<desc>`, `simplify/<desc>`, `harden/<desc>`, `fix/<desc>`, etc. — benefit-named prefix, **no** `NN` unless that repo's own rules require stacking | This rule § *Forbidden word* and *GOOD worktree names* above |
 
-Do **not** copy stacked **hosting repo** examples such as `feat/token-auth` or bare `improve/logger` onto a **hosting repo worktree** — use `feat/01-token-auth` on the primary hosting repo when stacked on `main`. Do **not** use the forbidden busy-work prefix from any center naming rule.
+Do **not** copy stacked **hosting repo** examples such as `feat/token-auth` or bare `improve/logger` onto a **separate hosting repo** — use `feat/01-token-auth` on the primary hosting repo when stacked on `main`. Do **not** use the forbidden busy-work prefix from any center naming rule.
 
 ## When tempted to reach for the forbidden word
 
