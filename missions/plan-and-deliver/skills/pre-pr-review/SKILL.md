@@ -51,9 +51,7 @@ inputs:
     description: Skill that spawned this reviewer, usually coding-session.
     required: false
 warmUpRules:
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
   - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
-  - ".sedea/centers/research-and-development/docs/development-process.md"
   - ".sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc"
   - ".sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc"
 ---
