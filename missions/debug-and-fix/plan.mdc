@@ -1,0 +1,128 @@
+---
+description: >-
+  Log-first debug and fix in a dedicated worktree; XOR exit to Ad-Hoc PRD or
+  plan-and-deliver code promotion after a verified fix.
+alwaysApply: false
+---
+
+# Mission plan
+
+**Execution model:** Squad Leader orchestrates three stages on separate agent lanes. Stage I (**debug-and-fix**) is always spawned. Stages II and III are **mutually exclusive** — exactly one must run after a verified fix (XOR). Reuse **`ad-hoc-prd`** and **`coding-session`** from plan-and-deliver; do not duplicate ship-chain steps in this mission.
+
+## Objectives
+
+1. **Log-first diagnosis** — Bootstrap a debug worktree, prioritize log access and debug instrumentation before substantive code analysis.
+2. **Fix loop** — Propose fixes with test scenarios; apply on developer approval; run automated tests and guided manual verification; loop on failure until fixed or blocked.
+3. **Post-fix routing (XOR)** — After a verified fix, the developer selects **exactly one** exit:
+   - **Ad-Hoc PRD** — noisy or unrelated worktree changes → spawn **`ad-hoc-prd`**; resolve dispatch after PRD approval.
+   - **Code promotion** — clean fix ready to ship → spawn **`coding-session`** ship chain (authority: **`coding-session/SKILL.md`**).
+4. **Reuse plan-and-deliver** — Downstream delivery delegates to existing R&D skills; this mission owns debug orchestration only.
+
+## Protocol
+
+```mermaid
+flowchart TD
+  A[Infer command] --> B[Collect issue context]
+  B --> C[Spawn debug-and-fix]
+  C --> D{Fix verified?}
+  D -->|no / blocked| E[Report status]
+  D -->|yes| F{XOR exit}
+  F -->|Ad-Hoc PRD| G[Spawn ad-hoc-prd]
+  F -->|Code promotion| H[Spawn coding-session]
+  G --> I[Dispatch resolution]
+  H --> I
+  E --> I
+```
+
+### 1. Infer intent from the opening command phrase
+
+- `type`: Branching logic.
+- `intent`: Match the opening command to Debug and Fix mission behavior.
+- `inputs`: Opening user message and `mission.yaml` command phrase inventory.
+- `expected output`: Intent label `debug-and-fix` when the command phrase is `debug and fix`, matched case-insensitively.
+- `next-step resolution`: If the command phrase matches, continue to step 2. If it does not match or intent is ambiguous, close with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** to confirm intent.
+- `branch predicates`:
+  - Opening message starts with `debug and fix` (case-insensitive) → intent `debug-and-fix`.
+  - Otherwise → invalid or unsupported command for this mission.
+- `default/fallback behavior`: Ask the user to confirm intent via structured choice before continuing.
+
+### 2. Collect issue context
+
+- `type`: Branching logic.
+- `intent`: Gather symptom, scope, and reproduction hints before spawning the debug agent.
+- `inputs`: Opening user message remainder after `debug and fix`, current Sedea user context (`operationsUserId`).
+- `expected output`: Structured handover: `issueSummary`, optional `reproductionSteps`, optional `logHints`, optional `repoPath`.
+- `next-step resolution`: Continue to step 3 when `issueSummary` is non-empty.
+- `ordered actions`:
+  1. Remove the matched command prefix from the opening message.
+  2. Treat remaining text as initial `issueSummary` when present.
+  3. Collect missing **`issueSummary`** via structured choice when empty.
+  4. Optionally collect **`reproductionSteps`**, **`logHints`**, and **`repoPath`** (default hosting repo root when omitted).
+- `valid early-exit conditions`: Stop without spawn if the user declines to provide an issue summary.
+
+### 3. Debug and fix (spawned skill)
+
+- `type`: Agent engagement and handover.
+- `execution`: spawned.
+- `intent`: Run log-first diagnosis, fix loop, and exit recommendation on a child lane.
+- `target agent role`: Debug and Fix agent.
+- `assigned skill`: [`skills/debug-and-fix/SKILL.md`](skills/debug-and-fix/SKILL.md).
+- `required rule context`: Sedea center always-apply rules, [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](../../rules/20_efficient-pr-shipping.mdc), [`.cursor/rules/dot-sedea.mdc`](.cursor/rules/dot-sedea.mdc), [`.cursor/rules/sedea-debug-logging-settings.mdc`](.cursor/rules/sedea-debug-logging-settings.mdc).
+- `inputs`: `issueSummary`, `reproductionSteps`, `logHints`, `repoPath`, `operationsUserId` from step 2.
+- `spawn run-request fields`:
+  - `inputs` — validated fields above.
+  - `warmUpRules` — skill frontmatter defaults plus mission context paths when needed.
+  - `initiatingPrompt` — protocol step, symptom, and any user decisions from step 2.
+- `expected output`: Child **`AGENT_RESULT_RESPONSE_V1`** with `outputs.fixStatus`, `outputs.worktreePath`, `outputs.worktreeName`, `outputs.hostingRoot`, `outputs.exitRecommendation` (`ad-hoc-prd` | `code-promotion` | `blocked`), `outputs.fixSummary`, `outputs.testEvidence`.
+- `next-step resolution`: On `fixStatus: verified`, continue to step 4. On `blocked` or `failed`, continue to step 6 (report). On `partial`, structured choice — retry debug or abandon.
+- **Agent session closure**: Child emits one parseable **`AGENT_RESULT_RESPONSE_V1`** line per skill **`## Completion (spawned)`**. Squad Leader waits for host delivery before continuing.
+- **Dispatch resolution**: Remains Squad Leader responsibility — child does not emit **`MC_DISPATCH_RESOLVED_V1`**.
+
+### 4. XOR exit selection
+
+- `type`: Branching logic.
+- `intent`: Developer picks **exactly one** post-fix path when `outputs.fixStatus` is `verified`.
+- `inputs`: Child `outputs.exitRecommendation`, `outputs.fixSummary`, `outputs.worktreePath`, `outputs.worktreeName`, `outputs.hostingRoot`.
+- `expected output`: Exit label `ad-hoc-prd` or `code-promotion`.
+- `next-step resolution`:
+  - `ad-hoc-prd` → step 5.
+  - `code-promotion` → step 5b.
+- `branch predicates`:
+  - Developer selects Ad-Hoc PRD → step 5 (even when recommendation differs — developer override allowed with structured choice).
+  - Developer selects code promotion → step 5b.
+- `default/fallback behavior`: Present **`exitRecommendation`** as the suggested default in modal labels; require explicit pick — one path mandatory (XOR).
+
+### 5. Create Ad-Hoc PRD (spawned skill)
+
+- `type`: Agent engagement and handover.
+- `execution`: spawned.
+- `intent`: Capture fix context as Ad-Hoc PRD for a future plan-and-deliver dispatch.
+- `target agent role`: Ad-Hoc PRD creator (plan-and-deliver).
+- `assigned skill`: [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/ad-hoc-prd/SKILL.md`](../plan-and-deliver/skills/ad-hoc-prd/SKILL.md).
+- `inputs`: `createIntent: true`, `title` from fix summary, `details` from child `outputs.fixSummary` + worktree noise rationale, `operationsUserId`, optional `sourceSummary` referencing debug dispatch.
+- `spawn run-request fields`: `inputs`, `warmUpRules` per target skill frontmatter, `initiatingPrompt` with debug handover.
+- `expected output`: Child terminal with `outputs.adHocPrdPath`, `outputs.developerApprovedPrd` after PRD approval flow inside skill.
+- `next-step resolution`: Continue to step 6 after child terminal. Tell developer to start **`plan and deliver`** dispatch separately when ready to implement from the PRD.
+- **Agent session closure** and **Dispatch resolution**: Same as step 3 — child terminal only; Squad Leader closes dispatch in step 6.
+
+### 5b. Code promotion (spawned skill)
+
+- `type`: Agent engagement and handover.
+- `execution`: spawned.
+- `intent`: Run plan-and-deliver ship chain from an already-modified debug worktree.
+- `target agent role`: Coding session agent (plan-and-deliver).
+- `assigned skill`: [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`](../plan-and-deliver/skills/coding-session/SKILL.md).
+- `inputs`: `repoPath` / `outputs.hostingRoot`, existing `outputs.worktreePath` and `outputs.worktreeName` from debug child (worktree already created and modified), `developerApprovedImplementation: true`, `upstreamSkill: debug-and-fix`, optional `targetPlanPath` when plan-anchored (usually omitted for debug-only fixes).
+- `spawn run-request fields`: `inputs`, `initiatingPrompt` — state that implementation is complete; ship chain starts at cut-point / commit per **`coding-session`** authority.
+- `expected output`: Child terminal after ship chain milestones per **`coding-session`** **`## Completion (spawned)`** / inline ship skills.
+- `next-step resolution`: Continue to step 6 after child terminal or when developer parks external review per skill gates.
+- **Note:** Ship steps (commit, deploy-walk, pre-pr-review, create-pr, pr-review, post-merge cleanup, plan-reconcile) are **owned by `coding-session`** — do not duplicate procedure here.
+
+### 6. Report and dispatch resolution
+
+- `type`: Finish/stop logic.
+- `intent`: Summarize outcomes and propose dispatch closure.
+- `inputs`: All child terminal outputs, selected exit path, any parked external-wait state.
+- `expected output`: Squad Leader recap and **`MC_DISPATCH_RESOLVED_V1`** when user signals done.
+- `next-step resolution`: Terminal when user accepts resolution or continues from resolution card per [`.sedea/centers/sedea/rules/4_mission.mdc`](.sedea/centers/sedea/rules/4_mission.mdc) § *Dispatch resolution*.
+- `terminal vs resumable`: **`resolved`** when XOR exit completed or Ad-Hoc PRD approved; **`partial`** when fix verified but ship/PRD pending external action; **`aborted`** / **`abandoned`** on user stop or unrecoverable block.
