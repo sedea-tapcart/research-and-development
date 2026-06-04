@@ -51,9 +51,7 @@ inputs:
     description: Skill that spawned this reviewer, usually coding-session.
     required: false
 warmUpRules:
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
   - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
-  - ".sedea/centers/research-and-development/docs/development-process.md"
   - ".sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc"
   - ".sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc"
 ---
@@ -82,6 +80,17 @@ Required inputs:
 For `anchorType: "plan"`, `targetPlanPath` is required and must point to a per-PR plan. If the file is a Master Plan or Phase plan, stop with `failure`; this review requires the PR plan that owns the implementation scope.
 
 If any required input is missing, stop with `failure`. Do not ask the developer to reconstruct a seed; the spawning `coding-session` agent owns input assembly.
+
+## Refresh lane display (when stale)
+
+After **`targetPlanSlug`** or free-form scope is validated (end of Step 1):
+
+1. Compare the visible tab **title** / **hover** to this review pass (plan slug, worktree name, or scope summary).
+2. When spawn labels are **generic or wrong**, call MCP **`mission_control_update_lane_display`** on **this lane only** with non-empty **`title`** and optional **`description`** / **`hoverDescription`** (max lengths in [`.sedea/centers/sedea/rules/9_display-metadata-authority.mdc`](.sedea/centers/sedea/rules/9_display-metadata-authority.mdc)).
+3. **Skip** when spawn labels already match scope.
+4. **Forbidden:** **`mission_control_update_dispatch_display`** from a child lane.
+
+See [`.sedea/centers/research-and-development/rules/50_mission-control-display-metadata-discipline.mdc`](../../../../rules/50_mission-control-display-metadata-discipline.mdc) § *Child lane — refresh own slot when labels are stale*.
 
 ## Step 2 — Fresh reviewer lane
 
