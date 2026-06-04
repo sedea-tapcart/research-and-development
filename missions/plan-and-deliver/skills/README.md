@@ -241,6 +241,15 @@ Every **spawned** plan-and-deliver skill lists the paths below in frontmatter **
 - `.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`
 - `.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc` — **`pre-pr-review`** spawn only; **`coding-session`** omits rule **30** from frontmatter (256 KiB warm-up cap); use `inputs.targetPlanPath` and explicit `Read` of rule **30** when resolving ambiguous `.sedea` paths
 
+**Warm-up cap exceptions (256 KiB host budget):**
+
+| Skill | Frontmatter omits (vs table above) | Runtime reads remain |
+|-------|-----------------------------------|----------------------|
+| **`pre-pr-review`** | `plan.mdc`, `development-process.md` | Step 3 reads **`development-process.md`**; Step 4 loads **`inputs.targetPlanPath`** (PR plan, not Squad Leader **`plan.mdc`**) |
+| **`coding-session`** | rule **30** only | Explicit **`Read`** of rule **30** when resolving ambiguous `.sedea` paths |
+
+Do **not** re-add omitted paths to **`pre-pr-review`** frontmatter without re-checking combined warm-up size — spawn rejects with **`warm-up-too-large`** when frontmatter + merged run-request rules exceed the host cap (see **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Run-request line*).
+
 **`pr-review`** and **`create-pr`** are inline-only — **no** frontmatter **`warmUpRules`**; they run **only** on the active **`coding-session`** lane (which includes this README and rule **20**). Do not dispatch **`pr-review`** or **`create-pr`** as standalone skill sessions.
 
 ### SKILL.md frontmatter (Mission Control spawn)
