@@ -223,7 +223,7 @@ git worktree add <absolute-path> -b <worktree-name> origin/main
 **Bootstrap the worktree (mandatory for coding-session).** After attach, resolve the hosting-repo profile **before** running commands:
 
 1. Read [`.cursor/rules/dot-sedea.mdc`](.cursor/rules/dot-sedea.mdc) § *Worktree bootstrap mode* and § *Fast bootstrap verification checklist* when that file exists on the active hosting repo.
-2. **`coding-session`** runs **`worktree-bootstrap`** **inline** on the same lane after attach (see [`coding-session/SKILL.md`](../missions/plan-and-deliver/skills/coding-session/SKILL.md) § *Worktree bootstrap (inline mandatory)* and [`worktree-bootstrap/SKILL.md`](../missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md)) and **waits** for **`outputs.bootstrapStatus: success`** before implementation. On failure, ship phase stays at `worktree` and the lane reports `partial` until bootstrap succeeds. **`--skip-*`** behavior is **hosting-repo specific** — follow dot-sedea § *Worktree bootstrap mode* (some repos ignore skip flags; others allow attested partial setup).
+2. **`coding-session`** runs **`worktree-bootstrap`** **inline** on the same lane after attach (see [`coding-session/SKILL.md`](../missions/plan-and-deliver/skills/coding-session/SKILL.md) § *Worktree bootstrap (inline mandatory)* and [`worktree-bootstrap/SKILL.md`](../missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md)) and **waits** for **`outputs.bootstrapStatus: success`** before implementation. On failure, ship phase stays at `worktree` and the lane reports `partial` until bootstrap succeeds. **`--skip-*`** behavior is **hosting-repo specific** — read [`.cursor/rules/dot-sedea.mdc`](.cursor/rules/dot-sedea.mdc) § *Worktree bootstrap mode* and § *Script phases* when present, plus that repo's bootstrap script **`--help`** on **`HOSTING_ROOT`**.
 
 | Profile | When | Action (from **`HOSTING_ROOT`** unless cwd is **`WORKTREE_ROOT`**) |
 |---------|------|---------------------------------------------------------------------|
@@ -281,7 +281,7 @@ flowchart TD
 | **`full`** | dot-sedea **`full`** or unset with vscode overlay; cold primary; **`vscode/src`** edits (typical **sedea-ai/app**) | `./scripts/bootstrap-worktree-dev.sh "$WORKTREE_ROOT"` |
 | **`extensions-only-link`** | dot-sedea **`extensions-only-link`**; warm primary; extension / rule / doc work only (**sedea-ai/app** overlay) | `./scripts/bootstrap-worktree-dev.sh "$WORKTREE_ROOT" --extensions-only --link-vsc-build-artifacts-from "$HOSTING_ROOT"` |
 
-**`--skip-*` flags:** Honor only when dot-sedea and that repo's bootstrap script document attested partial setup. When the hosting script ignores skip flags, run all documented phases.
+**`--skip-*` flags:** For **`script-bootstrap`** hosting repos, read [`.cursor/rules/dot-sedea.mdc`](.cursor/rules/dot-sedea.mdc) § *Script phases* (when present) and `./scripts/bootstrap-worktree-dev.sh --help` on **`HOSTING_ROOT`**. Pass skip flags only with developer attestation on the parent **`coding-session`** lane via **`worktree-bootstrap`**. When dot-sedea or the script documents that skip flags are ignored, run all documented phases.
 
 ##### sedea-ai/app overlay only (`full` / `extensions-only-link`)
 
