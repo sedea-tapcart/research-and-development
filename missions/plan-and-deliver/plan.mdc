@@ -42,22 +42,23 @@ flowchart TB
   subgraph CS["coding-session lane"]
     direction LR
     CUT["Ship cut-point<br/>review · approve · commit"]:::gate
-    BDW["Before deploy<br/>deploy-walk inline"]:::inline
+    LTW["Local test<br/>deploy-walk inline"]:::inline
     CPR["create-pr"]:::inline
+    STW["Staging test<br/>deploy-walk inline"]:::inline
     PRV["pr-review"]:::inline
     WAIT["Wait merge<br/>post-create-pr gate"]:::gate
     PMC["Cleanup<br/>pull · detach worktree"]:::proc
     ADW["After deploy<br/>deploy-walk inline"]:::inline
     REC["plan-reconcile<br/>explicit start"]:::inline
-    CUT --> BDW --> CPR
-    CPR --> PRV --> WAIT --> PMC --> ADW --> REC
+    CUT --> LTW --> CPR
+    CPR --> STW --> PRV --> WAIT --> PMC --> ADW --> REC
   end
 
   subgraph CHILD["spawned child lane"]
     PPR["pre-pr-review"]:::spawn
   end
 
-  BDW -->|spawn| PPR
+  LTW -->|spawn| PPR
   PPR -->|result go| CPR
 ```
 
@@ -549,18 +550,19 @@ When legacy Hub parent or an explicit developer override applies, replace the **
 | Order | Protocol branch | Typical invoker | Skill |
 |------:|-----------------|-----------------|-------|
 | 1 | `coding-session` | Developer phrase, snapshot, or post–**pr-plan** handoff | `skills/coding-session/SKILL.md` |
-| 2 | `deploy-walk` (Before deploy) | **coding-session** (inline) after implementation approval + commit | `skills/deploy-walk/SKILL.md` — `deployWalkScope: before-deploy-only` |
-| 3 | `pre-pr-review` | **coding-session** (spawn) after Before deploy walk or skip | `skills/pre-pr-review/SKILL.md` |
+| 2 | `deploy-walk` (Local test) | **coding-session** (inline) after implementation approval + commit | `skills/deploy-walk/SKILL.md` — `deployWalkScope: local-test-only` |
+| 3 | `pre-pr-review` | **coding-session** (spawn) after Local test walk or skip | `skills/pre-pr-review/SKILL.md` |
 | 4 | `create-pr` | **coding-session** (inline) after pre-PR **go** | `skills/create-pr/SKILL.md` |
-| 5 | `pr-review` | **coding-session** (inline) after PR exists | `skills/pr-review/SKILL.md` |
-| 6 | `deploy-walk` (After deploy) | **coding-session** (inline) after merge (**AskQuestion** at post-create-pr gate) | `skills/deploy-walk/SKILL.md` — **development-process.md** § *deploy-walk entry points* |
-| 7 | `plan-reconcile` | **`coding-session`** (inline) after deploy done or developer choice (not auto from deploy-walk) | `skills/plan-reconcile/SKILL.md` |
+| 5 | `deploy-walk` (Staging test) | **coding-session** (inline) after PR open | `skills/deploy-walk/SKILL.md` — `deployWalkScope: staging-test-only` |
+| 6 | `pr-review` | **coding-session** (inline) after PR exists | `skills/pr-review/SKILL.md` |
+| 7 | `deploy-walk` (After deploy) | **coding-session** (inline) after merge (**AskQuestion** at post-create-pr gate) | `skills/deploy-walk/SKILL.md` — **development-process.md** § *deploy-walk entry points* |
+| 8 | `plan-reconcile` | **`coding-session`** (inline) after deploy done or developer choice (not auto from deploy-walk) | `skills/plan-reconcile/SKILL.md` |
 
-**`deploy-walk` entry points:** **coding-session** runs Before deploy inline pre-merge; **coding-session** runs After deploy inline post-merge when the developer chooses **PR merged — start After deploy deploy-walk** at [Post-create-pr handoff gate](skills/coding-session/SKILL.md#post-create-pr-handoff-gate); deploy phrases on the active coding-session lane. Detached **`deploy-walk`** dispatch redirects to **`coding-session`**. **`plan-reconcile`** runs **inline** on **`coding-session`** when the developer explicitly chooses reconcile — see [Plan-reconcile handoff (inline)](skills/coding-session/SKILL.md#plan-reconcile-handoff-inline). Finishing deploy-walk does **not** auto-run **`plan-reconcile`**.
+**`deploy-walk` entry points:** **coding-session** runs Local test inline pre-merge; Staging test inline after PR open; After deploy inline post-merge when the developer chooses **PR merged — start After deploy deploy-walk** at [Post-create-pr handoff gate](skills/coding-session/SKILL.md#post-create-pr-handoff-gate); deploy phrases on the active coding-session lane. Detached **`deploy-walk`** dispatch redirects to **`coding-session`**. **`plan-reconcile`** runs **inline** on **`coding-session`** when the developer explicitly chooses reconcile — see [Plan-reconcile handoff (inline)](skills/coding-session/SKILL.md#plan-reconcile-handoff-inline). Finishing deploy-walk does **not** auto-run **`plan-reconcile`**.
 
 **Start `coding-session`:** Detached lane only — not a Squad Leader spawn from §§1–7. Entry paths, required inputs, and anti-patterns: **`.sedea/centers/research-and-development/docs/development-process.md`** § *Start implementation (`coding-session` entry)*.
 
-**Pre-review verification:** Before developer review on **`coding-session`**, run hosting-repo **pre-review verification** per applicable **`.cursor/rules/`** (curated **Project rules** / plan **§5** — commands stay in hosting rules only). See [Ship cut-point gate](skills/coding-session/SKILL.md#ship-cut-point-gate-approve-commit-before-deploy) and rule **20** § *Review before commit*.
+**Tests and checks before developer review:** On **`coding-session`**, after implementation completes and **before** [Ship cut-point gate](skills/coding-session/SKILL.md#ship-cut-point-gate-approve-commit-before-deploy), run every locally executable **test and check** — Project rules (plan **§5**), plan **§6**, and repo entrypoints — per [Post-implementation tests and checks](skills/coding-session/SKILL.md#post-implementation-tests-and-checks). Block the review modal until all pass (**exit 0**). Commands stay in hosting rules and repo config only. See rule **20** § *Review before commit*.
 
 Procedures, gates, and spawn contracts live in those skills and in **`.sedea/centers/research-and-development/docs/development-process.md`** (**Protocol branches** table and § *Ship chain*). The Squad Leader **does not** emit `AGENT_RUN_REQUEST_V1` for this table unless a future protocol step explicitly adds it.
 

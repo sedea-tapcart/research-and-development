@@ -242,7 +242,11 @@ _TBD_
 
 **Status:** drafted *(<YYYY-MM-DD>: PR plan drafted.)*
 
-### Before deploy
+### Local test
+
+_TBD — numbered GFM task list (`1. [ ]` / `2. [ ]` / `3. [ ]`), not dashes, not bare numbers without checkboxes._
+
+### Staging test
 
 _TBD — numbered GFM task list (`1. [ ]` / `2. [ ]` / `3. [ ]`), not dashes, not bare numbers without checkboxes._
 
