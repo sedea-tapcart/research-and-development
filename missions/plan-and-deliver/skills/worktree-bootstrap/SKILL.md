@@ -109,7 +109,7 @@ Required:
 
 The bootstrap script is idempotent where the hosting repo documents idempotency — safe to re-run after partial failure.
 
-**Script-bootstrap repos:** submodule init, operations seed, deps, configure, and docker (when applicable) are owned by that repo's script — see **`--help`**, not this skill.
+**Script-bootstrap repos:** submodule init, operations seed, **local-dev-files** (gitignored **`tapcart-merchant-dashboard/.npmrc`** and **`.env`** from primary clone when missing), deps, configure, docker (when applicable) are owned by that repo's script — see **`--help`**, not this skill.
 
 **Forbidden on this lane:** `git worktree add` / `remove` / `prune`, `sedea_add_worktree_folder` / `sedea_remove_worktree_folder`, hosting-repo product edits, `gh pr create`, spawning other plan-and-deliver skills. **Worktree removal ownership:** bootstrap never removes worktrees — see rule **20** § *Worktree removal ownership (binding)* and [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § *Worktree ownership*.
 
