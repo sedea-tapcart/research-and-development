@@ -205,6 +205,12 @@ Start **`plan-reconcile`** separately: developer phrase on active **`coding-sess
 
 When the user or task says "open a PR", "push and open a PR", or "create a pull request" on a **non–`coding-session`** lane, interpret it as **hand off to the `coding-session` ship chain** — not as permission to run `gh pr create` on this lane.
 
+## PR merge — inline **`coding-session`** after clean **`pr-review`**
+
+**Rule.** The **only** path that may call `gh pr merge` (or equivalent GitHub merge API) is the active **`coding-session`** agent on the **non-outsider** repo route after inline **`pr-review`** is clean and the developer selects **`approve-merge`** at [Post-pr-review merge approval gate](../missions/plan-and-deliver/skills/coding-session/SKILL.md#post-pr-review-merge-approval-gate). **Outsider repos** (`tapcart-push`, `tapcart-merchant-dashboard`) — developer merges manually; agent verifies with `gh pr view` and continues post-merge cleanup when the developer picks **`merged-manually`**.
+
+**Forbidden:** `gh pr merge` from planning, Squad Leader, **`pre-pr-review`**, or other lanes; merge without structured-choice **`approve-merge`** on **`coding-session`**; prose “merge when you’re ready” instead of the merge approval gate after clean **`pr-review`**.
+
 ### User phrases → required handoff (not `gh pr create`)
 
 | User says (paraphrase OK) | Current lane | Required action |
