@@ -60,7 +60,7 @@ Mission Control delivery for skills that mix long plan output with structured us
 | **`phase-planner`** | §4f echo / §5c route modal; Step **5f** after **`prPlanHandoffSkipped`** | §5b inline decompose / Step **5f** **`coding-session`** spawn |
 | **`new-plan`** | stub + parent link + populator gate | populator spawn |
 
-**Ship and ops skills:** **`coding-session`** (worktree-open, inline bootstrap wait, **auto** pre-PR spawn after cut-point + Before deploy, **auto** inline **create-pr** on clean **go**, **auto** post-merge cleanup when merged, inline **deploy-walk**, inline **plan-reconcile**), **`worktree-bootstrap`**, **`pre-pr-review`** — structured choice for gates that still require a developer pick (cut-point, review feedback, post-create-PR, remainder); recap for status, diff, or dry-run report only. Prefer **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** when recap and modal belong in one message.
+**Ship and ops skills:** **`coding-session`** (worktree-open, inline bootstrap wait, **auto** pre-PR spawn after cut-point + Before deploy, **auto** inline **create-pr** on clean **go** — inline GitHub or **outsider handoff** on tapcart product repos, **auto** post-merge cleanup when merged, inline **deploy-walk**, inline **plan-reconcile**), **`worktree-bootstrap`**, **`pre-pr-review`** — structured choice for gates that still require a developer pick (cut-point, review feedback, post-create-PR, post-outsider-handoff, remainder); recap for status, diff, or dry-run report only. Prefer **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** when recap and modal belong in one message.
 
 **Lane pick (no resolved target):** emit *Where we are now in the plan tree* snapshot, then structured choice per **30_planning-target-resolution** § *Sedea input channel* (phased or split — not prose menus).
 
@@ -125,7 +125,7 @@ When a ship skill finishes a milestone on a **detached** lane, the terminal **`A
 | Skill | Invoker | Result section | §8 ship ledger |
 |-------|---------|------------------|----------------|
 | `pr-review` | Active **`coding-session`** agent on its lane | `## Inline result for coding-session` | **`coding-session`** re-emit with `shipPhase: pr-review` — host sync |
-| `create-pr` | Active **`coding-session`** agent on its lane | `## Completion (inline)` | `pr-open` via **`coding-session`** terminal re-emit — no separate child terminal |
+| `create-pr` | Active **`coding-session`** agent on its lane | `## Completion (inline)` | `pr-open` or outsider handoff (`implementing`) via **`coding-session`** terminal re-emit — no separate child terminal |
 | `deploy-walk` | Active **`coding-session`** agent on its lane (Before deploy after commit, After deploy after merge, or deploy phrases) | `## Completion (inline)` | `deploy-walk` via **`coding-session`** terminal re-emit — no separate child terminal |
 | `plan-reconcile` | Active **`coding-session`** agent on its lane (after deploy, stale worktree pick, or *plan reconcile* phrase) | `## Completion (inline)` | `reconcile` / `done` via **`coding-session`** terminal re-emit — no separate child terminal |
 

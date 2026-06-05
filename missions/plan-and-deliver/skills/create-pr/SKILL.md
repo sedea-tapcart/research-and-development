@@ -1,9 +1,10 @@
 ---
 name: create-pr
 description: >-
- Inline coding-session procedure to create or prepare a GitHub PR from a reviewed
- implementation branch using PR plan lineage and pre-pr-review result. Executed by
- the active coding-session agent only — not spawned, no warmUpRules.
+ Inline coding-session procedure to open a GitHub PR or emit an outsider handoff
+ prompt from a reviewed implementation branch. Evaluates repo class and authorization
+ (inline gh vs outsider handoff vs prompt fallback). Executed by the active
+ coding-session agent only — not spawned, no warmUpRules.
 inputs:
   targetPlanPath:
     type: string
@@ -15,7 +16,7 @@ inputs:
     required: false
   worktreePath:
     type: string
-    description: Absolute hosting repo worktree path.
+    description: Absolute worktree path for the target repository.
     required: true
   worktreeName:
     type: string
@@ -81,51 +82,114 @@ If Mission Control opened a session whose only intent is **`create-pr`** / *open
 
 ## Structured choice (Mission Control)
 
-Gates use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* on the **`coding-session`** lane — **preferred:** recap + modal in one message. **Act** (`gh pr create`, plan follow-up append) only after the developer selects.
+Gates use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* on the **`coding-session`** lane — **preferred:** recap + modal in one message. **Act** (`gh pr create`, plan follow-up append) only after the developer selects — **except** on the **outsider-handoff** route (no `gh pr create`; emit prompt and open [Post-outsider-handoff gate](../coding-session/SKILL.md#post-outsider-handoff-gate) on the same turn).
 
 ## Relationship to rule 20 (`gh pr create`)
 
-**`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`** forbids **`gh pr create`** on planning, Squad Leader, **`pre-pr-review`**, and other non-ship lanes. **Exception:** the active **`coding-session`** agent **while executing this skill inline** after pre-PR clean **`go`** (auto path) or exceptional Create-PR gate may call `gh pr create` when gates pass and push/creation is authorized.
+**`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`** forbids **`gh pr create`** on planning, Squad Leader, **`pre-pr-review`**, and other non-ship lanes. **Exception:** the active **`coding-session`** agent **while executing this skill inline** on the **inline GitHub** route after pre-PR clean **`go`** (auto path) or exceptional Create-PR gate may call `gh pr create` when gates pass and push/creation is authorized. **Outsider repos** never use this exception — see **## PR route evaluation** below.
 
 ## Gate
 
-Before creating or preparing a PR:
+Before choosing a PR route:
 
 1. Verify `prePrReviewRecommendation` is exactly `go`. If not, stop; PR creation is blocked until review passes.
 2. Verify `worktreePath`, `worktreeName`, and `baseRef` are present.
 3. Verify the worktree name ref matches `worktreeName` (`git branch --show-current`).
 4. Verify the committed diff exists: `git diff <baseRef>...HEAD` is non-empty.
-5. Verify the worktree is pushed or push it only if the developer / **`coding-session`** explicitly authorized push. If push is not authorized, emit a copy-pasteable PR prompt (below) and report `partial` with `remainingTasks`.
+5. Resolve **`repoUrl`** when omitted: `git -C "$worktreePath" remote get-url origin`.
 
-When authorized to create the PR, you **may** run `gh pr create`. If creation is not authorized, produce the PR prompt below and set `continuationStatus: "active"` — do not call `gh pr create`.
+## PR route evaluation
 
-## PR prompt fallback
+After shared gates pass, choose **exactly one** route. Evaluate in order:
 
-When direct PR creation is not authorized, generate a copy-paste prompt for a future **`coding-session`** ship pass. Gather:
+| Order | Route | When | `prCreationMode` |
+|-------|-------|------|------------------|
+| 1 | **Outsider handoff** | [Outsider repo](#outsider-repos-mandatory-handoff) | `outsider-handoff` |
+| 2 | **Inline GitHub create** | Not an outsider repo **and** push/PR creation authorized | `inline` |
+| 3 | **Prompt fallback** | Not an outsider repo **and** push/PR creation **not** authorized | `prompt-fallback` |
+
+### Outsider repos (mandatory handoff)
+
+Classify as an **outsider repo** when **`worktreePath`** or **`repoUrl`** matches any of:
+
+| Repo | Path segment | Remote slug |
+|------|--------------|-------------|
+| **tapcart-push** | `tapcart-push` | `tapcartinc/tapcart-push` |
+| **tapcart-merchant-dashboard** | `tapcart-merchant-dashboard` | `tapcartinc/tapcart-merchant-dashboard` |
+
+See **`.cursor/rules/push-monorepo-submodules.mdc`** on the hosting repo. Sedea agents **cannot** open PRs on these repositories from Mission Control — the developer engages an **outsider** (external agent outside Sedea) to create the GitHub PR.
+
+**On outsider repos:**
+
+- **Forbidden:** `gh pr create` and any GitHub PR API/MCP call that creates, drafts, or reopens a PR — even when push is authorized.
+- **Required:** emit the [Outsider PR handoff prompt](#outsider-pr-handoff-prompt) in a copy/paste-safe fence.
+- Set `promptEmitted: true`, `prCreationMode: outsider-handoff`, `remainingTasks` to include *outsider creates PR on GitHub*.
+- **Same turn:** open [Post-outsider-handoff gate](../coding-session/SKILL.md#post-outsider-handoff-gate) — not [Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate).
+
+### Inline GitHub create (default)
+
+When route **2** applies:
+
+1. Verify the worktree is pushed or push it only if **`coding-session`** explicitly authorized push.
+2. When authorized, run `gh pr create` per rule **20** § *Comprehensive PR descriptions*.
+3. Set `prCreationMode: inline`, `prUrl`, `prNumber`, `shipPhase: pr-open`, `rowStatus: open`.
+4. **Same turn:** open [Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate).
+
+If push is not authorized on a non-outsider repo, use route **3** instead — do not call `gh pr create`.
+
+### Prompt fallback (push not authorized)
+
+When route **3** applies on a **non-outsider** repo, generate a copy-paste prompt for a future **`coding-session`** ship pass or authorized PR opener. Gather:
 
 1. **Current worktree name ref**: `git branch --show-current`
 2. **Integration line**: from `git merge-base` / tracking parent (e.g. `main`).
 3. **Repo URL**: `git remote get-url origin`
 4. **Changes summary**: `git diff <base>...HEAD` plus session context — **reviewer-complete** per rule **20** § *Comprehensive PR descriptions*.
 
-Print inside a fenced code block:
+Print inside a fenced code block using the template in [Outsider PR handoff prompt](#outsider-pr-handoff-prompt) but address the **next authorized PR creator** (not necessarily an outsider).
+
+Set `prCreationMode: prompt-fallback`, `promptEmitted: true`, `continuationStatus: active`, `remainingTasks` including *push and authorize PR creation*.
+
+## Outsider PR handoff prompt
+
+When route **1** (or route **3** with the same template) applies, gather:
+
+1. **Worktree name ref** — `git branch --show-current`
+2. **Integration line** — merge-base / tracking parent (e.g. `main`)
+3. **Repo URL** — `git remote get-url origin`
+4. **Changes summary** — `git diff <baseRef>...HEAD` plus **`diffSummary`** and session context
+5. **Pre-PR review** — recommendation, flags, proposed follow-ups (and whether appended)
+6. **Plan lineage** — `targetPlanPath` / `targetPlanSlug` when plan-anchored
+7. **Verify steps** — from plan §5 / applicable Project rules when known
+
+Print inside a fenced code block (default ` ```text … ``` `):
 
 ```
-Create a PR for the worktree I pushed: `<current-worktree-name>`
-In the <repo-url> repo
-The integration line is `<integration-line>`
+You are the outsider — an external agent outside Sedea Mission Control. Create a GitHub pull request for the branch already pushed by the developer.
+
+Repository: <repo-url>
+Branch (worktree name): `<worktree-name>`
+Integration line (base): `<integration-line>`
+
+Pre-PR review: go (Sedea pre-pr-review completed on the implementation lane).
 
 Use past tense for the PR title.
 
-Here is a summary of the changes as a starting point for the PR description (verify against the diff and adjust as needed). Use bullets; keep it proportional to PR size but do not omit reasoning:
+PR description — verify against the diff; use bullets proportional to PR size but do not omit reasoning:
 
 - Why this slice / motivation (enough that a reviewer can tell intent vs mistake)
 - What changed (behaviour, APIs, schema, config)
 - Not in this PR (deferrals, parent scope left out on purpose)
-- Plan lineage (if applicable): path or slug to `.sedea/operations/**/plans/<slug>.plan.md` and optional pointer to Mermaid in the plan
+- Plan lineage (if applicable): <targetPlanPath or slug>
+- Pre-PR flags (if any): <prePrReviewFlags>
+- Proposed follow-ups (if any; note whether appended): <followUpsAppended or proposed list>
 - Intentional non-changes (if any)
-- How to verify (which tests or observable behaviour — no separate test-plan essay)
+- How to verify (tests or observable behaviour)
+
+After opening the PR, return the PR URL to the developer so they can continue the Sedea ship chain (pr-review, merge, After deploy).
 ```
+
+State in one recap line that the developer should paste this prompt to their **outsider** agent and resume **`coding-session`** when the PR URL is known.
 
 ## Result contract
 
@@ -137,12 +201,13 @@ Merge these fields into **`coding-session`** `outputs` via **`## Completion (inl
 - `worktreeName`
 - `baseRef`
 - `repoUrl`
+- `prCreationMode` — `inline` | `outsider-handoff` | `prompt-fallback`
 - `prUrl`
 - `prNumber`
 - `promptEmitted`
 - `remainingTasks`
-- `shipPhase` — `pr-open` when PR created; `implementing` or `blocked` when deferred
-- `rowStatus` — `open` when PR exists and ship continues; `blocked` when handoff blocked
+- `shipPhase` — `pr-open` when PR created; `implementing` when outsider/prompt handoff pending
+- `rowStatus` — `open` when PR exists; `blocked` when handoff blocked
 - `blockedReason` — when `rowStatus: blocked`
 - `prState` — `open` | `merged` | `closed` | `unknown` when known
 - `reviewState` — when queried on this pass
@@ -151,7 +216,7 @@ Merge these fields into **`coding-session`** `outputs` via **`## Completion (inl
 Set `continuationStatus`:
 
 - `active` when a PR URL/number is created and post-create-pr gates remain on **`coding-session`**.
-- `active` when a PR prompt was emitted but the developer still must create the PR.
+- `active` when an outsider or fallback prompt was emitted but the developer still must create the PR.
 - `active` when push or PR creation is blocked by missing authorization.
 
 ## Mission Control section 8 sync (via coding-session)
@@ -161,16 +226,18 @@ Set `continuationStatus`:
 | Field | When |
 |-------|------|
 | `targetPlanPath` | Always when plan-anchored |
-| `shipPhase` | `pr-open` when PR created; `implementing` or `blocked` when deferred |
+| `shipPhase` | `pr-open` when PR created; `implementing` when outsider/prompt handoff pending |
 | `rowStatus` | `open` when PR exists; `blocked` when handoff blocked |
 | `prUrl` / `prNumber` | When PR created |
+| `prCreationMode` | Always |
 | `remainingTasks` / `blockedReason` | When applicable |
 
 **Forbidden:** nudging manual **Ship recap** on the Squad Leader dispatch. Host sync delivers §8 updates from **`coding-session`** terminals only.
 
 | Outcome | `shipPhase` | Key `outputs` |
 |---------|-------------|---------------|
-| PR created | `pr-open` | `targetPlanPath`, `prUrl`, `prNumber` |
+| PR created (inline) | `pr-open` | `targetPlanPath`, `prUrl`, `prNumber`, `prCreationMode: inline` |
+| Outsider handoff | `implementing` | `targetPlanPath`, `promptEmitted`, `prCreationMode: outsider-handoff`, `remainingTasks` |
 | Blocked / deferred | `implementing` or `blocked` | `targetPlanPath`, `remainingTasks`, `blockedReason` |
 
 ## Completion (inline)
@@ -180,6 +247,12 @@ Report on the **same `coding-session` lane**. Do **not** emit `AGENT_RUN_REQUEST
 Required fields (prose to invoker / merged into **`coding-session`** `outputs`):
 
 - All keys from **## Result contract**
-- One-line summary: PR opened (`prUrl`) or blocked reason
+- One-line summary: PR opened (`prUrl`), outsider prompt emitted, or blocked reason
 
-**Handback:** the invoker opens [Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate) on the **same `coding-session` assistant turn** that finishes this procedure — **`MC_PHASED_RESPONSE_V1`** with post-create-pr **`options`**, not prose-only PR URL (see **`coding-session`** § *Every developer-await turn* and Create-PR step **7**). Do **not** auto-start inline **`pr-review`**, inline **`deploy-walk`**, or **`plan-reconcile`** from this skill.
+**Handback:**
+
+- **Inline route** — open [Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate) on the **same assistant turn**.
+- **Outsider-handoff route** — open [Post-outsider-handoff gate](../coding-session/SKILL.md#post-outsider-handoff-gate) on the **same assistant turn**.
+- **Prompt-fallback route** — recap only; re-open ship cut-point or defer per developer message unless they return with PR URL.
+
+Do **not** auto-start inline **`pr-review`**, inline **`deploy-walk`**, or **`plan-reconcile`** from this skill.

@@ -878,7 +878,7 @@ Run on the **developer's response turn** — **not** in the same assistant turn 
 
 When the developer says *open a PR*, *create a pull request*, or similar **before** **`pre-pr-review`** returns **`go`** and the **Create-PR handoff after go** gate:
 
-1. **Do not** call `gh pr create` or surface GitHub `pull/new/` URLs (rule **20** § *PR creation* and § *User phrases → required handoff*) except when executing inline **`create-pr`** after that gate approves.
+1. **Do not** call `gh pr create` or surface GitHub `pull/new/` URLs (rule **20** § *PR creation* and § *User phrases → required handoff*) except when executing inline **`create-pr`** on the **inline GitHub** route after that gate approves. **Outsider repos** (`tapcart-push`, `tapcart-merchant-dashboard`) always use **`create-pr`** outsider-handoff — never `gh pr create`.
 2. State the required order: implementation → [Ship cut-point gate](#ship-cut-point-gate-approve-commit-before-deploy) (approve, commit, Before deploy **`deploy-walk`** inline when applicable) → auto-spawn **`pre-pr-review`** → on clean **`go`**, [Inline create-pr (auto on clean go)](#inline-create-pr-auto-on-clean-go).
 3. If they only pushed and expect a PR, confirm whether **`pre-pr-review`** has run; first-push cadence does **not** skip the inline **`create-pr`** procedure.
 
@@ -904,8 +904,8 @@ Construct inline context:
 | `ledgerParent` | From coding-session ledger when present |
 | `upstreamSkill` | `"coding-session"` |
 
-4. Follow **`create-pr`** gates and procedure (`gh pr create` when authorized). Merge **`## Completion (inline)`** into coding-session `outputs`.
-5. **Same assistant turn** — when step **4** completes with a PR URL/number, open [Post-create-pr handoff gate](#post-create-pr-handoff-gate) before **StreamFinal** (unchanged).
+4. Follow **`create-pr`** gates and [PR route evaluation](../create-pr/SKILL.md#pr-route-evaluation) — **inline GitHub** (`gh pr create` when authorized), **outsider-handoff** (tapcart product submodules — no `gh pr create`), or **prompt-fallback**. Merge **`## Completion (inline)`** into coding-session `outputs`.
+5. **Same assistant turn** — when step **4** completes with a PR URL/number, open [Post-create-pr handoff gate](#post-create-pr-handoff-gate); when **`prCreationMode: outsider-handoff`**, open [Post-outsider-handoff gate](#post-outsider-handoff-gate) before **StreamFinal**.
 
 **Forbidden:** opening *Coding session — create PR* modal on clean **`go`** without proposed follow-ups; opening this section when **`hasProposedFollowUps`** is **false**; treating reviewer **`go`** alone as follow-up append consent; any **`approve-followups-create-pr`** option when `proposedFollowUps` is empty.
 
@@ -937,7 +937,22 @@ MC_PHASED_RESPONSE_V1
 ```
 
 4. On the **developer's response turn** (not the same turn as the modal), load **`create-pr/SKILL.md`** and run inline per steps in [Inline create-pr (auto on clean go)](#inline-create-pr-auto-on-clean-go) with `followUpsAppended` per pick.
-5. **Same assistant turn** as inline **`create-pr`** completion — open [Post-create-pr handoff gate](#post-create-pr-handoff-gate) before **StreamFinal**.
+5. **Same assistant turn** as inline **`create-pr`** completion — open [Post-create-pr handoff gate](#post-create-pr-handoff-gate) or [Post-outsider-handoff gate](#post-outsider-handoff-gate) per **`prCreationMode`** before **StreamFinal**.
+
+### Post-outsider-handoff gate
+
+When inline **`create-pr`** completes with **`prCreationMode: outsider-handoff`** (outsider prompt emitted for **tapcart-push** or **tapcart-merchant-dashboard** — no Sedea `gh pr create`):
+
+1. Recap: repo, worktree name, that the fenced **outsider** prompt was emitted, and `remainingTasks`.
+2. Use **one** **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** (`modalTitle`: *Coding session — outsider PR handoff*). Required options:
+
+| Option id | Label (brief) | Agent action |
+|-----------|---------------|--------------|
+| `pr-url-known` | PR created — I have the PR URL | On **next** turn, record `prUrl` / `prNumber`, set `shipPhase: pr-open`, open [Post-create-pr handoff gate](#post-create-pr-handoff-gate) |
+| `defer-ship` | Defer — outsider has not opened PR yet | Keep `continuationStatus: active`; no spawn |
+| `more-details` | More details for option _ | Elaborate; ask again |
+
+3. Do **not** call `gh pr create` on outsider repos from this lane.
 
 ### Post-create-pr handoff gate
 

@@ -250,7 +250,7 @@ If all comments were **Skipped (no follow-up)** with **no** code edits, the Step
 
 1. **Reply + resolve** each inline thread using approved dispositions from Step 4 — **Must fix**, **Should fix**, **Skipped (no follow-up)**, or **Skipped → follow-up** (same paraphrase + `(target: …)` as Step 3a) plus short reasoning, then resolve the thread.
 
-2. **Minimize** every top-level review (`PRR_` node) from **every** reviewer (CodeRabbit, Brin, humans) with `{"command":"minimize",...,"node_id":"PRR_...","classifier":"RESOLVED"}`. Use GraphQL `reviews` + REST `pull-reviews` from Step 1. One JSON **array** of `minimize` objects; one script invocation.
+2. **Minimize** every top-level review (`PRR_` node) from **every** reviewer (CodeRabbit, outsider / external agents, humans) with `{"command":"minimize",...,"node_id":"PRR_...","classifier":"RESOLVED"}`. Use GraphQL `reviews` + REST `pull-reviews` from Step 1. One JSON **array** of `minimize` objects; one script invocation.
 
 3. **Re-request review** from `slink-ai` if any `pull-reviews` entry from `slink-ai` has `state` **CHANGES_REQUESTED** — `{"command":"request-review",...,"reviewers":["slink-ai"]}`.
 
