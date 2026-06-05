@@ -146,7 +146,7 @@ When route **3** applies on a **non-outsider** repo, generate a copy-paste promp
 3. **Repo URL**: `git remote get-url origin`
 4. **Changes summary**: `git diff <base>...HEAD` plus session context — **reviewer-complete** per rule **20** § *Comprehensive PR descriptions*.
 
-Print inside a fenced code block using the template in [Outsider PR handoff prompt](#outsider-pr-handoff-prompt) but address the **next authorized PR creator** (not necessarily an outsider).
+Print inside a fenced code block using the template in [Outsider PR handoff prompt](#outsider-pr-handoff-prompt) (same task-first shape — no role preamble).
 
 Set `prCreationMode: prompt-fallback`, `promptEmitted: true`, `continuationStatus: active`, `remainingTasks` including *push and authorize PR creation*.
 
@@ -162,10 +162,12 @@ When route **1** (or route **3** with the same template) applies, gather:
 6. **Plan lineage** — `targetPlanPath` / `targetPlanSlug` when plan-anchored
 7. **Verify steps** — from plan §5 / applicable Project rules when known
 
+**Prompt shape:** task-first — **do not** open with a role preamble (for example “You are the outsider …”). The recipient already knows they are the external PR opener; start with the create-PR task and facts below.
+
 Print inside a fenced code block (default ` ```text … ``` `):
 
 ```
-You are the outsider — an external agent outside Sedea Mission Control. Create a GitHub pull request for the branch already pushed by the developer.
+Create a GitHub pull request for the branch already pushed by the developer.
 
 Repository: <repo-url>
 Branch (worktree name): `<worktree-name>`
