@@ -296,4 +296,6 @@ Return results through the active **`coding-session`** lane, not as a child-agen
 
 Keep `continuationStatus: "active"` until every PR review comment is fixed, skipped with rationale, converted to follow-up, or explicitly deferred by the developer, and GitHub reconciliation has run when required.
 
+**Handback when triage is clean:** When Step **5 — GitHub only** completes (or skipped-only triage with no open Must/Should blockers), set `githubReconciliationStatus: complete` and `prReviewStatus: complete`. On the **next** turn, the invoker (**`coding-session`**) **must** open [Post-pr-review merge approval gate](../coding-session/SKILL.md#post-pr-review-merge-approval-gate) — **not** passive “tell me when merged” prose. If preconditions for merge are not met (pending **`CHANGES_REQUESTED`**, open blockers), loop **`pr-review`** or return to [Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate).
+
 This skill is **inline-only** on the **`plan and deliver`** mission — no **`AGENT_RUN_REQUEST_V1`**, no **`AGENT_RESULT_RESPONSE_V1`** on this lane. See **[`../README.md`](../README.md)** § Inline-only.
