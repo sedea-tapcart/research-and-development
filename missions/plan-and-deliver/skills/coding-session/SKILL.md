@@ -917,8 +917,13 @@ When the developer says *open a PR*, *create a pull request*, or similar **befor
 When **`pre-pr-review`** returns `recommendation: "go"` **and** **`actionablePrePrFindings`** is **false** **and NOT `hasProposedFollowUps`** — **no Create-PR modal**. On the **next** turn after the reviewer result (not the same turn as the result):
 
 1. One-line recap: reviewer **`go`**, no Must/Should/blockers, no proposed follow-ups, optional non-actionable flags noted.
-2. Verify the worktree is pushed or pushable per **efficient-pr-shipping**.
-3. Load `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/create-pr/SKILL.md` and run it **inline on this lane** — **do not** emit **`AGENT_RUN_REQUEST_V1`** for **`create-pr`**.
+2. **Outsider repo — local-only branch banner (binding):** When the worktree is an **outsider repo** per [`create-pr` § Outsider repos](../create-pr/SKILL.md#outsider-repos-mandatory-handoff) **and** the ship cut-point used **`commit-only`** or **`commit-only-skip-local-test`** (branch not pushed), prepend a **blocking banner** to the recap / next `display.markdown` (not a footnote):
+
+   > **Blocking:** Branch `<worktreeName>` is **local-only** — not on `origin`. Outsider handoff requires a pushed branch. `create-pr` will offer push before emitting the outsider prompt.
+
+   Record `lastShipCutPointId` in `outputs` when the cut-point pick is known (`commit-only`, `commit-push`, …).
+3. Verify the worktree is pushed or pushable per **efficient-pr-shipping**.
+4. Load `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/create-pr/SKILL.md` and run it **inline on this lane** — **do not** emit **`AGENT_RUN_REQUEST_V1`** for **`create-pr`**.
 
 **Default authorization:** clean **`go`** authorizes PR creation **without appending proposed follow-ups** (`followUpsAppended: false`). Do **not** open [Create-PR handoff after go](#create-pr-handoff-after-go) on this path.
 
@@ -934,8 +939,8 @@ Construct inline context:
 | `ledgerParent` | From coding-session ledger when present |
 | `upstreamSkill` | `"coding-session"` |
 
-4. Follow **`create-pr`** gates and [PR route evaluation](../create-pr/SKILL.md#pr-route-evaluation) — **inline GitHub** (`gh pr create` when authorized), **outsider-handoff** (tapcart product submodules — no `gh pr create`), or **prompt-fallback**. Merge **`## Completion (inline)`** into coding-session `outputs`.
-5. When step **4** completes with a PR URL/number: run **`deploy-walk pr-open`** on the plan (flip `**Status:**` to `pr-open`), then [Staging test deploy-walk handoff](#staging-test-deploy-walk-handoff) on the **next** turn when §7 **`### Staging test`** has unchecked items — otherwise open [Post-create-pr handoff gate](#post-create-pr-handoff-gate) on the **same** turn. When **`prCreationMode: outsider-handoff`**, open [Post-outsider-handoff gate](#post-outsider-handoff-gate) before **StreamFinal**.
+5. Follow **`create-pr`** gates and [PR route evaluation](../create-pr/SKILL.md#pr-route-evaluation) — **inline GitHub** (`gh pr create` when authorized), **outsider-handoff** (tapcart product submodules — no `gh pr create`), or **prompt-fallback**. Merge **`## Completion (inline)`** into coding-session `outputs`.
+6. When step **5** completes with a PR URL/number: run **`deploy-walk pr-open`** on the plan (flip `**Status:**` to `pr-open`), then [Staging test deploy-walk handoff](#staging-test-deploy-walk-handoff) on the **next** turn when §7 **`### Staging test`** has unchecked items — otherwise open [Post-create-pr handoff gate](#post-create-pr-handoff-gate) on the **same** turn. When **`prCreationMode: outsider-handoff`** **and** **`promptEmitted: true`**, open [Post-outsider-handoff gate](#post-outsider-handoff-gate) before **StreamFinal**. When **`blockedReason: remote-branch-missing`**, the push-branch modal from [`create-pr` § Remote branch gate](../create-pr/SKILL.md#remote-branch-gate-binding) is already open — **do not** open Post-outsider-handoff gate.
 
 **Forbidden:** opening *Coding session — create PR* modal on clean **`go`** without proposed follow-ups; opening this section when **`hasProposedFollowUps`** is **false**; treating reviewer **`go`** alone as follow-up append consent; any **`approve-followups-create-pr`** option when `proposedFollowUps` is empty.
 
@@ -981,7 +986,7 @@ MC_PHASED_RESPONSE_V1
 
 ### Post-outsider-handoff gate
 
-When inline **`create-pr`** completes with **`prCreationMode: outsider-handoff`** (outsider prompt emitted for **tapcart-push** or **tapcart-merchant-dashboard** — no Sedea `gh pr create`):
+When inline **`create-pr`** completes with **`prCreationMode: outsider-handoff`** **and** **`promptEmitted: true`** (outsider prompt emitted for **tapcart-push** or **tapcart-merchant-dashboard** — no Sedea `gh pr create`). **Do not** open this gate when **`blockedReason: remote-branch-missing`** — use [`create-pr` § Remote branch gate](../create-pr/SKILL.md#remote-branch-gate-binding) instead.
 
 1. Recap: repo, worktree name, that the fenced **outsider** prompt was emitted, and `remainingTasks`.
 2. Use **one** **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** (`modalTitle`: *Coding session — outsider PR handoff*). Required options:

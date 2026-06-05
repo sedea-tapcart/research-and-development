@@ -184,7 +184,9 @@ Start **`plan-reconcile`** separately: developer phrase on active **`coding-sess
 
 ### Outsider repos (tapcart product submodules)
 
-**`create-pr`** classifies **outsider repos** before any GitHub API call. When the worktree targets **`tapcart-push`** or **`tapcart-merchant-dashboard`** (see **`.cursor/rules/push-monorepo-submodules.mdc`**), Sedea agents **must not** call `gh pr create`. Instead, **`create-pr`** emits an **outsider PR handoff prompt** for an external agent outside Mission Control; the developer pastes it and resumes **`coding-session`** when the PR URL is known. See **`create-pr/SKILL.md`** § *PR route evaluation* and § *Outsider PR handoff prompt*.
+**`create-pr`** classifies **outsider repos** before any GitHub API call. When the worktree targets **`tapcart-push`** or **`tapcart-merchant-dashboard`** (see **`.cursor/rules/push-monorepo-submodules.mdc`**), Sedea agents **must not** call `gh pr create`. Instead, **`create-pr`** emits an **outsider PR handoff prompt** for an external agent outside Mission Control **after** verifying the branch exists on `origin`; the developer pastes it and resumes **`coding-session`** when the PR URL is known. See **`create-pr/SKILL.md`** § *PR route evaluation*, § *Remote branch gate*, and § *Outsider PR handoff prompt*.
+
+**Remote branch before outsider handoff:** On outsider repos, **`create-pr`** runs `git ls-remote --heads origin <worktreeName>` before emitting the outsider prompt. If empty, it blocks with **`blockedReason: remote-branch-missing`** and offers a push modal — **do not** emit the handoff prompt. **`commit-only`** at [Ship cut-point gate](../missions/plan-and-deliver/skills/coding-session/SKILL.md#ship-cut-point-gate-approve-commit-before-deploy) leaves the branch **local-only** by design; outsider handoff requires an explicit push (`commit-push` at cut-point, or **`push-branch-now`** when blocked).
 
 | Lane | Outsider repo | May call `gh pr create`? | Handoff |
 |------|---------------|--------------------------|---------|
