@@ -82,7 +82,7 @@ If Mission Control opened a session whose only intent is **`create-pr`** / *open
 
 ## Structured choice (Mission Control)
 
-Gates use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* on the **`coding-session`** lane — **preferred:** recap + modal in one message. **Act** (`gh pr create`, plan follow-up append) only after the developer selects — **except** on the **outsider-handoff** route (no `gh pr create`; emit prompt and open [Post-outsider-handoff gate](../coding-session/SKILL.md#post-outsider-handoff-gate) on the same turn).
+Gates use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* on the **`coding-session`** lane — **preferred:** recap + modal in one message. **Act** (`gh pr create`, plan follow-up append, `git push`) only after the developer selects — **except** on the **outsider-handoff** route when the [remote branch gate](#remote-branch-gate-binding) passes (no `gh pr create`; emit prompt and open [Post-outsider-handoff gate](../coding-session/SKILL.md#post-outsider-handoff-gate) on the same turn). When **`blockedReason: remote-branch-missing`**, open the push-branch modal — **do not** emit the outsider prompt or Post-outsider-handoff gate.
 
 ## Relationship to rule 20 (`gh pr create`)
 
@@ -122,9 +122,27 @@ See **`.cursor/rules/push-monorepo-submodules.mdc`** on the hosting repo. Sedea 
 **On outsider repos:**
 
 - **Forbidden:** `gh pr create` and any GitHub PR API/MCP call that creates, drafts, or reopens a PR — even when push is authorized.
-- **Required:** emit the [Outsider PR handoff prompt](#outsider-pr-handoff-prompt) in a copy/paste-safe fence.
+- **Required (after [remote branch gate](#remote-branch-gate-binding) passes):** emit the [Outsider PR handoff prompt](#outsider-pr-handoff-prompt) in a copy/paste-safe fence.
 - Set `promptEmitted: true`, `prCreationMode: outsider-handoff`, `remainingTasks` to include *outsider creates PR on GitHub*.
-- **Same turn:** open [Post-outsider-handoff gate](../coding-session/SKILL.md#post-outsider-handoff-gate) — not [Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate).
+- **Same turn (prompt emitted):** open [Post-outsider-handoff gate](../coding-session/SKILL.md#post-outsider-handoff-gate) — not [Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate).
+
+#### Remote branch gate (binding)
+
+After shared gates pass and this route is selected, **before** gathering outsider prompt fields or emitting any handoff fence:
+
+1. Run `git -C "$worktreePath" ls-remote --heads origin "$worktreeName"`.
+2. **If output is empty** (no remote ref for the worktree name):
+   - Set `blockedReason: remote-branch-missing`, `rowStatus: blocked`, `shipPhase: implementing`, `promptEmitted: false`, `prCreationMode: outsider-handoff`, `remainingTasks` to include *push branch to origin before outsider handoff*.
+   - Open **`MC_PHASED_RESPONSE_V1`** on the **`coding-session`** lane (`modalTitle`: *Coding session — push branch for outsider handoff*). Required **`options`**:
+
+   | Option id | Label (brief) | Agent action |
+   |-----------|---------------|--------------|
+   | `push-branch-now` | Push branch to origin now | On **next** turn after pick: `git -C "$worktreePath" push -u origin "$worktreeName"`, then re-run this skill from shared gates |
+   | `defer` | Defer outsider handoff | Keep `continuationStatus: active`; no prompt emitted |
+   | `more-details` | More details for option _ | Elaborate; ask again |
+
+   - **Forbidden:** emit [Outsider PR handoff prompt](#outsider-pr-handoff-prompt); open [Post-outsider-handoff gate](../coding-session/SKILL.md#post-outsider-handoff-gate).
+3. **If a remote ref exists**, continue with outsider prompt emission per **On outsider repos** above.
 
 ### Inline GitHub create (default)
 
@@ -151,6 +169,8 @@ Print inside a fenced code block using the template in [Outsider PR handoff prom
 Set `prCreationMode: prompt-fallback`, `promptEmitted: true`, `continuationStatus: active`, `remainingTasks` including *push and authorize PR creation*.
 
 ## Outsider PR handoff prompt
+
+**Precondition:** [Remote branch gate](#remote-branch-gate-binding) must pass — `git ls-remote --heads origin <worktreeName>` returns a ref. **Forbidden:** emitting this prompt when the branch exists only on the local worktree.
 
 When route **1** (or route **3** with the same template) applies, gather:
 
@@ -240,6 +260,7 @@ Set `continuationStatus`:
 |---------|-------------|---------------|
 | PR created (inline) | `pr-open` | `targetPlanPath`, `prUrl`, `prNumber`, `prCreationMode: inline` |
 | Outsider handoff | `implementing` | `targetPlanPath`, `promptEmitted`, `prCreationMode: outsider-handoff`, `remainingTasks` |
+| Remote branch missing | `implementing` | `targetPlanPath`, `blockedReason: remote-branch-missing`, `rowStatus: blocked`, `promptEmitted: false` |
 | Blocked / deferred | `implementing` or `blocked` | `targetPlanPath`, `remainingTasks`, `blockedReason` |
 
 ## Completion (inline)
@@ -254,7 +275,8 @@ Required fields (prose to invoker / merged into **`coding-session`** `outputs`):
 **Handback:**
 
 - **Inline route** — open [Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate) on the **same assistant turn**.
-- **Outsider-handoff route** — open [Post-outsider-handoff gate](../coding-session/SKILL.md#post-outsider-handoff-gate) on the **same assistant turn**.
+- **Outsider-handoff route (prompt emitted)** — open [Post-outsider-handoff gate](../coding-session/SKILL.md#post-outsider-handoff-gate) on the **same assistant turn**.
+- **Outsider-handoff route (`blockedReason: remote-branch-missing`)** — open push-branch modal per [Remote branch gate](#remote-branch-gate-binding); **do not** open Post-outsider-handoff gate.
 - **Prompt-fallback route** — recap only; re-open ship cut-point or defer per developer message unless they return with PR URL.
 
 Do **not** auto-start inline **`pr-review`**, inline **`deploy-walk`**, or **`plan-reconcile`** from this skill.
