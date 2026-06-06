@@ -1,6 +1,6 @@
 # Mission Control display metadata — host spec pointer (R&D)
 
-This document is a **read-only pointer** for R&D agents and plan authors. The **host implementation** lives in the **hosting repo** Mission Control extension (not in the **research-and-development** center git repo). Do not treat this file as the normative authority table — use [`.sedea/centers/sedea/rules/9_display-metadata-authority.mdc`](.sedea/centers/sedea/rules/9_display-metadata-authority.mdc).
+This document is a **read-only pointer** for R&D agents and plan authors. The **host implementation** lives in the **active hosting repo** Mission Control host integration (not in the **research-and-development** center git repo). Do not treat this file as the normative authority table — use [`.sedea/centers/sedea/rules/9_display-metadata-authority.mdc`](.sedea/centers/sedea/rules/9_display-metadata-authority.mdc).
 
 Phase **1** (host persistence + MCP tools) must be merged before agents rely on governed updates. Phase **2** PR **1** added rule **9**; this doc supports PR **2** (R&D rules + development-process cross-links).
 
@@ -15,9 +15,9 @@ Mission Control persists display metadata in **`dispatch-tab.v1.json`** under ea
 | **Dispatch chrome** | `dispatchTitle`, `dispatchDescription`, `dispatchHoverDescription` | **`mission_control_update_dispatch_display`** (Squad Leader only) |
 | **Per-slot row** (`agentSlots[]`) | `title`, `description`, `hoverDescription` (plus existing `slug`, `role`, …) | **`mission_control_update_lane_display`** (caller slot only) |
 
-**Read path:** Host merges bundle snapshot with lane memento — see hosting repo `extensions/mission-control/src/host/spawn/resolveLaneTabDisplay.ts` and `resolveLaneTabDisplayMerge.ts` (comments mark bundle fields as additive).
+**Read path:** Host merges bundle snapshot with lane memento. Resolve merge modules from the **active hosting repo** host overlay (for example **`.cursor/rules/dot-sedea.mdc`**) — do not hard-code repository layout paths in this center doc.
 
-**Max lengths** (host validation): hosting repo `extensions/mission-control/src/shared/displayUpdateLimits.ts` — title / `dispatchTitle` **64** characters; description, hover, and dispatch long-form fields **512** characters.
+**Max lengths** (host validation): title / `dispatchTitle` **64** characters; description, hover, and dispatch long-form fields **512** characters — limits are enforced in the hosting repo host package; see that repo's overlay for source module names.
 
 ---
 
@@ -47,16 +47,9 @@ Audit: successful updates append **`display-metadata-updated`** events to **`dis
 
 ## Related hosting-repo references (implementation)
 
-Workspace-root paths on the **hosting repo** that contains `extensions/mission-control/`:
+Mission Control host source, limits, and integration tests live in the **active hosting repo**, not in this center submodule. **Do not** embed product-specific directory paths here — resolve implementation file paths from **`.cursor/rules/dot-sedea.mdc`** (or equivalent host overlay) on the repo that ships Mission Control.
 
-| Asset | Path |
-|-------|------|
-| Display update limits | `extensions/mission-control/src/shared/displayUpdateLimits.ts` |
-| Governed apply + permission matrix | `extensions/mission-control/src/host/displayUpdate/applyGovernedDisplayUpdate.ts` |
-| Bundle read (additive dispatch fields) | `extensions/mission-control/src/host/spawn/resolveLaneTabDisplay.ts` |
-| Integration tests | `extensions/mission-control/src/host/displayUpdate/displayMetadataPermissionMatrix.integration.test.ts` |
-
-R&D center agents **reference** these paths in plans and docs; **implement** host changes in the hosting repo, not in this center submodule.
+R&D center agents **reference** host overlay docs in plans; **implement** host changes in the hosting repo, not in this center submodule.
 
 ---
 

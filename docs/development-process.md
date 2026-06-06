@@ -5,7 +5,7 @@
 This is a document describing how developers deliver new features from idea to production. It is structured in four layers, captured in this order:
 
 1. **Strategy** — the underlying principles that govern every decision.
-2. **Development tools** - A surface of missions, protocol branches, agents, and extensions that is used to deliver artifacts - designs, plans and hosting repo code.
+2. **Development tools** - A surface of missions, protocol branches, agents, and workbench host capabilities that is used to deliver artifacts - designs, plans and hosting repo code.
 3. **Planning Modes** — the three modes planning passes through, applied top-down (*architectural / code design* → *delivery phases* → *PR breakdown*), each with a plan-file template and notes on how the template shifts across hierarchy levels (feature-level plan, delivery phase plan, etc.). A **PRD** (Product or Feature Requirements Document) is upstream input to the one-shot **Master Plan** in mode #1; it is not a separate planning mode.
 4. **Cadence** — the continuous loop that wraps the modes once delivery starts: phase decomposition → PRs breakdown → work session → feedback collection → plan updates → next phase. Each iteration may update *any* plan in the hierarchy, depending on the feedback's nature.
 
@@ -714,7 +714,7 @@ Full checklist and *Pre-resolution checklist* live in **`.sedea/centers/research
 | **`pr-review`** finished on coding lane | **`coding-session`** must re-emit with `shipPhase: pr-review` |
 | Developer wants **`resolved`** but rows still `open` | Run *Pre-resolution checklist* **AskQuestion** — wait for sync, planning-only close, or **`partial`** |
 
-**Host sync scope:** ship skills per **`extensions/mission-control/docs/plan-and-deliver-section-8-ship-ledger.md`**. Inline milestones on **`coding-session`** use **`coding-session`** re-emits. Implementation lives in the **hosting repo Mission Control extension**; manifest: **`center.yaml`** `governance.hostSync`.
+**Host sync scope:** ship skills per the **hosting repo** ship-ledger contract documented in **`.cursor/rules/dot-sedea.mdc`** (or equivalent host overlay) and **`center.yaml`** `governance.hostSync`. Inline milestones on **`coding-session`** use **`coding-session`** re-emits. Implementation lives in the **hosting repo Mission Control host integration** — not in this center submodule.
 
 - **Dispatch closure gate:** On the **plan and deliver** leader lane, do **not** propose **`MC_DISPATCH_RESOLVED_V1`** with **`resolved`** while any §8 ship row is **`open`** or **`blocked`** unless a **host-sync** update for that row was parsed this session, or the developer explicitly chose **planning-only** dispatch closure via **AskQuestion** (see **`plan.mdc`** §8 *Pre-resolution checklist*).
 

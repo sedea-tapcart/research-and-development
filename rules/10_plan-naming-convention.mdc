@@ -68,7 +68,7 @@ Worktree naming depends on the **hosting repo** that receives the code change, n
 
 | Hosting repo | Pattern | Authority |
 |--------------|---------|-----------|
-| **Hosting repo** (root contains `.sedea/centers/sedea/`, e.g. `sedea-ai/app`) | `<prefix>/<NN>-<slug>` — two-digit stack index required when the team uses stacked PRs on `main` | [`.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc`](.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc) and [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](20_efficient-pr-shipping.mdc) § *Worktree naming* |
+| **Hosting repo** (root contains `.sedea/centers/sedea/`) | `<prefix>/<NN>-<slug>` — two-digit stack index required when the team uses stacked PRs on `main` | [`.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc`](.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc) and [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](20_efficient-pr-shipping.mdc) § *Worktree naming* |
 | **Separate hosting repo worktree** (e.g. `user-auth`, `payments-web`) | `improve/<desc>`, `simplify/<desc>`, `harden/<desc>`, `fix/<desc>`, etc. — benefit-named prefix, **no** `NN` unless that repo's own rules require stacking | This rule § *Forbidden word* and *GOOD worktree names* above |
 
 Do **not** copy stacked **hosting repo** examples such as `feat/token-auth` or bare `improve/logger` onto a **separate hosting repo** — use `feat/01-token-auth` on the primary hosting repo when stacked on `main`. Do **not** use the forbidden busy-work prefix from any center naming rule.

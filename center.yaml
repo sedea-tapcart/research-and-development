@@ -82,8 +82,9 @@ governance:
       - missions/plan-and-deliver/plan.mdc
       - docs/development-process.md
     extensionDoc: >-
-      Hosting repo `extensions/mission-control/docs/plan-and-deliver-section-8-ship-ledger.md`
-      (ship-ledger.v1.json, silent leader host-sync message, required child outputs, audit events).
+      Hosting repo ship-ledger host contract (paths in that repo's `.cursor/rules/dot-sedea.mdc`
+      or Mission Control host docs): ship-ledger.v1.json, silent leader host-sync message,
+      required child outputs, audit events.
     requiredChildOutputs:
       - targetPlanPath
       - shipPhase
