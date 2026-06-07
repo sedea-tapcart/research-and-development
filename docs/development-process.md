@@ -82,6 +82,14 @@ node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/v
 
 Exit **0** when manifest and disk match; **1** prints paths only on disk or only in YAML. Plan-and-deliver authors also see **`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md`** § *Adding or removing a skill*.
 
+**Lane warm-up parity (`verify-lane-warmup-parity.mjs`).** After changing definitive **`laneRules`** tables or skill **`warmUpRules`**, run from the hosting repo root:
+
+```bash
+node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/verify-lane-warmup-parity.mjs --bootstrap full
+```
+
+Exit **0** when every **plan and deliver** lane role's manifest **`effectiveWarmUp`** covers today's legacy baseline (**sedea `alwaysApply` scan ∪ skill `warmUpRules`**). **`--bootstrap slim`** is the **§5.3 `alwaysApply` flip merge gate** (single bootstrap rule only) — expected to fail until phase 4 parity sign-off. Hosting-repo CI: **`./scripts/verify-center-governance.sh`** (runs skill manifest + parity **full**).
+
 **Scripts vendor trees.** Any `node_modules/` or other tooling-only trees under `missions/*/scripts/` are **not** center governance assets — do not link-audit or gap-report them as protocol. Hosting repos document audit scope in **`.cursor/rules/`** (not in this center repo).
 
 ### PRD routing (canonical)

@@ -192,7 +192,14 @@ Normative minimum **`laneRules`** paths per lane role — merged into **`effecti
 
 **Squad Leader:** Mission protocol or host config supplies the leader row — not only child spawn requests (see **`plan.mdc`** § *Squad Leader laneRules*). **Spawned children:** Include **`laneRules`** on the run-request when they differ from the skill frontmatter default, or rely on skill frontmatter when it matches this table exactly.
 
-**Parity (§5.3 gate):** **`effectiveWarmUp`** must cover at minimum today's `(alwaysApply scan ∪ skill warmUpRules)` per role — enforced by `verify-lane-warmup-parity.mjs` (PR 3).
+**Parity (§5.3 gate):** **`effectiveWarmUp`** must cover at minimum today's `(alwaysApply scan ∪ skill warmUpRules)` per role — enforced by **`verify-lane-warmup-parity.mjs`**:
+
+```bash
+node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/verify-lane-warmup-parity.mjs --bootstrap full
+node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/verify-lane-warmup-parity.mjs --bootstrap slim
+```
+
+**`--bootstrap full`** — today's host scan (must pass on manifest table changes). **`--bootstrap slim`** — §5.3 merge gate before **`alwaysApply` frontmatter flip** (expected fail until phase 4).
 
 ## Universal spawn preflight (all plan-and-deliver spawners)
 

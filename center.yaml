@@ -62,6 +62,8 @@ centerSkills:
 
 manifest:
   verify: missions/plan-and-deliver/scripts/verify-skill-manifest.mjs
+  parityVerify: missions/plan-and-deliver/scripts/verify-lane-warmup-parity.mjs
+  parityGateBootstrap: slim
   sync: >-
     After adding or removing any `missions/<slug>/skills/*/SKILL.md`, update this file's
     `skillEntries` for that mission and run the verify script from the hosting repo root
