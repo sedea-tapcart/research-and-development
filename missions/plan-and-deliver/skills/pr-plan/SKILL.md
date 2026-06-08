@@ -362,15 +362,15 @@ However:
 | Invoker (`parentAgentRole`) | Who owns §5d-equivalent spawn or §5c re-entry |
 |-----------------------------|-----------------------------------------------|
 | **`new-plan-agent`** on **`planner`** lane | **`planner`** Step **7b** may re-enter inline **`pr-plan`** §5c on the same **`targetPlanPath`**, or defer |
-| **`new-plan-agent`** on **`phase-planner`** lane (`phase-planner-agent` subtree) | **`phase-planner/SKILL.md`** Step **5f** — offer spawn or **`reenter-pr-plan-5c`** on **that** child lane; **forbidden** to default to detached **`coding-session`** or **`planner`** prose redirect |
+| **`new-plan-agent`** on **`phase-planner`** lane (`phase-planner-agent` subtree) | **`phase-planner/SKILL.md`** Step **5f** — offer spawn or **`reenter-pr-plan-5c`** on **that** child lane; **forbidden** to default to detached **`coding-session`** or **`planner`** prose redirect. **Decomposition** (**inline **`pr-breakdown`**, including ancestor hoist): same lane rule — Step **5b-decompose** on **`phase-planner`**, not **`planner`** Step **7**. |
 
-When inline under **`phase-planner`**, include **`invokerRole: phase-planner-agent`** (or equivalent) in inline completion so the parent runs Step **5f** without inferring from README shorthand alone.
+When inline under **`phase-planner`**, include **`invokerRole: phase-planner-agent`** (or equivalent) in inline completion so the parent runs Step **5f** (implementation) or Step **5b-decompose** / **5e** (decomposition merge) without inferring from README shorthand alone.
 
 **Forbidden after §§1–4 (binding — inline under `new-plan` or upstream on planner):**
 
 - Report **`## Completion (inline)`** to the invoker while **`implementationHandoffStatus`** is still **`not-offered`** (§5c not yet shown) **unless** **`skipPrPlanHandoffModal: true`**.
 - Bubble **`readyForImplementation: true`** upstream and return to **`planner`** Step **7b** master-plan menus without offering §5c on **this** lane first **unless** **`skipPrPlanHandoffModal: true`** (then include **`prPlanHandoffSkipped: true`** in inline completion).
-- Treat Squad Leader §2 **existing PRD** intake (no session **`ad-hoc-prd`**) as permission to skip §5c — PRD source does **not** change the **`pr-plan`** → **`coding-session`** handoff chain.
+- Skip §5c based on PRD **`operation: manage`** or a linked `@path` alone — PRD source does **not** change the **`pr-plan`** → **`coding-session`** handoff chain.
 
 Set **`implementationHandoffStatus: "offered"`** when §5c modal is emitted; **`deferred`** when the developer picks **`defer`**; **`spawned-coding-session`** after §5d.
 

@@ -356,9 +356,46 @@ async function syncHostingDefaultBranch(hostingRoot, defaultBranch, dryRun) {
   return { ok: true, actions, pullStatus: pull.stdout || 'ok' };
 }
 
-async function runNativeExtensionsRebuild(hostingRoot, dryRun) {
-  const scriptPath = path.join(hostingRoot, 'scripts', 'rebuild-native-extensions.sh');
-  const action = { action: 'rebuild-native-extensions', cwd: hostingRoot, script: scriptPath };
+async function readDotSedeaText(hostingRoot) {
+  const dotSedeaPath = path.join(hostingRoot, '.cursor', 'rules', 'dot-sedea.mdc');
+  try {
+    return await fs.readFile(dotSedeaPath, 'utf8');
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Repo-relative post-merge rebuild script from hosting overlay — see dot-sedea
+ * `postMergeHostRebuildScript` (frontmatter or body). Center assets must not
+ * hard-code product script paths.
+ */
+function resolvePostMergeRebuildScriptRel(dotSedeaText) {
+  if (!dotSedeaText) return null;
+  const patterns = [
+    /^postMergeHostRebuildScript:\s*['"]?([^\s'"]+)['"]?/m,
+    /postMergeHostRebuildScript:\s*`([^`]+)`/,
+    /postMergeHostRebuildScript:\s*([^\s`]+)/,
+  ];
+  for (const re of patterns) {
+    const m = dotSedeaText.match(re);
+    if (m?.[1]) return m[1].trim();
+  }
+  return null;
+}
+
+async function resolvePostMergeRebuildScript(hostingRoot) {
+  const rel = resolvePostMergeRebuildScriptRel(await readDotSedeaText(hostingRoot));
+  if (!rel) return null;
+  return path.join(hostingRoot, rel);
+}
+
+async function runPostMergeHostRebuild(hostingRoot, dryRun) {
+  const scriptPath = await resolvePostMergeRebuildScript(hostingRoot);
+  if (!scriptPath) {
+    return { ok: true, skipped: true, status: 'skipped_not_present', actions: [] };
+  }
+  const action = { action: 'post-merge-host-rebuild', cwd: hostingRoot, script: scriptPath };
   try {
     await fs.access(scriptPath, fsSync.constants.X_OK);
   } catch {
@@ -404,7 +441,7 @@ const USAGE = `Usage: post-reconcile-workspace-cleanup [--operations-user-id <id
 
   --dry-run   Print planned git actions (default). Does not mutate git or sidecars.
   --apply     Run git worktree remove, local worktree name ref cleanup (PR merged + remote head gone), hosting pull,
-              rebuild-native-extensions.sh (when present), prune-sessions.
+              post-merge host rebuild when dot-sedea documents postMergeHostRebuildScript, prune-sessions.
               Agent must call sedea_remove_worktree_folder for each worktreePath before --apply.
 
   --default-integration-line <name>  Integration line on origin (default: main). Legacy flag: --default-branch.
@@ -530,13 +567,13 @@ async function main() {
   }
 
   if (sync.ok) {
-    const rebuild = await runNativeExtensionsRebuild(hostingRoot, dryRun);
-    report.nativeExtensionsRebuildStatus = rebuild.status;
+    const rebuild = await runPostMergeHostRebuild(hostingRoot, dryRun);
+    report.postMergeHostRebuildStatus = rebuild.status;
     if (rebuild.actions?.length) report.actions.push(...rebuild.actions);
     if (!rebuild.ok && !dryRun) {
       report.errors.push({
         hostingRoot,
-        error: rebuild.error || 'rebuild-native-extensions failed',
+        error: rebuild.error || 'post-merge host rebuild failed',
       });
     }
   }

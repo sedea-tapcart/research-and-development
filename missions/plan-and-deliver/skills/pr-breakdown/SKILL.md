@@ -88,6 +88,17 @@ The procedure below is a hard contract — do **not** skip steps, re-order them,
 
 The **developer** picks the next move per **30_planning-target-resolution** § *Sedea input channel*.
 
+### Inline invoker lane (binding)
+
+When **`parentAgentRole`** is **`phase-planner-agent`**, this skill runs **inline on the active phase-planner child lane** — even when **`targetPlanPath`** is the decomposition **ancestor** (Master Plan) after single-PR hoist (`hoistFromPhasePath` set). The **write target** (which `.plan.md` file is edited) is **not** the **execution lane**.
+
+**Forbidden:**
+
+- Prose redirect to the **`planner`** lane, **`planner`** Step **7**, or *"open the Master Plan agent"* because **`targetPlanPath`** names the ancestor Master Plan.
+- Treating ancestor file paths as permission to hand decomposition back to **`master-plan-agent`** while **`phase-planner-agent`** invoked this skill inline.
+
+**Required:** Report **`## Completion (inline)`** to the **phase-planner** invoker on the **same** child lane; merge fields per **`phase-planner/SKILL.md`** Step **5e**.
+
 ### Inline handoff — **pr-breakdown** → **`new-plan`** (step 6 act-after-select)
 
 When **`parentAgentRole`** is **`master-plan-agent`** or **`phase-planner-agent`** (this skill inline under **`planner`** or **`phase-planner`**), run **`new-plan`** **inline on this lane** for **eligible** row index(es) only — **do not** emit **`AGENT_RUN_REQUEST_V1`** for **`new-plan`**. **Depth-first gate:** parse **`### Sequencing`** per **development-process.md** § *Depth-first plan-tree traversal* — expand only PR indices that are **ship-eligible** (sequential: lowest pending **N** whose prior PR in the chain is ship-complete; parallel stage: all pending indices in the current stage once the prior stage is fully ship-complete). Load `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/new-plan/SKILL.md`, construct inline context per eligible row from the table below, follow that skill’s steps (including inline **`pr-plan`**), and merge each **`## Completion (inline)`** into this skill’s ledger (`childRows`, `spawnedPlans`, `activeLanes`, `openLedgerEntries`, `remainingTasks`). Inline **`new-plan`** may still spawn **`coding-session`** via inline **`pr-plan`** §5d.
@@ -141,9 +152,9 @@ Run **after** stage verification when **all** of the following hold:
 
 **Stop** (do not draft § 5 PR breakdown on this phase plan):
 
-> *"Single-PR **`PR breakdown`** after **`phase-planner`** should **hoist** to the decomposition **ancestor** (the plan that owns this phase's **`Delivery phases`** row), not run set-level **`pr-breakdown`** on this phase file. Re-run **`pr-breakdown`** on the ancestor with `hoistFromPhasePath` / `hoistFromPhaseSlug`, `scopeParentIndex`, and `prBreakdownShape: \"single\"` — or set `decomposeOnPhasePlan: true` only when the developer explicitly wants a one-PR § 5 on this phase plan."*
+> *"Single-PR **`PR breakdown`** after **`phase-planner`** should **hoist** to the decomposition **ancestor** (the plan that owns this phase's **`Delivery phases`** row), not run set-level **`pr-breakdown`** on this phase file. Re-run **`pr-breakdown` inline on this phase-planner lane** with `targetPlanPath` = ancestor, plus `hoistFromPhasePath` / `hoistFromPhaseSlug`, `scopeParentIndex`, and `prBreakdownShape: \"single\"` — **do not** switch to the **`planner`** lane. Or set `decomposeOnPhasePlan: true` only when the developer explicitly wants a one-PR § 5 on this phase plan."*
 
-Return `partial` with `remainingTasks` naming the hoist when spawned from **`phase-planner`** without ancestor retargeting.
+Return `partial` with `remainingTasks` naming the hoist when **`phase-planner`** inline handoff omitted ancestor retargeting — **not** as permission to redirect to **`planner`**.
 
 When **`hoistFromPhasePath`** **is** set, the **target** must be the **ancestor** (Master or Phase plan whose **`Delivery phases`** list contains item **`scopeParentIndex`** for the hoisted phase). The phase file at **`hoistFromPhasePath`** is **scope-only** — do not use it as `targetPlanPath`. Acknowledge: *"Hoist mode: ancestor `<target-slug>`, phase scope `<hoistFromPhaseSlug>`, row N=<index>."* Then continue; **step 3.6** runs after step 3.
 
@@ -177,7 +188,7 @@ Acknowledge the state in one line.
 Run when **`hoistFromPhasePath`** and **`scopeParentIndex`** are set and **`prBreakdownShape`** is `"single"` (or step 4 would route to **step 5s**).
 
 1. Read the phase plan at **`hoistFromPhasePath`** in full. Use §§ 2–4 and **`### Decomposition assessment`** as the **only** scope for the single PR (not the ancestor's full feature scope).
-2. Read the **target** (ancestor) plan. Locate **`## 6. Delivery phases`** (Master) or **`## 5. Delivery phases`** (Phase parent). If the ancestor dual-title is still `Delivery phases | PR breakdown` with `_TBD_` list, **stop** — run **`delivery-phases`** on the ancestor first, then re-enter hoist.
+2. Read the **target** (ancestor) plan. Locate **`## 6. Delivery phases`** (Master) or **`## 5. Delivery phases`** (Phase parent). If the ancestor dual-title is still `Delivery phases | PR breakdown` with `_TBD_` list: when **`parentAgentRole`** is **`phase-planner-agent`**, run **`delivery-phases`** **inline on this same phase-planner lane** on the ancestor (or close with structured choice to defer) — **forbidden** to redirect to the **`planner`** lane. When **`master-plan-agent`**, run **`delivery-phases`** inline on the **`planner`** lane or stop with structured choice. Then re-enter hoist.
 3. Match **`scopeParentIndex`** to the numbered row whose **`Plan:`** links the hoisted phase plan (or whose title matches **`hoistFromPhaseSlug`** / phase `name:`). If no row matches, return `partial` and report the index mismatch.
 4. **`StrReplace`** on the ancestor — update **only** that row:
  - Set the **Decomposition decision** sub-bullet to **`PR breakdown`**.
@@ -185,7 +196,7 @@ Run when **`hoistFromPhasePath`** and **`scopeParentIndex`** are set and **`prBr
  - If the row already has separate **`Phase plan:`** / **`Plan:`** lines, set **`Plan:`** to `_TBD_` only when the PR link is still missing.
 5. **`StrReplace`** on the phase plan — under **`## 5. Delivery phases | PR breakdown`**, replace `_TBD_` with a short hoisted note (one paragraph): PR breakdown is authored on ancestor **`<ancestor-slug>`** row **N**; do not draft a § 5 **`PR breakdown`** list on this phase file.
 6. Draft the single-PR set-level block (**`### Single-concern strategy`**, **`### Sequencing`**, **`### PR list`** with **K = 1**) using **step 5s**, grounded in the **phase** plan scope from step 1. **Do not** retitle the ancestor's top-level § 6 / § 5 from **`Delivery phases`** to **`PR breakdown`** — the hoisted PR is row-scoped on the ancestor list.
-7. Store the drafted block in working notes for step 6 approval, or write it under a comment block in chat only until approved — **preferred:** proceed to **step 6** with `hoistPendingWrite: true` and present the draft for approval before **`new-plan`** spawn.
+7. When **`upstreamRouteApproved: true`** or **`skipPrBreakdownApprovalModal: true`** from **`phase-planner`** with **`autoContinue: true`**, **write** the drafted **`### Single-concern strategy` / `### Sequencing` / `### PR list`** block to the ancestor plan (row-scoped anchor under the target **`Delivery phases`** section) **before** inline **`new-plan`** — do **not** keep chat-only **`hoistPendingWrite`** as a stall. When upstream route is **not** pre-approved, **preferred:** proceed to **step 6** with `hoistPendingWrite: true` and present the draft for approval before **`new-plan`** spawn.
 8. After developer approval (step 6 **`expand-eligible`** or **`approve-list`** followed by expand on a later turn): **inline** (`parentAgentRole` **`master-plan-agent`** or **`phase-planner-agent`**) — run **`new-plan`** **inline** per [Inline handoff](#inline-handoff--pr-breakdown--new-plan-step-6-act-after-select) with hoist fields. **Standalone spawned** — emit **`AGENT_RUN_REQUEST_V1`** for **`new-plan`** with `inputs` including `mode: "indexed-child"`, `parentPlanPath` / `parentPlanSlug` (ancestor), `index: scopeParentIndex`, `childKind: "pr-plan"`, `requestedPopulatorSkill: "pr-plan"`, `hoistFromPhase: true`, `hoistFromPhasePath`, `hoistFromPhaseSlug`, `decompositionKind: "pr-breakdown"`, `upstreamSkill: "pr-breakdown"`, plus `ledgerParent` when known. Pass the drafted single-PR row title in `initiatingPrompt` when helpful.
 
 **Skip** steps **4** and **5** (whole-plan dual-title gate and set-level rewrite on the ancestor) when step 3.6 applies — unless the developer explicitly chooses **`decomposeOnPhasePlan`** on a follow-up turn.
@@ -348,7 +359,7 @@ Required **`options`** (adapt labels; keep **K** visible in the **`prompt`** whe
 | `abandon` | Abandon this branch |
 | `more-details` | More details for option _ |
 
-**Inline under `planner` or `phase-planner`:** Structured-choice approval is mandatory before indexed **`new-plan`** handoff. Do **not** emit **`AGENT_RESULT_RESPONSE_V1`** for this skill when **`parentAgentRole`** is **`master-plan-agent`** or **`phase-planner-agent`** — report **`## Completion (inline)`** to the invoker instead. Run **`new-plan`** **inline** on this lane (no child lanes for **`new-plan`**); **`coding-session`** child lanes may open from inline **`pr-plan`**.
+**Inline under `planner` or `phase-planner`:** Structured-choice approval is mandatory before indexed **`new-plan`** handoff **except** when **`upstreamRouteApproved: true`** or **`skipPrBreakdownApprovalModal: true`** from **`phase-planner`** with **`autoContinue: true`** (see **Cascade route approval** in act-after-select below) — then run **`approve-list`** act-after-select **same turn** without opening Step **6** modal. Do **not** emit **`AGENT_RESULT_RESPONSE_V1`** for this skill when **`parentAgentRole`** is **`master-plan-agent`** or **`phase-planner-agent`** — report **`## Completion (inline)`** to the invoker instead. Run **`new-plan`** **inline** on this lane (no child lanes for **`new-plan`**); **`coding-session`** child lanes may open from inline **`pr-plan`**.
 
 **Standalone (spawned):** After structured-choice approval, emit **`AGENT_RESULT_RESPONSE_V1`** with `continuationStatus: "active"` when spawning **`new-plan`** child lanes — **not** in the structured-choice message. On **revise**, run step **6a** then repeat recap → structured choice.
 
@@ -358,6 +369,7 @@ In a **new** assistant turn after the developer selects an option in the approva
 
 | Choice | Action |
 | --- | --- |
+| **Cascade route approval** (no modal) | When **`upstreamRouteApproved: true`** OR **`skipPrBreakdownApprovalModal: true`** from inline **`phase-planner`** with **`autoContinue: true`**, and PR index **1** is depth-first eligible: treat as **`approve-list`** without re-asking — write hoisted PR block if `hoistPendingWrite`, then **same turn** inline **`new-plan`** index **1** with `autoChainFirstPr: true` and `parentRowSingleConcern` from item **1**; merge inline **`new-plan`** / **`pr-plan`**. **Forbidden:** Step **6** modal on this path. **`planner`** Step **7** route approval and **`phase-planner`** Step **5b** route approval are **equivalent upstream consent** for first PR expand. |
 | **Approve PR breakdown** (`approve-list`) | Record `developerApprovalStatus: "list-approved"`. **Inline under `planner` or `phase-planner`:** when PR index **1** is depth-first eligible per **30_planning-target-resolution** § *Depth-first expansion eligibility*, **same turn** run inline **`new-plan`** for index **1** only with `autoChainFirstPr: true` and `parentRowSingleConcern` from item **1** (see [Inline handoff](#inline-handoff--pr-breakdown--new-plan-step-6-act-after-select)); merge inline **`new-plan`** / **`pr-plan`** completion. When index **1** is not eligible, keep **`Plan:`** placeholders `_TBD_` and report why — do **not** run **`new-plan`**. **Standalone spawned:** keep **`Plan:`** placeholders `_TBD_` on **`approve-list`** alone — use **`expand-eligible`** to spawn. |
 | **Expand eligible PR row(s)** (`expand-eligible`) | Parse **`### Sequencing`**; resolve eligible indices per **30_planning-target-resolution** § *Depth-first expansion eligibility*. **Inline:** run **`new-plan`** once per eligible index (parallel stage may be >1); merge each **`## Completion (inline)`**; record **`coding-session`** spawns in `activeLanes`. **Standalone spawned:** one **`AGENT_RUN_REQUEST_V1`** per eligible index. If none eligible, stop with reason (prior PR/stage ship incomplete) — do not spawn. |
 | **Revise PR breakdown first** | Run step **6a**, then repeat recap → structured choice. Do **not** spawn children or emit terminal success until re-approved. |

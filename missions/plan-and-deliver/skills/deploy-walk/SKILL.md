@@ -147,6 +147,33 @@ When `upstreamSkill` is **`coding-session`** and `deployWalkScope` is **`staging
 
 Use `worktreePath` / `worktreeName` from inline context for command context in step presentations. PR fields (`prUrl`, `prNumber`, …) are usually present for staging scope.
 
+## Worktree path visibility (binding)
+
+When **`worktreePath`** is set on inline context (typical on **`coding-session`** Before deploy while the session worktree still exists):
+
+| Surface | Requirement |
+|---------|-------------|
+| **Manual step presentation** ([Step 4](#step-4--step-presentation-contract)) | First line after the plan header: **`Worktree: <absolute-worktreePath>`** |
+| **Agent-executable run** | Recap **`cwd: <absolute-worktreePath>`** before shell commands |
+| **Developer-await gates** ([Deploy developer-await modal options](#deploy-developer-await-modal-options-binding)) | **`display.markdown`** includes **`Worktree: <absolute-worktreePath>`** when any step runs in-tree |
+| **`deploy-walk status`** | Append **`worktree=<absolute-path>`** when known |
+
+When **`worktreePath`** is missing but agent-executable steps need a cwd, surface one line: *No worktree in inline context — resolve **`worktreePath`** before running in-tree commands* — do not guess cwd from chat.
+
+After merge cleanup the session worktree may be gone — After deploy walks often have no **`worktreePath`**; do not invent a path. [Return to implementation from deploy walk](#return-to-implementation-from-deploy-walk-inline-handback) creates a **new** worktree when the developer picks **`return-to-implementation-new-worktree`**.
+
+## Deploy developer-await modal options (binding)
+
+Every **AskQuestion** / **`MC_PHASED_RESPONSE_V1`** gate while a deploy step awaits developer input (manual step presentation, block follow-up, After-deploy closure, sub-section completion hints) **must** include these options unless the gate table below explicitly omits one:
+
+| Option id | Label (brief) |
+|-----------|---------------|
+| *(gate-specific)* | Step done / skip / block / closure / present-next — per gate table |
+| `return-to-implementation-new-worktree` | Return to implementation — new worktree |
+| `more-details` | More details for option _ |
+
+**`return-to-implementation-new-worktree`** — developer found a product defect during deploy verification (including after the PR merged). Set **`outputs.returnToImplementation: true`** in **`## Completion (inline)`** and stop the walk. Parent **`coding-session`** runs [Return to implementation from deploy walk](../coding-session/SKILL.md#return-to-implementation-from-deploy-walk-new-worktree) on the **next** turn — **do not** edit product code from this skill.
+
 On inline start, run [Inline walk bootstrap](#inline-walk-bootstrap) — do not wait for `deploy-walk present 1`.
 
 The skill is **loose mode by design** on **manual** steps. Between `deploy-walk present <N>` (manual presentation) and `deploy-walk <N> done` / `skip` / `block`, the chat is **normal collaboration** — the **developer** can ask questions, paste logs, debug. **Agent-executable** steps do **not** wait for `deploy-walk present <N>` — the agent runs them, updates the plan, and continues.
@@ -161,7 +188,7 @@ Classify each unchecked step **before** acting. When classification is ambiguous
 
 ### Agent-executable (auto-run — no approval)
 
-Run **without** an **AskQuestion** approval gate **before each agent-executable step** (mid-turn tool work). Use `worktreePath` from inline context when present; otherwise resolve cwd from plan anchor or chat. When an auto-run pass **ends the assistant turn** without chaining further steps, still close with structured choice per [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](.sedea/centers/sedea/rules/2_ask-question-instructions.mdc) § **Turn completion invariant**.
+Run **without** an **AskQuestion** approval gate **before each agent-executable step** (mid-turn tool work). Use **`worktreePath`** from inline context when present — recap **`cwd: <absolute-path>`** per [Worktree path visibility (binding)](#worktree-path-visibility-binding); otherwise resolve cwd from plan anchor or chat. When an auto-run pass **ends the assistant turn** without chaining further steps, still close with structured choice per [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](.sedea/centers/sedea/rules/2_ask-question-instructions.mdc) § **Turn completion invariant** (include [Deploy developer-await modal options](#deploy-developer-await-modal-options-binding) when awaiting developer input).
 
 | Examples | Notes |
 |----------|--------|
@@ -289,7 +316,7 @@ Find the Nth numbered item in the active sub-section (regex `^N\. \[[ x]\] `). T
 - If the box is `[ ]` and has a prior `*(YYYY-MM-DD: Blocked — {reason})*` annotation, surface it: *"Previously blocked: {reason} (YYYY-MM-DD). Has the blocker cleared?"* Then classify — re-run if agent-executable and developer cleared the blocker; else present as manual.
 - If the box is `[ ]` and clean, **classify**:
  - **Agent-executable** — run per [Agent-executable vs manual steps](#agent-executable-vs-manual-steps); on pass flip and auto-advance; on fail block or assist.
- - **Manual** — present with numbered **Testing steps** per § *Step 4 — Step presentation contract*, then close with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** (step done / blocked / skip / more-details) — do not prose-only stop.
+ - **Manual** — present with numbered **Testing steps** per § *Step 4 — Step presentation contract*, then close with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** per [Deploy developer-await modal options](#deploy-developer-await-modal-options-binding) (step done / blocked / skip / return-to-implementation / more-details) — do not prose-only stop.
 
 ### `deploy-walk <N> done` / `deploy-walk <N> done: <note>` — flip box, advance hint
 
@@ -302,14 +329,19 @@ If `{note}` is omitted in `deploy-walk <N> done`, append `*(YYYY-MM-DD: done.)*`
 
 After the edit, **check whether step N was the last `[ ]` in the active sub-section**:
 
-- If `### Local test` is now fully `[x]` and Status is `drafted`, hand back to **`coding-session`** for pre-pr-review — do **not** flip to `pr-open` until **`create-pr`** succeeds.
+- If `### Local test` (legacy **`### Before deploy`**) is now fully `[x]` and Status is `drafted`, hand back to **`coding-session`** for pre-pr-review — do **not** flip to `pr-open` until **`create-pr`** succeeds.
 - If `### Staging test` is now fully `[x]` and Status is `pr-open`, close with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`**: *Continue to PR review*, *Review Staging-test checklist*, or **More details for option _**.
-- If `### After deploy` is now fully `[x]` and Status is `deployed`, stop after marking the step and ask the developer for explicit closure approval with **AskQuestion**. Required options:
- - **Approve deploy checklist closure**
- - **Review deploy checklist first**
- - **Leave status deployed**
- - **More details for option _**
- Only **Approve deploy checklist closure** authorizes the Status `deployed → done` flip and the **Frontmatter capstone** `deploy-test-plan-verified` `pending → done` mutation. Do not treat the final step's `done` command as approval for the larger deploy lifecycle closeout.
+- If `### After deploy` is now fully `[x]` and Status is `deployed`, stop after marking the step and ask the developer for explicit closure approval with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`**. Required options (plus **`return-to-implementation-new-worktree`** and **More details for option _** per [Deploy developer-await modal options](#deploy-developer-await-modal-options-binding)):
+
+| Option id | Label (brief) |
+|-----------|---------------|
+| `approve-deploy-closure` | Approve deploy checklist closure |
+| `review-deploy-checklist` | Review deploy checklist first |
+| `leave-status-deployed` | Leave status deployed |
+| `return-to-implementation-new-worktree` | Return to implementation — new worktree |
+| `more-details` | More details for option _ |
+
+Only **`approve-deploy-closure`** authorizes the Status `deployed → done` flip and the **Frontmatter capstone** `deploy-test-plan-verified` `pending → done` mutation. Do not treat the final step's `done` command as approval for the larger deploy lifecycle closeout. **`return-to-implementation-new-worktree`** sets **`outputs.returnToImplementation: true`** — hand back to **`coding-session`**; do **not** flip to `done`.
 - Otherwise, if step N+1 is **agent-executable**, continue [Autonomous agent-executable pass](#autonomous-agent-executable-pass) in the same turn (no `deploy-walk present` wait).
 - If step N+1 is **manual**, close with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`**: *Present step N+1* (equivalent to **`deploy-walk present <N+1>`**), report agent-assisted results, or **More details for option _** — put the verbatim next unchecked step line in **`display.markdown`**.
 
@@ -375,7 +407,7 @@ If `### After deploy` has no `[ ]` items at all (it's empty by design or already
 No edits. Reply with one line summarising the plan's current state (plain text or a single fenced `text` line — do **not** use raw `<…>` placeholders, which Markdown parsers treat as HTML tags):
 
 ```text
-{slug} — Status: {state} (last transition: {YYYY-MM-DD}). Local: {Lx}/{Ly} ✓. Staging: {Sx}/{Sy} ✓. After: {Ax}/{Ay} ✓.
+{slug} — Status: {state} (last transition: {YYYY-MM-DD}). Local: {Lx}/{Ly} ✓. Staging: {Sx}/{Sy} ✓. After: {Ax}/{Ay} ✓. worktree={absolute-path when worktreePath set}
 ```
 
 Where `{Lx}`/`{Ly}` count Local test (legacy Before deploy), `{Sx}`/`{Sy}` Staging test, `{Ax}`/`{Ay}` After deploy, `{state}` from the `**Status:**` line, and `{YYYY-MM-DD}` from the latest `*(…)*` history entry when present. If no `**Status:**` line is found, surface: *"No `**Status:**` lifecycle marker — pre-skill plan format."*
@@ -390,6 +422,7 @@ Use a **blockquote** or plain lines for the presentation shell — **do not** pu
 
 > **Plan:** {slug} — {absolute-path-to.plan.md} — Section: § N {Local, Staging, or After} deploy, step {N} of {total}.
 > **Status:** {state} (last transition: {YYYY-MM-DD}).
+> **Worktree:** {absolute-worktreePath} *(omit this line only when `worktreePath` is absent from inline context)*
 >
 > ### Step
 >
@@ -420,7 +453,7 @@ Use a **blockquote** or plain lines for the presentation shell — **do not** pu
 >
 > ---
 >
-> **Manual step** — follow **Testing steps** in order. Close this turn with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`**: step done, step skip (with reason), step blocked (with reason), or **More details for option _** — put equivalent **`deploy-walk <N> done` / `skip` / `block`** command text in **`display.markdown`** or option labels when helpful.
+> **Manual step** — follow **Testing steps** in order. Close this turn with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** per [Deploy developer-await modal options](#deploy-developer-await-modal-options-binding) — step done, step skip (with reason), step blocked (with reason), **return-to-implementation-new-worktree**, or **More details for option _** — put equivalent **`deploy-walk <N> done` / `skip` / `block`** command text in **`display.markdown`** or option labels when helpful.
 
 ### Testing steps authoring rules
 
@@ -570,6 +603,16 @@ When run inline on **`coding-session`**, report these fields in prose via **`## 
 - `outputs.shipPhase` — `deploy-walk` while checklist in progress; update when blocked or done
 - `outputs.rowStatus` — `open` while steps remain; `closed` when `deployStatus` and `deployTodoStatus` are both `done`; `blocked` when a deploy step is blocked
 - `outputs.blockedReason` — when `rowStatus` is `blocked` (name the blocked step)
+- `outputs.returnToImplementation` — **`true`** when the developer chose **`return-to-implementation-new-worktree`** at a deploy gate; parent **`coding-session`** opens a new worktree (see [Return to implementation from deploy walk](#return-to-implementation-from-deploy-walk-inline-handback))
+
+## Return to implementation from deploy walk (inline handback)
+
+When the developer selects **`return-to-implementation-new-worktree`** at any [Deploy developer-await modal options](#deploy-developer-await-modal-options-binding) gate:
+
+1. **Do not** flip deploy checklist boxes or Status to `done` as part of this pick.
+2. Set **`outputs.returnToImplementation: true`**, keep **`deployStatus`** / sub-section state as-is (document the active step index in **`outputs.remainingTasks`** when useful).
+3. Report via **`## Completion (inline)`** — parent **`coding-session`** runs [Return to implementation from deploy walk](../coding-session/SKILL.md#return-to-implementation-from-deploy-walk-new-worktree) on the **next** turn.
+4. **Forbidden:** product edits, **`git commit`**, or new worktree creation from **`deploy-walk`** — parent owns worktree lifecycle.
 
 Stop when a **manual** step is presented and awaiting developer input, when the walk is **blocked**, when Local-test scope is satisfied (`local-test-only`), when Staging-test scope is satisfied (`staging-test-only`), or when full post-merge walk reaches `done`. You **may** process multiple **agent-executable** steps in one turn before stopping. Do not auto-invoke other skills; do not commit hosting-repo git from this procedure.
 

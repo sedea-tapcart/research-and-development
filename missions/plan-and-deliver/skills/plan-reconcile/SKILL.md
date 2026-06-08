@@ -295,7 +295,7 @@ node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/p
  --operations-user-id "$OPS_ID" --apply [--slug <slug>]
 ```
 
-The script runs **`git worktree remove`**, drops local worktree name refs when PR merged **and** remote head is gone (not merge-base heuristics), **`git pull origin <defaultIntegrationLine>`** on **`HOSTING_ROOT`**, **`./scripts/rebuild-native-extensions.sh`** when present (so the developer can reload the window), and **`plan-state.mjs prune-sessions --all`**.
+The script runs **`git worktree remove`**, drops local worktree name refs when PR merged **and** remote head is gone (not merge-base heuristics), **`git pull origin <defaultIntegrationLine>`** on **`HOSTING_ROOT`**, optional **post-merge host rebuild** when **`.cursor/rules/dot-sedea.mdc`** documents **`postMergeHostRebuildScript`** on the active hosting repo (so the developer can reload the Sedea workbench), and **`plan-state.mjs prune-sessions --all`**.
 
 3. Summarise **`cleanedWorktrees`**, **`deletedWorktreeNames`**, **`skippedWorktreeNames`**, **`mainPullStatus`**, and any **`errors`** from the script JSON.
 

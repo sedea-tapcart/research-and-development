@@ -60,11 +60,11 @@ This skill prepares a fresh **`WORKTREE_ROOT`** after Mission Control attach. **
 | dot-sedea mode | What this skill runs |
 |----------------|----------------------|
 | **`script-bootstrap`** | `./scripts/bootstrap-worktree-dev.sh "$WORKTREE_ROOT"` from **primary** **`HOSTING_ROOT`** — linear phases per that repo's **`--help`** (orchestrator repos) |
-| **`full`** | Bootstrap script, full path (**sedea-ai/app** overlay) |
-| **`extensions-only-link`** | Bootstrap script with `--extensions-only --link-vsc-build-artifacts-from "$HOSTING_ROOT"` |
+| **`full`** | Bootstrap script, **full overlay** profile when dot-sedea § *Worktree bootstrap mode* names **`full`** |
+| **`extensions-only-link`** | Bootstrap script, **linked-build overlay** profile per dot-sedea § *Worktree bootstrap mode* |
 | **`submodule-init`** | `git submodule update --init --recursive` under **`WORKTREE_ROOT`** when no bootstrap script applies |
 
-Vscode compile, linked **`vscode/out`**, and extension sync apply **only** on **`full`** / **`extensions-only-link`** overlays — not on every script repo.
+Full compile, linked primary-clone build artifacts, and add-on sync per dot-sedea apply **only** on **`full`** / linked-build overlay profiles — not on every script repo.
 
 **Normative invocation:** **`coding-session`** runs this skill **inline** on the same lane after worktree attach and **waits** for `outputs.bootstrapStatus: success` before implementation. Spawn (`AGENT_RUN_REQUEST_V1`) is **not** the default — use only when a protocol step explicitly requires a spawned bootstrap child; the parent must still wait for success before implementing.
 
@@ -104,7 +104,7 @@ Required:
 |-------------------------|-----------------------------------------------|
 | **`script-bootstrap`** | `./scripts/bootstrap-worktree-dev.sh "<worktreePath>"` — append `bootstrapSkipFlags` only when dot-sedea documents honored skip flags |
 | **`full`** | `./scripts/bootstrap-worktree-dev.sh "<worktreePath>"` + attested `bootstrapSkipFlags` when applicable |
-| **`extensions-only-link`** | `./scripts/bootstrap-worktree-dev.sh "<worktreePath>" --extensions-only --link-vsc-build-artifacts-from "<hostingRoot>"` + attested flags when applicable |
+| **`extensions-only-link`** | `./scripts/bootstrap-worktree-dev.sh "<worktreePath>"` with linked-build flags per dot-sedea § *Worktree bootstrap mode* and that repo's script **`--help`** + attested `bootstrapSkipFlags` when applicable |
 | **`submodule-init`** | `cd "<worktreePath>" && git submodule update --init --recursive` — seed empty `.sedea/centers/*` from **`hostingRoot`** when init leaves an empty tree (see dot-sedea) |
 
 The bootstrap script is idempotent where the hosting repo documents idempotency — safe to re-run after partial failure.

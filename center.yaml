@@ -33,6 +33,7 @@ missions:
     commands:
       - plan and deliver
     skillEntries:
+      - missions/plan-and-deliver/skills/author-prd/SKILL.md
       - missions/plan-and-deliver/skills/ad-hoc-prd/SKILL.md
       - missions/plan-and-deliver/skills/coding-session/SKILL.md
       - missions/plan-and-deliver/skills/create-pr/SKILL.md
@@ -47,14 +48,13 @@ missions:
       - missions/plan-and-deliver/skills/pr-review/SKILL.md
       - missions/plan-and-deliver/skills/pre-pr-review/SKILL.md
       - missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md
-  - slug: prd
-    plan: missions/prd/plan.mdc
-    skills: missions/prd/skills/
+  - slug: debug-and-fix
+    plan: missions/debug-and-fix/plan.mdc
+    skills: missions/debug-and-fix/skills/
     commands:
-      - create prd
-      - manage prd
+      - debug and fix
     skillEntries:
-      - missions/prd/skills/author-prd/SKILL.md
+      - missions/debug-and-fix/skills/debug-and-fix/SKILL.md
 
 centerSkills:
   readme: missions/plan-and-deliver/skills/README.md
@@ -62,6 +62,8 @@ centerSkills:
 
 manifest:
   verify: missions/plan-and-deliver/scripts/verify-skill-manifest.mjs
+  parityVerify: missions/plan-and-deliver/scripts/verify-lane-warmup-parity.mjs
+  parityGateBootstrap: slim
   sync: >-
     After adding or removing any `missions/<slug>/skills/*/SKILL.md`, update this file's
     `skillEntries` for that mission and run the verify script from the hosting repo root
@@ -82,8 +84,9 @@ governance:
       - missions/plan-and-deliver/plan.mdc
       - docs/development-process.md
     extensionDoc: >-
-      Hosting repo `extensions/mission-control/docs/plan-and-deliver-section-8-ship-ledger.md`
-      (ship-ledger.v1.json, silent leader host-sync message, required child outputs, audit events).
+      Hosting repo ship-ledger host contract (paths in that repo's `.cursor/rules/dot-sedea.mdc`
+      or Mission Control host docs): ship-ledger.v1.json, silent leader host-sync message,
+      required child outputs, audit events.
     requiredChildOutputs:
       - targetPlanPath
       - shipPhase
