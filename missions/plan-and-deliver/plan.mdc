@@ -546,10 +546,52 @@ When an explicit developer override applies, replace the **`Parent:`** line with
 | 4 | `create-pr` | **coding-session** (inline) after pre-PR **go** | `skills/create-pr/SKILL.md` |
 | 5 | `deploy-walk` (Staging test) | **coding-session** (inline) after PR open | `skills/deploy-walk/SKILL.md` — `deployWalkScope: staging-test-only` |
 | 6 | `pr-review` | **coding-session** (inline) after PR exists | `skills/pr-review/SKILL.md` |
-| 7 | `deploy-walk` (After deploy) | **coding-session** (inline) after merge (**AskQuestion** at post-create-pr gate) | `skills/deploy-walk/SKILL.md` — **development-process.md** § *deploy-walk entry points* |
-| 8 | `plan-reconcile` | **`coding-session`** (inline) after deploy done or developer choice (not auto from deploy-walk) | `skills/plan-reconcile/SKILL.md` |
+| 7 | Merge approval | **coding-session** (inline) after clean **`pr-review`** | [Post-pr-review merge approval gate](skills/coding-session/SKILL.md#post-pr-review-merge-approval-gate) (outsider repos + manual path) or [Agent-delegated PR approve and merge](skills/coding-session/SKILL.md#agent-delegated-pr-approve-and-merge) when `mergeDelegationAuthorized` |
+| 8 | `deploy-walk` (After deploy) | **coding-session** (inline) after merge and post-merge cleanup | `skills/deploy-walk/SKILL.md` — **development-process.md** § *deploy-walk entry points* |
+| 9 | `plan-reconcile` | **`coding-session`** (inline) after deploy done or developer choice (not auto from deploy-walk) | `skills/plan-reconcile/SKILL.md` |
 
-**`deploy-walk` entry points:** **coding-session** runs Local test inline pre-merge; Staging test inline after PR open; After deploy inline post-merge when the developer chooses **PR merged — start After deploy deploy-walk** at [Post-create-pr handoff gate](skills/coding-session/SKILL.md#post-create-pr-handoff-gate); deploy phrases on the active coding-session lane. Detached **`deploy-walk`** dispatch redirects to **`coding-session`**. **`plan-reconcile`** runs **inline** on **`coding-session`** when the developer explicitly chooses reconcile — see [Plan-reconcile handoff (inline)](skills/coding-session/SKILL.md#plan-reconcile-handoff-inline). Finishing deploy-walk does **not** auto-run **`plan-reconcile`**.
+**`deploy-walk` entry points:** **coding-session** runs Local test inline pre-merge; Staging test inline after PR open; After deploy inline post-merge after [Agent-delegated PR approve and merge](skills/coding-session/SKILL.md#agent-delegated-pr-approve-and-merge) (when delegation authorized), [Post-pr-review merge approval gate](skills/coding-session/SKILL.md#post-pr-review-merge-approval-gate) (**`approve-merge`** on non-outsider repos; outsider repos merge on GitHub), or **`check-pr-status`** / **`spawn-after-deploy-walk`** at [Post-create-pr handoff gate](skills/coding-session/SKILL.md#post-create-pr-handoff-gate). Deploy phrases on the active coding-session lane. Detached **`deploy-walk`** dispatch redirects to **`coding-session`**. **`plan-reconcile`** runs **inline** on **`coding-session`** when the developer explicitly chooses reconcile — see [Plan-reconcile handoff (inline)](skills/coding-session/SKILL.md#plan-reconcile-handoff-inline). Finishing deploy-walk does **not** auto-run **`plan-reconcile`**.
+
+**PR review cycle (cyclic — post-create-pr)**
+
+After **`create-pr`** opens a GitHub PR, **`coding-session`** owns a **repeatable review loop** until the PR merges or the developer defers. The Squad Leader **tracks** `pr-open` / `pr-review` phases via §8 host sync from **`coding-session`** re-emits — it does **not** run this loop.
+
+```mermaid
+flowchart TB
+  classDef gate fill:#fef3c7,stroke:#d97706,color:#78350f
+  classDef inline fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
+  classDef external fill:#f1f5f9,stroke:#64748b,color:#0f172a
+
+  CPR["1 PR created<br/>create-pr inline"]:::inline
+  REV["2 Reviewers review<br/>GitHub — external"]:::external
+  GATE["Post-create-pr gate<br/>start-pr-review"]:::gate
+  PRV["3 coding-session runs pr-review<br/>Steps 1–5 inline"]:::inline
+  CLEAN{"4 Comments?"}
+  MERGE["Developer merges on GitHub<br/>not a skill modal"]:::external
+  FIX["5 Push fixes<br/>disposition → commit/push → Step 5 reconcile"]:::inline
+  WAIT["Post-create-pr gate<br/>check-pr-status / defer"]:::gate
+
+  CPR --> REV --> GATE --> PRV --> CLEAN
+  CLEAN -->|0 Must/Should/follow-up| MERGE
+  CLEAN -->|Must/Should| FIX --> REV
+  MERGE --> WAIT
+  PRV -->|skip-reject only| WAIT
+```
+
+| Cycle step | Normative owner | Skill / gate |
+|------------|-----------------|--------------|
+| **1 — PR created** | **`coding-session`** (inline **`create-pr`**) | [Post-create-pr handoff gate](skills/coding-session/SKILL.md#post-create-pr-handoff-gate) opens same turn |
+| **2 — Reviewers review** | Developer + GitHub reviewers (Slink, CodeRabbit, humans) | External — not a Sedea spawn |
+| **3 — Run `pr-review`** | **`coding-session`** (inline) | Developer picks **`start-pr-review`** at post-create-pr gate, or explicit *triage PR comments* on the lane |
+| **4 — No actionable comments** | Developer or agent (when delegated) | **`pr-review`** skip-only path: **`skip-reject`** → Step 5 GitHub reconciliation. **Non-outsider repos:** [Post-pr-review merge approval gate](skills/coding-session/SKILL.md#post-pr-review-merge-approval-gate) or [Agent-delegated PR approve and merge](skills/coding-session/SKILL.md#agent-delegated-pr-approve-and-merge) when `mergeDelegationAuthorized`. **Outsider repos** (`tapcart-push`, `tapcart-merchant-dashboard`): developer approves and merges on GitHub — see outsider table at merge gate |
+| **5 — Push fixes** | **`coding-session`** + inline **`pr-review`** | Disposition gate → approved edits → commit/push gate (rule **6**) → **`pr-review`** Step 5 (reply, resolve, minimize, re-request `slink-ai` when **CHANGES_REQUESTED**) |
+| **6 — Loop to step 2** | Developer + reviewers | After Step 5, **`coding-session`** re-opens [Post-create-pr handoff gate](skills/coding-session/SKILL.md#post-create-pr-handoff-gate). When new comments land, pick **`start-pr-review`** again. **`continuationStatus: active`** until comments are resolved, skipped, follow-up-captured, or deferred |
+
+**Binding references:** [pr-review/SKILL.md](skills/pr-review/SKILL.md) (triage + reconciliation); [coding-session/SKILL.md § Inline PR review after PR creation](skills/coding-session/SKILL.md#inline-pr-review-after-pr-creation); rule **20** § *Commit and push cadence* step 3.
+
+**§8 phase hints:** `pr-open` after PR URL exists; advance to `pr-review` when **`coding-session`** re-emits with `prReviewStatus` terminal + `githubReconciliationStatus`. Repeated rounds stay on `pr-review` until merge moves toward `deploy-walk`.
+
+**Known contract gaps (documented, not invented):** Outsider-repo merge stays developer/GitHub. Non-outsider repos may use agent-delegated merge when authorized. Loop-back after reconciliation is via post-create-pr gate + **`start-pr-review`**, not auto-spawn.
 
 **Start `coding-session`:** Detached lane only — not a Squad Leader spawn from §§1–7. Entry paths, required inputs, and anti-patterns: **`.sedea/centers/research-and-development/docs/development-process.md`** § *Start implementation (`coding-session` entry)*.
 
@@ -571,7 +613,7 @@ Maintain one row per in-scope **PR plan** path under `.sedea/operations/.../plan
 
 **Phase enum (happy-path order)** — update when the developer or a bubbled child result reports progress; do not skip backward without explicit correction:
 
-`not-started` → `worktree` → `implementing` → `pre-pr-review` → `pr-open` → `pr-review` → `deploy-walk` → `reconcile` → `done`
+`not-started` → `worktree` → `implementing` → `pre-pr-review` → `pr-open` → `pr-review` → `pr-merged` → `deploy-walk` → `reconcile` → `done`
 
 **Ship child `outputs` hints (when `AGENT_RESULT_RESPONSE_V1` bubbles up)** — see **`skills/README.md`** § Ship spawn. Typical mappings:
 
@@ -580,7 +622,8 @@ Maintain one row per in-scope **PR plan** path under `.sedea/operations/.../plan
 | `coding-session` | `developerApprovedImplementation: true` (after worktree-open gate in that skill) + `targetPlanPath` → at least `implementing`; worktree ready → `worktree` |
 | `pre-pr-review` | `recommendation: go` (or `no-go` + blockers → `blocked`) → `pre-pr-review` |
 | `create-pr` (inline on **`coding-session`**) | `prUrl` / `prNumber` → `pr-open` (via **`coding-session`** terminal re-emit — no separate child terminal) |
-| `pr-review` (inline in **coding-session**) | `prReviewStatus` terminal + `githubReconciliationStatus` when required → `pr-review` |
+| `pr-review` (inline in **coding-session**) | `prReviewStatus` terminal + `githubReconciliationStatus` when required + `mergeDelegationReady` when delegated → `pr-review` |
+| Agent merge (inline **coding-session**) | `prState: merged`, `mergeSha`, `mergedAt` → `pr-merged` |
 | `deploy-walk` | `deployStatus: done` and `deployTodoStatus: done` → `deploy-walk` (then `done` when reconcile complete) |
 | `plan-reconcile` | terminal reconcile with target archived → `reconcile` or `done` |
 

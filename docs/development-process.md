@@ -701,7 +701,20 @@ Spawned from **`coding-session`** after developer implementation approval, **com
 
 ##### pr-review
 
-Runs **inline** on the active **`coding-session`** lane after a PR exists (not a separate spawn on **`plan and deliver`**). Triages review comments; commit/push gates per rule **20** and Sedea **6_git-commit-push-gate**. See **`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-review/SKILL.md`**.
+Runs **inline** on the active **`coding-session`** lane after a PR exists (not a separate spawn on **`plan and deliver`**). Triages review comments; commit/push gates per rule **20** and Sedea **6_git-commit-push-gate**. See **`pr-review/SKILL.md`**.
+
+**Cyclic post-create-pr flow (canonical detail in `plan.mdc` §8 *PR review cycle*):**
+
+| Step | What happens |
+|------|----------------|
+| 1 | **`create-pr`** opens the PR; post-create-pr gate opens same turn |
+| 2 | GitHub reviewers comment (external) |
+| 3 | Developer picks **`start-pr-review`** → **`coding-session`** runs **`pr-review`** inline (Steps 1–5) |
+| 4 | **No Must/Should/follow-up:** **`skip-reject`** → Step 5 GitHub reconciliation → developer **merges on GitHub** (no skill **Merge PR** modal) → **`check-pr-status`** or **`spawn-after-deploy-walk`** |
+| 5 | **Must/Should present:** disposition gate → fixes → commit/push → Step 5 reconcile (re-request `slink-ai` when **CHANGES_REQUESTED**) |
+| 6 | Post-create-pr gate re-opens; pick **`start-pr-review`** again when new comments arrive |
+
+Loop continues until merge, defer, or all comments are resolved/skipped/follow-up-captured. **`continuationStatus: active`** on **`coding-session`** throughout.
 
 ##### deploy-walk
 
