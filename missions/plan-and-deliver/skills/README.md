@@ -272,7 +272,7 @@ Every **spawned** plan-and-deliver skill lists the paths below in frontmatter **
 | Skill | Frontmatter omits (vs table above) | Runtime reads remain |
 |-------|-----------------------------------|----------------------|
 | **`pre-pr-review`** | `plan.mdc`, `development-process.md` | Step 3 reads **`development-process.md`**; Step 4 loads **`inputs.targetPlanPath`** (PR plan, not Squad Leader **`plan.mdc`**) |
-| **`coding-session`** | rule **30** only | Explicit **`Read`** of rule **30** when resolving ambiguous `.sedea` paths |
+| **`coding-session`** | `development-process.md`, rule **20** (in **`laneRules`**), rule **30** | Explicit **`Read`** of **`development-process.md`** and rule **30** when resolving ambiguous `.sedea` paths |
 
 Do **not** re-add omitted paths to **`pre-pr-review`** frontmatter without re-checking combined warm-up size — spawn rejects with **`warm-up-too-large`** when frontmatter + merged run-request rules exceed the host cap (see **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Run-request line*).
 
