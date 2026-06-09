@@ -505,7 +505,7 @@ Run only **after** [Pre-worktree validation](#pre-worktree-validation-plan-compl
  - **Forbidden (step 1):** **`sedea_add_worktree_folder`** — MCP attach is step **3** only. **Forbidden:** inline **`git worktree add`** / dirty-primary **`git status`** gate on the default path when this script exists on **`HOSTING_ROOT`**.
  - Worktree naming: **`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`** § *Worktree naming* (primary **hosting repo** → Sedea **`.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc`**).
  - **Exit 0:** parse the stdout JSON line; set **`WORKTREE_ROOT`**, **`outputs.bootstrapMode`**, **`outputs.bootstrapStatus`** from hint (**`success`**, **`skipped-noop`**, **`skipped-idempotent`** → implementation allowed).
- - **Non-zero:** parse failure JSON when present; set **`outputs.bootstrapStatus: failed`**, **`outputs.bootstrapFailureReason`** from **`message`**; stop with structured retry — exit **10** dirty primary (developer resolves on **`HOSTING_ROOT`**); exit **11** warm-primary (**no `full` fallback** on center path); exit **12** overlay missing / mode not allowed.
+ - **Non-zero:** parse failure JSON when present; set **`outputs.bootstrapStatus: failed`**, **`outputs.bootstrapFailureReason`** from **`message`**; stop with structured retry — exit **10** dirty primary (on sedea-push run **`.cursor/rules/dot-sedea.mdc`** § *Housekeeping pass (dirty hosting tree before bootstrap)* before retry); exit **11** warm-primary (**no `full` fallback** on center path); exit **12** overlay missing / mode not allowed.
  - If `baseRef` input is supplied, it must be a remote integration ref such as `origin/main`; do not accept a local-only ref for worktree creation.
 
 2. **Record the session on the plan** (see [Sidecar state](#sidecar-state)). From the **hosting repo root**:
@@ -660,13 +660,16 @@ flowchart TB
     LTW["Local test<br/>deploy-walk inline"]:::inline
     CPR["create-pr"]:::inline
     STW["Staging test<br/>deploy-walk inline"]:::inline
-    PRV["pr-review"]:::inline
-    MRG["Approve + merge<br/>post-pr-review gate"]:::gate
+    PRV --> MRG["Approve + merge<br/>post-pr-review gate"]:::gate
     PMC["Cleanup<br/>pull · detach worktree"]:::proc
     ADW["After deploy<br/>deploy-walk inline"]:::inline
     REC["plan-reconcile<br/>explicit start"]:::inline
+    PCP["Post-create-pr gate<br/>pr-review cycle"]:::gate
     CUT --> LTW --> CPR
-    CPR --> STW --> PRV --> MRG --> PMC --> ADW --> REC
+    CPR --> STW --> PCP --> PRV
+    PRV -->|skip-only| MRG
+    PRV -->|fix + push| PCP
+    MRG --> PMC --> ADW --> REC
   end
 
   subgraph CHILD["spawned child lane"]
@@ -688,7 +691,20 @@ Pre-ship setup on this lane (not shown): implement → [Ship cut-point gate](#sh
 | 5 | [Staging test deploy-walk handoff](#staging-test-deploy-walk-handoff) | inline | **No** — after PR open; flip `**Status:**` to `pr-open` | **No** (manual §7 step only) |
 | 6 | Inline **`pr-review`** (see skill path in **`plan.mdc`** §8) | inline | **No** — after PR exists | **No** — triage on coding lane |
 | 6b | [Post-pr-review merge approval gate](#post-pr-review-merge-approval-gate) | gate | **No** — after clean **`pr-review`** | **Yes** — approve and merge |
-| 7 | [Post-create-pr handoff gate](#post-create-pr-handoff-gate) — pre-review navigation | gate | **No** | **Yes** — before/during **`pr-review`** cycle |
+| 7 | [Post-create-pr handoff gate](#post-create-pr-handoff-gate) — **`pr-review`** cycle hub | gate | **No** | **Yes** — before/during/after fix+push re-review loop |
+
+### PR review cycle (after PR open)
+
+Normative loop — see also [`pr-review/SKILL.md`](pr-review/SKILL.md) § *PR review cycle (normative)*:
+
+1. **PR created** — inline **`create-pr`** or outsider handoff with PR URL.
+2. **Reviewers review** on GitHub (external).
+3. **`start-pr-review`** → inline **`pr-review`** triage.
+4. **Skip-only** → [Post-pr-review merge approval gate](#post-pr-review-merge-approval-gate) (outsider: you approve + merge on GitHub; hosting inline: **`approve-merge`**).
+5. **Must/Should fixes** → commit/push → GitHub reconciliation.
+6. **Back to 2** — re-open [Post-create-pr handoff gate](#post-create-pr-handoff-gate); pick **`start-pr-review`** again when reviewers have re-reviewed.
+
+**Forbidden:** merge approval gate immediately after step **5** without a fresh skip-only **`pr-review`** pass (unless merge gate preconditions already show no pending reviews).
 | 8 | [Post-merge workspace cleanup](#post-merge-workspace-cleanup) | procedure | **No** — after **`prState: merged`**, before After deploy | **No** — auto **`--apply`** when authorized; modal on failure/unclear ownership only |
 | 9 | [After deploy deploy-walk handoff](#after-deploy-deploy-walk-handoff) | inline | **No** — post-merge cleanup done or skipped | **No** (manual §7 step only) |
 | 10 | [Plan-reconcile handoff (inline)](#plan-reconcile-handoff-inline) | inline | **No** — explicit start; not auto from deploy-walk | **Yes** when reconcile inventory requires picks; [Post–After deploy remainder authorization](#post-after-deploy-remainder-authorization) may batch tail work first |
@@ -1445,7 +1461,8 @@ The inline procedure:
 4. Applies only the approved fix scope.
 5. Runs GitHub reconciliation only after approved fixes are committed/pushed, or immediately for skipped-only triage.
 6. When triage is **not** clean (open Must/Should blockers, pending fixes, or deferred reconciliation), keeps `continuationStatus: "active"` and loops **`pr-review`** until resolved or explicitly deferred.
-7. When triage is **clean** (all comments resolved, skipped, or captured as follow-ups; `githubReconciliationStatus: complete`; no open `prReviewBlockers`), open [Post-pr-review merge approval gate](#post-pr-review-merge-approval-gate) on the **next** turn — **do not** end with passive “wait for merge on GitHub” prose.
+7. When triage is **skip-only** (no code edits this pass; `githubReconciliationStatus: complete`; no open `prReviewBlockers`), open [Post-pr-review merge approval gate](#post-pr-review-merge-approval-gate) on the **next** turn.
+8. When **Must/Should fixes were pushed** this pass (`outputs.prReviewFixPushed: true` from **`pr-review`** handback), re-open [Post-create-pr handoff gate](#post-create-pr-handoff-gate) on the **next** turn — **not** the merge gate — until a fresh **`start-pr-review`** pass is skip-only or merge preconditions hold.
 
 ### Post-pr-review merge approval gate
 
@@ -1475,14 +1492,19 @@ If any precondition fails, loop back to [Inline PR review after PR creation](#in
 | `check-pr-status` | Refresh PR / review status first | Query `gh pr view`; update `outputs`; re-open this gate or post-create-pr gate |
 | `more-details` | More details for option _ | Elaborate; ask again |
 
-3. **Outsider repos** (`tapcart-push`, `tapcart-merchant-dashboard` per [`create-pr` § Outsider repos](../create-pr/SKILL.md#outsider-repos-mandatory-handoff)): **omit** `approve-merge`. Offer instead:
+3. **Outsider repos** (`tapcart-push`, `tapcart-merchant-dashboard` per [`create-pr` § Outsider repos](../create-pr/SKILL.md#outsider-repos-mandatory-handoff)): **omit** `approve-merge`. Reviewers have approved and **`pr-review`** is clean — **you** approve and merge on GitHub (Sedea agents do **not** call `gh pr merge` or `gh pr review --approve` on outsider repos). Use **one** **`MC_PHASED_RESPONSE_V1`** (`modalTitle`: *Coding session — outsider PR ready to merge*). Required **`options`**:
 
 | Option id | Label (brief) | Agent action |
 |-----------|---------------|--------------|
-| `merged-manually` | I merged the PR manually | On **next** turn: set `prState: merged` from `gh pr view`; run [Post-merge workspace cleanup](#post-merge-workspace-cleanup) auto-apply |
-| `defer-merge` | Defer — PR still open | Keep `continuationStatus: active` |
+| `ready-merge-on-github` | I will approve and merge on GitHub now | Recap: open `prUrl`; no git mutations — park until you return |
+| `merged-manually` | I merged the PR on GitHub | On **next** turn: verify `gh pr view` **`MERGED`**; run [Post-merge workspace cleanup](#post-merge-workspace-cleanup) auto-apply |
+| `defer-merge` | Defer — wait for more review | Re-open [Post-create-pr handoff gate](#post-create-pr-handoff-gate); `continuationStatus: active` |
+| `check-pr-status` | Refresh PR / review status first | Query `gh pr view`; update `outputs`; re-open this gate or post-create-pr gate |
+| `more-details` | More details for option _ | Elaborate; ask again |
 
-4. **Forbidden:** `gh pr merge` on outsider repos from this lane; prose “merge when ready on GitHub” without structured choice; opening this gate while Must/Should blockers remain.
+Legacy option id **`merged-manually`** remains valid when the developer skips **`ready-merge-on-github`** and returns after merging.
+
+4. **Forbidden:** `gh pr merge` or `gh pr review --approve` on outsider repos from this lane; prose “merge when ready on GitHub” **without** structured choice; opening this gate while Must/Should blockers remain.
 
 #### Spawned lane — merge approval sentinel (binding)
 
@@ -1491,7 +1513,7 @@ MC_PHASED_RESPONSE_V1
 {"version":1,"display":{"markdown":"<recap>"},"askQuestion":{"modalTitle":"Coding session — approve and merge PR","questions":[{"id":"merge-approval","prompt":"PR review is clean. Approve and merge this PR?","allowMultiple":false,"options":[{"id":"approve-merge","label":"Approve and merge PR now"},{"id":"defer-merge","label":"Defer merge"},{"id":"check-pr-status","label":"Refresh PR / review status first"},{"id":"more-details","label":"More details for option _"}]}]}}
 ```
 
-Omit **`approve-merge`** on outsider repos; use **`merged-manually`** per table above.
+Omit **`approve-merge`** on outsider repos; use the outsider table above (`ready-merge-on-github`, **`merged-manually`**, …).
 
 #### Act after merge approval
 
@@ -1509,6 +1531,8 @@ Run on the **developer's response turn** after **`approve-merge`** or **`merged-
 1. Verify `gh pr view` shows **`MERGED`**.
 2. Same `outputs` updates as step 3 above.
 3. Same auto-continue as step 4.
+
+**`ready-merge-on-github` (outsider repos):** Recap `prUrl` in one line; keep `continuationStatus: active`. Re-open this gate or [Post-create-pr handoff gate](#post-create-pr-handoff-gate) on the developer's return — no git mutations on this turn.
 
 **`defer-merge` / `check-pr-status`:** per gate table — re-open appropriate gate on the response turn.
 

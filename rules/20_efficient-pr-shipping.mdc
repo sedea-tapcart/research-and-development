@@ -208,9 +208,11 @@ When the user or task says "open a PR", "push and open a PR", or "create a pull 
 
 ## PR merge — inline **`coding-session`** after clean **`pr-review`**
 
-**Rule.** The **only** path that may call `gh pr merge` (or equivalent GitHub merge API) is the active **`coding-session`** agent on the **non-outsider** repo route after inline **`pr-review`** is clean and the developer selects **`approve-merge`** at [Post-pr-review merge approval gate](../missions/plan-and-deliver/skills/coding-session/SKILL.md#post-pr-review-merge-approval-gate). **Outsider repos** (`tapcart-push`, `tapcart-merchant-dashboard`) — developer merges manually; agent verifies with `gh pr view` and continues post-merge cleanup when the developer picks **`merged-manually`**.
+**Rule.** The **only** path that may call `gh pr merge` (or equivalent GitHub merge API) is the active **`coding-session`** agent on the **non-outsider** repo route after inline **`pr-review`** is clean and the developer selects **`approve-merge`** at [Post-pr-review merge approval gate](../missions/plan-and-deliver/skills/coding-session/SKILL.md#post-pr-review-merge-approval-gate).
 
-**Forbidden:** `gh pr merge` from planning, Squad Leader, **`pre-pr-review`**, or other lanes; merge without structured-choice **`approve-merge`** on **`coding-session`**; prose “merge when you’re ready” instead of the merge approval gate after clean **`pr-review`**.
+**Outsider repos** (`tapcart-push`, `tapcart-merchant-dashboard`) — after reviewers give **go** and a **skip-only** **`pr-review`** pass, the developer **approves and merges on GitHub** themselves. The agent opens the outsider merge gate (*Coding session — outsider PR ready to merge*), may recap `prUrl`, and continues only after **`merged-manually`** (or equivalent) when `gh pr view` shows **`MERGED`**. **Forbidden:** `gh pr merge`, `gh pr review --approve`, or agent-initiated merge on outsider repos from any lane.
+
+See [`pr-review/SKILL.md`](../missions/plan-and-deliver/skills/pr-review/SKILL.md) § *PR review cycle (normative)* and [`coding-session/SKILL.md`](../missions/plan-and-deliver/skills/coding-session/SKILL.md) § *PR review cycle (after PR open)*.
 
 ### User phrases → required handoff (not `gh pr create`)
 
@@ -344,7 +346,9 @@ Use `origin/main`, **not** `main` — `git worktree add … main` (and `git fetc
 
 ### Dirty hosting repo before `git worktree add`
 
-[`coding-session/SKILL.md`](../missions/plan-and-deliver/skills/coding-session/SKILL.md) § *Generic flow* runs a **dirty-tree gate** before `git worktree add`. On hosting repos that pin `.sedea/` via git submodules (**.cursor/rules/dot-sedea.mdc** § *Submodule pins* on the active hosting repo), **submodule gitlink-only** porcelain under `.sedea/centers/` and `.sedea/operations/` does **not** block worktrees when `git diff --stat -- <submodule-path>` shows pointer-only drift (2 +/- per submodule). All other non-empty porcelain still blocks.
+[`coding-session/SKILL.md`](../missions/plan-and-deliver/skills/coding-session/SKILL.md) § *Generic flow* delegates to center **`worktree-setup.sh`**, which may exit **10** when the primary checkout is dirty. On **operational hosting repos** (for example **sedea-push**), **`.cursor/rules/dot-sedea.mdc`** § *Operational repo — dirty tree and worktrees* and § *Housekeeping pass (dirty hosting tree before bootstrap)* override generic blocking: commit + push + promote center pin when needed, then retry setup — do not refuse worktrees solely for submodule gitlink drift or documented submodule porcelain once upstream center scripts align.
+
+When dot-sedea does **not** declare an operational exception, **submodule gitlink-only** porcelain under `.sedea/centers/` and `.gitmodules` does **not** block worktrees when `git diff --stat -- <submodule-path>` shows pointer-only drift (2 +/- per submodule). All other non-empty porcelain still blocks until resolved.
 
 ## Commit and push cadence
 

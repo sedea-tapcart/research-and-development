@@ -105,7 +105,9 @@ Required:
 | **`script-bootstrap`** | `./scripts/bootstrap-worktree-dev.sh "<worktreePath>"` — append `bootstrapSkipFlags` only when dot-sedea documents honored skip flags |
 | **`full`** | `./scripts/bootstrap-worktree-dev.sh "<worktreePath>"` + attested `bootstrapSkipFlags` when applicable |
 | **`extensions-only-link`** | `./scripts/bootstrap-worktree-dev.sh "<worktreePath>"` with linked-build flags per dot-sedea § *Worktree bootstrap mode* and that repo's script **`--help`** + attested `bootstrapSkipFlags` when applicable |
-| **`submodule-init`** | `cd "<worktreePath>" && git submodule update --init --recursive` — seed empty `.sedea/centers/*` from **`hostingRoot`** when init leaves an empty tree (see dot-sedea) |
+| **`submodule-init`** | `cd "<worktreePath>" && git submodule update --init --recursive --force` — seed empty `.sedea/centers/*` from **`hostingRoot`** when init leaves an empty tree (see dot-sedea). Submodule **working-tree** dirty does not fail bootstrap when **`--force`** update exits **0**. |
+
+**Operational hosting repos (sedea-push):** when **`bootstrap-worktree-dev.sh`** runs on **`HOSTING_ROOT`**, it uses **`--force`** on submodule update. Center **`worktree-setup.sh`** / **`worktree-cleanup.sh`** behavior is upstream — agents follow **`.cursor/rules/dot-sedea.mdc`** § *Housekeeping pass* when setup exits **10** for dirty primary.
 
 The bootstrap script is idempotent where the hosting repo documents idempotency — safe to re-run after partial failure.
 

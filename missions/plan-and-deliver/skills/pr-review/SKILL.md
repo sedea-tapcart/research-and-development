@@ -22,6 +22,23 @@ If Mission Control opened a session whose only intent is **`pr-review`** / *tria
 
 **Required upstream context:** `prUrl` or `prNumber`, repository identity, worktree path, worktree name, linked PR plan when available, and coding-session ledger state. If this context is missing, return to `coding-session` to recover it before running PR review.
 
+## PR review cycle (normative)
+
+After a PR exists, **`coding-session`** runs this skill **inline** in a loop until merge preconditions hold. The cycle matches the ship chain on the implementation lane:
+
+| Step | Actor | Action |
+|------|-------|--------|
+| **1** | Ship chain | PR created (`create-pr` or outsider handoff → PR URL recorded) |
+| **2** | Reviewers (GitHub) | Humans / external agents review the open PR |
+| **3** | **`coding-session`** | Developer picks **`start-pr-review`** → this skill Steps **1–5** |
+| **4** | Developer | **Skip-only triage** (0 Must / 0 Should / 0 follow-up) → [Post-pr-review merge approval gate](../coding-session/SKILL.md#post-pr-review-merge-approval-gate) on the **next** turn |
+| **5** | **`coding-session`** | **Must/Should fixes** → approved edits → commit/push gate → Step **5 — GitHub only** |
+| **6** | Reviewers (GitHub) | Re-review after push (Step **5** may **`request-review`** for `slink-ai` when **`CHANGES_REQUESTED`**) |
+
+**After step 5 (code-fix path):** do **not** open the merge approval gate on the same pass. The invoker (**`coding-session`**) **must** re-open [Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate) on the **next** turn so the developer can wait for step **6**, then pick **`start-pr-review`** again (step **3**). Only after a **fresh** triage pass that is **skip-only** (or merge preconditions in the merge gate all hold) may step **4** offer merge.
+
+**Outsider repos** (`tapcart-push`, `tapcart-merchant-dashboard`): step **4** uses the outsider merge gate — developer **approve and merges on GitHub**; agent never calls `gh pr merge`. See [Post-pr-review merge approval gate](../coding-session/SKILL.md#post-pr-review-merge-approval-gate) § *Outsider repos*.
+
 **Worktree removal ownership (binding).** **Do not remove worktrees you do not own.** PR review runs in **`WORKTREE_ROOT`** for edits; it does **not** authorize **`git worktree remove`**, **`git worktree prune`**, or **`sedea_remove_worktree_folder`** on any other path. See [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § *Worktree ownership* and rule **20** § *Worktree removal ownership (binding)*. **`git worktree list` is read-only** when ownership is unclear — **stop; do not remove**.
 
 ## Structured choice (Mission Control)
@@ -318,6 +335,14 @@ Return results through the active **`coding-session`** lane, not as a child-agen
 
 Keep `continuationStatus: "active"` until every PR review comment is fixed, skipped with rationale, converted to follow-up, or explicitly deferred by the developer, and GitHub reconciliation has run when required.
 
-**Handback when triage is clean:** When Step **5 — GitHub only** completes (or skipped-only triage with no open Must/Should blockers), set `githubReconciliationStatus: complete` and `prReviewStatus: complete`. On the **next** turn, the invoker (**`coding-session`**) **must** open [Post-pr-review merge approval gate](../coding-session/SKILL.md#post-pr-review-merge-approval-gate) — **not** passive “tell me when merged” prose. If preconditions for merge are not met (pending **`CHANGES_REQUESTED`**, open blockers), loop **`pr-review`** or return to [Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate).
+**Handback when triage completes:**
+
+| Path | Set outputs | Next turn on **`coding-session`** |
+|------|-------------|-----------------------------------|
+| **Skipped-only** (no code edits; Step **5** or skip-only Step **3b**) | `githubReconciliationStatus: complete`, `prReviewStatus: complete` | [Post-pr-review merge approval gate](../coding-session/SKILL.md#post-pr-review-merge-approval-gate) |
+| **Fix + push** (approved Must/Should applied; commit/push + Step **5** ran) | Same completion fields; set `outputs.prReviewFixPushed: true` | [Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate) — **not** merge gate until a **fresh** **`start-pr-review`** pass is skip-only or merge preconditions hold |
+| **Open blockers / pending `CHANGES_REQUESTED`** | `continuationStatus: active` | Loop **`pr-review`** or [Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate) |
+
+**Forbidden:** passive “tell me when merged” prose; opening merge approval immediately after a fix+push pass without re-review.
 
 This skill is **inline-only** on the **`plan and deliver`** mission — no **`AGENT_RUN_REQUEST_V1`**, no **`AGENT_RESULT_RESPONSE_V1`** on this lane. See **[`../README.md`](../README.md)** § Inline-only.
