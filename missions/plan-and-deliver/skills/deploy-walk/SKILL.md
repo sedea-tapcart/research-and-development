@@ -213,6 +213,44 @@ Run **without** an **AskQuestion** approval gate **before each agent-executable 
 
 **No auto-run** and **no auto-flip** until the developer invokes `deploy-walk <N> done`, `skip`, or `block`, or free-form equivalent confirmed in one line.
 
+### Agent capability inventory (binding)
+
+**Default:** If a deploy step can be satisfied with this inventory and credentials already available in the session, classify it **agent-executable**, **run it in the same turn**, flip the checkbox on pass, and auto-advance. **Do not** delegate that work to the developer.
+
+| Category | Agent runs (use tools — do not ask the developer) |
+|----------|---------------------------------------------------|
+| **Shell** | `npm test`, `npm run <script>`, `pytest`, `go test`, `cargo test`, `make`, repo `./scripts/*.sh`, `curl` / `wget`, `jq`, `python -c`, read-only `git` (`status`, `diff`, `log`, `rev-parse`, `branch`) |
+| **Logs and text** | `grep`, `rg`, `tail`, `head`, `cat`, `awk`, `sed` on log files and stdout; search for phrases, error codes, stack traces, HTTP status lines |
+| **Filesystem read** | `Read`, `Grep`, `Glob` on repo paths; `test -f`, `test -d`, diff expected vs actual config or artifacts in **`worktreePath`** |
+| **Plan file edits** | `StrReplace` on deploy checklist boxes, `**Status:**`, capstone todo; read-only `plan-state.mjs resolve` / `show` from **`HOSTING_ROOT`** |
+| **HTTP / API** | `curl` to localhost, staging, or URLs named in the step when env vars or tokens are already in the session — **do not** invent secrets |
+| **GitHub CLI** | `gh pr view`, `gh api`, `gh run list` / `view` when `gh` auth works in the shell |
+| **Mission Control MCP** | `sedea_get_current_user`; `sedea_add_worktree_folder` / `sedea_remove_worktree_folder` when worktree lifecycle applies; `mission_control_update_lane_display` on **own** slot only |
+| **Parse / verify** | Read JSON, YAML, Markdown plan sections; compare output to expected shape; count matches; exit codes — **agent parses**, not developer |
+
+**Manual only** (present per [Step 4 — Step presentation contract](#step-4--step-presentation-contract)):
+
+| Situation | Why manual |
+|-----------|------------|
+| Browser / native UI, visual review, product sign-off | Agent cannot drive the UI |
+| Production dashboard or on-call judgment without automatable threshold | Human gate |
+| Credentials, VPN, SSO, hardware, or env vars **missing** from session | **block** or manual with expanded **Testing steps** |
+| Subjective “looks right” with no named automatable check | Developer records observation |
+
+**Forbidden mis-delegation (agent-executable steps):**
+
+| Anti-pattern | Required instead |
+|--------------|------------------|
+| “Run this command…” / “execute in your terminal…” | Agent runs Shell in **`worktreePath`** |
+| “Grep the log for…” / “find this phrase in…” | Agent greps/parses; cite matching lines in recap |
+| “Open this file and check…” | Agent `Read` / `Grep` |
+| “Parse the output and confirm…” | Agent parses; report pass/fail with evidence |
+| “Paste the log snippet here” when the log path is known | Agent reads the log file |
+| **Testing steps** that only repeat commands the agent should run | Remove duplicate — agent runs first; manual steps cover UI-only actions |
+| **AskQuestion** “may I run this test?” before agent-executable work | Run without approval modal (see *Agent-executable (auto-run)*) |
+
+When **manual** is required, **Testing steps** must be **numbered**, **3–7** sub-steps minimum when the plan implies multiple actions, with **Commands / context** fully expanded — not a one-line “please verify.”
+
 ### Inline walk bootstrap
 
 When run **inline** on **`coding-session`** (first turn after inline context validates):
