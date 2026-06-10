@@ -217,7 +217,7 @@ Run this checklist **before** every `AGENT_RUN_REQUEST_V1` emit on any lane (Squ
 | 8 | **`name`** — topic-specific child label (feature title, plan slug, PR concern); **not** generic placeholders such as "Child agent" alone |
 | 9 | **`description`** — one-line summary of the child lane's work scope |
 | 10 | Display metadata is **initial** slot copy — spawned children refresh **own** slot via **`mission_control_update_lane_display`** when labels are stale (rule **9**; rule **50** § *Child lane*) |
-| 11 | **`laneRules`** on the spawn line (when supplied) matches the target role row in § *Definitive `laneRules`* — same paths and order, or omit when skill frontmatter **`laneRules`** already matches |
+| 11 | **`laneRules`** on the spawn line (when supplied) matches the target role row in § *Definitive `laneRules`* — same paths and order, or omit when skill frontmatter **`laneRules`** already matches. **Enforced by CI/local:** `verify-skill-manifest.mjs` lints spawned skill frontmatter **`laneRules`** against the definitive rows for **`author-prd`**, **`planner`**, and **`coding-session`**, and **`warmUpRules`** / **`laneRules`** table ↔ frontmatter parity for every spawned skill with § *Warm-up manifest (spawned)* |
 
 Skill-specific **`inputs`** tables and paste-ready examples live in each **`SKILL.md`** (for example **`planner`** § *Spawn contract*). **`plan and deliver`** Squad Leader §5 adds a **planner** seed → **`inputs`** mapping before the §5 spawn step.
 
@@ -269,7 +269,7 @@ Every **spawned** plan-and-deliver skill lists the paths below in frontmatter **
 
 **Warm-up cap exceptions (256 KiB host budget):**
 
-Each spawned ship skill documents its manifest in **`SKILL.md`** § *Warm-up manifest (spawned)* or § *Warm-up manifest (inline)*. Frontmatter must match the documented table — PR 3 **`verify-skill-manifest.mjs`** will lint against these paths.
+Each spawned ship skill documents its manifest in **`SKILL.md`** § *Warm-up manifest (spawned)* or § *Warm-up manifest (inline)*. Frontmatter must match the documented table — **`verify-skill-manifest.mjs`** enforces table ↔ frontmatter parity and spawn preflight row **11** for definitive **`laneRules`** roles (see § *Universal spawn preflight* row 11).
 
 | Skill | Frontmatter omits (vs table above) | Runtime reads remain |
 |-------|-----------------------------------|----------------------|
@@ -322,4 +322,4 @@ When you add, rename, or remove a protocol branch under `missions/plan-and-deliv
 - **Location:** `missions/plan-and-deliver/scripts/` (paths in skills and rule **20** are workspace-root relative from the hosting repo that contains **`.sedea/`** — see that repo’s **`.cursor/rules/`** for hosting-repo specifics).
 - **Runtime:** **Node / Python bundled with Sedea / VS Code** — see [`.sedea/centers/research-and-development/rules/31_operations-user-id.mdc`](../../../rules/31_operations-user-id.mdc) § *Hosting repo cwd (scripts)* and the hosting repo **`.cursor/rules/`**.
 - **Vendor trees:** do not treat `scripts/**/node_modules/` or other installed dependencies as protocol documentation (center governance ends at `SKILL.md`, rules, and mission plans).
-- **`verify-skill-manifest.mjs`** — compares **`center.yaml`** `skillEntries` to on-disk `SKILL.md` files for all missions in this center (exit 0 = match).
+- **`verify-skill-manifest.mjs`** — compares **`center.yaml`** `skillEntries` to on-disk `SKILL.md` files; validates frontmatter YAML; lints **`warmUpRules`** / **`laneRules`** table ↔ frontmatter parity on spawned plan-and-deliver skills; enforces spawn preflight row **11** definitive **`laneRules`** for **`author-prd`**, **`planner`**, and **`coding-session`** (exit 0 = match + parity).
