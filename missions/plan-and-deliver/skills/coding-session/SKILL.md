@@ -674,7 +674,7 @@ Pre-ship setup on this lane (not shown): implement → [Ship cut-point gate](#sh
 | 4 | [Inline create-pr (auto on clean go)](#inline-create-pr-auto-on-clean-go) or [Create-PR handoff after go](#create-pr-handoff-after-go) | inline | After **`pre-pr-review`** **go** | **No** on clean **go** without proposed follow-ups; **Yes** when **`hasProposedFollowUps`**, **`actionablePrePrFindings`**, or **`proceed-create-pr`** |
 | 5 | [Post-create-pr handoff gate](#post-create-pr-handoff-gate) | gate | **No** | **Yes** at post-create-pr gate |
 | 6 | Inline **`pr-review`** (see skill path in **`plan.mdc`** §8) | inline | **No** — after PR exists | **No** — triage on coding lane |
-| 7 | [Agent-delegated PR approve and merge](#agent-delegated-pr-approve-and-merge) | procedure | **No** — after clean **`pr-review`** when delegation authorized | **No** — auto on next turn; modal on CI/merge failure only |
+| 7 | [Agent-delegated PR approve and merge](#agent-delegated-pr-approve-and-merge) | procedure | **No** — after clean **`pr-review`** when delegation authorized | **Yes** — [Pre-merge authorization gate](#pre-merge-authorization-gate) before **`gh`** approve/merge; modal on CI/merge failure too |
 | 8 | [Post-merge workspace cleanup](#post-merge-workspace-cleanup) | procedure | **No** — after **`prState: merged`**, before After deploy | **No** — auto **`--apply`** when authorized; modal on failure/unclear ownership only |
 | 9 | [After deploy deploy-walk handoff](#after-deploy-deploy-walk-handoff) | inline | **No** — post-merge cleanup done or skipped | **No** (manual §7 step only) |
 | 9 | [Plan-reconcile handoff (inline)](#plan-reconcile-handoff-inline) | inline | **No** — explicit start; not auto from deploy-walk | **Yes** when reconcile inventory requires picks; [Post–After deploy remainder authorization](#post-after-deploy-remainder-authorization) may batch tail work first |
@@ -1052,7 +1052,7 @@ When inline **`create-pr`** completes with a PR URL/number (or the developer ret
 
 | Option id | Label (brief) | Agent action |
 |-----------|---------------|--------------|
-| `start-pr-review-delegate-merge` | Start PR review — agent approve + merge when clean | Set `outputs.mergeDelegationAuthorized: true`; run [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) on **next** turn; then [Agent-delegated PR approve and merge](#agent-delegated-pr-approve-and-merge) when ready |
+| `start-pr-review-delegate-merge` | Start PR review — agent approve + merge when clean | Set `outputs.mergeDelegationAuthorized: true`; run [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) on **next** turn; when **`mergeDelegationReady`**, open [Pre-merge authorization gate](#pre-merge-authorization-gate) |
 | `start-pr-review` | Start inline PR review only | Run [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) on **next** turn — **you** merge on GitHub when ready |
 | `check-pr-status` | Check PR merge status | Refresh `prState` / `mergeSha` / `mergedAt` via `gh` or repo tooling; re-open this gate |
 | `rebase-onto-main` | Rebase onto origin/main | On **next** turn, [Rebase onto origin/main after PR creation](#rebase-onto-origin-main-after-pr-creation) |
@@ -1078,7 +1078,7 @@ Run on the **developer's response turn** — **not** in the same assistant turn 
 
 | Pick | Actions |
 |------|---------|
-| **`start-pr-review-delegate-merge`** | Set `outputs.mergeDelegationAuthorized: true`; [Inline PR review after PR creation](#inline-pr-review-after-pr-creation); when **`mergeDelegationReady`**, continue to [Agent-delegated PR approve and merge](#agent-delegated-pr-approve-and-merge) on **next** turn |
+| **`start-pr-review-delegate-merge`** | Set `outputs.mergeDelegationAuthorized: true`; [Inline PR review after PR creation](#inline-pr-review-after-pr-creation); when **`mergeDelegationReady`**, open [Pre-merge authorization gate](#pre-merge-authorization-gate) on **next** turn |
 | **`start-pr-review`** | [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) |
 | **`check-pr-status`** | Query PR state; update `outputs`; when **`merged`**, run [Post-merge workspace cleanup](#post-merge-workspace-cleanup) **auto-apply** on **next** turn |
 | **`rebase-onto-main`** | [Rebase onto origin/main after PR creation](#rebase-onto-origin-main-after-pr-creation) |
@@ -1401,13 +1401,13 @@ The inline procedure:
 4. Applies only the approved fix scope.
 5. Runs GitHub reconciliation only after approved fixes are committed/pushed, or immediately for skipped-only triage.
 6. Keeps coding-session `continuationStatus: "active"` until all PR comments are resolved, followed up, skipped with rationale, or explicitly deferred.
-7. When **`outputs.mergeDelegationAuthorized: true`** and **`pr-review`** reports **`mergeDelegationReady: true`**, one informational line on **next** turn — *PR review complete — agent approve + merge authorized* — then continue to [Agent-delegated PR approve and merge](#agent-delegated-pr-approve-and-merge) **without** asking the developer to merge on GitHub.
+7. When **`outputs.mergeDelegationAuthorized: true`** and **`pr-review`** reports **`mergeDelegationReady: true`**, one informational line on **next** turn — *PR review complete — agent approve + merge authorized* — then open [Pre-merge authorization gate](#pre-merge-authorization-gate). **Do not** run **`gh pr review --approve`** or **`gh pr merge`** until the developer picks **`delegate-merge-confirm`** on that gate.
 
 ### Agent-delegated PR approve and merge
 
 Run on the **spawned coding-session lane** after inline **`pr-review`** completes and delegation was authorized — **not** while **`pr-review`** gates or fix loops remain open.
 
-**Purpose:** Approve and merge the open PR via **`gh`** on the developer's delegated authority so they do not need to visit GitHub.
+**Purpose:** Approve and merge the open PR via **`gh`** on the developer's delegated authority so they do not need to visit GitHub — **after** explicit consent at [Pre-merge authorization gate](#pre-merge-authorization-gate).
 
 #### Preconditions (all required)
 
@@ -1416,10 +1416,34 @@ Run on the **spawned coding-session lane** after inline **`pr-review`** complete
 3. Inline **`pr-review`** finished with **`outputs.mergeDelegationReady: true`** (see **`pr-review/SKILL.md`** § *Inline result for coding-session*).
 4. **`outputs.prState`** is **`open`** (refresh with `gh pr view` when stale).
 
-#### Procedure (next turn after preconditions pass)
+#### Pre-merge authorization gate (binding)
 
-1. **Inspect PR** — `gh pr view <n> --json state,mergeable,mergeStateStatus,reviewDecision,statusCheckRollup,url`.
-2. **Blockers** — When `mergeable` is **false**, required checks are **pending**, or an unresolved **CHANGES_REQUESTED** review remains after **`pr-review`**, **stop** and open **`MC_PHASED_RESPONSE_V1`** with retry / check CI / defer — do **not** guess merge success.
+When **all** preconditions above pass, **stop** on **this turn** — emit **`MC_PHASED_RESPONSE_V1`** (`modalTitle`: *Coding session — merge PR?*) **before** `gh pr review --approve` or `gh pr merge`.
+
+**Inspect first (same turn, before modal):** `gh pr view <n> --json state,mergeable,mergeStateStatus,reviewDecision,statusCheckRollup,url`. When `mergeable` is **false**, required checks are **pending**, or an unresolved **CHANGES_REQUESTED** review remains after **`pr-review`**, **stop** and open **`MC_PHASED_RESPONSE_V1`** with retry / check CI / defer — do **not** offer **`delegate-merge-confirm`** until blockers clear.
+
+```
+MC_PHASED_RESPONSE_V1
+{"version":1,"display":{"markdown":"<recap — PR #, checks, mergeDelegationReady>"},"askQuestion":{"modalTitle":"Coding session — merge PR?","questions":[{"id":"pre-merge","prompt":"PR review is clean and merge is delegated. What should we do?","allowMultiple":false,"options":[{"id":"delegate-merge-confirm","label":"Approve and merge now"},{"id":"rerun-pr-review","label":"Run pr-review again first"},{"id":"defer-merge","label":"Defer merge"},{"id":"more-details","label":"More details for option _"}]}]}}
+```
+
+**Act after pre-merge pick** — run on the **developer's response turn**, not the same assistant turn as the modal:
+
+| Pick | Actions |
+|------|---------|
+| **`delegate-merge-confirm`** | Run [Merge procedure](#merge-procedure) below |
+| **`rerun-pr-review`** | Set `outputs.mergeDelegationReady: false`; [Inline PR review after PR creation](#inline-pr-review-after-pr-creation); when **`mergeDelegationReady`** is true again, re-open this gate |
+| **`defer-merge`** | `continuationStatus: active`; recap; re-open [Post-create-pr handoff gate](#post-create-pr-handoff-gate) on next explicit ship continuation |
+| **`more-details`** | Clarify; re-open gate |
+
+**Forbidden:** auto-merge on the turn preconditions first become true; prose *merge when ready* without modal; **`gh pr merge`** before **`delegate-merge-confirm`**.
+
+#### Merge procedure
+
+Run only after **`delegate-merge-confirm`** at [Pre-merge authorization gate](#pre-merge-authorization-gate) — or when blockers were cleared and the developer re-confirms merge on a later gate pick.
+
+1. **Re-inspect PR** — `gh pr view <n> --json state,mergeable,mergeStateStatus,reviewDecision,statusCheckRollup,url`.
+2. **Blockers** — When `mergeable` is **false**, required checks are **pending**, or an unresolved **CHANGES_REQUESTED** review remains, **stop** and open **`MC_PHASED_RESPONSE_V1`** with retry / check CI / defer — do **not** guess merge success.
 3. **Approve** — `gh pr review <n> --approve` (cwd any; uses authenticated **`gh`** identity).
 4. **Merge method** — Default **`--squash --delete-branch`**. When `gh repo view --json squashMergeAllowed,mergeCommitAllowed,rebaseMergeAllowed` shows squash disabled, use the first allowed method (`merge` or `rebase`) and note the choice in recap.
 5. **Merge** — `gh pr merge <n> --squash --delete-branch` (adjust flags per step 4). When checks are still running and the repo allows it, you may use **`--auto`** instead of immediate merge — prefer **`--auto`** when status checks are pending but mergeable.
@@ -1438,7 +1462,7 @@ When approve or merge fails (auth, branch protection, failing checks, merge conf
 | Merge conflict / not mergeable | Recap `gh pr view` reason; re-open [Post-create-pr handoff gate](#post-create-pr-handoff-gate) or defer |
 | Already merged | Set `outputs.prState: merged`; skip to post-merge cleanup |
 
-**Forbidden:** *Review on GitHub and merge when ready*, *tell me when merged*, or any handoff that requires the developer to click merge on GitHub when preconditions pass and **`gh`** succeeds.
+**Forbidden:** *Review on GitHub and merge when ready*, *tell me when merged*, or any handoff that requires the developer to click merge on GitHub when preconditions pass, [Pre-merge authorization gate](#pre-merge-authorization-gate) **`delegate-merge-confirm`** was picked, and **`gh`** succeeds.
 
 **Manual merge path:** When the developer chose **`start-pr-review`** only (no delegation) or **`mergeDelegationAuthorized`** is false, do **not** run this section — they merge on GitHub and pick **`spawn-after-deploy-walk`** or **`check-pr-status`** at [Post-create-pr handoff gate](#post-create-pr-handoff-gate).
 
