@@ -1,0 +1,80 @@
+---
+description: >-
+  Sole R&D alwaysApply bootstrap — plan-and-deliver routing summary, lane warm-up
+  manifest contract, and on-demand links to numbered R&D center rules.
+globs: "**/*"
+alwaysApply: true
+---
+
+# R&D bootstrap (Mission Control warm-up)
+
+**Target:** This file is the **single** research-and-development center rule with `alwaysApply: true` once the §5.4 parity gate completes. Numbered rules **`10`–`50`** load **on demand** via lane manifests and explicit `Read` steps — not on every dispatch warm-up until the host resolver and frontmatter flip ship (reduce-alwaysapply-governance-load PRD §5.4).
+
+Sedea platform bootstrap and numbered Sedea rules load per **`.sedea/centers/sedea/rules/bootstrap.mdc`** and mission **`laneRules`** — not duplicated here.
+
+---
+
+## Research-and-development center
+
+The **research-and-development** center owns **plan and deliver** delivery process, PR shipping conventions, planning-target resolution, and R&D Mission Control display discipline.
+
+| Tree | Role |
+|------|------|
+| **`.sedea/centers/research-and-development/rules/`** | Center governance (this file + numbered rules) |
+| **`.sedea/centers/research-and-development/missions/`** | Mission **`plan.mdc`**, skills, protocol branches |
+| **`.sedea/centers/research-and-development/docs/`** | **`development-process.md`** — NFD cadence, ship chain glossary |
+
+Built-in **`sedea`** center lives at **`.sedea/centers/sedea/`** — see Sedea bootstrap for hosting layout, operations union, and platform spawn protocol.
+
+---
+
+## Lane warm-up manifest (R&D dispatch)
+
+Normative field semantics: [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea/docs/lane-manifest-contract.md). R&D authoring notes: [`.sedea/centers/research-and-development/docs/development-process.md`](../docs/development-process.md) § *Lane warm-up manifest contract*. Spawn/reload bindings: [`.sedea/centers/sedea/rules/4_mission.mdc`](.sedea/centers/sedea/rules/4_mission.mdc) § *Lane warm-up manifest (spawn and reload)*.
+
+```text
+effectiveWarmUp = dedupe( sedeaBootstrapRules → rdBootstrapRules → laneRules → skillWarmUp )
+```
+
+| Layer | Owner | Content |
+|-------|--------|---------|
+| **Sedea `bootstrapRules`** | Host | **`.sedea/centers/sedea/rules/bootstrap.mdc`** (≤ ~15 KB) |
+| **R&D `bootstrapRules`** | Host when `centerSlug === research-and-development` | **This file** — `.sedea/centers/research-and-development/rules/bootstrap.mdc` (≤ ~10 KB) |
+| **`laneRules`** | Mission protocol / spawn request / lane record | Role-specific governance beyond both bootstrap layers |
+| **`skillWarmUp`** | Skill frontmatter + run-request **`warmUpRules`** | Subject to **256 KiB** combined warm-up cap |
+
+Definitive per-role **`laneRules`** minimums: [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md`](../missions/plan-and-deliver/skills/README.md) § *Definitive `laneRules`*. Skill **`SKILL.md`** § *Warm-up manifest* tables document **`skillWarmUp`** and **`laneRules`**; **`bootstrapRules`** rows document the R&D bootstrap path for host parity lint.
+
+**Spawned children:** Assigned **`SKILL.md`**, validated **`inputs`**, merged **`warmUpRules`**, and persisted spawn handover define the lane contract after reload — not center READMEs alone.
+
+---
+
+## Mission Control turn completion
+
+On **every** Mission Control assistant turn, close with **`AskQuestion`** or **`MC_PHASED_RESPONSE_V1`** — not prose-only exit. Spawned lanes without the AskQuestion tool **must** use **`MC_PHASED_RESPONSE_V1`** (sentinel-first when required). Full wire format: [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](.sedea/centers/sedea/rules/2_ask-question-instructions.mdc) § *`MC_PHASED_RESPONSE_V1` wire format (binding)*.
+
+---
+
+## On-demand R&D rules (read when the lane manifest or skill requires)
+
+Load these **explicitly** when **`laneRules`**, **`skillWarmUp`**, spawn handover, or the active skill directs a `Read` — not assumed from this bootstrap alone.
+
+| Rule | Path | Load when |
+|------|------|-----------|
+| **10** Plan naming | [`.sedea/centers/research-and-development/rules/10_plan-naming-convention.mdc`](10_plan-naming-convention.mdc) | Plan/PR/worktree naming, forbidden-word policy |
+| **20** PR shipping | [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](20_efficient-pr-shipping.mdc) | Worktrees, commit/push cadence, ship chain, PR creation gate |
+| **30** Planning targets | [`.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`](30_planning-target-resolution.mdc) | Resolve `.plan.md` targets, snapshot tables, depth-first gates |
+| **31** Operations user id | [`.sedea/centers/research-and-development/rules/31_operations-user-id.mdc`](31_operations-user-id.mdc) | `operationsUserId`, plans union, `plan-state.mjs --operations-user-id` |
+| **40** Maintain rules | [`.sedea/centers/research-and-development/rules/40_maintain-rules.mdc`](40_maintain-rules.mdc) | Hosting-repo **`.cursor/rules/*.mdc`** routing vs center rules |
+| **50** Display metadata | [`.sedea/centers/research-and-development/rules/50_mission-control-display-metadata-discipline.mdc`](50_mission-control-display-metadata-discipline.mdc) | Child lane display refresh, Squad Leader dispatch scope |
+
+Mission **`plan.mdc`**, **`development-process.md`**, and skill **`SKILL.md`** procedures load per **`laneRules`** and **`skillWarmUp`** — not duplicated here.
+
+---
+
+## Related
+
+- Lane manifest contract (Sedea doc): [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea/docs/lane-manifest-contract.md)
+- Plan-and-deliver spawn contracts: [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md`](../missions/plan-and-deliver/skills/README.md)
+- NFD cadence: [`.sedea/centers/research-and-development/docs/development-process.md`](../docs/development-process.md)
+- Sedea platform bootstrap: [`.sedea/centers/sedea/rules/bootstrap.mdc`](.sedea/centers/sedea/rules/bootstrap.mdc)

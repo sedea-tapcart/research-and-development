@@ -1,9 +1,11 @@
 ---
 description: "Naming conventions for plans, worktree names, PRs, chat titles, and commits — forbid the r-word, always name the benefit"
-alwaysApply: true
+alwaysApply: false
 ---
 
 # Plan & PR naming
+
+**On-demand rule.** Mission Control warm-up loads [`.sedea/centers/research-and-development/rules/bootstrap.mdc`](bootstrap.mdc) as the sole R&D `alwaysApply: true` bootstrap. Read **this file** when you need plan/PR/worktree naming and forbidden-word policy — not on every dispatch warm-up.
 
 Applies to **plan filenames and headings**, **worktree names** (`-b` on `git worktree add`), **PR titles and descriptions**, **chat titles**, and **commit messages** across all repos.
 

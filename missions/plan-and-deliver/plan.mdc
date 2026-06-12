@@ -196,7 +196,7 @@ flowchart TB
 
 **Legend:** yellow = Squad Leader executable steps; blue = spawned child lanes and their spawns; purple = cadence branches outside §§1–5 (see **Cadence reference** and `development-process.md`).
 
-**Single-PR hoist:** after **`phase-planner`**, a **single-PR** assessment spawns **`pr-breakdown`** on the **ancestor** plan (not on the phase file) with `hoistFromPhasePath` — see `development-process.md` § *Single-PR hoist from a phase plan* and **`phase-planner`** § **5a-hoist**.
+**Single-PR hoist:** after **`phase-planner`**, single-PR routes **default** to hoisting **PR-list drafting** to the ancestor (`hoistFromPhasePath`); the phase file keeps a § 5 **pointer note**, not a full **`PR breakdown`** list. That is **draft location** — while **`phase-planner-agent`** owns the lane, the phase `.plan.md` remains the **delivery anchor** in recaps. Override: **`decomposeOnPhasePlan: true`**. See `development-process.md` § *Single-PR hoist from a phase plan* and **`phase-planner`** § **5a-hoist**.
 
 ## Hub missionInputs *(legacy — host-removed)*
 
@@ -550,7 +550,15 @@ When an explicit developer override applies, replace the **`Parent:`** line with
 | 8 | `deploy-walk` (After deploy) | **coding-session** (inline) after merge and post-merge cleanup | `skills/deploy-walk/SKILL.md` — **development-process.md** § *deploy-walk entry points* |
 | 9 | `plan-reconcile` | **`coding-session`** (inline) after deploy done or developer choice (not auto from deploy-walk) | `skills/plan-reconcile/SKILL.md` |
 
-**`deploy-walk` entry points:** **coding-session** runs Local test inline pre-merge; Staging test inline after PR open; After deploy inline post-merge after [Agent-delegated PR approve and merge](skills/coding-session/SKILL.md#agent-delegated-pr-approve-and-merge) (when delegation authorized), [Post-pr-review merge approval gate](skills/coding-session/SKILL.md#post-pr-review-merge-approval-gate) (**`approve-merge`** on non-outsider repos; outsider repos merge on GitHub), or **`check-pr-status`** / **`spawn-after-deploy-walk`** at [Post-create-pr handoff gate](skills/coding-session/SKILL.md#post-create-pr-handoff-gate). Deploy phrases on the active coding-session lane. Detached **`deploy-walk`** dispatch redirects to **`coding-session`**. **`plan-reconcile`** runs **inline** on **`coding-session`** when the developer explicitly chooses reconcile — see [Plan-reconcile handoff (inline)](skills/coding-session/SKILL.md#plan-reconcile-handoff-inline). Finishing deploy-walk does **not** auto-run **`plan-reconcile`**.
+**`deploy-walk` entry points (binding timing):**
+
+- **Local test** (`deployWalkScope: local-test-only`) runs **before the PR is created** — inline on **`coding-session`** after implementation approval + commit, **before** `pre-pr-review` and **`create-pr`** (detached branches table order 2). Plan §7 **`### Local test`** items must be checks runnable **without a GitHub PR** (scripts, manifest parity, read-only verification). Steps that require merge (e.g. *merged to `main`*, pin promotion) belong under **`### After deploy`**, not Local test.
+
+- **Staging test** (`deployWalkScope: staging-test-only`) runs **after the PR is open** and **before merge** — inline on **`coding-session`** after **`create-pr`** (detached branches table order 5). Plan §7 **`### Staging test`** items require a PR but not necessarily merge.
+
+- **After deploy** runs **after the PR has merged** — inline on **`coding-session`** after post-merge cleanup (detached branches table order 8), per [Agent-delegated PR approve and merge](skills/coding-session/SKILL.md#agent-delegated-pr-approve-and-merge) (when delegation authorized), [Post-pr-review merge approval gate](skills/coding-session/SKILL.md#post-pr-review-merge-approval-gate) (**`approve-merge`** on non-outsider repos; outsider repos merge on GitHub), or **`check-pr-status`** / **`spawn-after-deploy-walk`** at [Post-create-pr handoff gate](skills/coding-session/SKILL.md#post-create-pr-handoff-gate).
+
+Detached **`deploy-walk`** dispatch redirects to **`coding-session`**. **`plan-reconcile`** runs **inline** on **`coding-session`** when the developer explicitly chooses reconcile — see [Plan-reconcile handoff (inline)](skills/coding-session/SKILL.md#plan-reconcile-handoff-inline). Finishing deploy-walk does **not** auto-run **`plan-reconcile`**.
 
 **PR review cycle (cyclic — post-create-pr)**
 

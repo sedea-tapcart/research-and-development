@@ -45,7 +45,19 @@ inputs:
 
 # Plan reconcile
 
-**Lane requirement (no separate warm-up).** This skill has **no** frontmatter **`warmUpRules`** by design. Run it **only** on the active **`coding-session`** lane after that session has loaded ship rules (**`20_efficient-pr-shipping`**, **`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`**, **`skills/README.md`**, dev-process). Do **not** start a standalone Mission Control session on **`plan-reconcile`** alone — context will be incomplete.
+## Warm-up manifest (inline)
+
+Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea/docs/lane-manifest-contract.md) and **`../README.md`** § *Inline-only*. **No** frontmatter **`warmUpRules`** or **`laneRules`** — runs on the active **`coding-session`** lane whose **`effectiveWarmUp`** already loaded ship rules. **No `alwaysApply` frontmatter flip.**
+
+### Inherited from invoker (`coding-session`)
+
+| Source | Paths (via parent lane) |
+|--------|-------------------------|
+| Parent **`skillWarmUp`** | `plan.mdc`, `skills/README.md`, `development-process.md`, rule **20** (parent omits rule **30** from frontmatter — see README cap table) |
+| Parent **`laneRules`** | Rule **2**, rule **6**, rule **20**, `coding-session/SKILL.md` |
+| This skill | Procedure body only — no separate spawn warm-up |
+
+**Lane requirement (no separate warm-up).** Run **only** on the active **`coding-session`** lane after that session has loaded ship rules. Do **not** start a standalone Mission Control session on **`plan-reconcile`** alone — context will be incomplete.
 
 ### Standalone dispatch (stop immediately)
 

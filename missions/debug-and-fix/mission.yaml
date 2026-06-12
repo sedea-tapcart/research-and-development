@@ -1,9 +1,11 @@
 name: Debug and Fix
 description: >-
-  Log-first debug loop in a dedicated worktree; after fix, route to Ad-Hoc PRD
-  (noisy worktree) or code promotion via plan-and-deliver (clean fix).
+  Log-first debug loop in a dedicated worktree; after verified fix, code
+  promotion runs Ad-Hoc PRD then coding-session, or findings report only
+  without promotion.
 commands:
   - phrase: debug and fix
+    default: true
     description: >-
-      Diagnose and fix an issue — logs first, then promote to production or
-      hand off via Ad-Hoc PRD.
+      Diagnose and fix an issue — logs first; after verified fix, promote via
+      Ad-Hoc PRD and coding-session, or deliver a findings report only.

@@ -3,10 +3,12 @@ description: >-
   R&D Mission Control display metadata — spawn discipline, child lane refresh,
   Squad Leader dispatch scope. Cross-references sedea authority rule 9; does not
   duplicate the authority table.
-alwaysApply: true
+alwaysApply: false
 ---
 
 # Mission Control display metadata discipline (R&D)
+
+**On-demand rule.** Mission Control warm-up loads [`.sedea/centers/research-and-development/rules/bootstrap.mdc`](bootstrap.mdc) as the sole R&D `alwaysApply: true` bootstrap. Read **this file** when you need child lane display refresh and Squad Leader dispatch scope — not on every dispatch warm-up.
 
 Mission Control persists **dispatch-level** and **per-lane (slot)** display labels in the dispatch bundle. The **normative authority table**, MCP tool names, field max lengths, and forbidden cross-slot writes live only in [`.sedea/centers/sedea/rules/9_display-metadata-authority.mdc`](.sedea/centers/sedea/rules/9_display-metadata-authority.mdc). This rule adds **R&D center** spawn and refresh discipline for **plan-and-deliver** and related dispatches — read rule **9** first when behavior conflicts.
 

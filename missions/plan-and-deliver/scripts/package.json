@@ -2,6 +2,9 @@
   "name": "sedea-plan-state-scripts",
   "private": true,
   "type": "module",
+  "scripts": {
+    "test:governance-integration": "node --test verify-center-governance-integration.test.mjs"
+  },
   "dependencies": {
     "yaml": "^2.7.0"
   }

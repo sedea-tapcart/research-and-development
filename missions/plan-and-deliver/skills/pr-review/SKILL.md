@@ -342,7 +342,7 @@ Set **`outputs.mergeDelegationReady: true`** when **all** apply:
 3. No open **Must fix** blockers remain on this PR.
 4. `outputs.prReviewStatus` is **`terminal`** for this triage pass.
 
-Otherwise set **`mergeDelegationReady: false`** — **`coding-session`** must not run [Agent-delegated PR approve and merge](../coding-session/SKILL.md#agent-delegated-pr-approve-and-merge) until a later pass clears blockers.
+Otherwise set **`mergeDelegationReady: false`** — **`coding-session`** must not open [Pre-merge authorization gate](../coding-session/SKILL.md#pre-merge-authorization-gate) or run [Merge procedure](../coding-session/SKILL.md#merge-procedure) until a later pass clears blockers.
 
 Keep `continuationStatus: "active"` until every PR review comment is fixed, skipped with rationale, converted to follow-up, or explicitly deferred by the developer, and GitHub reconciliation has run when required.
 

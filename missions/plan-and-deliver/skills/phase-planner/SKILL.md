@@ -44,6 +44,11 @@ inputs:
     description: When true, run the next decomposition branch inline after population if parent hint and assessment agree.
     required: false
     default: true
+laneRules:
+  - ".sedea/centers/sedea/rules/2_ask-question-instructions.mdc"
+  - ".sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc"
+  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/phase-planner/SKILL.md"
+  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
 warmUpRules:
   - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
   - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
@@ -58,6 +63,34 @@ This skill drives the **second-tier** planning move under Sedea's New Feature De
 The agent has enough context after step 3 to draft §§ 1–4 and the assessment — inferable from the parent plan's architectural design + change list + this phase's row in the parent's `Delivery phases` numbered list. The assessment supplies **kinds of change**, **PR count band**, **sequencing / coupling**, a **routing recommendation**, and **confidence** so the next **`delivery-phases`** / **`pr-breakdown`** path can be selected without guessing. Filling the dual-title **numbered list** is owned by those protocol branches; § 6 (Caveats) often only emerges once § 5 reveals constraints.
 
 The procedure below is a hard contract — do **not** skip steps, re-order them, or start drafting before the target plan is verified as a phase plan stub. Skipping a step is the difference between a clean phase plan and one that drifts from the documented process.
+
+## Warm-up manifest (spawned)
+
+Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea/docs/lane-manifest-contract.md) and **`../README.md`** § *Default warm-up*. Host merge: `effectiveWarmUp = dedupe(bootstrapRules → laneRules → skillWarmUp)`. Frontmatter matches this table; spawners may omit run-request **`laneRules`** when identical (README spawn preflight row 11). **No `alwaysApply` frontmatter flip.**
+
+### `bootstrapRules` — host-resolved (R&D layer)
+
+| Path | Purpose |
+|------|---------|
+| `.sedea/centers/research-and-development/rules/bootstrap.mdc` | Sole R&D `alwaysApply: true` bootstrap (≤10 KB); host merges when `centerSlug === research-and-development` |
+
+### `skillWarmUp` — frontmatter `warmUpRules`
+
+| Path | Purpose |
+|------|---------|
+| `.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc` | Squad Leader ledger, spawn/wait |
+| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` | Spawn contracts, terminal stop |
+| `.sedea/centers/research-and-development/docs/development-process.md` | NFD process templates |
+| `.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc` | Target resolution, depth-first gates |
+
+### `laneRules` — frontmatter `laneRules`
+
+| Path | Purpose |
+|------|---------|
+| `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc` | Structured choice, AskQuestion |
+| `.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc` | Planning target resolution (role minimum) |
+| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/phase-planner/SKILL.md` | This skill procedure |
+| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` | Spawn preflight, definitive `laneRules` |
 
 ## Trigger
 
@@ -391,14 +424,16 @@ Apply:
 - If parent hint is `Delivery phases` but assessment says PR breakdown, or the reverse, do not auto-spawn. Surface the conflict as an open decision.
 - If either signal is missing or low-confidence, do not auto-spawn. Surface the uncertainty as an open decision.
 
-### 5a-hoist — Single-PR on ancestor (default)
+### 5a-hoist — Single-PR on ancestor (default procedure)
 
-When **`hoistRequired`** is true (route `pr-breakdown-single`):
+**Draft location ≠ phase lane.** Hoist moves **PR-list drafting** to the ancestor and leaves a **pointer note** on phase § 5 — it does **not** transfer phase delivery ownership (§ *Phase delivery ownership*). When **`hoistRequired`** is true (route `pr-breakdown-single`):
 
 1. Resolve **ancestor** = sidecar `parent:` of this phase plan (`parentPlanPath` / `parentPlanSlug` from spawn inputs when present). Verify the ancestor file exists and its dual-title section is **`Delivery phases`** (not already whole-plan **`PR breakdown`** only).
 2. **`StrReplace`** this phase plan's **`## 5. Delivery phases | PR breakdown`** body: replace `_TBD_` with a one-paragraph hoisted note — *PR breakdown for this phase is authored on ancestor `<ancestor-slug>` **`Delivery phases`** row **N**; do not draft § 5 **`PR breakdown`** here.*
 3. Run **`pr-breakdown`** **inline** on the **ancestor** per [Inline handoff](#inline-handoff--phase-planner--delivery-phases--pr-breakdown-step-5b--5a-hoist) — **not** on this phase file unless the developer chooses **decompose on this phase plan**.
-4. Do **not** run **`pr-breakdown`** on this phase file unless the developer later chooses **decompose on this phase plan** (`decomposeOnPhasePlan: true`).
+4. Do **not** run **`pr-breakdown`** on this phase file unless the developer chooses **decompose on this phase plan** (`decomposeOnPhasePlan: true`) via Step **5b**.
+
+When the developer asks about the phase § 5 pointer or challenges hoist: name **default procedure** (steps 1–4), **link the phase plan first** in recap, offer **PR breakdown on this phase plan** (`decomposeOnPhasePlan: true`) — **forbidden** "correct by design" or "the phase plan shouldn't own delivery."
 
 When route is `pr-breakdown-multi`, **`hoistRequired`** is false — run **`pr-breakdown`** **inline** on **this** phase plan with `prBreakdownShape: "multi"` per [Inline handoff](#inline-handoff--phase-planner--delivery-phases--pr-breakdown-step-5b--5a-hoist).
 
@@ -491,6 +526,7 @@ When Mission Control delivers a child result from **`phase-planner`** or **`codi
 1. Match it by correlation id first, then by `outputs.targetPlanPath` / `outputs.targetPlanSlug`.
 2. Copy downstream `spawnedPlans`, `activeLanes`, `openLedgerEntries`, and `remainingTasks` into this skill's result. When inline **`new-plan`** / **`pr-plan`** reports a new child plan, append `{ planPath, planSlug }` to **`outputs.spawnedPlans`** on the next terminal re-emit so Mission Control lane documents include PR plans created inline on this lane.
 3. When result carries **`outputs.prShipComplete: true`**: record the PR index on this phase; when **every** PR plan under this phase (per **`### PR list`** on this file or inline **`pr-breakdown`** subtree) is **`ship-complete`**, set **`outputs.phaseShipComplete: true`**, **`outputs.shipPhase: done`**, **`outputs.rowStatus: closed`** for this phase plan.
+3a. When result carries **`outputs.parentPlanningFollowUpNotification: "sent"`** with non-empty **`parentPlanningFollowUps`**: append each item to the **phase plan** or bubbled **`parentPlanPath`** **`## Follow-ups`** (create section at EOF if missing); track **`pendingParentFollowUps[]`** on this lane's ledger. **Do not** expand next PR/phase index — scheduling stays on a later turn. Bubble merged fields upstream via **re-emit updated** terminal or **`## Completion (inline)`** per **`../README.md`** § *Upstream parent follow-up notification*.
 4. **Re-emit updated terminal** (standalone spawned) or **`## Completion (inline)`** (when invoker runs this skill inline) with **`phaseShipComplete`** and **`parentPlanPath`**, **`parentPlanSlug`**, **`parentIndex`** from spawn **`inputs`** — so **`delivery-phases`** / **`planner`** can offer **`expand-next-eligible`** per **`../README.md`** § *Upstream ship-complete notification*.
 5. If downstream status is `success` and `continuationStatus: "terminal"`, this phase-planner lane may return `terminal` — unless **`phaseShipComplete`** should bubble upstream while **`continuationStatus: active`** on the parent decomposition lane.
 6. If downstream status is `success` or `partial` with active lanes or remaining tasks, return `active`.
@@ -536,6 +572,8 @@ When the developer picks **`start-coding-session`** (or explicit implement autho
 ## Phase delivery ownership (binding)
 
 After §§ 1–4 are drafted on this lane, **this phase-planner child lane owns phase delivery** until one of the terminal conditions below. The **Master Plan agent** (`planner` lane) must **not** re-offer §6 route menus, **`pr-breakdown`** approval, or phase-scoped expand options for the same phase while this lane is active.
+
+In recaps and hoist explanations, **link the target phase `.plan.md` first** — see **§ 5a-hoist** (*draft location ≠ phase lane*).
 
 **Owns on this lane (through ship-complete or explicit defer/abandon):**
 
@@ -595,6 +633,7 @@ Required `outputs` fields:
 - `outputs.continuationStatus` — `active` while route approval, inline decomposition, nested **`phase-planner`** / **`coding-session`** child lanes, or phase ship work remains; `terminal` only per **Phase delivery ownership** ( **`phaseShipComplete`**, explicit defer/abandon, or unrecoverable failure)
 - `outputs.phaseShipComplete` — `true` when every PR under this phase is ship-complete (§5e)
 - `outputs.prShipComplete` — echo when aggregating a **`coding-session`** terminal for a PR under this phase
+- `outputs.parentPlanningFollowUpNotification`, `outputs.parentPlanningFollowUps`, `outputs.pendingParentFollowUps` — when §5e merged child parent follow-up notification
 
 Stop after the terminal line. Do not emit **`AGENT_RUN_REQUEST_V1`** for **`delivery-phases`** or **`pr-breakdown`** (see **`../README.md`** § *Terminal stop (normative)*).
 

@@ -1,14 +1,12 @@
 ---
 name: worktree-bootstrap
 description: >-
- Prepare a fresh git worktree after Mission Control attach per hosting-repo
- dot-sedea bootstrap mode (script-bootstrap, full, extensions-only-link, or
- submodule-init). Normative path: **inline** on the **`coding-session`** lane — the parent
- waits for bootstrap success before any implementation. Spawned execution is an exception
- only when a protocol step explicitly requires a child lane. Does not commit, spawn
- deploy-walk, or run the ship chain — those wait for bootstrap success on the parent.
- Does not implement product code on open PRs, or edit plan files unless the spawner
- requests a skip attestation path.
+ **Deprecated (read-only).** Normative bootstrap is center **`worktree-setup.sh`**
+ on **`coding-session`** (fast bootstrap inside setup; map hint **`bootstrapStatus`**).
+ This skill remains for in-flight dispatch drain and **exception-only** inline retry
+ when setup failed — not spawn-by-default. Does not commit, spawn deploy-walk, or run
+ the ship chain. Does not implement product code on open PRs, or edit plan files unless
+ the spawner requests a skip attestation path.
 inputs:
   worktreePath:
     type: string
@@ -46,6 +44,11 @@ inputs:
     type: string
     description: Skill that spawned this lane — usually coding-session.
     required: false
+laneRules:
+  - ".sedea/centers/sedea/rules/2_ask-question-instructions.mdc"
+  - ".sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc"
+  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md"
+  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
 warmUpRules:
   - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
   - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
@@ -54,6 +57,36 @@ warmUpRules:
 ---
 
 # Worktree bootstrap
+
+> **Deprecated (read-only):** Normative bootstrap is **`.sedea/centers/sedea/scripts/worktree-setup.sh`** on the **`coding-session`** lane — see [`coding-session/SKILL.md`](../coding-session/SKILL.md) § *Center worktree scripts (binding)* and § *Worktree bootstrap (mandatory)*. This skill file stays on disk until [drain criteria](../README.md#worktree-bootstrap-skill-drain-gate) pass; do **not** spawn by default.
+
+## Warm-up manifest (spawned)
+
+Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea/docs/lane-manifest-contract.md) and **`../README.md`** § *Default warm-up*. Host merge: `effectiveWarmUp = dedupe(bootstrapRules → laneRules → skillWarmUp)`. **Exception-only** inline retry on **`coding-session`** when center setup failed; manifest applies when spawned or warm-up replay. **No `alwaysApply` frontmatter flip.**
+
+### `bootstrapRules` — host-resolved (R&D layer)
+
+| Path | Purpose |
+|------|---------|
+| `.sedea/centers/research-and-development/rules/bootstrap.mdc` | Sole R&D `alwaysApply: true` bootstrap (≤10 KB); host merges when `centerSlug === research-and-development` |
+
+### `skillWarmUp` — frontmatter `warmUpRules`
+
+| Path | Purpose |
+|------|---------|
+| `.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc` | Plan sidecar, worktree session |
+| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` | Spawn contracts, inline vs spawned |
+| `.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc` | Bootstrap profiles, hosting cwd |
+| `.cursor/rules/dot-sedea.mdc` | Worktree bootstrap mode (hosting overlay) |
+
+### `laneRules` — frontmatter `laneRules`
+
+| Path | Purpose |
+|------|---------|
+| `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc` | Structured choice on bootstrap retry |
+| `.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc` | Ship lane context |
+| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md` | This skill procedure |
+| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` | Spawn preflight |
 
 This skill prepares a fresh **`WORKTREE_ROOT`** after Mission Control attach. **Read dot-sedea first** — [`.cursor/rules/dot-sedea.mdc`](.cursor/rules/dot-sedea.mdc) § *Worktree bootstrap mode* and § *Fast bootstrap verification checklist* on the active hosting repo, then follow [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc) § *Bootstrap profiles*.
 
@@ -66,18 +99,18 @@ This skill prepares a fresh **`WORKTREE_ROOT`** after Mission Control attach. **
 
 Full compile, linked primary-clone build artifacts, and add-on sync per dot-sedea apply **only** on **`full`** / linked-build overlay profiles — not on every script repo.
 
-**Normative invocation:** **`coding-session`** runs this skill **inline** on the same lane after worktree attach and **waits** for `outputs.bootstrapStatus: success` before implementation. Spawn (`AGENT_RUN_REQUEST_V1`) is **not** the default — use only when a protocol step explicitly requires a spawned bootstrap child; the parent must still wait for success before implementing.
+**Normative invocation (superseded):** **`coding-session`** maps **`bootstrapStatus`** from center **`worktree-setup.sh`** on the default path — **do not** invoke this skill after successful setup. **Exception-only:** **`coding-session`** may read this skill **inline** when setup failed and the developer attests retry (see [`coding-session/SKILL.md`](../coding-session/SKILL.md) § *Worktree bootstrap (inline mandatory)*). **Forbidden:** spawn (`AGENT_RUN_REQUEST_V1`) for this skill on the default path.
 
 Running bootstrap is **not** developer approval for worktrees — layer 2 **`developerApprovedImplementation`** stays on the parent **`coding-session`** lane.
 
 ## Prerequisites (parent **`coding-session`** lane)
 
-This skill **does not** create worktrees or attach them to Sedea. The parent lane must finish first (see [`coding-session/SKILL.md`](../coding-session/SKILL.md) § *Hard rules — git worktree vs workbench attach (binding)*):
+This skill **does not** create worktrees or attach them to Sedea. The parent lane must finish first (see [`coding-session/SKILL.md`](../coding-session/SKILL.md) § *Hard rules — git worktree vs workbench attach (binding)* and § *Generic flow (single repo)*):
 
-1. **`git worktree add` only** — filesystem worktree exists at **`worktreePath`**. **Forbidden on parent before bootstrap:** **`sedea_add_worktree_folder`** used **instead of** `git worktree add`.
-2. **`sedea_add_worktree_folder` only** — worktree is a workspace root in Mission Control (unless the parent confirms attach already succeeded). **Forbidden on parent before bootstrap:** editor **Add Folder to Workspace** or skipping MCP attach because the directory exists on disk.
+1. **Center setup** — parent ran **`.sedea/centers/sedea/scripts/worktree-setup.sh`** from **`HOSTING_ROOT`**; worktree exists at **`worktreePath`**. **Forbidden on parent before retry:** **`sedea_add_worktree_folder`** before setup exits **0**, or inline **`git worktree add`** on the default path when the center script exists.
+2. **`sedea_add_worktree_folder` only** — worktree is a workspace root in Mission Control when setup JSON **`nextAction`** is **`attach-required`**. **Forbidden:** editor **Add Folder to Workspace** or skipping MCP attach.
 
-Then invoke **`worktree-bootstrap`** inline with **`worktreePath`** and **`hostingRoot`**. If **`worktreePath`** is missing or MCP attach failed, stop — do **not** substitute `git worktree add` or **`sedea_add_worktree_folder`** on this lane (see **Forbidden** in step 2 below).
+Then invoke **`worktree-bootstrap`** **inline** only when center setup failed and the developer attests retry — with **`worktreePath`** and **`hostingRoot`**. If **`worktreePath`** is missing or MCP attach failed, stop — do **not** substitute setup steps on this lane (see **Forbidden** in step 2 below).
 
 ## Structured choice (Mission Control)
 

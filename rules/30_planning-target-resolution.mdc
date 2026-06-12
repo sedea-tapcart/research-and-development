@@ -5,10 +5,12 @@ description: >-
  is from session and chat context — not from IDE focused-file list. Covers resolution order,
  snapshot emission, and "Where we are now in the plan tree" table format for planning moves
  (§ *Sedea input channel*; § *Planning vs ship cadence*). **`planner`** handoff uses the same contract (Step 7 — AskQuestion + AGENT_RUN_REQUEST_V1).
-alwaysApply: true
+alwaysApply: false
 ---
 
 # Planning target resolution
+
+**On-demand rule.** Mission Control warm-up loads [`.sedea/centers/research-and-development/rules/bootstrap.mdc`](bootstrap.mdc) as the sole R&D `alwaysApply: true` bootstrap. Read **this file** when you need to resolve `.plan.md` targets, snapshot tables, and planning depth-first gates — not on every dispatch warm-up.
 
 Planning protocol branches act on a specific `.plan.md` under the **`.sedea/operations/`** union. The target is resolved from **session input, chat context, and structured choices** — not from the IDE focused-file list alone (IDE state can drift from planning intent).
 

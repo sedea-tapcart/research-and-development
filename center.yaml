@@ -55,6 +55,12 @@ missions:
       - debug and fix
     skillEntries:
       - missions/debug-and-fix/skills/debug-and-fix/SKILL.md
+  # No local SKILL.md files — reuses plan-and-deliver skills via paths in plan.mdc.
+  - slug: single-phase
+    plan: missions/single-phase/plan.mdc
+    skills: missions/single-phase/skills/
+    commands:
+      - plan and deliver a single phase
 
 centerSkills:
   readme: missions/plan-and-deliver/skills/README.md

@@ -2,10 +2,12 @@
 description: >-
   Canonical operationsUserId — Mission Control context, filesystem paths, skill
   inputs/outputs, and plan-state CLI flag.
-alwaysApply: true
+alwaysApply: false
 ---
 
 # Operations user id
+
+**On-demand rule.** Mission Control warm-up loads [`.sedea/centers/research-and-development/rules/bootstrap.mdc`](bootstrap.mdc) as the sole R&D `alwaysApply: true` bootstrap. Read **this file** when you need `operationsUserId`, plans union paths, and `plan-state.mjs --operations-user-id` — not on every dispatch warm-up.
 
 One opaque stable string identifies the developer’s private tree under **`.sedea/operations/`**. Use the same naming everywhere agents and docs refer to it.
 
