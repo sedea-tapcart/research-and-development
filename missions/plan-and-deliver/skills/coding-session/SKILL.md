@@ -1061,6 +1061,7 @@ When inline **`create-pr`** completes with a PR URL/number (or the developer ret
 |-----------|---------------|--------------|
 | `start-pr-review-delegate-merge` | Start PR review — agent approve + merge when clean | Set `outputs.mergeDelegationAuthorized: true`; run [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) on **next** turn; when **`mergeDelegationReady`**, open [Pre-merge authorization gate](#pre-merge-authorization-gate) |
 | `start-pr-review` | Start inline PR review only | Run [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) on **next** turn — **you** merge on GitHub when ready |
+| `submit-manual-review` | Submit manual review on GitHub | [Manual review submission (external-wait)](#manual-review-submission-external-wait) — park; developer submits Approve / Comment / Request changes on GitHub |
 | `check-pr-status` | Check PR merge status | Refresh `prState` / `mergeSha` / `mergedAt` via `gh` or repo tooling; re-open this gate |
 | `rebase-onto-main` | Rebase onto origin/main | On **next** turn, [Rebase onto origin/main after PR creation](#rebase-onto-origin-main-after-pr-creation) |
 | `spawn-after-deploy-walk` | PR merged — start After deploy deploy-walk | On **next** turn, [After deploy deploy-walk handoff](#after-deploy-deploy-walk-handoff) when merge confirmed |
@@ -1076,7 +1077,7 @@ When inline **`create-pr`** completes with a PR URL/number (or the developer ret
 
 ```
 MC_PHASED_RESPONSE_V1
-{"version":1,"display":{"markdown":"<recap>"},"askQuestion":{"modalTitle":"Coding session — PR opened, next step","questions":[{"id":"post-create-pr","prompt":"What should we do next with this PR?","allowMultiple":false,"options":[{"id":"start-pr-review-delegate-merge","label":"Start PR review — agent approve + merge when clean"},{"id":"start-pr-review","label":"Start inline PR review only (I merge on GitHub)"},{"id":"check-pr-status","label":"Check PR merge status"},{"id":"rebase-onto-main","label":"Rebase onto origin/main"},{"id":"spawn-after-deploy-walk","label":"PR merged — start After deploy deploy-walk"},{"id":"defer-ship","label":"Defer next ship step"},{"id":"more-details","label":"More details for option _"}]}]}}
+{"version":1,"display":{"markdown":"<recap>"},"askQuestion":{"modalTitle":"Coding session — PR opened, next step","questions":[{"id":"post-create-pr","prompt":"What should we do next with this PR?","allowMultiple":false,"options":[{"id":"start-pr-review-delegate-merge","label":"Start PR review — agent approve + merge when clean"},{"id":"start-pr-review","label":"Start inline PR review only (I merge on GitHub)"},{"id":"submit-manual-review","label":"Submit manual review on GitHub"},{"id":"check-pr-status","label":"Check PR merge status"},{"id":"rebase-onto-main","label":"Rebase onto origin/main"},{"id":"spawn-after-deploy-walk","label":"PR merged — start After deploy deploy-walk"},{"id":"defer-ship","label":"Defer next ship step"},{"id":"more-details","label":"More details for option _"}]}]}}
 ```
 
 ### Act after post-create-pr pick
@@ -1087,11 +1088,44 @@ Run on the **developer's response turn** — **not** in the same assistant turn 
 |------|---------|
 | **`start-pr-review-delegate-merge`** | Set `outputs.mergeDelegationAuthorized: true`; [Inline PR review after PR creation](#inline-pr-review-after-pr-creation); when **`mergeDelegationReady`**, open [Pre-merge authorization gate](#pre-merge-authorization-gate) on **next** turn |
 | **`start-pr-review`** | [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) |
+| **`submit-manual-review`** | [Manual review submission (external-wait)](#manual-review-submission-external-wait) |
 | **`check-pr-status`** | Query PR state; update `outputs`; when **`merged`**, run [Post-merge workspace cleanup](#post-merge-workspace-cleanup) **auto-apply** on **next** turn |
 | **`rebase-onto-main`** | [Rebase onto origin/main after PR creation](#rebase-onto-origin-main-after-pr-creation) |
 | **`spawn-after-deploy-walk`** | When merge confirmed: [Post-merge workspace cleanup](#post-merge-workspace-cleanup) **auto-apply** on **next** turn, then [After deploy deploy-walk handoff](#after-deploy-deploy-walk-handoff) after cleanup completes or is skipped |
 | **`defer-ship`** | Stop with recap; `continuationStatus: active` |
 | **`more-details`** | Clarify; re-open gate |
+
+### Manual review submission (external-wait)
+
+Run when the developer picks **`submit-manual-review`** at [Post-create-pr handoff gate](#post-create-pr-handoff-gate), at **`pr-review`** Step **3b** disposition gate, or when they choose to submit their own GitHub review before further agent triage or merge.
+
+**Purpose:** Park while the developer submits their own pull request review on GitHub (Approve, Comment, or Request changes) — without forcing agent triage or delegate-merge paths.
+
+1. Recap: `prUrl`, `prNumber`, current `reviewState` / latest `pull-reviews` summary when available.
+2. Emit **`MC_PHASED_RESPONSE_V1`** (`modalTitle`: *Coding session — submit manual review*) with **`display.markdown`** stating the developer may submit a review on GitHub (PR link) or via `gh pr review` locally. **Park** — no agent triage, GitHub reconciliation, or merge on this turn.
+3. **Resume modal** on the **developer's response turn** (`modalTitle`: *Coding session — manual review submitted?*):
+
+| Option id | Label (brief) | Agent action |
+|-----------|---------------|--------------|
+| `manual-review-done-check-status` | Manual review submitted — refresh PR status | Refresh `prState` / `reviewState` via `gh pr view`; re-open [Post-create-pr handoff gate](#post-create-pr-handoff-gate) |
+| `start-pr-review` | Run inline pr-review (triage comments) | [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) |
+| `start-pr-review-delegate-merge` | Agent triage + delegate merge when clean | Set `outputs.mergeDelegationAuthorized: true`; [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) |
+| `defer-ship` | Defer next ship step | `continuationStatus: active` |
+| `more-details` | More details for option _ | Elaborate; re-open resume modal |
+
+**Act after resume pick** — run on the **developer's response turn**, not the same assistant turn as the resume modal:
+
+| Pick | Actions |
+|------|---------|
+| **`manual-review-done-check-status`** | Query PR state; update `outputs`; re-open [Post-create-pr handoff gate](#post-create-pr-handoff-gate) |
+| **`start-pr-review`** | [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) |
+| **`start-pr-review-delegate-merge`** | Set `outputs.mergeDelegationAuthorized: true`; [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) |
+| **`defer-ship`** | Stop with recap; `continuationStatus: active` |
+| **`more-details`** | Clarify; re-open resume modal |
+
+**Forbidden:** prose *review on GitHub and tell me when*; running `gh pr review --approve` or `--request-changes` without the developer naming review type and body in the **same message** after **`more-details`** or an explicit assisted-review request.
+
+**Agent-assisted submission (optional):** When the developer picks **`more-details`** and names Approve / Comment / Request changes with body text in the **same message**, run `gh pr review` with the matching flags on the **next** turn only — then re-open [Post-create-pr handoff gate](#post-create-pr-handoff-gate) after success.
 
 ### Rebase onto origin/main after PR creation
 

@@ -235,16 +235,18 @@ After Step 3 classification, compute:
 | `apply-must-should` | **`mustCount > 0` or `shouldCount > 0`** | Apply Must + Should fixes |
 | `follow-ups-only` | **`followUpCount > 0`** | Follow-ups only — no source edits |
 | `skip-reject` | Triage non-empty | When **`skippedOnly`**: *Skip / reject — reconcile on GitHub (recommended)*; else *Skip / reject selected comments* |
+| `submit-manual-review` | **`skippedOnly`** or (**`followUpCount > 0`** and **`mustCount === 0`** and **`shouldCount === 0`**) | Submit manual review on GitHub — park per **`coding-session`** [Manual review submission (external-wait)](../coding-session/SKILL.md#manual-review-submission-external-wait) |
 | `more-details` | Always | More details for option _ |
 
-**Act mapping unchanged:** selecting an option not shown in the modal is impossible; do not treat hidden options as implicit consent.
+**Act mapping:** selecting an option not shown in the modal is impossible; do not treat hidden options as implicit consent. When the developer picks **`submit-manual-review`**, run **`coding-session`** [Manual review submission (external-wait)](../coding-session/SKILL.md#manual-review-submission-external-wait) — do not run Step **5 — GitHub only** on that turn.
 
 **Example fixtures** (illustrative `askQuestion.options` after counts):
 
 | Scenario | Typical options |
 |----------|-----------------|
 | Must present | `apply-must`, `apply-must-should`, `skip-reject`, `more-details` |
-| Skip-only (0 Must / 0 Should / 0 follow-up) | `skip-reject` (recommended), `more-details` |
+| Skip-only (0 Must / 0 Should / 0 follow-up) | `skip-reject` (recommended), `submit-manual-review`, `more-details` |
+| Follow-up only (0 Must / 0 Should) | `follow-ups-only`, `submit-manual-review`, `skip-reject`, `more-details` |
 | Mixed (Must + follow-up) | `apply-must`, `apply-must-should`, `follow-ups-only`, `skip-reject`, `more-details` |
 
 **Forbidden:** “Review the PR and tell me when to continue”, “wait for the user to review”, fixed five-option menus when counts make options inert, or ending the turn without structured choice when dispositions need approval.
