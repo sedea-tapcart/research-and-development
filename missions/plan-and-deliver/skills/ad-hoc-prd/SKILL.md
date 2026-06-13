@@ -139,11 +139,25 @@ See [`.sedea/centers/research-and-development/rules/50_mission-control-display-m
  - `# <Title>` — handoff title (not the filename).
  - **`Master Plan:`** line — `_TBD_` plus one sentence that **`planner`** will create the `.plan.md` from this Ad-Hoc PRD and the developer should paste or link that path here when it exists (do **not** invent a plan path).
  - **`## 1–3`** sections filled from handoff details; `_TBD_` where unavoidable + say what is missing.
-5. **Present for approval** — Recap the new file (workspace / `file://` link, one-line summary of §§1–3). Use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`../README.md`** § *Recap, structured choice, act* and **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`**. Minimum options:
+5. **Present for approval** — Recap the new file (workspace / `file://` link, one-line summary of §§1–3). Use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`../README.md`** § *Recap, structured choice, act* and **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`**.
+
+ **Detect open items** before building the modal: `_TBD_` bullets in §§1–3, explicit risks or unknowns in **§3 Proposed solution**, thin or ambiguous acceptance criteria, and `outputs.complexityGuard: needs-master-plan-assessment`.
+
+ **When open items exist** — **same approval turn** (one modal):
+ - **`display.markdown`:** numbered list — each open item elaborated (section, gap text, why a decision matters, agent-proposed resolution options).
+ - **`askQuestion.options`:** per-item resolution picks (for example accept proposed resolution A/B, mark not applicable, defer to planner, gather more evidence) **and always** **Approve PRD**, **Revise PRD**, **More details for option _** on the **same** options list.
+ - **Forbidden:** a separate resolve-only modal that omits **Approve PRD** / **Revise PRD** until all items are cleared.
+ - **Many open items:** batch across turns when one modal would be impractical; **each batch still co-presents** **Approve PRD** and **Revise PRD**.
+
+ **When no open items remain** — minimum options:
  - **Approve PRD** — developer accepts this Ad-Hoc PRD for **`planner`** input
  - **Revise PRD** — edit the `.ad-hoc-prd.md` on this lane, then return to step 5
  - **More details for option _**
+
  Do **not** treat the write alone as developer approval. Mention optional **manual move** to **`joint/docs/`** only if **the developer** wants shared visibility.
+
+5a. **On open-item resolution pick** — Apply the selected resolution to the `.ad-hoc-prd.md`, then return to step 5 with the same co-present approval shape.
+
 6. **On approve** — Set `outputs.developerApprovedPrd: true`, ensure `prdRef` / `prdPath` / `prdTitle` reflect the approved file, then emit the terminal **`AGENT_RESULT_RESPONSE_V1`** with `continuationStatus: terminal` and `continuationOwner: "squad-leader"`.
 7. **On revise** — Apply edits to the Ad-Hoc PRD file, then repeat step 5 until the developer approves or abandons (report `aborted` / `abandoned` only when they clearly stop).
 

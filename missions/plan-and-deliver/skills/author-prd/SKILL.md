@@ -134,11 +134,25 @@ Gather evidence, calibrate section policy, and draft or update a Product or Feat
  - optional gaps do not block planning.
 8. Write the document when an output path is resolved, then re-read it and verify the required sections.
 9. **Refresh lane display** when spawn labels are generic — MCP **`mission_control_update_lane_display`** on this lane only (rule **50**).
-10. **Present for approval** — Recap path, `planningReadiness`, and gap summary. Use **`MC_PHASED_RESPONSE_V1`** with minimum options:
-    - **Approve PRD** — accept for **`planner`** on this dispatch
-    - **Revise PRD** — edit on this lane, return to step 10
-    - **More details for option _**
-    Do **not** treat the write alone as developer approval.
+10. **Present for approval** — Recap path, `planningReadiness`, and gap summary. Use **`MC_PHASED_RESPONSE_V1`** (spawned lanes) or **AskQuestion** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`**.
+
+ **Detect open items** before building the modal: `outputs.openQuestions`, missing mandatory or important sections, unresolved `TBD` markers, contradictions, and `planningReadiness: partial` or `blocked`.
+
+ **When open items exist** — **same approval turn** (one modal):
+ - **`display.markdown`:** numbered list — each open item elaborated (section or PRD location, gap text, why a decision matters, agent-proposed resolution options).
+ - **`askQuestion.options`:** per-item resolution picks (for example accept proposed resolution A/B, mark not applicable, defer to §12 follow-up, gather more evidence) **and always** **Approve PRD**, **Revise PRD**, **More details for option _** on the **same** options list.
+ - **Forbidden:** a separate resolve-only modal that omits **Approve PRD** / **Revise PRD** until all items are cleared.
+ - **Many open items:** batch across turns when one modal would be impractical; **each batch still co-presents** **Approve PRD** and **Revise PRD** (developer may approve mid-stream with remaining gaps documented in §12).
+
+ **When no open items remain** (or only surfaced §12 notes the developer may accept as-is) — minimum options:
+ - **Approve PRD** — accept for **`planner`** on this dispatch (allowed when `planningReadiness: ready` even if §12 lists planner-owned follow-ups)
+ - **Revise PRD** — edit on this lane, return to step 10
+ - **More details for option _**
+
+ Do **not** treat the write alone as developer approval.
+
+10a. **On open-item resolution pick** — Apply the selected resolution to the PRD and source ledger, re-run step 7 completeness review, rewrite when needed (step 8), then return to step 10 with the same co-present approval shape.
+
 11. **On approve** — Set `outputs.developerApprovedPrd: true`, emit terminal **`AGENT_RESULT_RESPONSE_V1`** with `continuationStatus: terminal` and `continuationOwner: squad-leader`.
 
 ## Default section policy

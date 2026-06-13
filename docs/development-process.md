@@ -149,7 +149,8 @@ flowchart TD
 
 - **`plan and deliver` §2** collects product context on the **Squad Leader** lane — it does **not** draft the PRD or skip **`author-prd`**.
 - **`author-prd`** owns evidence gathering, drafting, and developer approval on its **child** lane (steps 10–11).
-- **`ad-hoc-prd`** is **not** used on **`plan and deliver`** — it remains for **`debug-and-fix`** only (minimal fix-scope PRD).
+- **`ad-hoc-prd`** is **not** used on **`plan and deliver`** — it remains for **`debug-and-fix`** and **`single-phase`** (minimal fix-scope PRD).
+- **PRD approval UX (binding):** On **`author-prd`** step 10 and **`ad-hoc-prd`** step 5, when open questions, concerns, ambiguities, or incompleteness remain, the approval modal **co-presents** per-item resolution picks **and** **Approve PRD** / **Revise PRD** on the **same** turn — **forbidden** to hide Approve until all items are cleared. See those skills for batching when many items remain.
 
 **Do not use**
 
@@ -210,6 +211,7 @@ Normative field semantics: [`.sedea/centers/sedea/rules/8_plan-board-contract.md
 | Squad Leader collects **title only**, spawns **`author-prd`**, child invents scope | Complete **`plan.mdc`** §2 intake on Squad Leader; §3 handoff includes **`prdDescription`** + **`sourceMaterials`** |
 | Spawn **`planner`** from **`new-plan`** or run **`pr-plan`** on a standalone child without **`new-plan-agent`** | **`planner`** = Squad Leader §5 **spawn only**; **`pr-plan`** = **inline** under **`new-plan`** — **`skills/README.md`** § *Normative execution mode* |
 | Leader **AskQuestion** after Author PRD child approve (seed review / confirm spawn) | **Forbidden** — auto-chain §4→§5 on same leader turn; PRD approval stays on **Author PRD** child lane (**`plan.mdc`** §3 resume) |
+| Author PRD resolve-only modal without **Approve PRD** / **Revise PRD** | **Forbidden** — open-item resolution and approval co-present on the same modal (**`author-prd`** step 10; **`ad-hoc-prd`** step 5) |
 | **Child lane** calls **`mission_control_update_dispatch_display`** | **Forbidden** — dispatch chrome is Squad Leader scope only; child refreshes **own** slot via **`mission_control_update_lane_display`** — [`.sedea/centers/sedea/rules/9_display-metadata-authority.mdc`](.sedea/centers/sedea/rules/9_display-metadata-authority.mdc); [`.sedea/centers/research-and-development/rules/50_mission-control-display-metadata-discipline.mdc`](../rules/50_mission-control-display-metadata-discipline.mdc) |
 | **Squad Leader** renames a **child** agent tab via dispatch MCP or prose | **Forbidden** — leader uses **`mission_control_update_dispatch_display`** for dispatch title/hover; child lane self-service via lane MCP — rule **9** § *Forbidden* |
 | **Chat-only** tab rename ("call it X in the UI") with no MCP on owning lane | **Stop** — durable labels persist through governed MCP; see [`.sedea/centers/research-and-development/docs/mission-control-display-metadata-host-spec.md`](mission-control-display-metadata-host-spec.md) § *Stale tab title recovery* |
