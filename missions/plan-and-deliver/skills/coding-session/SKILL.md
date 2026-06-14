@@ -182,6 +182,48 @@ Approval gates and worktree naming picks use **AskQuestion** or **`MC_PHASED_RES
 
 On **[Spawned implementation lane](#spawned-implementation-lane)**, **this lane** edits the hosting repo under the worktree through the implementation cut point — do not tell the developer to paste a session prompt into another chat. On **prompt-only** runs, emit the external prompt and **stop** without implementing here.
 
+## Session orientation table (binding)
+
+Give developers a **consistent state snapshot** at ship gates so they can re-orient after reload, tab switch, or parallel work.
+
+**When required:** At every **Mandatory gate** below — render as the **first block** in `display.markdown` (before step recap or checklist prose). **Forbidden:** omitting the table and substituting scattered one-liners.
+
+**Table shape (markdown):**
+
+| Field | Value |
+|-------|-------|
+| Plan | `<slug>` @ `<path>` or — |
+| Worktree | `<absolute WORKTREE_ROOT>` or — |
+| Branch | `<worktreeName>` or — |
+| PR | `<url>` (#N) or — |
+| Ship phase | `<shipPhase>` |
+| Deploy scope | Before deploy · After deploy · — |
+| Review | `<prePrReviewRecommendation>` / `prReviewStatus` / `reviewState` or — |
+
+**Population rules:**
+
+| Rule | Requirement |
+|------|-------------|
+| No invention | Use `—` when unknown; never guess paths or PR numbers |
+| Worktree row | Populated while session worktree exists; `—` after authorized cleanup |
+| PR row | Populated when `prUrl` or `prNumber` exists |
+| Deploy scope | `Before deploy` during before-deploy-only walk; `After deploy` post-merge walk; `—` otherwise |
+| Review row | Pre-PR: `outputs.prePrReviewRecommendation`; during PR: `prReviewStatus` + GitHub `reviewState` when known |
+
+**Mandatory gates (this skill):**
+
+| Gate | Section |
+|------|---------|
+| Ship cut-point | [Ship cut-point gate](#ship-cut-point-gate-approve-commit-before-deploy) |
+| Before deploy walk | [Before deploy deploy-walk handoff](#before-deploy-deploy-walk-handoff) |
+| Pre-PR handback | [Pre-PR review handoff](#pre-pr-review-handoff) |
+| PR opened | [Post-create-pr handoff gate](#post-create-pr-handoff-gate) |
+| Post-merge cleanup modal | [Post-merge workspace cleanup](#post-merge-workspace-cleanup) |
+| After deploy walk | [After deploy deploy-walk handoff](#after-deploy-deploy-walk-handoff) |
+| Implementation continuation | [Implementation continuation gate](#implementation-continuation-gate) |
+
+Inline **`deploy-walk`** and **`pr-review`** on this lane must include the same table per their skill contracts.
+
 ## Refresh lane display (when stale)
 
 After **`targetPlanPath`** / PR concern is clear (before worktree attach or immediately after bootstrap succeeds):
@@ -818,7 +860,7 @@ Before ending a turn that opens [Ship cut-point gate](#ship-cut-point-gate-appro
 
 1. First non-whitespace character is **`M`** of **`MC_PHASED_RESPONSE_V1`** (spawned lane — sentinel-first).
 2. JSON includes **`version`: 1**, **`display.markdown`**, **`askQuestion.questions`** with ≥1 option (`id` + `label`) matching [Combined authorization](#combined-authorization) for this tree state.
-3. Recap includes `git status --short` summary and Before-deploy §7 state when plan-anchored.
+3. Recap includes [Session orientation table (binding)](#session-orientation-table-binding) as the first block, then `git status --short` summary and Before-deploy §7 state when plan-anchored.
 4. **`commit-push`** and create-PR option ids are **absent** unless [Pre-PR ship gate (push/PR)](#pre-pr-ship-gate-pushpr) allows **`executive-override-push`** on this message.
 5. Message contains **no** prose-only *advisory* / *pick in chat* / *I'll wait* closing — if any check fails, fix before send.
 

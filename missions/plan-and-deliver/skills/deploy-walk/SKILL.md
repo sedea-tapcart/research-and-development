@@ -144,15 +144,38 @@ When `upstreamSkill` is **`coding-session`** and `deployWalkScope` is **`before-
 
 Use `worktreePath` / `worktreeName` from inline context for command context in step presentations. PR merge fields (`prUrl`, `mergeSha`, …) are optional and usually absent.
 
+## Session orientation table (binding)
+
+Give developers a **consistent state snapshot** during deploy verification so they can re-orient after reload, tab switch, or parallel work.
+
+**When required:** At every **Mandatory gate** below — render as the **first block** in `display.markdown` (before plan header or step recap). **Forbidden:** omitting the table and substituting scattered one-liners.
+
+**Table shape (markdown):**
+
+| Field | Value |
+|-------|-------|
+| Plan | `<slug>` @ `<path>` or — |
+| Worktree | `<absolute WORKTREE_ROOT>` or — |
+| Branch | `<worktreeName>` or — |
+| PR | `<url>` (#N) or — |
+| Ship phase | parent `shipPhase` when inline on **`coding-session`**, or — |
+| Deploy scope | Before deploy · After deploy · — |
+| Review | — (deploy walk does not own PR triage) |
+
+**Population rules:** Same as [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`](../coding-session/SKILL.md) § *Session orientation table (binding)* — use `—` when unknown; never invent paths or PR numbers.
+
+**Mandatory gates (this skill):** [Inline walk bootstrap](#inline-walk-bootstrap) start; each [Step 4 — Step presentation contract](#step-4--step-presentation-contract) manual presentation; every developer-await **AskQuestion** / **`MC_PHASED_RESPONSE_V1`** ([Deploy developer-await modal options](#deploy-developer-await-modal-options-binding)).
+
 ## Worktree path visibility (binding)
 
 When **`worktreePath`** is set on inline context (typical on **`coding-session`** Before deploy while the session worktree still exists):
 
 | Surface | Requirement |
 |---------|-------------|
-| **Manual step presentation** ([Step 4](#step-4--step-presentation-contract)) | First line after the plan header: **`Worktree: <absolute-worktreePath>`** |
+| **Session orientation table** | **Worktree** and **Branch** rows populated from inline context |
+| **Manual step presentation** ([Step 4](#step-4--step-presentation-contract)) | Full orientation table first; plan header follows |
 | **Agent-executable run** | Recap **`cwd: <absolute-worktreePath>`** before shell commands |
-| **Developer-await gates** ([Deploy developer-await modal options](#deploy-developer-await-modal-options-binding)) | **`display.markdown`** includes **`Worktree: <absolute-worktreePath>`** when any step runs in-tree |
+| **Developer-await gates** ([Deploy developer-await modal options](#deploy-developer-await-modal-options-binding)) | **`display.markdown`** starts with the orientation table |
 | **`deploy-walk status`** | Append **`worktree=<absolute-path>`** when known |
 
 When **`worktreePath`** is missing but agent-executable steps need a cwd, surface one line: *No worktree in inline context — resolve **`worktreePath`** before running in-tree commands* — do not guess cwd from chat.

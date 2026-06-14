@@ -28,6 +28,28 @@ If Mission Control opened a session whose only intent is **`pr-review`** / *tria
 
 Triage and fix loops use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* on the **`coding-session`** lane — **preferred:** recap (comment summary) + modal in one message. **Act** (code/plan edits) only after developer approval per this skill.
 
+## Session orientation table (binding)
+
+Give developers a **consistent state snapshot** during PR review cycles so they can re-orient after reload, tab switch, or parallel work.
+
+**When required:** At every **Mandatory gate** below — render as the **first block** in `display.markdown`. **Forbidden:** omitting the table and substituting scattered one-liners.
+
+**Table shape (markdown):**
+
+| Field | Value |
+|-------|-------|
+| Plan | `<slug>` @ `<path>` or — |
+| Worktree | `<absolute WORKTREE_ROOT>` or — |
+| Branch | `<worktreeName>` or — |
+| PR | `<url>` (#N) |
+| Ship phase | `pr-review` |
+| Deploy scope | — |
+| Review | `prReviewStatus` · GitHub `reviewState` · open Must/Should counts |
+
+**Population rules:** Same as [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`](../coding-session/SKILL.md) § *Session orientation table (binding)* — recover missing PR/worktree context from **`coding-session`** before triage.
+
+**Mandatory gates (this skill):** Step **3b** disposition gate; Step **4** report + commit/push gate; external-wait parking after push; each cycle reopen when new comments land.
+
 ## Helper script
 
 Script: `.sedea/centers/research-and-development/missions/plan-and-deliver/scripts/pr-review.py` (reads PAT from `GH_TOKEN`, then hosting-repo **`.sedea/mcp.json`**, then `~/.sedea/mcp.json` for token lookup only — see § *GitHub access*).
