@@ -293,6 +293,31 @@ The `[~]` marker plus the explicit "captured to … § Follow-ups" pointer lets 
 
 If Step 1 payloads are **missing or stale** in context (new comments since fetch, fresh chat), re-run **Step 1**’s `pr-review.py` array for the same `owner` / `repo` / `pull_number`, then run **GitHub only** above — do **not** start a second full **`pr-review`** triage unless you truly cannot resolve the PR identity.
 
+### Step 5 turn invariant (binding)
+
+When this chat ran **`pr-review`** Steps **1–4** and the developer picked **`apply-must`**, **`apply-must-should`**, or **`fix-now-session`**, then the agent commits/pushes (or takes the skipped-only path with no edits), **Step 5 must run in that same assistant turn** before any **`MC_PHASED_RESPONSE_V1`** that offers merge, re-triage, post-create-pr forward paths, or “next cycle” options.
+
+**Forbidden:**
+
+- Ending the turn at **`git push`** success without Step 5 when Step 4 ran in-session.
+- Offering **`start-pr-review`** / **`rerun-pr-review`** as the primary path when only Step 5 was skipped — use **`reconcile-github-only`** at [Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate) instead.
+- Stating ship cadence or **`mergeDelegationReady`** complete while **`CHANGES_REQUESTED`** reviews or unresolved dispositioned threads remain.
+
+**Skipped-only path:** When Step 3 marked every comment **Skipped (no follow-up)** with **no** code edits, Step 5 runs immediately in the disposition response turn (no commit/push) — still **same turn** as the Step 3b pick.
+
+### Reconciliation completeness checklist (binding)
+
+Set **`outputs.githubReconciliationStatus: complete`** only when **all** pass (re-fetch Step 1 payloads when stale):
+
+| # | Check |
+|---|--------|
+| 1 | **Inline threads:** every dispositioned comment has an agent **reply** |
+| 2 | **Resolve:** every dispositioned thread has **`isResolved: true`** (resolve any still open) |
+| 3 | **Top-level reviews:** every non-minimized **`PRR_`** from bot/human reviewers is **minimized** with `classifier: RESOLVED` when dispositions are addressed or skipped with rationale |
+| 4 | **Summary:** **`summary`** command posted with commit short SHA and bullets mirroring Step 4 dispositions |
+
+Until all four pass, keep **`githubReconciliationStatus: pending`** and **`mergeDelegationReady: false`**.
+
 ## §8 host sync (via coding-session)
 
 Runs **inline** on the **`coding-session`** lane. When triage reaches a stable milestone, the **`coding-session`** agent **must** re-emit **`AGENT_RESULT_RESPONSE_V1`** with §8 **`outputs`** so Mission Control host sync updates the Squad Leader ledger (**`../../plan.mdc`** §8).
@@ -323,11 +348,13 @@ Return results through the active **`coding-session`** lane, not as a child-agen
 Set **`outputs.mergeDelegationReady: true`** when **all** apply:
 
 1. Every fetched review comment has an approved disposition (fixed, skipped with rationale, or captured follow-up).
-2. GitHub reconciliation ran when required (Step 5), or the skipped-only path completed with no pending Must fixes.
+2. **`outputs.githubReconciliationStatus: complete`** — Step 5 checklist passed (§ *Reconciliation completeness checklist*), or the skipped-only path completed with no pending Must fixes (skipped-only triage with no code edits also sets **`complete`** — no separate **`skipped`** value on the merge path).
 3. No open **Must fix** blockers remain on this PR.
 4. `outputs.prReviewStatus` is **`terminal`** for this triage pass.
 
 Otherwise set **`mergeDelegationReady: false`** — **`coding-session`** must not open [Pre-merge authorization gate](../coding-session/SKILL.md#pre-merge-authorization-gate) or run [Merge procedure](../coding-session/SKILL.md#merge-procedure) until a later pass clears blockers.
+
+**`githubReconciliationStatus` values:** `complete` (checklist passed or skipped-only path with no GitHub actions required), `pending` (Step 5 required or incomplete). Do **not** use a separate **`skipped`** value when **`mergeDelegationReady`** must be true — map skipped-only to **`complete`**.
 
 Keep `continuationStatus: "active"` until every PR review comment is fixed, skipped with rationale, converted to follow-up, or explicitly deferred by the developer, and GitHub reconciliation has run when required.
 

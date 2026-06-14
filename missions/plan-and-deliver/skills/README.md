@@ -151,6 +151,8 @@ When a ship skill finishes a milestone on a **detached** lane, the terminal **`A
 
 **`pr-review`**, **`create-pr`**, **`deploy-walk`**, and **`plan-reconcile`** return through **`coding-session`** on the coding lane. §8 updates on the leader dispatch via **`coding-session`** terminal re-emit and host sync only (**`../plan.mdc`** §8).
 
+**Inline `pr-review` ship-chain note (binding):** After fix push when Steps **1–4** ran in-session, **`pr-review`** Step **5 (GitHub reconciliation)** is **not optional** — same assistant turn as push per rule **20** § *Commit and push cadence* step 3 and **`pr-review/SKILL.md`** § *Step 5 turn invariant*. Set **`outputs.githubReconciliationStatus: complete`** before **`mergeDelegationReady: true`**. Distinguish **`reconcile-github-only`** (Step 5 only) from **`rerun-pr-review`** (full triage) at **`coding-session`** post-create-pr and pre-merge gates.
+
 ## Upstream ship-complete notification (spawn chain)
 
 Depth-first expansion ( **`development-process.md`** § *Depth-first plan-tree traversal*) requires parents to know when a child PR or phase is **ship-complete** before offering **`expand-eligible`** / **`expand-next-eligible`**. Two channels apply:
