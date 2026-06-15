@@ -206,6 +206,13 @@ The procedure below is a hard contract — do **not** skip steps, infer state fr
 
 Classify each unchecked step **before** acting. When classification is ambiguous, use **AskQuestion** once (recap + modal) — do **not** guess credentials, environments, or subjective UI checks.
 
+### Per-step and per-assertion classification (binding)
+
+- Classify **each numbered checklist line** independently — do **not** mark a whole step manual because one clause needs UI when other clauses are agent-executable per [Agent capability inventory (binding)](#agent-capability-inventory-binding).
+- When a step lists multiple checks (comma-separated, semicolon-separated, or sub-bullets), split into **sub-assertions** and classify each one before acting.
+- **Mixed steps** (UI + filesystem / YAML / JSON / grep / diff in one line): run all **agent-executable sub-assertions first** in the **same turn**; present **only** the UI or subjective remainder as manual per [Step 4 — Step presentation contract](#step-4--step-presentation-contract). **Forbidden:** treating the entire mixed step as manual and asking the developer to read files or parse YAML.
+- Neighboring steps do **not** inherit classification — a manual UI step before or after a file-verification step does **not** make the file step manual.
+
 ### Agent-executable (auto-run — no approval)
 
 Run **without** an **AskQuestion** approval gate **before each agent-executable step** (mid-turn tool work). Use **`worktreePath`** from inline context when present — recap **`cwd: <absolute-path>`** per [Worktree path visibility (binding)](#worktree-path-visibility-binding); otherwise resolve cwd from plan anchor or chat. When an auto-run pass **ends the assistant turn** without chaining further steps, still close with structured choice per [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](.sedea/centers/sedea/rules/2_ask-question-instructions.mdc) § **Turn completion invariant** (include [Deploy developer-await modal options](#deploy-developer-await-modal-options-binding) when awaiting developer input).
@@ -250,6 +257,26 @@ Run **without** an **AskQuestion** approval gate **before each agent-executable 
 | **GitHub CLI** | `gh pr view`, `gh api`, `gh run list` / `view` when `gh` auth works in the shell |
 | **Mission Control MCP** | `sedea_get_current_user`; `sedea_add_worktree_folder` / `sedea_remove_worktree_folder` when worktree lifecycle applies; `mission_control_update_lane_display` on **own** slot only |
 | **Parse / verify** | Read JSON, YAML, Markdown plan sections; compare output to expected shape; count matches; exit codes — **agent parses**, not developer |
+
+**Agent-executable verification examples (binding)** — when the step or sub-assertion names these artifacts, the agent runs tools **before** flipping `[ ]` → `[x]`:
+
+| Artifact / check | Agent runs | Example done-note evidence |
+|------------------|------------|----------------------------|
+| **`dispatch.yaml`** under `.sedea/operations/.../dispatch/<id>/` | `Read` + field grep; optional `git diff` when mutation is expected | *Read dispatch.yaml — trustLevel: tool_execution present; no diff vs merge base* |
+| **Dispatch bundle JSON** (`dispatch-lane.*.v1.json`, `dispatch-tab.v1.json`) | `Read` / `Grep` for expected keys or absence of stale fields | *Grep dispatch-lane — spawnContext.skillPath matches expected path* |
+| **Plan sidecar** (`*.state.yaml`) | `Read`; compare `status`, `archived`, `parent`, `worktrees`, `prs` to step criteria | *state.yaml status=started, worktrees[] includes worktree path* |
+| **YAML / JSON field assertion** (`trustLevel`, `version`, enum values) | `Read` or `rg` on the named path; agent states pass/fail with quoted field values | *rg trustLevel dispatch.yaml — matched tool_execution* |
+| **Before/after mutation check** (file should or should not have changed) | `git diff`, `git status`, or re-read + compare to prior tool output in transcript | *git diff dispatch.yaml — empty (no post-merge mutation)* |
+| **Operations plan body** (deploy checklist, capstone todo) | `Read` target `.plan.md`; verify checkbox or `**Status:**` line matches evidence | *Read plan §7 step 3 — still [ ] before flip* |
+
+**Tool evidence before flip (binding):** Do **not** mark an agent-executable step or sub-assertion `[x]` unless **this turn** already contains tool output (`Read`, `Grep`, `Glob`, `Shell`) that supports pass/fail. The `deploy-walk <N> done: <note>` line must cite the tool and outcome (path, command, exit code, or quoted field values). Developer chat confirmation alone is **not** evidence for agent-executable work.
+
+**Challenged checkbox correction (binding):** When the developer challenges a checked step (marked without tool evidence, misclassified as manual, or contradicted by artifacts):
+
+1. Re-read the plan line and reclassify per assertion — do **not** defend the prior mark from chat memory.
+2. Run agent-executable checks immediately in the **same turn**.
+3. If evidence contradicts the checkbox, revert `[x]` → `[ ]` (remove or amend the dated note), then re-flip only after new pass evidence.
+4. Recap the correction (what was wrong, what tools showed, plan state after fix) before closing the turn.
 
 **Manual only** (present per [Step 4 — Step presentation contract](#step-4--step-presentation-contract)):
 
