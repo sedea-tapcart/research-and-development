@@ -258,18 +258,29 @@ After Step 3 classification, compute:
 | `follow-ups-only` | **`followUpCount > 0`** | Follow-ups only — no source edits |
 | `skip-reject` | Triage non-empty | When **`skippedOnly`**: *Skip / reject — reconcile on GitHub (recommended)*; else *Skip / reject selected comments* |
 | `submit-manual-review` | **`skippedOnly`** or (**`followUpCount > 0`** and **`mustCount === 0`** and **`shouldCount === 0`**) | Submit manual review on GitHub — park per **`coding-session`** [Manual review submission (external-wait)](../coding-session/SKILL.md#manual-review-submission-external-wait) |
+| `merged-pr-proceed` | **`prNumber`** or **`prUrl`** known (always during PR ship chain) | PR merged — proceed with cleanup — **Act** per § *Merged-forward act mapping* below |
 | `more-details` | Always | More details for option _ |
 
-**Act mapping:** selecting an option not shown in the modal is impossible; do not treat hidden options as implicit consent. When the developer picks **`submit-manual-review`**, run **`coding-session`** [Manual review submission (external-wait)](../coding-session/SKILL.md#manual-review-submission-external-wait) — do not run Step **5 — GitHub only** on that turn.
+**Merged-forward (binding):** Include **`merged-pr-proceed`** on **every** parked disposition gate, post-fix commit/push gate, and external-wait resume modal while **`prNumber`** or **`prUrl`** is set — **even when** last `gh pr view` showed **`OPEN`**. **Forbidden:** omitting **`merged-pr-proceed`** because merge status was stale; using **`check-pr-status`** alone as the only way to discover developer merge on GitHub.
+
+**Act mapping:** selecting an option not shown in the modal is impossible; do not treat hidden options as implicit consent. When the developer picks **`submit-manual-review`**, run **`coding-session`** [Manual review submission (external-wait)](../coding-session/SKILL.md#manual-review-submission-external-wait) — do not run Step **5 — GitHub only** on that turn. When the developer picks **`merged-pr-proceed`**, run § *Merged-forward act mapping* below.
+
+#### Merged-forward act mapping (binding)
+
+Run on the **developer's response turn** when they pick **`merged-pr-proceed`**:
+
+1. **`gh pr view <n> --json state,mergedAt,mergeCommit,url`** — always refresh on pick; never trust stale session state.
+2. **If `state: merged`:** Set inline result fields `prState: merged`, `mergeSha`, `mergedAt`, `shipPhase: pr-merged`, `prReviewStatus: terminal`, `continuationStatus: terminal`. On **`coding-session`** invoker lanes, continue with [Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate) **`spawn-after-deploy-walk`** **Act** (post-merge cleanup → After deploy walk when applicable).
+3. **If `state: open`:** One line: *PR still open on GitHub — pick again after merge or choose another path.* Re-open the same gate **with `merged-pr-proceed` still listed**.
 
 **Example fixtures** (illustrative `askQuestion.options` after counts):
 
 | Scenario | Typical options |
 |----------|-----------------|
-| Must present | `apply-must`, `apply-must-should`, `skip-reject`, `more-details` |
-| Skip-only (0 Must / 0 Should / 0 follow-up) | `skip-reject` (recommended), `submit-manual-review`, `more-details` |
-| Follow-up only (0 Must / 0 Should) | `follow-ups-only`, `submit-manual-review`, `skip-reject`, `more-details` |
-| Mixed (Must + follow-up) | `apply-must`, `apply-must-should`, `follow-ups-only`, `skip-reject`, `more-details` |
+| Must present | `apply-must`, `apply-must-should`, `skip-reject`, `merged-pr-proceed`, `more-details` |
+| Skip-only (0 Must / 0 Should / 0 follow-up) | `skip-reject` (recommended), `submit-manual-review`, `merged-pr-proceed`, `more-details` |
+| Follow-up only (0 Must / 0 Should) | `follow-ups-only`, `submit-manual-review`, `skip-reject`, `merged-pr-proceed`, `more-details` |
+| Mixed (Must + follow-up) | `apply-must`, `apply-must-should`, `follow-ups-only`, `skip-reject`, `merged-pr-proceed`, `more-details` |
 
 **Forbidden:** “Review the PR and tell me when to continue”, “wait for the user to review”, fixed five-option menus when counts make options inert, or ending the turn without structured choice when dispositions need approval.
 
@@ -280,7 +291,8 @@ When fixes are applied and ready to land, use a **separate** structured-choice g
 1. **Commit and push** (same message must say *commit* / *push* per **`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`**) — when Step 4 ran in this chat, rule **20** § *Commit and push cadence* step 3 requires **this skill’s Step 5 (GitHub only)** in the **same agent turn** after push, before plan upsert and **create-pr** prompt.
 2. **Revise dispositions or fixes**
 3. **Defer — stay on pr-review**
-4. **More details for option _**
+4. **`merged-pr-proceed`** — *PR merged — proceed with cleanup* (when **`prNumber`** / **`prUrl`** known)
+5. **More details for option _**
 
 If all comments were **Skipped (no follow-up)** with **no** code edits, the Step **3b** pick may authorize proceeding directly to Step **5 — GitHub only** (skipped-only path).
 
@@ -364,6 +376,8 @@ Return results through the active **`coding-session`** lane, not as a child-agen
 - `outputs.prReviewFollowUps`
 - `outputs.githubReconciliationStatus`
 - `outputs.mergeDelegationReady`
+- `outputs.prState` / `outputs.mergeSha` / `outputs.mergedAt` when **`merged-pr-proceed`** confirms merge
+- `outputs.shipPhase` (`pr-review` or `pr-merged`)
 - `outputs.remainingTasks`
 - `outputs.continuationStatus`
 
