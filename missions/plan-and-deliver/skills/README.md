@@ -57,6 +57,24 @@ Mission Control delivery for skills that mix long plan output with structured us
 - Gate **`options`** must match the skill’s next branches (approve, revise, defer, commit when applicable, **More details for option _**).
 - Reference **`coding-session/SKILL.md`** § *Post-create-pr handoff gate* and **`pr-review/SKILL.md`** Step **4** § *Build disposition options* for ship-path examples (contextual options from triage counts — omit inert Must/Should rows).
 
+### Planning open-item modal contract
+
+Planning composition skills that surface review gaps before approval use the same modal shape as **`author-prd/SKILL.md`** Step **10**. This applies when a planning lane presents open items in generated PRDs, Master Plans, phase plans, PR breakdowns, plan stubs, or PR plans before the developer approves, revises, defers, or starts implementation.
+
+**Detect open items before building the modal.** Open items include unresolved `TBD` markers, missing required plan sections, contradictions, incomplete acceptance or handoff details, blocked readiness states, and any agent-discovered decision that would otherwise be hidden in prose.
+
+**When open items exist — one modal, multiple questions:**
+
+- **`display.markdown`** renders a numbered list of the open items. Each item states the document location, the gap, why the decision matters, and the agent-proposed resolution options.
+- **`askQuestion.questions`** contains **one entry per open item**. Each question has its own `id`, `prompt`, and item-scoped `options` (for example accept a proposed resolution, choose an alternate resolution, mark not applicable, defer as follow-up, gather more evidence, or request more details for that item).
+- **The final question in the array** is always the terminal approval / routing question for the gate, with options such as approve, revise, defer, start implementation, or **More details for option _** as appropriate for the skill.
+- **Forbidden:** combining all open-item decisions into one `questions` entry; mixing item-resolution options with terminal approve / revise options in the same question; emitting a resolve-only modal that omits the terminal approval / routing question.
+- **Many open items:** batch across turns when one modal would be impractical. Each batch still includes the terminal approval / routing question last, so the developer can approve with remaining gaps explicitly documented when the skill allows it.
+
+**When no open items remain** (or only visible follow-up notes the developer may accept as-is), use a single terminal approval / routing question with the gate's normal options and **More details for option _**.
+
+**Act after selection.** Apply selected item resolutions only after the developer picks them in the modal, rewrite or re-check the affected artifact, then return to the same modal shape until the gate reaches its terminal branch. Do **not** treat writing the draft, rendering the recap, or silence as approval.
+
 **Reference implementations (planning):**
 
 | Skill | Recap + structured choice (same turn) | Act |
