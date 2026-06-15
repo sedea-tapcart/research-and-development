@@ -506,7 +506,6 @@ Recap content:
 - **`delivery-phases`** — draft the § 5 **list** as child phases (`Delivery phases` heading).
 - **`pr-breakdown`** — multi-PR: draft § 5 on **this** phase plan. Single-PR: default **hoist** to ancestor (**§ 5a-hoist**); override only via **PR breakdown on this phase plan**.
 - **Revise a section** — the developer names § N and feedback; you apply one focused `StrReplace` and echo. For assessment-only edits, anchor on `## 4. Changes` … `### Decomposition assessment`.
-- **Commit plans** — remind the developer to commit when the body reads cleanly; this skill does **not** run git.
 - **More details for option _**
 
 **Stop** after structured choice — wait for the developer's reply. Do **not** chain **`delivery-phases`** or **`pr-breakdown`** in the structured-choice message unless mission dispatch explicitly continues the session and route signal is clear.

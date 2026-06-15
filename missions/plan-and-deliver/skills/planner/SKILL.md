@@ -563,7 +563,6 @@ Invoke **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** in the **same turn** as st
 | `route-6` | Route §6 — Delivery phases or PR breakdown | Step 7d → route **AskQuestion** → inline skill |
 | `draft-7` | Draft §7 Caveats | Inline §7 only |
 | `revise` | Revise a drafted section (§1–§5 or §7) | Step 7e |
-| `commit-plans` | Commit plans (say *commit* in chat) | Remind sedea **6_git-commit-push-gate**; do not run git unless same message asks |
 | `more` | More details for option _ | Elaborate, then re-ask |
 
 **When complexity is high (C > 20)** — **include `route-6`** (same as low/medium — do not withhold §6 at high band). In recap / **`display.markdown`**, recommend **Delivery phases** over **PR breakdown** and name the downstream chain (**`delivery-phases`** → **`new-plan`** → **`phase-planner`**). At Step **7c** route **AskQuestion**, list **Delivery phases** first with a brief label such as *Delivery phases — recommended (split into phase plans)* and **PR breakdown** second with caution such as *PR breakdown — skips phase layer; usually not for high band*. Also offer **revise §4**, **revise §5** when the user wants to narrow before decomposing. The **Squad Leader** must **never** run **`delivery-phases`** or **`pr-breakdown`** — only this **planner** lane runs them inline after **`route-6`**.
@@ -662,9 +661,9 @@ When (2) holds but §7 is still **`_TBD_`**, keep **`continuationStatus: active`
 3. Apply edit to **that section only**; re-run Step 6c after §4 or §5 edits.
 4. Flag sibling issues; do not fix silently.
 
-#### Commit plans (`commit-plans`)
+#### Operations git requests (binding)
 
-State that the user must include *commit* (and *push* if needed) in the **same** message per **`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`**. Do not commit from this skill unless asked in that message.
+When the developer asks to commit, push, or open a PR for plan files under **`.sedea/operations/`**, **decline in prose** — operations git is **user-managed** outside the agent per **`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`** § **Operations repository**. **Forbidden:** `commit-plans`, `commit-only`, `commit-push`, or any commit/push/PR **`options`** in **`MC_PHASED_RESPONSE_V1`** / **AskQuestion** when the active **`targetPlanPath`** (or plan writes from this skill) resolve under **`.sedea/operations/`**.
 
 ### Observations (numbered flags)
 
@@ -676,13 +675,15 @@ After handling flags, return to **Step 7b**.
 
 After each completed action, re-read the plan file and run **Step 7b** again with updated options. Decomposition remains available via `route-6` at all complexity bands. Child list index **N** for **`new-plan`** is chosen via **AskQuestion** or snapshot per **30_planning-target-resolution**.
 
+**Terminal / re-closure (binding):** When a prior turn emitted **`AGENT_RESULT_RESPONSE_V1`** with **`outputs.continuationStatus: terminal`**, resumed turns (including Mission Control warm-up on this lane) offer **acknowledgment**, **More details for option _**, or **user-directed follow-up** that explicitly reopens skill scope (for example **Revise a section**). **Forbidden:** re-offer full Step **7b** next-move menus, **`route-6`**, expand options, or any commit/push/PR modal **`options`** unless the user's message explicitly reopens planning scope on this lane.
+
 ## Scope guard
 
 This skill writes the Master Plan file (`<slug>.plan.md` + `<slug>.state.yaml`) and populates §§ 1 through 5 in the initial turn (**§ 5 includes `### Decomposition assessment` and `### Complexity score (plan-scope signal)`**), computes the **plan-scope complexity table** per Step 6c, and when the **overall score** is **> 20** recommends **Route §6 → Delivery phases** (not withholding §6) to split into lower-complexity phase plans via **`phase-planner`**. It drafts §7 when the user selects that option, and runs **delivery-phases** or **pr-breakdown** **inline** when the user selects route §6. It does **not**:
 
 - Create worktrees or start implementation.
 - Modify code or content in the selected repos. Step 3b is the only repo touch this skill makes — it runs `git status --porcelain`, `git checkout <default-branch>`, and `git pull --ff-only` to sync each selected hosting repo to its default branch before loading architectural rules. It refuses to run on a dirty tree or a linked worktree, never stashes / commits / discards, and never falls back to a non-fast-forward pull.
-- Run commit / push flow on the plans repo unless the user explicitly asks in the same message (Step 7c **commit-plans** option).
+- Offer or run commit / push / PR for **`.sedea/operations/`** plan files — operations git is user-managed per **`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`** § **Operations repository** (see Step **7c** § **Operations git requests**).
 - Draft section 6 (`Delivery phases | PR breakdown`) in **`planner`** prose alone — that section is owned by inline **`delivery-phases`** / **`pr-breakdown`**.
 - Spawn **`delivery-phases`**, **`pr-breakdown`**, or **`new-plan`** child lanes — those skills run inline on this lane; they may still spawn **`phase-planner`** or **`coding-session`** per their contracts.
 
