@@ -548,6 +548,19 @@ After **Echo to chat** (§§1–5 + complexity table), end with **one short stat
 
 When the full section echo is too long for one message, use rule **2** priority **3** split only: prior message = echo; **next** message = **`MC_PHASED_RESPONSE_V1`** sentinel-first with Step **7b** options — never a prose-only follow-up. On the **initial §§1–5 draft turn**, include **`MC_PHASED_RESPONSE_V1`** in the **same** message as **`AGENT_RESULT_RESPONSE_V1`** — phased **line 1**, terminal **last line** (rule **2** § *Same message as spawn terminal*).
 
+### Step 7a.1 — Open-item modal contract
+
+Apply the shared planning open-item contract from `../README.md` to every **planner** review gate that surfaces multiple unresolved items: initial draft observations, section revision needs, high-complexity route caveats, route-choice caveats, inline decomposition blockers, and follow-up flags.
+
+**When open items exist** — use **one modal with multiple `questions[]` entries**:
+
+- **`display.markdown`:** numbered list of open items. For each item, include the section or route it affects, the gap or caveat, why the decision matters, and the agent's proposed resolution options.
+- **`askQuestion.questions`:** one scoped question per open item, with its own stable `id`, `prompt`, and item-only `options` (for example `accept-proposed`, `revise-section`, `defer-to-caveats`, `skip-no-change`, `more-details`). **Forbidden:** one combined question whose options mix several item decisions.
+- **Final question:** always append the terminal planner gate question last in the array. Use the normal gate for the current step: Step **7b** primary next moves, Step **7c** route choice, §7 Caveats approval, or the relevant resume/expand gate. **Forbidden:** a resolve-only modal that omits the terminal next-move or approval question until every item is cleared.
+- **Many open items:** batch across turns when needed; each batch still ends with the terminal planner gate question as the final `questions[]` entry so the developer can approve, route, revise, or defer with the surfaced context visible.
+
+**When no open items remain** — use the existing single terminal gate question for Step **7b**, Step **7c**, §7 approval, or resume/expand.
+
 ### Step 7b — Structured choice: primary next moves
 
 Invoke **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** in the **same turn** as step **7a** recap when practical. **Obsolete:** structured choice in a **separate** assistant message after step **7a** without a phased sentinel on that follow-up. Build options from plan state and Step 6c band.
@@ -563,7 +576,6 @@ Invoke **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** in the **same turn** as st
 | `route-6` | Route §6 — Delivery phases or PR breakdown | Step 7d → route **AskQuestion** → inline skill |
 | `draft-7` | Draft §7 Caveats | Inline §7 only |
 | `revise` | Revise a drafted section (§1–§5 or §7) | Step 7e |
-| `commit-plans` | Commit plans (say *commit* in chat) | Remind sedea **6_git-commit-push-gate**; do not run git unless same message asks |
 | `more` | More details for option _ | Elaborate, then re-ask |
 
 **When complexity is high (C > 20)** — **include `route-6`** (same as low/medium — do not withhold §6 at high band). In recap / **`display.markdown`**, recommend **Delivery phases** over **PR breakdown** and name the downstream chain (**`delivery-phases`** → **`new-plan`** → **`phase-planner`**). At Step **7c** route **AskQuestion**, list **Delivery phases** first with a brief label such as *Delivery phases — recommended (split into phase plans)* and **PR breakdown** second with caution such as *PR breakdown — skips phase layer; usually not for high band*. Also offer **revise §4**, **revise §5** when the user wants to narrow before decomposing. The **Squad Leader** must **never** run **`delivery-phases`** or **`pr-breakdown`** — only this **planner** lane runs them inline after **`route-6`**.
@@ -610,6 +622,15 @@ Execute **only** what the user selected in **AskQuestion** (or the matching **`o
 **Pending inline `pr-plan` handoff (binding):** When inline **`pr-breakdown`** / **`new-plan`** merged fields show a fresh PR plan with **`implementationHandoffStatus: not-offered`** or **`offered`** (§5c open, **`coding-session`** not yet spawned), **do not** offer Step **7b** **`route-6`** / master-plan menus on this turn — **unless** **`prPlanHandoffSkipped: true`** (auto-chain after **`approve-list`**). In that case continue Step **7b**; offer **Start coding session** via re-entering inline **`pr-plan`** §5c on **`targetPlanPath`**. When **`prPlanHandoffSkipped`** is absent, **re-enter** inline **`pr-plan`** §5c–§5e on **this Master Plan lane** (same **`targetPlanPath`**) until the developer picks **Start coding session**, **`defer`**, or a **`coding-session`** child terminal arrives. **PRD source is irrelevant** — every **`plan and deliver`** dispatch reaches **`planner`** only after Squad Leader §3 **`author-prd`** approval; only **`pr-plan`** §5c–§5d opens **`coding-session`**.
 
 **Spawn-chain ship notifications:** When Mission Control delivers **`agent-result-response delivered`** with **`outputs.prShipComplete`** or **`outputs.phaseShipComplete`** (bubbled from **`coding-session`** → **`pr-plan`** / **`new-plan`** → **`pr-breakdown`** / **`phase-planner`** → **`delivery-phases`**), merge into the ledger per **`../README.md`** § *Upstream ship-complete notification*, **re-emit updated** **`AGENT_RESULT_RESPONSE_V1`** (same **`correlationId`**) when this lane is standalone spawned, then return to Step **7b** with expand options when indices unlock.
+
+### Resume / PR-expand handoff (binding)
+
+When this skill resumes on a spawned **Master Plan** child lane (Mission Control reload, Squad Leader re-spawn for one PR index, or **`single-phase`** / **`plan and deliver`** resume after inline **`new-plan` + `pr-plan`** completes §§1–4):
+
+1. **Do not** emit **`continuationStatus: terminal`** with only **`readyForImplementation: true`** while inline merge reports **`implementationHandoffStatus`** in **`not-offered`** or **`offered`** — apply Step **7c** *Pending inline `pr-plan` handoff* first.
+2. **Do not** redirect **`coding-session`** spawn to the **Squad Leader**. Squad Leader §§1–7 never spawn ship skills; **this lane** re-enters inline **`pr-plan`** §5c–§5d on **`targetPlanPath`** and emits §5d **`AGENT_RUN_REQUEST_V1`** when the developer picks **Start coding session**.
+3. When the developer acknowledges **ready for coding-session** (or equivalent), treat that as **`start-coding-session`** authorization — run inline **`pr-plan`** §5c then §5d on **this lane**, not prose deferral to the leader dispatch.
+4. **Forbidden:** prose such as *Squad Leader owns **`coding-session`** spawn* or *hand off to Squad Leader for implementation* after a PR plan was created on **this** lane.
 
 **Spawn-chain parent follow-up notifications:** When a bubbled child terminal carries **`outputs.parentPlanningFollowUpNotification: "sent"`** and non-empty **`parentPlanningFollowUps`**, append each item to the **master plan** (or resolved **`parentPlanPath`**) **`## Follow-ups`** section via **`StrReplace`**; record **`pendingParentFollowUps[]`** on the working ledger. **Do not** offer **`expand-eligible`** / **`expand-next-eligible`** solely because follow-ups arrived — depth-first expand still requires **`prShipComplete`** / **`phaseShipComplete`**. **Re-emit updated** terminal when standalone spawned so upstream receives merged follow-up fields.
 
@@ -662,13 +683,13 @@ When (2) holds but §7 is still **`_TBD_`**, keep **`continuationStatus: active`
 3. Apply edit to **that section only**; re-run Step 6c after §4 or §5 edits.
 4. Flag sibling issues; do not fix silently.
 
-#### Commit plans (`commit-plans`)
+#### Operations git requests (binding)
 
-State that the user must include *commit* (and *push* if needed) in the **same** message per **`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`**. Do not commit from this skill unless asked in that message.
+When the developer asks to commit, push, or open a PR for plan files under **`.sedea/operations/`**, **decline in prose** — operations git is **user-managed** outside the agent per **`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`** § **Operations repository**. **Forbidden:** `commit-plans`, `commit-only`, `commit-push`, or any commit/push/PR **`options`** in **`MC_PHASED_RESPONSE_V1`** / **AskQuestion** when the active **`targetPlanPath`** (or plan writes from this skill) resolve under **`.sedea/operations/`**.
 
 ### Observations (numbered flags)
 
-When you notice gaps while working, list **numbered observations** in recap prose (Flag 1, Flag 2, …). Then **AskQuestion** / **`MC_PHASED_RESPONSE_V1`** per flag or batch: **Apply fix**, **Skip**, **More details for option _** — prefer recap + modal in one message.
+When you notice gaps while working, list **numbered observations** in **`display.markdown`** (Flag 1, Flag 2, …) and apply **Step 7a.1 — Open-item modal contract**: one scoped `questions[]` entry per observation or batch item, then the current terminal planner gate question last. Prefer recap + modal in one message.
 
 After handling flags, return to **Step 7b**.
 
@@ -676,13 +697,15 @@ After handling flags, return to **Step 7b**.
 
 After each completed action, re-read the plan file and run **Step 7b** again with updated options. Decomposition remains available via `route-6` at all complexity bands. Child list index **N** for **`new-plan`** is chosen via **AskQuestion** or snapshot per **30_planning-target-resolution**.
 
+**Terminal / re-closure (binding):** When a prior turn emitted **`AGENT_RESULT_RESPONSE_V1`** with **`outputs.continuationStatus: terminal`**, resumed turns (including Mission Control warm-up on this lane) offer **acknowledgment**, **More details for option _**, or **user-directed follow-up** that explicitly reopens skill scope (for example **Revise a section**). **Forbidden:** re-offer full Step **7b** next-move menus, **`route-6`**, expand options, or any commit/push/PR modal **`options`** unless the user's message explicitly reopens planning scope on this lane.
+
 ## Scope guard
 
 This skill writes the Master Plan file (`<slug>.plan.md` + `<slug>.state.yaml`) and populates §§ 1 through 5 in the initial turn (**§ 5 includes `### Decomposition assessment` and `### Complexity score (plan-scope signal)`**), computes the **plan-scope complexity table** per Step 6c, and when the **overall score** is **> 20** recommends **Route §6 → Delivery phases** (not withholding §6) to split into lower-complexity phase plans via **`phase-planner`**. It drafts §7 when the user selects that option, and runs **delivery-phases** or **pr-breakdown** **inline** when the user selects route §6. It does **not**:
 
 - Create worktrees or start implementation.
 - Modify code or content in the selected repos. Step 3b is the only repo touch this skill makes — it runs `git status --porcelain`, `git checkout <default-branch>`, and `git pull --ff-only` to sync each selected hosting repo to its default branch before loading architectural rules. It refuses to run on a dirty tree or a linked worktree, never stashes / commits / discards, and never falls back to a non-fast-forward pull.
-- Run commit / push flow on the plans repo unless the user explicitly asks in the same message (Step 7c **commit-plans** option).
+- Offer or run commit / push / PR for **`.sedea/operations/`** plan files — operations git is user-managed per **`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`** § **Operations repository** (see Step **7c** § **Operations git requests**).
 - Draft section 6 (`Delivery phases | PR breakdown`) in **`planner`** prose alone — that section is owned by inline **`delivery-phases`** / **`pr-breakdown`**.
 - Spawn **`delivery-phases`**, **`pr-breakdown`**, or **`new-plan`** child lanes — those skills run inline on this lane; they may still spawn **`phase-planner`** or **`coding-session`** per their contracts.
 
@@ -712,6 +735,14 @@ Required `outputs` fields:
 - `outputs.expandEligibleIndices`, `outputs.expandNextEligibleIndex` — echo from inline decomposition after spawn-chain ship-complete merges
 - `outputs.prShipComplete`, `outputs.phaseShipComplete` — when this lane merged bubbled ship terminals from nested **`coding-session`** / **`phase-planner`** chains
 - `outputs.parentPlanningFollowUpNotification`, `outputs.parentPlanningFollowUps`, `outputs.pendingParentFollowUps` — when bubbled from nested **`coding-session`** with parent follow-up notification (**`../README.md`** § *Upstream parent follow-up notification*)
+- `outputs.implementationHandoffStatus` — `not-offered` | `offered` | `deferred` | `spawned-coding-session` merged from inline **`pr-plan`** (required when a PR plan handoff is pending or completed on this lane)
+- `outputs.spawnCorrelationId` — UUID from inline **`pr-plan`** §5d when **`implementationHandoffStatus`** is **`spawned-coding-session`**
+
+**Forbidden terminal patterns (binding):**
+
+- **`outputs.nextRecommendedSkill: coding-session`** paired with prose or **`remainingTasks`** that assign spawn to the **Squad Leader** — §5d runs on **this Master Plan lane** via inline **`pr-plan`**, not on the leader dispatch.
+- **`continuationStatus: terminal`** when Step **7c** / *Resume / PR-expand handoff* requires open §5c on **`targetPlanPath`** (unless developer explicitly **`defer`** implementation on this lane).
+- **`implementationHandoffStatus: acknowledged-ready-for-coding-session`** (or similar) without **`spawnCorrelationId`** when the developer authorized **Start coding session** and §5a passed — emit §5d or keep **`continuationStatus: active`**.
 
 Stop after the terminal line. Do not emit another `AGENT_RUN_REQUEST_V1` for **`delivery-phases`**, **`pr-breakdown`**, or **`new-plan`** or run the next protocol step in the same turn (see **`../README.md`** § *Terminal stop (normative)*). While `continuationStatus` is `active`, the **Squad Leader** acknowledges only (**`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`** §6); this lane owns **AskQuestion** + inline decomposition (Step 7) on follow-up user messages. On turns that emit **`AGENT_RESULT_RESPONSE_V1`**, also emit **`MC_PHASED_RESPONSE_V1`** in the **same** message (phased line 1, terminal last line) per rule **2** § *Same message as spawn terminal* — Step **7b** options may be in that phased block on the initial draft turn.
 

@@ -1,0 +1,10 @@
+name: Quick Fix
+description: >-
+  Small, low-complexity fixes from a short bullet list — cosmetic UI/styling and
+  simple functional changes. Developer is responsible for tasking this dispatch
+  only with work at complexity 6 or under; single PR plan then coding-session ship chain.
+commands:
+  - phrase: quick fix
+    description: >-
+      Apply a short bullet list of small fixes (cosmetic UI/styling and simple
+      functional changes, complexity ≤6) via a single PR plan and standard ship chain.

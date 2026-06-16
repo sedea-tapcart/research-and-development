@@ -101,6 +101,28 @@ This pass complements, and does not replace, the later GitHub-surface **reviewer
 
 This skill does not own approval modals — **`coding-session`** collects developer consent before spawns. When this lane must surface a pick, use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act*.
 
+## Session orientation table (binding)
+
+Give developers a **consistent state snapshot** during pre-PR review so they can re-orient after reload or parallel work.
+
+**When required:** At every **Mandatory gate** below — render as the **first block** in `display.markdown` (before step recap or checklist prose). **Forbidden:** omitting the table and substituting scattered one-liners on modal gates. The terminal **`AGENT_RESULT_RESPONSE_V1`** line uses the 1–3 sentence `summary` only — do **not** embed the markdown table in the terminal JSON.
+
+**Table shape (markdown):**
+
+| Field | Value |
+|-------|-------|
+| Plan | `<slug>` @ `<path>` or — (free-form: —) |
+| Worktree | `<worktreePath>` from spawn inputs |
+| Branch | `<worktreeName>` from spawn inputs |
+| PR | — (pre-PR — no open PR yet) |
+| Ship phase | `pre-pr-review` |
+| Deploy scope | Before deploy complete · skipped · — |
+| Review | in progress · `go` · `no-go` when reporting |
+
+**Population rules:** Same contract as [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`](../coding-session/SKILL.md) § *Session orientation table (binding)* — use spawn `inputs` and review outputs; never invent paths.
+
+**Mandatory gates (this skill):** any spawned turn that closes with **`MC_PHASED_RESPONSE_V1`** before terminal (for example lane closure after review).
+
 ## Step 1 — Validate spawned inputs
 
 Required inputs:

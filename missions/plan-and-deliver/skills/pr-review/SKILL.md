@@ -45,6 +45,28 @@ After a PR exists, **`coding-session`** runs this skill **inline** in a loop unt
 
 Triage and fix loops use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* on the **`coding-session`** lane — **preferred:** recap (comment summary) + modal in one message. **Act** (code/plan edits) only after developer approval per this skill.
 
+## Session orientation table (binding)
+
+Give developers a **consistent state snapshot** during PR review cycles so they can re-orient after reload, tab switch, or parallel work.
+
+**When required:** At every **Mandatory gate** below — render as the **first block** in `display.markdown`. **Forbidden:** omitting the table and substituting scattered one-liners.
+
+**Table shape (markdown):**
+
+| Field | Value |
+|-------|-------|
+| Plan | `<slug>` @ `<path>` or — |
+| Worktree | `<absolute WORKTREE_ROOT>` or — |
+| Branch | `<worktreeName>` or — |
+| PR | `<url>` (#N) |
+| Ship phase | `pr-review` |
+| Deploy scope | — |
+| Review | `prReviewStatus` · GitHub `reviewState` · open Must/Should counts |
+
+**Population rules:** Same as [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`](../coding-session/SKILL.md) § *Session orientation table (binding)* — recover missing PR/worktree context from **`coding-session`** before triage.
+
+**Mandatory gates (this skill):** Step **3b** disposition gate; Step **4** report + commit/push gate; external-wait parking after push; each cycle reopen when new comments land.
+
 ## Helper script
 
 Script: `.sedea/centers/research-and-development/missions/plan-and-deliver/scripts/pr-review.py` (reads PAT from `GH_TOKEN`, then hosting-repo **`.sedea/mcp.json`**, then `~/.sedea/mcp.json` for token lookup only — see § *GitHub access*).
@@ -252,17 +274,30 @@ After Step 3 classification, compute:
 | `apply-must-should` | **`mustCount > 0` or `shouldCount > 0`** | Apply Must + Should fixes |
 | `follow-ups-only` | **`followUpCount > 0`** | Follow-ups only — no source edits |
 | `skip-reject` | Triage non-empty | When **`skippedOnly`**: *Skip / reject — reconcile on GitHub (recommended)*; else *Skip / reject selected comments* |
+| `submit-manual-review` | **`skippedOnly`** or (**`followUpCount > 0`** and **`mustCount === 0`** and **`shouldCount === 0`**) | Submit manual review on GitHub — park per **`coding-session`** [Manual review submission (external-wait)](../coding-session/SKILL.md#manual-review-submission-external-wait) |
+| `merged-pr-proceed` | **`prNumber`** or **`prUrl`** known (always during PR ship chain) | PR merged — proceed with cleanup — **Act** per § *Merged-forward act mapping* below |
 | `more-details` | Always | More details for option _ |
 
-**Act mapping unchanged:** selecting an option not shown in the modal is impossible; do not treat hidden options as implicit consent.
+**Merged-forward (binding):** Include **`merged-pr-proceed`** on **every** parked disposition gate, post-fix commit/push gate, and external-wait resume modal while **`prNumber`** or **`prUrl`** is set — **even when** last `gh pr view` showed **`OPEN`**. **Forbidden:** omitting **`merged-pr-proceed`** because merge status was stale; using **`check-pr-status`** alone as the only way to discover developer merge on GitHub.
+
+**Act mapping:** selecting an option not shown in the modal is impossible; do not treat hidden options as implicit consent. When the developer picks **`submit-manual-review`**, run **`coding-session`** [Manual review submission (external-wait)](../coding-session/SKILL.md#manual-review-submission-external-wait) — do not run Step **5 — GitHub only** on that turn. When the developer picks **`merged-pr-proceed`**, run § *Merged-forward act mapping* below.
+
+#### Merged-forward act mapping (binding)
+
+Run on the **developer's response turn** when they pick **`merged-pr-proceed`**:
+
+1. **`gh pr view <n> --json state,mergedAt,mergeCommit,url`** — always refresh on pick; never trust stale session state.
+2. **If `state: merged`:** Set inline result fields `prState: merged`, `mergeSha`, `mergedAt`, `shipPhase: pr-merged`, `prReviewStatus: terminal`, `continuationStatus: terminal`. On **`coding-session`** invoker lanes, continue with [Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate) **`spawn-after-deploy-walk`** **Act** (post-merge cleanup → After deploy walk when applicable).
+3. **If `state: open`:** One line: *PR still open on GitHub — pick again after merge or choose another path.* Re-open the same gate **with `merged-pr-proceed` still listed**.
 
 **Example fixtures** (illustrative `askQuestion.options` after counts):
 
 | Scenario | Typical options |
 |----------|-----------------|
-| Must present | `apply-must`, `apply-must-should`, `skip-reject`, `more-details` |
-| Skip-only (0 Must / 0 Should / 0 follow-up) | `skip-reject` (recommended), `more-details` |
-| Mixed (Must + follow-up) | `apply-must`, `apply-must-should`, `follow-ups-only`, `skip-reject`, `more-details` |
+| Must present | `apply-must`, `apply-must-should`, `skip-reject`, `merged-pr-proceed`, `more-details` |
+| Skip-only (0 Must / 0 Should / 0 follow-up) | `skip-reject` (recommended), `submit-manual-review`, `merged-pr-proceed`, `more-details` |
+| Follow-up only (0 Must / 0 Should) | `follow-ups-only`, `submit-manual-review`, `skip-reject`, `merged-pr-proceed`, `more-details` |
+| Mixed (Must + follow-up) | `apply-must`, `apply-must-should`, `follow-ups-only`, `skip-reject`, `merged-pr-proceed`, `more-details` |
 
 **Forbidden:** “Review the PR and tell me when to continue”, “wait for the user to review”, fixed five-option menus when counts make options inert, or ending the turn without structured choice when dispositions need approval.
 
@@ -273,7 +308,8 @@ When fixes are applied and ready to land, use a **separate** structured-choice g
 1. **Commit and push** (same message must say *commit* / *push* per **`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`**) — when Step 4 ran in this chat, rule **20** § *Commit and push cadence* step 3 requires **this skill’s Step 5 (GitHub only)** in the **same agent turn** after push, before plan upsert and **create-pr** prompt.
 2. **Revise dispositions or fixes**
 3. **Defer — stay on pr-review**
-4. **More details for option _**
+4. **`merged-pr-proceed`** — *PR merged — proceed with cleanup* (when **`prNumber`** / **`prUrl`** known)
+5. **More details for option _**
 
 If all comments were **Skipped (no follow-up)** with **no** code edits, the Step **3b** pick may authorize proceeding directly to Step **5 — GitHub only** (skipped-only path).
 
@@ -308,6 +344,31 @@ The `[~]` marker plus the explicit "captured to … § Follow-ups" pointer lets 
 
 If Step 1 payloads are **missing or stale** in context (new comments since fetch, fresh chat), re-run **Step 1**’s `pr-review.py` array for the same `owner` / `repo` / `pull_number`, then run **GitHub only** above — do **not** start a second full **`pr-review`** triage unless you truly cannot resolve the PR identity.
 
+### Step 5 turn invariant (binding)
+
+When this chat ran **`pr-review`** Steps **1–4** and the developer picked **`apply-must`**, **`apply-must-should`**, or **`fix-now-session`**, then the agent commits/pushes (or takes the skipped-only path with no edits), **Step 5 must run in that same assistant turn** before any **`MC_PHASED_RESPONSE_V1`** that offers merge, re-triage, post-create-pr forward paths, or “next cycle” options.
+
+**Forbidden:**
+
+- Ending the turn at **`git push`** success without Step 5 when Step 4 ran in-session.
+- Offering **`start-pr-review`** / **`rerun-pr-review`** as the primary path when only Step 5 was skipped — use **`reconcile-github-only`** at [Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate) instead.
+- Stating ship cadence or **`mergeDelegationReady`** complete while **`CHANGES_REQUESTED`** reviews or unresolved dispositioned threads remain.
+
+**Skipped-only path:** When Step 3 marked every comment **Skipped (no follow-up)** with **no** code edits, Step 5 runs immediately in the disposition response turn (no commit/push) — still **same turn** as the Step 3b pick.
+
+### Reconciliation completeness checklist (binding)
+
+Set **`outputs.githubReconciliationStatus: complete`** only when **all** pass (re-fetch Step 1 payloads when stale):
+
+| # | Check |
+|---|--------|
+| 1 | **Inline threads:** every dispositioned comment has an agent **reply** |
+| 2 | **Resolve:** every dispositioned thread has **`isResolved: true`** (resolve any still open) |
+| 3 | **Top-level reviews:** every non-minimized **`PRR_`** from bot/human reviewers is **minimized** with `classifier: RESOLVED` when dispositions are addressed or skipped with rationale |
+| 4 | **Summary:** **`summary`** command posted with commit short SHA and bullets mirroring Step 4 dispositions |
+
+Until all four pass, keep **`githubReconciliationStatus: pending`** and **`mergeDelegationReady: false`**.
+
 ## §8 host sync (via coding-session)
 
 Runs **inline** on the **`coding-session`** lane. When triage reaches a stable milestone, the **`coding-session`** agent **must** re-emit **`AGENT_RESULT_RESPONSE_V1`** with §8 **`outputs`** so Mission Control host sync updates the Squad Leader ledger (**`../../plan.mdc`** §8).
@@ -332,17 +393,21 @@ Return results through the active **`coding-session`** lane, not as a child-agen
 - `outputs.prReviewFollowUps`
 - `outputs.githubReconciliationStatus`
 - `outputs.mergeDelegationReady`
+- `outputs.prState` / `outputs.mergeSha` / `outputs.mergedAt` when **`merged-pr-proceed`** confirms merge
+- `outputs.shipPhase` (`pr-review` or `pr-merged`)
 - `outputs.remainingTasks`
 - `outputs.continuationStatus`
 
 Set **`outputs.mergeDelegationReady: true`** when **all** apply:
 
 1. Every fetched review comment has an approved disposition (fixed, skipped with rationale, or captured follow-up).
-2. GitHub reconciliation ran when required (Step 5), or the skipped-only path completed with no pending Must fixes.
+2. **`outputs.githubReconciliationStatus: complete`** — Step 5 checklist passed (§ *Reconciliation completeness checklist*), or the skipped-only path completed with no pending Must fixes (skipped-only triage with no code edits also sets **`complete`** — no separate **`skipped`** value on the merge path).
 3. No open **Must fix** blockers remain on this PR.
 4. `outputs.prReviewStatus` is **`terminal`** for this triage pass.
 
 Otherwise set **`mergeDelegationReady: false`** — **`coding-session`** must not open [Pre-merge authorization gate](../coding-session/SKILL.md#pre-merge-authorization-gate) or run [Merge procedure](../coding-session/SKILL.md#merge-procedure) until a later pass clears blockers.
+
+**`githubReconciliationStatus` values:** `complete` (checklist passed or skipped-only path with no GitHub actions required), `pending` (Step 5 required or incomplete). Do **not** use a separate **`skipped`** value when **`mergeDelegationReady`** must be true — map skipped-only to **`complete`**.
 
 Keep `continuationStatus: "active"` until every PR review comment is fixed, skipped with rationale, converted to follow-up, or explicitly deferred by the developer, and GitHub reconciliation has run when required.
 

@@ -159,15 +159,38 @@ When `upstreamSkill` is **`coding-session`** and `deployWalkScope` is **`staging
 
 Use `worktreePath` / `worktreeName` from inline context for command context in step presentations. PR fields (`prUrl`, `prNumber`, …) are usually present for staging scope.
 
+## Session orientation table (binding)
+
+Give developers a **consistent state snapshot** during deploy verification so they can re-orient after reload, tab switch, or parallel work.
+
+**When required:** At every **Mandatory gate** below — render as the **first block** in `display.markdown` (before plan header or step recap). **Forbidden:** omitting the table and substituting scattered one-liners.
+
+**Table shape (markdown):**
+
+| Field | Value |
+|-------|-------|
+| Plan | `<slug>` @ `<path>` or — |
+| Worktree | `<absolute WORKTREE_ROOT>` or — |
+| Branch | `<worktreeName>` or — |
+| PR | `<url>` (#N) or — |
+| Ship phase | parent `shipPhase` when inline on **`coding-session`**, or — |
+| Deploy scope | Before deploy · After deploy · — |
+| Review | — (deploy walk does not own PR triage) |
+
+**Population rules:** Same as [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`](../coding-session/SKILL.md) § *Session orientation table (binding)* — use `—` when unknown; never invent paths or PR numbers.
+
+**Mandatory gates (this skill):** [Inline walk bootstrap](#inline-walk-bootstrap) start; each [Step 4 — Step presentation contract](#step-4--step-presentation-contract) manual presentation; every developer-await **AskQuestion** / **`MC_PHASED_RESPONSE_V1`** ([Deploy developer-await modal options](#deploy-developer-await-modal-options-binding)).
+
 ## Worktree path visibility (binding)
 
 When **`worktreePath`** is set on inline context (typical on **`coding-session`** Before deploy while the session worktree still exists):
 
 | Surface | Requirement |
 |---------|-------------|
-| **Manual step presentation** ([Step 4](#step-4--step-presentation-contract)) | First line after the plan header: **`Worktree: <absolute-worktreePath>`** |
+| **Session orientation table** | **Worktree** and **Branch** rows populated from inline context |
+| **Manual step presentation** ([Step 4](#step-4--step-presentation-contract)) | Full orientation table first; plan header follows |
 | **Agent-executable run** | Recap **`cwd: <absolute-worktreePath>`** before shell commands |
-| **Developer-await gates** ([Deploy developer-await modal options](#deploy-developer-await-modal-options-binding)) | **`display.markdown`** includes **`Worktree: <absolute-worktreePath>`** when any step runs in-tree |
+| **Developer-await gates** ([Deploy developer-await modal options](#deploy-developer-await-modal-options-binding)) | **`display.markdown`** starts with the orientation table |
 | **`deploy-walk status`** | Append **`worktree=<absolute-path>`** when known |
 
 When **`worktreePath`** is missing but agent-executable steps need a cwd, surface one line: *No worktree in inline context — resolve **`worktreePath`** before running in-tree commands* — do not guess cwd from chat.
@@ -197,6 +220,12 @@ The procedure below is a hard contract — do **not** skip steps, infer state fr
 ## Agent-executable vs manual steps
 
 Classify each unchecked step **before** acting. When classification is ambiguous, use **AskQuestion** once (recap + modal) — do **not** guess credentials, environments, or subjective UI checks.
+
+### Per-step and per-assertion classification (binding)
+
+- Classify each numbered checklist line independently. If it contains multiple checks, split them into sub-assertions first.
+- **Mixed steps** (UI + filesystem / YAML / JSON / grep / diff): run agent-executable sub-assertions in the same turn, then present only the UI or subjective remainder as manual.
+- Neighboring manual UI steps do not make file, YAML, JSON, grep, or diff checks manual.
 
 ### Agent-executable (auto-run — no approval)
 
@@ -242,6 +271,15 @@ Run **without** an **AskQuestion** approval gate **before each agent-executable 
 | **GitHub CLI** | `gh pr view`, `gh api`, `gh run list` / `view` when `gh` auth works in the shell |
 | **Mission Control MCP** | `sedea_get_current_user`; `sedea_add_worktree_folder` / `sedea_remove_worktree_folder` when worktree lifecycle applies; `mission_control_update_lane_display` on **own** slot only |
 | **Parse / verify** | Read JSON, YAML, Markdown plan sections; compare output to expected shape; count matches; exit codes — **agent parses**, not developer |
+
+**Agent-executable verification examples (binding)** — when a step names `dispatch.yaml`, dispatch bundle JSON, plan sidecars, YAML/JSON fields, before/after mutations, or plan-body checkboxes/status, the agent uses tools (`Read`, `Grep`, `Glob`, `Shell`) before flipping `[ ]` → `[x]`. Done notes cite the tool result: path, command, exit code, or quoted field values. Developer chat confirmation alone is **not** evidence for agent-executable work.
+
+**Challenged checkbox correction (binding):** When the developer challenges a checked step (marked without tool evidence, misclassified as manual, or contradicted by artifacts):
+
+1. Re-read the plan line and reclassify per assertion.
+2. Run agent-executable checks immediately.
+3. If evidence contradicts the checkbox, revert `[x]` → `[ ]`; re-flip only after new pass evidence.
+4. Recap what changed before closing the turn.
 
 **Manual only** (present per [Step 4 — Step presentation contract](#step-4--step-presentation-contract)):
 

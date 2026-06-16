@@ -61,6 +61,11 @@ missions:
     skills: missions/single-phase/skills/
     commands:
       - plan and deliver a single phase
+  - slug: quick-fix
+    plan: missions/quick-fix/plan.mdc
+    skills: missions/quick-fix/skills/
+    commands:
+      - quick fix
 
 centerSkills:
   readme: missions/plan-and-deliver/skills/README.md

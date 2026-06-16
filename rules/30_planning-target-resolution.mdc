@@ -26,7 +26,7 @@ When a turn **requires a user reply** before you continue (pick a planning branc
 
 | You are on… | Signal that fired | Safe next step | Do **not** |
 |-------------|-------------------|----------------|------------|
-| **`pr-plan`** or Squad Leader planning lane | `readyForImplementation: true` | Offer **AskQuestion** **Start coding session** → spawn **`coding-session`** (§5d), or detached start per **development-process.md** § *Start implementation (`coding-session` entry)* | Open worktree, edit hosting repo code, or set §8 `phase` past `not-started` on the **`pr-plan`** lane |
+| **`pr-plan`** on **planning child lane** (`planner`, **`phase-planner`**, Quick Fix Plan agent) | `readyForImplementation: true` | Offer **AskQuestion** **Start coding session** on **that lane** → inline **`pr-plan`** §5d spawns **`coding-session`** | Open worktree on **`pr-plan`** lane, redirect spawn to Squad Leader, or set §8 `phase` past `not-started` from planning outputs alone |
 | **`coding-session`** after **`pr-plan`** §5d spawn | `planningHandoffApproved: true` + exit 1 + `EXPECTED_SECTIONS_5_8_TBD` or exit 0 (`OK`) | **Auto-authorize** — open worktree and implement; fill §§5–8 on this lane (no second modal) | Treat `INCOMPLETE` as planning failure; re-ask planning approval |
 | **`coding-session`** (detached) | `plan-ws-completeness.mjs` exit 0 or override in worktree-open gate | Proceed with worktree + implementation | Assume planning handoff alone was enough |
 | **`coding-session`** (detached) | `developerApprovedImplementation: true` | Continue ship chain; re-emit terminal with §8 `outputs` for host sync | Assume §8 updated without terminal `outputs` |
@@ -75,7 +75,7 @@ Three different signals appear in plan-and-deliver; advancing one does **not** a
 
 | Mistake | Correct behavior |
 |--------|------------------|
-| Edit hosting repo code on the **`pr-plan`** planning lane after `readyForImplementation: true` | **Stop** — spawn **`coding-session`** (§5d) or start it on a **detached** lane; layer 2 worktree-open gate runs on the **`coding-session`** lane |
+| Edit hosting repo code on the **`pr-plan`** planning lane after `readyForImplementation: true` | **Stop** — spawn **`coding-session`** (§5d); layer 2 worktree-open gate runs on the **`coding-session`** lane |
 | Open a worktree because **`pr-plan`** finished §§1–4 only | Run **`plan-ws-completeness.mjs`** on the **`coding-session`** lane — layer 1 + spawn handoff auto-authorizes when §§1–4 are drafted; detached entry still needs the worktree-open gate |
 | Set Squad Leader §8 `phase` to `worktree` / `implementing` from **`pr-plan`** outputs alone | Advance §8 only after host sync from **`coding-session`** terminal with `developerApprovedImplementation: true` |
 | Run **`git commit`** / **`git push`** while still on a planning skill lane | Ship cadence is **`coding-session`** (or rule **20** on an implementation lane) — see rule **20** § *AskQuestion vs git commit/push* |
@@ -151,7 +151,7 @@ Normative contract: **development-process.md** § *Depth-first plan-tree travers
 ### Phase rows (`Delivery phases` parent)
 
 1. List every numbered phase row in the snapshot (all indices visible).
-2. **Eligible for `new-plan` expand:** the lowest index **N** with `_TBD_` **`Plan:`** where **N = 1** or phase **N−1** is ship-complete (all PR plans under phase **N−1** closed on §8).
+2. **Eligible for `new-plan` expand:** the lowest index **N** with `_TBD_` **`Plan:`** where **N = 1** or phase **N−1** is ship-complete — meaning every PR plan under phase **N−1** meets the bar in § *Ship-complete definition* below (including explicit `deferred` / `abandoned` closures).
 3. **AskQuestion** `options` for expand: at most one phase index per turn (`expand-next-eligible`).
 
 ### PR rows (`### PR list` parent)
@@ -162,7 +162,7 @@ Normative contract: **development-process.md** § *Depth-first plan-tree travers
 
 ### Ship-complete definition
 
-Per PR plan path: §8 row `shipPhase: done` and `rowStatus: closed`, or explicit `deferred` / `abandoned` on the leader dispatch. Per phase row: every descendant PR plan (including hoisted PRs on an ancestor list) meets that bar.
+Per PR plan path: §8 row `shipPhase: done` and `rowStatus: closed`, or explicit `deferred` / `abandoned` on the leader dispatch. Per phase row: every descendant PR plan under that phase's § 5 **`PR list`** meets that bar.
 
 **Spawn-chain alternative:** When **`coding-session`** is a spawned child, the parent planning lane may treat **`outputs.prShipComplete: true`** on a delivered **`AGENT_RESULT_RESPONSE_V1`** as ship-complete for depth-first eligibility — without requiring a separate Squad Leader **Ship recap** on the same turn. See **`missions/plan-and-deliver/skills/README.md`** § *Upstream ship-complete notification*.
 

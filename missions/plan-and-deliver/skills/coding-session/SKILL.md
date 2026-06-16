@@ -182,6 +182,48 @@ Approval gates and worktree naming picks use **AskQuestion** or **`MC_PHASED_RES
 
 On **[Spawned implementation lane](#spawned-implementation-lane)**, **this lane** edits the hosting repo under the worktree through the implementation cut point — do not tell the developer to paste a session prompt into another chat. On **prompt-only** runs, emit the external prompt and **stop** without implementing here.
 
+## Session orientation table (binding)
+
+Give developers a **consistent state snapshot** at ship gates so they can re-orient after reload, tab switch, or parallel work.
+
+**When required:** At every **Mandatory gate** below — render as the **first block** in `display.markdown` (before step recap or checklist prose). **Forbidden:** omitting the table and substituting scattered one-liners.
+
+**Table shape (markdown):**
+
+| Field | Value |
+|-------|-------|
+| Plan | `<slug>` @ `<path>` or — |
+| Worktree | `<absolute WORKTREE_ROOT>` or — |
+| Branch | `<worktreeName>` or — |
+| PR | `<url>` (#N) or — |
+| Ship phase | `<shipPhase>` |
+| Deploy scope | Before deploy · After deploy · — |
+| Review | `<prePrReviewRecommendation>` / `prReviewStatus` / `reviewState` or — |
+
+**Population rules:**
+
+| Rule | Requirement |
+|------|-------------|
+| No invention | Use `—` when unknown; never guess paths or PR numbers |
+| Worktree row | Populated while session worktree exists; `—` after authorized cleanup |
+| PR row | Populated when `prUrl` or `prNumber` exists |
+| Deploy scope | `Before deploy` during before-deploy-only walk; `After deploy` post-merge walk; `—` otherwise |
+| Review row | Pre-PR: `outputs.prePrReviewRecommendation`; during PR: `prReviewStatus` + GitHub `reviewState` when known |
+
+**Mandatory gates (this skill):**
+
+| Gate | Section |
+|------|---------|
+| Ship cut-point | [Ship cut-point gate](#ship-cut-point-gate-approve-commit-before-deploy) |
+| Before deploy walk | [Before deploy deploy-walk handoff](#before-deploy-deploy-walk-handoff) |
+| Pre-PR handback | [Pre-PR review handoff](#pre-pr-review-handoff) |
+| PR opened | [Post-create-pr handoff gate](#post-create-pr-handoff-gate) |
+| Post-merge cleanup modal | [Post-merge workspace cleanup](#post-merge-workspace-cleanup) |
+| After deploy walk | [After deploy deploy-walk handoff](#after-deploy-deploy-walk-handoff) |
+| Implementation continuation | [Implementation continuation gate](#implementation-continuation-gate) |
+
+Inline **`deploy-walk`** and **`pr-review`** on this lane must include the same table per their skill contracts.
+
 ## Refresh lane display (when stale)
 
 After **`targetPlanPath`** / PR concern is clear (before worktree attach or immediately after bootstrap succeeds):
@@ -237,6 +279,7 @@ On spawned **`coding-session`** lanes, **any** assistant turn where the develope
 | Pre-PR findings | [Review feedback approval gate](#review-feedback-approval-gate) |
 | Open PR (exceptional) | [Create-PR handoff after go](#create-pr-handoff-after-go) — only when **`hasProposedFollowUps`** or (**`actionablePrePrFindings`** and developer chose **`proceed-create-pr`**) |
 | **After `gh pr create` succeeds** | [Post-create-pr handoff gate](#post-create-pr-handoff-gate) — **same turn**, not prose-only PR URL |
+| **After fix push — Step 5 pending** | Run **`pr-review`** Step 5 **same turn** as push — **no** post-create-pr or pre-merge modal until **`githubReconciliationStatus: complete`** (or auto-run Step 5 before modal) |
 | **After inline `pr-review` is clean** | [Post-pr-review merge approval gate](#post-pr-review-merge-approval-gate) — approve and merge, not passive wait |
 | Waiting on child **`pre-pr-review`** | Structured choice before turn ends (rule **2** § *Default continuation options* or defer) |
 
@@ -483,13 +526,24 @@ When the developer **confirms** a numbered step in the anchored PR plan’s **`#
 
 **Local test + bootstrap:** Do **not** run inline **`deploy-walk`** (Local test) or flip **`### Local test`** checkboxes via this ad-hoc path until `outputs.bootstrapStatus: success`. **Staging test** and **After deploy** confirmations follow normal status routing (`pr-open` / `deployed`).
 
-1. **Resolve `targetPlanPath`** — from spawn `inputs`, `plan-state.mjs resolve --cwd "<worktreePath>"`, or an explicit `@path` in the message. If multiple plans could apply, use **AskQuestion** once for **which plan** or **which step number** — not whether to persist.
-2. **Same-turn file edit** — before the reply ends, patch the matching §7 line: flip `[ ]` → `[x]` for that step number. Optionally append a short dated note on the line or under §7 (for example `— confirmed YYYY-MM-DD`).
-3. **Reply** — state the **absolute `targetPlanPath`** you edited and which step numbers were checked.
-4. **Do not** tell the developer “you can mark” or “likely done” without editing when you can write the operations plan. If you cannot write (permissions, wrong repo, missing path), say why and offer **`deploy-walk present 7`** / **`deploy-walk <N> done`** or a concrete absolute path.
-5. **Terminal `outputs`** — when you emit **`AGENT_RESULT_RESPONSE_V1`** in the same turn after edits, include `outputs.deployPlanStepsChecked` (array of step numbers, e.g. `[1,2,3]`) and `outputs.targetPlanPath`.
+**Classification gate (binding — ad-hoc path):** Before flipping any §7 checkbox on this path, **Read** the step text and classify per **`deploy-walk/SKILL.md`** § *Per-step and per-assertion classification* and § *Agent capability inventory (binding)*:
 
-**Trigger examples:** “1 confirmed”, “step 2 done”, “3. confirmed” (numbered §7 items). Do not infer confirmation from vague chat (“looks good”) without an explicit step reference — use **AskQuestion** for the step number if needed.
+| Step kind | Ad-hoc behavior |
+|-----------|-----------------|
+| **Agent-executable only** | Run tools first; flip only after tool evidence. Developer chat does not substitute for file/YAML/diff checks. |
+| **Mixed** (UI + file/YAML/diff) | Run agent-executable sub-assertions first; flip only when every sub-assertion is satisfied. |
+| **Manual only** | Developer confirmation may authorize the flip; still patch the plan file in the same turn. |
+
+**Forbidden on ad-hoc path:** flipping filesystem, `dispatch.yaml`, bundle JSON, sidecar, grep/diff, or YAML/JSON checks from developer confirmation alone when the inventory covers that work.
+
+1. **Resolve `targetPlanPath`** — from spawn `inputs`, `plan-state.mjs resolve --cwd "<worktreePath>"`, or an explicit `@path` in the message. If multiple plans could apply, use **AskQuestion** once for **which plan** or **which step number** — not whether to persist.
+2. **Classify then act** — apply the classification gate above. When agent-executable work applies, run it before any plan edit. Before patching, **Read** `targetPlanPath` and confirm it is the anchored PR plan under `.sedea/operations/` (matching spawn `inputs.targetPlanPath` or `plan-state.mjs resolve --cwd` for the current worktree); if the path is missing, stale, or outside operations, stop without editing.
+3. **Same-turn file edit** — before the reply ends, patch the matching §7 line only when classification + evidence rules pass. Append a dated note citing tool evidence or manual resolution.
+4. **Reply** — state the **absolute `targetPlanPath`**, step numbers checked, and one-line evidence per flipped step.
+5. **Do not** tell the developer “you can mark” or “likely done” without editing when you can write the operations plan. If you cannot write (permissions, wrong repo, missing path), say why and offer **`deploy-walk present 7`** / **`deploy-walk <N> done`** or a concrete absolute path.
+6. **Terminal `outputs`** — when you emit **`AGENT_RESULT_RESPONSE_V1`** in the same turn after edits, include `outputs.deployPlanStepsChecked` (array of step numbers, e.g. `[1,2,3]`) and `outputs.targetPlanPath`.
+
+**Trigger examples:** “1 confirmed”, “step 2 done”, “3. confirmed” (numbered §7 items). Do not infer confirmation from vague chat (“looks good”) without an explicit step reference — use **AskQuestion** for the step number if needed. When the referenced step is agent-executable or mixed, treat the trigger as “run verification, then flip if pass” — not “developer said done, flip immediately.”
 
 ## Prompt-only handoff
 
@@ -864,7 +918,7 @@ Before ending a turn that opens [Ship cut-point gate](#ship-cut-point-gate-appro
 
 1. First non-whitespace character is **`M`** of **`MC_PHASED_RESPONSE_V1`** (spawned lane — sentinel-first).
 2. JSON includes **`version`: 1**, **`display.markdown`**, **`askQuestion.questions`** with ≥1 option (`id` + `label`) matching [Combined authorization](#combined-authorization) for this tree state.
-3. Recap includes tests-and-checks summary (commands run, pass/fail), `git status --short`, and Local-test §7 state when plan-anchored.
+3. Recap includes [Session orientation table (binding)](#session-orientation-table-binding) as the first block, then tests-and-checks summary (commands run, pass/fail), `git status --short`, and Local-test §7 state when plan-anchored.
 4. **`commit-push`** and create-PR option ids are **absent** unless [Pre-PR ship gate (push/PR)](#pre-pr-ship-gate-pushpr) allows **`executive-override-push`** on this message.
 5. Message contains **no** prose-only *advisory* / *pick in chat* / *I'll wait* closing — if any check fails, fix before send.
 
@@ -1138,6 +1192,8 @@ When inline **`create-pr`** completes with a PR URL/number (or the developer ret
 |-----------|---------------|--------------|
 | `start-pr-review-delegate-merge` | Start PR review — agent approve + merge when clean | Set `outputs.mergeDelegationAuthorized: true`; run [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) on **next** turn; when **`mergeDelegationReady`**, open [Pre-merge authorization gate](#pre-merge-authorization-gate) |
 | `start-pr-review` | Start inline PR review only | Run [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) on **next** turn — **you** merge on GitHub when ready |
+| `reconcile-github-only` | Reconcile GitHub only (Step 5) | Run **`pr-review`** Step 5 only — when triage already ran and push landed without reconciliation |
+| `submit-manual-review` | Submit manual review on GitHub | [Manual review submission (external-wait)](#manual-review-submission-external-wait) — park; developer submits Approve / Comment / Request changes on GitHub |
 | `check-pr-status` | Check PR merge status | Refresh `prState` / `mergeSha` / `mergedAt` via `gh` or repo tooling; re-open this gate |
 | `rebase-onto-main` | Rebase onto origin/main | On **next** turn, [Rebase onto origin/main after PR creation](#rebase-onto-origin-main-after-pr-creation) |
 | `spawn-after-deploy-walk` | PR merged — start After deploy deploy-walk | On **next** turn, [After deploy deploy-walk handoff](#after-deploy-deploy-walk-handoff) when merge confirmed |
@@ -1153,7 +1209,7 @@ When inline **`create-pr`** completes with a PR URL/number (or the developer ret
 
 ```
 MC_PHASED_RESPONSE_V1
-{"version":1,"display":{"markdown":"<recap>"},"askQuestion":{"modalTitle":"Coding session — PR opened, next step","questions":[{"id":"post-create-pr","prompt":"What should we do next with this PR?","allowMultiple":false,"options":[{"id":"start-pr-review-delegate-merge","label":"Start PR review — agent approve + merge when clean"},{"id":"start-pr-review","label":"Start inline PR review only (I merge on GitHub)"},{"id":"check-pr-status","label":"Check PR merge status"},{"id":"rebase-onto-main","label":"Rebase onto origin/main"},{"id":"spawn-after-deploy-walk","label":"PR merged — start After deploy deploy-walk"},{"id":"defer-ship","label":"Defer next ship step"},{"id":"more-details","label":"More details for option _"}]}]}}
+{"version":1,"display":{"markdown":"<recap>"},"askQuestion":{"modalTitle":"Coding session — PR opened, next step","questions":[{"id":"post-create-pr","prompt":"What should we do next with this PR?","allowMultiple":false,"options":[{"id":"start-pr-review-delegate-merge","label":"Start PR review — agent approve + merge when clean"},{"id":"start-pr-review","label":"Start inline PR review only (I merge on GitHub)"},{"id":"reconcile-github-only","label":"Reconcile GitHub only (Step 5 — triage already done)"},{"id":"submit-manual-review","label":"Submit manual review on GitHub"},{"id":"check-pr-status","label":"Check PR merge status"},{"id":"rebase-onto-main","label":"Rebase onto origin/main"},{"id":"spawn-after-deploy-walk","label":"PR merged — start After deploy deploy-walk"},{"id":"defer-ship","label":"Defer next ship step"},{"id":"more-details","label":"More details for option _"}]}]}}
 ```
 
 ### Act after post-create-pr pick
@@ -1164,11 +1220,45 @@ Run on the **developer's response turn** — **not** in the same assistant turn 
 |------|---------|
 | **`start-pr-review-delegate-merge`** | Set `outputs.mergeDelegationAuthorized: true`; [Inline PR review after PR creation](#inline-pr-review-after-pr-creation); when **`mergeDelegationReady`**, open [Pre-merge authorization gate](#pre-merge-authorization-gate) on **next** turn |
 | **`start-pr-review`** | [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) |
+| **`reconcile-github-only`** | Run **`pr-review`** Step 5 only (§ *Post-fix push — Step 5 same turn*); then re-open this gate or pre-merge gate when **`githubReconciliationStatus: complete`** |
+| **`submit-manual-review`** | [Manual review submission (external-wait)](#manual-review-submission-external-wait) |
 | **`check-pr-status`** | Query PR state; update `outputs`; when **`merged`**, run [Post-merge workspace cleanup](#post-merge-workspace-cleanup) **auto-apply** on **next** turn |
 | **`rebase-onto-main`** | [Rebase onto origin/main after PR creation](#rebase-onto-origin-main-after-pr-creation) |
 | **`spawn-after-deploy-walk`** | When merge confirmed: [Post-merge workspace cleanup](#post-merge-workspace-cleanup) **auto-apply** on **next** turn, then [After deploy deploy-walk handoff](#after-deploy-deploy-walk-handoff) after cleanup completes or is skipped |
 | **`defer-ship`** | Stop with recap; `continuationStatus: active` |
 | **`more-details`** | Clarify; re-open gate |
+
+### Manual review submission (external-wait)
+
+Run when the developer picks **`submit-manual-review`** at [Post-create-pr handoff gate](#post-create-pr-handoff-gate), at **`pr-review`** Step **3b** disposition gate, or when they choose to submit their own GitHub review before further agent triage or merge.
+
+**Purpose:** Park while the developer submits their own pull request review on GitHub (Approve, Comment, or Request changes) — without forcing agent triage or delegate-merge paths.
+
+1. Recap: `prUrl`, `prNumber`, current `reviewState` / latest `pull-reviews` summary when available.
+2. Emit **`MC_PHASED_RESPONSE_V1`** (`modalTitle`: *Coding session — submit manual review*) with **`display.markdown`** stating the developer may submit a review on GitHub (PR link) or via `gh pr review` locally. **Park** — no agent triage, GitHub reconciliation, or merge on this turn.
+3. **Resume modal** on the **developer's response turn** (`modalTitle`: *Coding session — manual review submitted?*):
+
+| Option id | Label (brief) | Agent action |
+|-----------|---------------|--------------|
+| `manual-review-done-check-status` | Manual review submitted — refresh PR status | Refresh `prState` / `reviewState` via `gh pr view`; re-open [Post-create-pr handoff gate](#post-create-pr-handoff-gate) |
+| `start-pr-review` | Run inline pr-review (triage comments) | [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) |
+| `start-pr-review-delegate-merge` | Agent triage + delegate merge when clean | Set `outputs.mergeDelegationAuthorized: true`; [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) |
+| `defer-ship` | Defer next ship step | `continuationStatus: active` |
+| `more-details` | More details for option _ | Elaborate; re-open resume modal |
+
+**Act after resume pick** — run on the **developer's response turn**, not the same assistant turn as the resume modal:
+
+| Pick | Actions |
+|------|---------|
+| **`manual-review-done-check-status`** | Query PR state; update `outputs`; re-open [Post-create-pr handoff gate](#post-create-pr-handoff-gate) |
+| **`start-pr-review`** | [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) |
+| **`start-pr-review-delegate-merge`** | Set `outputs.mergeDelegationAuthorized: true`; [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) |
+| **`defer-ship`** | Stop with recap; `continuationStatus: active` |
+| **`more-details`** | Clarify; re-open resume modal |
+
+**Forbidden:** prose *review on GitHub and tell me when*; running `gh pr review --approve` or `--request-changes` without the developer naming review type and body in the **same message** after **`more-details`** or an explicit assisted-review request.
+
+**Agent-assisted submission (optional):** When the developer picks **`more-details`** and names Approve / Comment / Request changes with body text in the **same message**, run `gh pr review` with the matching flags on the **next** turn only — then re-open [Post-create-pr handoff gate](#post-create-pr-handoff-gate) after success.
 
 ### Rebase onto origin/main after PR creation
 
@@ -1486,12 +1576,21 @@ The inline procedure:
 2. Classifies each as `Must fix`, `Should fix`, `Skipped`, or `Skipped → follow-up`.
 3. **Commit/push gates (stacked):** **AskQuestion** and **20_efficient-pr-shipping** § *Review before commit* for approval before the next stage; **`git commit`** / **`git push`** only per **`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`** when the user **same message** explicitly asks (*commit*, *push*, etc.). Workflow approval alone is not git consent.
 4. Applies only the approved fix scope.
-5. Runs GitHub reconciliation only after approved fixes are committed/pushed, or immediately for skipped-only triage.
+5. Runs GitHub reconciliation only after approved fixes are committed/pushed, or immediately for skipped-only triage — **same assistant turn** as the push (rule **20** § *Commit and push cadence* step 3; **`pr-review`** § *Step 5 turn invariant*).
 6. When triage is **not** clean (open Must/Should blockers, pending fixes, or deferred reconciliation), keeps `continuationStatus: "active"` and loops **`pr-review`** until resolved or explicitly deferred.
 7. When triage is **skip-only** (no code edits this pass; `githubReconciliationStatus: complete`; no open `prReviewBlockers`):
    - When **`outputs.mergeDelegationAuthorized: true`** and **`pr-review`** reports **`mergeDelegationReady: true`**, one informational line on **next** turn — *PR review complete — agent approve + merge authorized* — then open [Pre-merge authorization gate](#pre-merge-authorization-gate). **Do not** run **`gh pr review --approve`** or **`gh pr merge`** until the developer picks **`delegate-merge-confirm`** on that gate.
    - Otherwise open [Post-pr-review merge approval gate](#post-pr-review-merge-approval-gate) on the **next** turn.
 8. When **Must/Should fixes were pushed** this pass (`outputs.prReviewFixPushed: true` from **`pr-review`** handback), re-open [Post-create-pr handoff gate](#post-create-pr-handoff-gate) on the **next** turn — **not** the merge gate — until a fresh **`start-pr-review`** pass is skip-only or merge preconditions hold.
+
+#### Post-fix push — Step 5 same turn (binding)
+
+When inline **`pr-review`** Steps **1–4** ran in this chat and the developer approved fixes (**`apply-must`**, **`apply-must-should`**, or equivalent), then **`git push`** succeeds in this turn:
+
+1. **Run Step 5 immediately** — before **`MC_PHASED_RESPONSE_V1`**, post-create-pr gate, or pre-merge gate.
+2. **Forbidden:** ending at push recap; offering **`start-pr-review`** / **`rerun-pr-review`** when only Step 5 was skipped — default recovery is **`reconcile-github-only`** at [Post-create-pr handoff gate](#post-create-pr-handoff-gate).
+3. Set **`outputs.githubReconciliationStatus: complete`** only per **`pr-review`** § *Reconciliation completeness checklist*.
+4. When Step 5 is still required, **no** pre-merge or merge-delegation modals — auto-run Step 5 or offer **`reconcile-github-only`** at [Post-create-pr handoff gate](#post-create-pr-handoff-gate) only.
 
 ### Post-pr-review merge approval gate
 
@@ -1577,7 +1676,7 @@ Run on the **spawned coding-session lane** after inline **`pr-review`** complete
 
 1. **`outputs.mergeDelegationAuthorized: true`** — from post-create-pr pick **`start-pr-review-delegate-merge`**, or the developer's **same message** explicitly authorizes agent merge (*merge on my behalf*, *approve and merge for me*, *you merge*).
 2. **`outputs.prNumber`** or readable **`prUrl`** from inline **`create-pr`** on this ship chain.
-3. Inline **`pr-review`** finished with **`outputs.mergeDelegationReady: true`** (see **`pr-review/SKILL.md`** § *Inline result for coding-session*).
+3. Inline **`pr-review`** finished with **`outputs.mergeDelegationReady: true`** and **`outputs.githubReconciliationStatus: complete`** (see **`pr-review/SKILL.md`** § *Inline result for coding-session*).
 4. **`outputs.prState`** is **`open`** (refresh with `gh pr view` when stale).
 
 #### Pre-merge authorization gate (binding)
@@ -1588,7 +1687,7 @@ When **all** preconditions above pass, **stop** on **this turn** — emit **`MC_
 
 ```
 MC_PHASED_RESPONSE_V1
-{"version":1,"display":{"markdown":"<recap — PR #, checks, mergeDelegationReady>"},"askQuestion":{"modalTitle":"Coding session — merge PR?","questions":[{"id":"pre-merge","prompt":"PR review is clean and merge is delegated. What should we do?","allowMultiple":false,"options":[{"id":"delegate-merge-confirm","label":"Approve and merge now"},{"id":"rerun-pr-review","label":"Run pr-review again first"},{"id":"defer-merge","label":"Defer merge"},{"id":"more-details","label":"More details for option _"}]}]}}
+{"version":1,"display":{"markdown":"<recap — PR #, checks, mergeDelegationReady>"},"askQuestion":{"modalTitle":"Coding session — merge PR?","questions":[{"id":"pre-merge","prompt":"PR review is clean and merge is delegated. What should we do?","allowMultiple":false,"options":[{"id":"delegate-merge-confirm","label":"Approve and merge now"},{"id":"rerun-pr-review","label":"Run full pr-review again (Steps 1–4 + 5)"},{"id":"defer-merge","label":"Defer merge"},{"id":"more-details","label":"More details for option _"}]}]}}
 ```
 
 **Act after pre-merge pick** — run on the **developer's response turn**, not the same assistant turn as the modal:
@@ -1596,7 +1695,7 @@ MC_PHASED_RESPONSE_V1
 | Pick | Actions |
 |------|---------|
 | **`delegate-merge-confirm`** | Run [Merge procedure](#merge-procedure) below |
-| **`rerun-pr-review`** | Set `outputs.mergeDelegationReady: false`; [Inline PR review after PR creation](#inline-pr-review-after-pr-creation); when **`mergeDelegationReady`** is true again, re-open this gate |
+| **`rerun-pr-review`** | Set `outputs.mergeDelegationReady: false`; full [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) (Steps 1–4 + 5); when **`mergeDelegationReady`** is true again, re-open this gate |
 | **`defer-merge`** | `continuationStatus: active`; recap; re-open [Post-create-pr handoff gate](#post-create-pr-handoff-gate) on next explicit ship continuation |
 | **`more-details`** | Clarify; re-open gate |
 

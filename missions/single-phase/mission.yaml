@@ -1,4 +1,4 @@
-name: single phase
+name: Single Phase
 description: >-
   Simplified plan-and-deliver for small, single-phase features — ad-hoc PRD,
   Master Plan with PR breakdown only (max 3 PRs), complexity score ≤ 12,

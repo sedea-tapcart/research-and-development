@@ -282,7 +282,7 @@ Use **`origin/main`** as **`--base-ref`**, **not** local **`main`** — local **
 
 ## Center submodule pin promotion (hosting repo)
 
-When changes under a **non-built-in** center submodule (for example **`.sedea/centers/research-and-development/`**) merge to that center's **`defaultBranch`**, agents **must** run [`.sedea/centers/sedea/skills/promote-center-submodule-pin/SKILL.md`](.sedea/centers/sedea/skills/promote-center-submodule-pin/SKILL.md) **inline** on the hosting-repo lane so **`origin/main`** records the new gitlink. Local pointer drift on the primary clone is **not** enough for worktree bootstrap — see § *Dirty hosting repo before center setup* and [`.sedea/centers/research-and-development/docs/development-process.md`](docs/development-process.md) § *Center submodule git (two repositories)*.
+When changes under a **non-built-in** center submodule (for example **`.sedea/centers/research-and-development/`**) merge to that center's **`defaultBranch`**, agents **must** run [`.sedea/centers/sedea/skills/promote-center-submodule-pin/SKILL.md`](.sedea/centers/sedea/skills/promote-center-submodule-pin/SKILL.md) **inline** on the hosting-repo lane so **`origin/main`** records the new gitlink. Entry routing: [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § *Pin promotion routing* — **direct** invoke, or **cleanup-hint** only when post-merge **`worktree-cleanup.sh`** reports drift (`nextAction: promote-pin-required` with **`centerPinDriftPaths`**; host background when **`autoPromoteSubmodulePins: true`**). Local pointer drift on the primary clone is **not** enough for worktree bootstrap — see § *Dirty hosting repo before center setup* and [`.sedea/centers/research-and-development/docs/development-process.md`](../docs/development-process.md) § *Center submodule git (two repositories)*.
 
 Pin the center **`defaultBranch`** tip only. Git is **skill-owned** per [`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`](.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc) § *Submodule pin promotion (skill-owned)*. Canonical semantics: [`.sedea/centers/sedea/rules/3_center.mdc`](.sedea/centers/sedea/rules/3_center.mdc) § *Git repo semantics*.
 
@@ -327,6 +327,17 @@ Apply § *Hosting repo cwd for scripts (canonical)* for every script invocation 
 1. **Commit** (step 1). **Skip this step if `git status --short` is empty** — typical when the worktree is already committed after **`pre-pr-review`** **go**. Do not amend the previous commit and do not pass `--allow-empty`; just proceed to step 2.
 2. Push to remote.
 3. **PR comment reconciliation (`pr-review` → this cadence).** This step is **only** [`pr-review`](../missions/plan-and-deliver/skills/pr-review/SKILL.md) **Step 5 — GitHub only** (not Steps 1–4). When this coding session already ran that skill’s Steps 1–4 (per-comment dispositions in the Step 4 report) and **GitHub** reply / resolve / minimize / summary from Step 5 has **not** run yet, the **commit and push cadence is incomplete** until Step 5 runs — **same agent turn**, immediately after the push succeeds (so the summary can cite `git rev-parse --short HEAD` in the **worktree**). Execute from **`HOSTING_ROOT`**: `cd "$HOSTING_ROOT" && python3 .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/pr-review.py` (two-step `PR_REVIEW_INPUT` per that skill). If thread IDs or PR identity are missing from context, re-run that skill’s **Step 1** script array for the same PR, then Step 5. If there was no `pr-review` triage in this chat, **skip step 3 entirely** — do not run the script.
+
+   **Anti-patterns (agent failure):**
+
+   | Symptom | Required response |
+   |---------|-------------------|
+   | Push succeeded, **`pr-review`** Steps 1–4 ran in this chat, no **`pr-review.py`** Step 5 invocation | Run Step 5 **before ending the turn** — cadence incomplete |
+   | **`CHANGES_REQUESTED`** unchanged, assistant turn ends at push recap | Same — see **`pr-review`** § *Step 5 turn invariant* |
+   | Post-fix modal offers merge / full re-triage without Step 5 | **Forbidden** — [`coding-session/SKILL.md`](../missions/plan-and-deliver/skills/coding-session/SKILL.md) § *Inline PR review after PR creation* |
+
+   **Forbidden:** ending the assistant turn at push when Step 4 ran in-session; opening post-create-pr or pre-merge modals before **`outputs.githubReconciliationStatus: complete`** when Step 5 was required.
+
 4. **Link the PR to its plan sidecar.** After push (and after step 3 when applicable), attempt to upsert the PR number into the Plan Board sidecar so `plan-reconcile` can later archive the plan when all linked PRs merge. Run with **`cd "$HOSTING_ROOT"`** and **`--operations-user-id` before the subcommand** (`WORKTREE_ROOT` = hosting repo worktree where commit/push ran):
 
    ```bash
