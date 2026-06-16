@@ -515,6 +515,32 @@ Each PR's standalone plan file has these sections only — sections 1–7 are re
 
 Sections 1, 2, 3, 4, 6, 7, and 8 (when present) flow into the PR description that **a coding agent** has **a PR-creating agent** write — single concern → PR title and summary; Background → "Context"; Change scope → "What changed"; Reasoning → "Why this approach" and "Alternatives considered"; Tests to write → "Tests"; Deploy test plan → "Verification / deploy plan"; Caveats → "Notes for the reviewer" (for **a reviewer agent** and for a **fresh pre-PR reviewer agent session**). Section **5 (Repo rules impact)** is primarily for **coding + workspace rules** alignment; it may be summarized in the PR description optionally but its contract is to list **which** rule files to touch — and **those hosting-repo `.mdc` edits land with the code before merge** unless §5 explicitly defers them (see **Align hosting-repo rules before commit and push** above).
 
+#### Cross-repo dashboard-first sequencing (sedea-push)
+
+When **plan and deliver** on the **sedea-push** hosting repo spans **both** `tapcart-push/` and `tapcart-merchant-dashboard/`, preserve a **dashboard-first** delivery order per feature slice so PMs can review UX before backend work lands.
+
+**Trigger** — apply when **all** are true:
+
+1. Dispatch uses **research-and-development** center **plan and deliver** (or downstream planning skills on that mission).
+2. Feature scope touches **both** application submodules (`planner` Step 3a selects both paths, or PRD/plan text implies both).
+3. Delivery is a **new or extended user-facing capability** — not pure infra, docs-only, or gitlink housekeeping on the sedea-push root.
+
+**Per-slice invariant (normative order):** For each slice, plan and ship **shell → backend → wiring**:
+
+| Step | Repo | Content |
+|------|------|---------|
+| **1 — Dashboard shell** | `tapcart-merchant-dashboard/` | UI layout, copy, styling, navigation, placeholder states; **no** live backend calls for the new capability |
+| **2 — Backend work** | `tapcart-push/` | API routes, workers, schema/migrations, orchestration, config |
+| **3 — Dashboard wiring** | `tapcart-merchant-dashboard/` | Connect UI to backend; gate network mounts behind LaunchDarkly when applicable |
+
+Repeat per slice. Parallel delivery is allowed **across independent slices**, not **within** one slice's shell/backend/wiring chain.
+
+**Planning artifacts:** When the trigger applies, Master Plan and phase **`### Decomposition assessment`** should record **Sequencing / coupling:** `cross-repo dashboard-first (shell → push API → dashboard wiring)`. **`pr-breakdown`** set-level **`### Sequencing`** and **`Delivery phases`** lists must preserve shell → backend → wiring order per slice.
+
+**Authoritative hosting rule:** Full invariant text, feature-slice definition, shell placeholder rule, and LaunchDarkly table live in the sedea-push hosting repo — `.cursor/rules/push-monorepo-submodules.mdc` § *Cross-repo plan-and-deliver sequencing* on the active sedea-push checkout. Cross-reference that section; do not duplicate the full prose here.
+
+**Governance mission cap vs feature delivery:** The sedea-governed-repo-setup Planning lane caps governance PR rows at three; **feature** plan-and-deliver work on sedea-push may exceed three PRs per slice or feature when complexity warrants — the invariant governs **order within a slice**, not a fixed PR count.
+
 ## Cadence
 
 **Strategy**, **Development tools**, and **Planning Modes** describe the **artifacts** and tooling of feature development. **Cadence** describes the **operational loop** those artifacts live inside. Setup is one-shot per feature (PRD → **Master Plan**); from there, every feature runs the loop below until it is done shipping.
