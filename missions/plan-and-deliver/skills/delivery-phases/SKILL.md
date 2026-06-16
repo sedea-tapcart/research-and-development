@@ -196,6 +196,8 @@ Read the target plan’s earlier sections:
 - **Master Plan:** § 4 Architectural design + § 5 Changes.
 - **Phase plan:** § 2 Scope + § 3 Code design + § 4 Changes.
 
+**Cross-repo sedea-push.** When parent scope or **`### Decomposition assessment`** spans **both** `tapcart-push/` and `tapcart-merchant-dashboard/` on **sedea-push**, read **development-process.md** § *Cross-repo dashboard-first sequencing (sedea-push)*. Prefer phase boundaries that align each slice to **shell → backend → wiring** (for example one phase per stage, or one phase per slice with PR breakdown inside). Record cross-repo sequencing in each phase row's decomposition sub-bullet when non-obvious.
+
 Pick phase boundaries that respect Strategy #6 (single concern per deliverable) and Strategy #4 (small chunks, fast to production) from **development-process.md**:
 
 - A phase is a coherent slice of the parent’s scope to ship or defer together.
