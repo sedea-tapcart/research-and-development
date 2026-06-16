@@ -41,6 +41,12 @@ After a PR exists, **`coding-session`** runs this skill **inline** in a loop unt
 
 **Worktree removal ownership (binding).** **Do not remove worktrees you do not own.** PR review runs in **`WORKTREE_ROOT`** for edits; it does **not** authorize **`git worktree remove`**, **`git worktree prune`**, or **`sedea_remove_worktree_folder`** on any other path. See [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § *Worktree ownership* and rule **20** § *Worktree removal ownership (binding)*. **`git worktree list` is read-only** when ownership is unclear — **stop; do not remove**.
 
+## Global `gh` exception (binding)
+
+When a **global Cursor or developer rule** directs agents to use `gh` for GitHub tasks, that default **yields to this skill** for PR review-cycle operations. While inline **`pr-review`** is active on a **`coding-session`** lane, **`pr-review.py` is the only permitted interface** for comment collection, thread/review state, classification, reconciliation, replies, resolves, minimizes, and review re-requests — not generic `gh`, REST, or GraphQL substitutes.
+
+**Permitted `gh` on this skill (narrow allowlist):** Step 0 worktree/URL resolution in the **worktree**; **`merged-pr-proceed`** merge-state verify (`gh pr view` for **`state` / merge metadata only**); invoker-owned **`gh pr create`** upstream (not this skill). **`check-pr-status`**, manual review submission, rebase, and merge paths on **`coding-session`** may use `gh` for **status/control** only — they do **not** replace Step 1 collection or Step 5 reconciliation.
+
 ## Structured choice (Mission Control)
 
 Triage and fix loops use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* on the **`coding-session`** lane — **preferred:** recap (comment summary) + modal in one message. **Act** (code/plan edits) only after developer approval per this skill.
@@ -65,7 +71,7 @@ Give developers a **consistent state snapshot** during PR review cycles so they 
 
 **Population rules:** Same as [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`](../coding-session/SKILL.md) § *Session orientation table (binding)* — recover missing PR/worktree context from **`coding-session`** before triage.
 
-**Mandatory gates (this skill):** Step **3b** disposition gate; Step **4** report + commit/push gate; external-wait parking after push; each cycle reopen when new comments land.
+**Mandatory gates (this skill):** Step **3b** disposition gate; Step **4** report + disposition gate; external-wait next-step modal after push; each cycle reopen when new comments land.
 
 ## Helper script
 
@@ -119,11 +125,43 @@ Input format — **one object** (single command) or a **JSON array** of command 
 
 Supported `command` values: `threads`, `reply`, `resolve`, `minimize`, `pr-for-branch`, `reviews`, `review-comments`, `pull-reviews`, `issue-comments`, `request-review`, `summary`.
 
-### GitHub access
+### GitHub interface (binding)
 
-**All** GitHub reads and writes for this skill use **`pr-review.py`** via the two-step **`PR_REVIEW_INPUT`** workflow (§ *Input file and script*). In Step 0 you may use `git` / `gh` in the **worktree** for worktree name or URL resolution; prefer **`pr-for-branch`** in the script when resolving the PR from the current worktree name ref (`git branch --show-current` returns the worktree name).
+When this skill is active, **`pr-review.py` is the only permitted GitHub interface** for PR review comment collection, thread/review state used for classification, and reconciliation.
+
+| Operation | Required interface |
+|-----------|--------------------|
+| Collect comments (Step 1) | **`pr-review.py`** array only |
+| Re-fetch before reconcile (Step 2 / Step 5) | **`pr-review.py`** array only |
+| Reply / resolve / minimize / summary (Step 5) | **`pr-review.py`** array only |
+| PR identity in worktree (Step 0) | **`pr-for-branch`** script command or known **`prUrl`** |
+| Merge-state verify (`merged-pr-proceed`) | **`gh pr view`** for merge state only — no comment, thread, or review endpoints |
+
+**Forbidden when this skill is active:** **`gh api`**, **`gh api graphql`**, **`gh pr view --json reviews,comments`**, or any REST / GraphQL call whose purpose is to collect, classify, reconcile, or verify PR review comments, threads, or reviews.
+
+**First-action invariant:** If invoker context, user context, or an open gate references **`pr-review`**, the first GitHub-touching shell in that turn must be the Step 1 collect array:
+
+```bash
+cd "$HOSTING_ROOT" && PR_REVIEW_INPUT="<absolute-path>" python3 .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/pr-review.py
+```
+
+Checking PR status during an open **`pr-review`** cycle is **not** exempt from this invariant unless the active pick is **`merged-pr-proceed`** or **`check-pr-status`** on **`coding-session`** (merge metadata only).
+
+**Verification:** After Step 5, re-fetch using the same Step 1 script array. **Forbidden:** using **`gh api graphql`** for thread counts or review-state verification.
 
 Superseded paths (token/config lookup only — **not** for listing threads or posting replies): GitHub MCP server ids such as **`github`** or **`user-github`** in **`.sedea/mcp.json`**. Those tools duplicate **`pr-review.py`** and inflate agent context.
+
+## Cyclic review loop (binding)
+
+After inline **`create-pr`** opens a PR, **`coding-session`** runs this skill **in cycles** until **`continuationStatus`** is **`terminal`**:
+
+1. **Open PR** — inline **`create-pr`** records `prUrl` / `prNumber`; [Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate) opens same turn.
+2. **Developer picks `start-pr-review`** — load this skill; **Step 1 `pr-review.py` collect array is the first GitHub-touching action** (not generic `gh` inspection).
+3. **Triage** — Steps **1–4** below.
+4. **Developer gate** — structured choice for dispositions and commit/push depth per rule **6**.
+5. **Reconcile on GitHub** — Step **5** when required (same turn as push when fixes landed).
+6. **Wait for reviewers** — external; open structured choice naming resume paths per rule **2** § *External-wait / next-step modal*.
+7. **Loop** — when new comments land, return to step **2** on the **same lane** until every comment is fixed, skipped with rationale, captured as deferred work, or explicitly deferred by the developer.
 
 ## When coding-session executes `pr-review`
 
@@ -170,7 +208,7 @@ Skip silently when `resolve` exits non-zero (session has no plan) or when `pull_
 
 **Capture the resolved slug + full `planPath`** (or the lack thereof) for Step 3a. After `resolve`, parse the path segment immediately after `.sedea/operations/` — it is either **`joint`** or the **user uuid** — and edit that same `<slug>.plan.md` (sidecar `<slug>.state.yaml` sits beside it). Re-running `resolve` later only to recover the path wastes a shell call.
 
-### Step 1 — Collect comments (**script only**)
+### Step 1 — Collect comments (`pr-review.py` only — no `gh` substitute)
 
 1. Use the resolved `owner`, `repo`, and `pull_number`.
 2. Run **`pr-review.py` once** with a JSON **array** of commands (same `PR_REVIEW_INPUT` two-step workflow as above), in this order:
@@ -209,7 +247,7 @@ Do **not** apply fixes yet. First report the classification; then open the Step 
 
 Run this gate only after Step 3a has prepared proposed follow-ups and Step **4** has printed the classification report.
 
-Before applying any code, plan, or GitHub changes, open the **parked disposition gate** in Step **4** (`MC_PHASED_RESPONSE_V1` or **AskQuestion** with the **contextual** option set in Step **4** § *Build disposition options*). **Do not** duplicate the gate in prose.
+Before applying any code, plan, or GitHub changes, open the **disposition gate** in Step **4** (`MC_PHASED_RESPONSE_V1` or **AskQuestion** with the **contextual** option set in Step **4** § *Build disposition options*). **Do not** duplicate the gate in prose.
 
 **Contextual options (binding):** List **only** disposition actions valid for this PR's Step 3 classification counts — see Step **4** § *Build disposition options*. **Forbidden:** showing **`apply-must`** or **`apply-must-should`** when **`mustCount`** and **`shouldCount`** are both **0**; showing **`follow-ups-only`** when **`followUpCount`** is **0**. **`more-details`** is always included.
 
@@ -237,7 +275,7 @@ Acknowledge: *"Prepared <K> Code Review Follow-ups for `<slug>.plan.md` § Follo
 
 Plan files live under **`.sedea/operations/`** on the primary hosting repo. In the Sedea `app` monorepo, see `.sedea/centers/sedea/rules/0_hosting-repo.mdc`: that tree is often its **own** git repository, gitignored or submodule-pinned from the monorepo. Edits to `*.plan.md` / `*.state.yaml` therefore may **not** appear in the hosting repo worktree's `git status`. Sync plan changes through whatever workflow owns the operations repository (for example a dedicated `operations` commit), not only the `app` PR — rule **20** § *Commit and push cadence* still commits hosting-repo source changes as usual when the developer requests *commit* / *push* in the same message.
 
-### Step 4 — Report and parked disposition gate
+### Step 4 — Report and disposition gate
 
 Print **every** comment in its original form (quote the body). For each one, state one of four dispositions:
 
@@ -248,7 +286,7 @@ Print **every** comment in its original form (quote the body). For each one, sta
 
 Do **not** reply to, resolve, or minimize any threads yet.
 
-**Parked continuation (binding):** After the report, emit **`MC_PHASED_RESPONSE_V1`** (preferred on **`coding-session`** spawned lanes — sentinel line **1**, report recap in **`display.markdown`**) or the **AskQuestion** tool with the **contextual** Step **3b** option set from § *Build disposition options* below. The developer may review on GitHub or inspect local diffs **while the modal stays open**; they resume by **selecting an option**, not free-form chat.
+**Next-step modal (binding):** After the report, emit **`MC_PHASED_RESPONSE_V1`** (preferred on **`coding-session`** spawned lanes — sentinel line **1**, report recap in **`display.markdown`**) or the **AskQuestion** tool with the **contextual** Step **3b** option set from § *Build disposition options* below. The developer may review on GitHub or inspect local diffs **while the modal stays open**; they continue by **selecting an option**, not free-form chat.
 
 #### Build disposition options (contextual — binding)
 
@@ -274,11 +312,11 @@ After Step 3 classification, compute:
 | `apply-must-should` | **`mustCount > 0` or `shouldCount > 0`** | Apply Must + Should fixes |
 | `follow-ups-only` | **`followUpCount > 0`** | Follow-ups only — no source edits |
 | `skip-reject` | Triage non-empty | When **`skippedOnly`**: *Skip / reject — reconcile on GitHub (recommended)*; else *Skip / reject selected comments* |
-| `submit-manual-review` | **`skippedOnly`** or (**`followUpCount > 0`** and **`mustCount === 0`** and **`shouldCount === 0`**) | Submit manual review on GitHub — park per **`coding-session`** [Manual review submission (external-wait)](../coding-session/SKILL.md#manual-review-submission-external-wait) |
+| `submit-manual-review` | **`skippedOnly`** or (**`followUpCount > 0`** and **`mustCount === 0`** and **`shouldCount === 0`**) | Submit manual review on GitHub — open **`coding-session`** [Manual review submission (external-wait)](../coding-session/SKILL.md#manual-review-submission-external-wait) |
 | `merged-pr-proceed` | **`prNumber`** or **`prUrl`** known (always during PR ship chain) | PR merged — proceed with cleanup — **Act** per § *Merged-forward act mapping* below |
 | `more-details` | Always | More details for option _ |
 
-**Merged-forward (binding):** Include **`merged-pr-proceed`** on **every** parked disposition gate, post-fix commit/push gate, and external-wait resume modal while **`prNumber`** or **`prUrl`** is set — **even when** last `gh pr view` showed **`OPEN`**. **Forbidden:** omitting **`merged-pr-proceed`** because merge status was stale; using **`check-pr-status`** alone as the only way to discover developer merge on GitHub.
+**Merged-forward (binding):** Include **`merged-pr-proceed`** on **every** disposition gate, post-fix commit/push gate, and external-wait resume modal while **`prNumber`** or **`prUrl`** is set — **even when** last `gh pr view` showed **`OPEN`**. **Forbidden:** omitting **`merged-pr-proceed`** because merge status was stale; using **`check-pr-status`** alone as the only way to discover developer merge on GitHub.
 
 **Act mapping:** selecting an option not shown in the modal is impossible; do not treat hidden options as implicit consent. When the developer picks **`submit-manual-review`**, run **`coding-session`** [Manual review submission (external-wait)](../coding-session/SKILL.md#manual-review-submission-external-wait) — do not run Step **5 — GitHub only** on that turn. When the developer picks **`merged-pr-proceed`**, run § *Merged-forward act mapping* below.
 
@@ -301,7 +339,7 @@ Run on the **developer's response turn** when they pick **`merged-pr-proceed`**:
 
 **Forbidden:** “Review the PR and tell me when to continue”, “wait for the user to review”, fixed five-option menus when counts make options inert, or ending the turn without structured choice when dispositions need approval.
 
-**Act** (edits, plan append, GitHub reconciliation) runs on the **developer's response turn** after modal selection — not in the same turn as the parked gate.
+**Act** (edits, plan append, GitHub reconciliation) runs on the **developer's response turn** after modal selection — not in the same turn as the disposition gate.
 
 When fixes are applied and ready to land, use a **separate** structured-choice gate before commit/push. Include at least:
 

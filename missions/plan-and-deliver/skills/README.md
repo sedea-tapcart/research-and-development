@@ -46,14 +46,14 @@ Mission Control delivery for skills that mix long plan output with structured us
 |-------|---------|--------|
 | **Recap** | Plan link, one-line summary, optional short recap | Prefer one message with structured choice (AskQuestion tool or `MC_PHASED_RESPONSE_V1`) |
 | **Structured choice** | Modal approval / gates | No `MC_PHASED_RESPONSE_V1` after recap prose in the same message |
-| **Parked continuation** | User leaves chat (PR/diff/CI) before next step | Open modal **before** end turn — rule **2** § External-wait; forbid prose “wait for user/developer” |
+| **Next-step modal** | User leaves chat (PR/diff/CI) before next step | Open modal **before** end turn naming resume paths — rule **2** § External-wait / next-step modal; forbid prose “wait for user/developer” |
 | **Act** | Spawn, terminal result, implementation | After the user selects in the modal |
 
 **Normative:** Every skill in this mission **must** close **every** assistant turn with the **AskQuestion tool** or **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** § **Mandatory structured choice on every turn** and § **`MC_PHASED_RESPONSE_V1` wire format (binding)**. **Forbidden:** prose-only exit, recap-only endings, prose menus, or “wait for the developer” without a modal. Spawned skills that emit **`AGENT_RESULT_RESPONSE_V1`** put **`MC_PHASED_RESPONSE_V1`** on **line 1** and the terminal sentinel on the **last line** of the same message. Do **not** use “Turn A/B” or similar implementation labels in developer-facing chat.
 
 **Authoring new or updated skills (binding):**
 
-- When a step says the developer will review work **outside** chat (GitHub PR, diff, staging), end the turn with **parked** structured choice — not “wait for the user” / “come back when done” prose alone.
+- When a step says the developer will review work **outside** chat (GitHub PR, diff, staging), end the turn with structured choice naming resume paths — not “wait for the user” / “come back when done” prose alone.
 - Gate **`options`** must match the skill’s next branches (approve, revise, defer, commit when applicable, **More details for option _**).
 - Reference **`coding-session/SKILL.md`** § *Post-create-pr handoff gate* and **`pr-review/SKILL.md`** Step **4** § *Build disposition options* for ship-path examples (contextual options from triage counts — omit inert Must/Should rows).
 
@@ -297,6 +297,7 @@ Run this checklist **before** every `AGENT_RUN_REQUEST_V1` emit on any lane (Squ
 | Step | Check |
 |------|--------|
 | 1 | Read the target **`SKILL.md`** frontmatter **`inputs`** map. Every key with **`required: true`** must appear in the spawn line’s **`inputs`** object with a non-empty value (unless the skill documents an explicit empty default). |
+| 1b | **Nullable string inputs (`type: string` + null semantics):** when the skill documents null/absent meaning (for example **`planner`** **`parent`** for root delivery), emit the **wire string sentinel** in spawn JSON — **`"parent": "null"`** — never JSON **`null`**. Seed blocks and sidecars keep their own encodings (`Parent: null` in seeds; YAML `parent: null` in sidecars). See **`planner/SKILL.md`** § *Wire encoding — nullable `parent`*. |
 | 2 | **`inputs` keys must match frontmatter names exactly** (camelCase). Do **not** invent aliases (for example `featurePlanning` when the skill requires **`featurePlanningTitle`**). |
 | 3 | Top-level spawn JSON includes **`version`** (`1`), a **new** **`correlationId`** (UUID), workspace-relative **`skillPath`** ending in **`/SKILL.md`**, **`name`**, dispatch-unique **`slug`**, **`description`**, and **`inputs`** (object — use `{}` only when the skill allows no required keys). |
 | 4 | Optional keys only when needed: **`warmUpRules`** (repo-relative paths merged with skill frontmatter), **`laneRules`** (ordered paths per § *Definitive `laneRules`* above when not fully declared in skill frontmatter), **`initiatingPrompt`** (handover prose). |
@@ -411,4 +412,4 @@ When you add, rename, or remove a protocol branch under `missions/plan-and-deliv
 - **Location:** `missions/plan-and-deliver/scripts/` (paths in skills and rule **20** are workspace-root relative from the hosting repo that contains **`.sedea/`** — see that repo’s **`.cursor/rules/`** for hosting-repo specifics).
 - **Runtime:** **Node / Python bundled with Sedea / VS Code** — see [`.sedea/centers/research-and-development/rules/31_operations-user-id.mdc`](../../../rules/31_operations-user-id.mdc) § *Hosting repo cwd (scripts)* and the hosting repo **`.cursor/rules/`**.
 - **Vendor trees:** do not treat `scripts/**/node_modules/` or other installed dependencies as protocol documentation (center governance ends at `SKILL.md`, rules, and mission plans).
-- **`verify-skill-manifest.mjs`** — compares **`center.yaml`** `skillEntries` to on-disk `SKILL.md` files; validates frontmatter YAML; lints **`warmUpRules`** / **`laneRules`** table ↔ frontmatter parity on spawned plan-and-deliver skills; enforces spawn preflight row **11** definitive **`laneRules`** for **`author-prd`**, **`planner`**, and **`coding-session`** (exit 0 = match + parity).
+- **`verify-skill-manifest.mjs`** — compares **`center.yaml`** `skillEntries` to on-disk `SKILL.md` files; validates frontmatter YAML; lints **`warmUpRules`** / **`laneRules`** table ↔ frontmatter parity on spawned plan-and-deliver skills; enforces spawn preflight row **11** definitive **`laneRules`** for **`author-prd`**, **`planner`**, and **`coding-session`**; lints **`AGENT_RUN_REQUEST_V1`** spawn examples on planner skills (R&D + Sedea maintenance copies) so string-typed **`inputs.parent`** never uses JSON **`null`** — wire encoding must be **`"parent":"null"`** (exit 0 = match + parity + spawn wire lint).

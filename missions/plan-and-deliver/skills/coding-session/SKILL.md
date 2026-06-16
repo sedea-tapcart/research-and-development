@@ -1188,12 +1188,14 @@ When inline **`create-pr`** completes with a PR URL/number (or the developer ret
 1. Recap: `prUrl`, `prNumber`, `prState`, `reviewState`, and §7 **`### After deploy`** unchecked count when plan-anchored.
 2. Use **one** **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** (`modalTitle`: *Coding session — PR opened, next step*). Required options **in this order**:
 
+**Post-PR handoff (binding):** **`create-pr`** opens the PR only. This gate is the mandatory resume point for the ship chain. Generic **`gh`** PR inspection, review summaries, or status checks are **not** substitutes for inline **`pr-review`** when the developer picks **`start-pr-review`** — the lane must load **`pr-review/SKILL.md`** and run **`pr-review.py`** Step 1 before offering generic review/wait/merge continuation.
+
 | Option id | Label (brief) | Agent action |
 |-----------|---------------|--------------|
 | `start-pr-review-delegate-merge` | Start PR review — agent approve + merge when clean | Set `outputs.mergeDelegationAuthorized: true`; run [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) on **next** turn; when **`mergeDelegationReady`**, open [Pre-merge authorization gate](#pre-merge-authorization-gate) |
 | `start-pr-review` | Start inline PR review only | Run [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) on **next** turn — **you** merge on GitHub when ready |
 | `reconcile-github-only` | Reconcile GitHub only (Step 5) | Run **`pr-review`** Step 5 only — when triage already ran and push landed without reconciliation |
-| `submit-manual-review` | Submit manual review on GitHub | [Manual review submission (external-wait)](#manual-review-submission-external-wait) — park; developer submits Approve / Comment / Request changes on GitHub |
+| `submit-manual-review` | Submit manual review on GitHub | [Manual review submission (external-wait)](#manual-review-submission-external-wait) — open structured choice; developer submits Approve / Comment / Request changes on GitHub |
 | `check-pr-status` | Check PR merge status | Refresh `prState` / `mergeSha` / `mergedAt` via `gh` or repo tooling; re-open this gate |
 | `rebase-onto-main` | Rebase onto origin/main | On **next** turn, [Rebase onto origin/main after PR creation](#rebase-onto-origin-main-after-pr-creation) |
 | `spawn-after-deploy-walk` | PR merged — start After deploy deploy-walk | On **next** turn, [After deploy deploy-walk handoff](#after-deploy-deploy-walk-handoff) when merge confirmed |
@@ -1218,8 +1220,8 @@ Run on the **developer's response turn** — **not** in the same assistant turn 
 
 | Pick | Actions |
 |------|---------|
-| **`start-pr-review-delegate-merge`** | Set `outputs.mergeDelegationAuthorized: true`; [Inline PR review after PR creation](#inline-pr-review-after-pr-creation); when **`mergeDelegationReady`**, open [Pre-merge authorization gate](#pre-merge-authorization-gate) on **next** turn |
-| **`start-pr-review`** | [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) |
+| **`start-pr-review-delegate-merge`** | Set `outputs.mergeDelegationAuthorized: true`; [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) on **next** turn — **Step 1 `pr-review.py` collect first**; when **`mergeDelegationReady`**, open [Pre-merge authorization gate](#pre-merge-authorization-gate) |
+| **`start-pr-review`** | [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) on **next** turn — **Step 1 `pr-review.py` collect first** |
 | **`reconcile-github-only`** | Run **`pr-review`** Step 5 only (§ *Post-fix push — Step 5 same turn*); then re-open this gate or pre-merge gate when **`githubReconciliationStatus: complete`** |
 | **`submit-manual-review`** | [Manual review submission (external-wait)](#manual-review-submission-external-wait) |
 | **`check-pr-status`** | Query PR state; update `outputs`; when **`merged`**, run [Post-merge workspace cleanup](#post-merge-workspace-cleanup) **auto-apply** on **next** turn |
@@ -1232,10 +1234,10 @@ Run on the **developer's response turn** — **not** in the same assistant turn 
 
 Run when the developer picks **`submit-manual-review`** at [Post-create-pr handoff gate](#post-create-pr-handoff-gate), at **`pr-review`** Step **3b** disposition gate, or when they choose to submit their own GitHub review before further agent triage or merge.
 
-**Purpose:** Park while the developer submits their own pull request review on GitHub (Approve, Comment, or Request changes) — without forcing agent triage or delegate-merge paths.
+**Purpose:** Open structured choice naming **`manual-review-done-check-status`** and **`start-pr-review`** while the developer submits their own pull request review on GitHub (Approve, Comment, or Request changes) — without forcing agent triage or delegate-merge paths.
 
 1. Recap: `prUrl`, `prNumber`, current `reviewState` / latest `pull-reviews` summary when available.
-2. Emit **`MC_PHASED_RESPONSE_V1`** (`modalTitle`: *Coding session — submit manual review*) with **`display.markdown`** stating the developer may submit a review on GitHub (PR link) or via `gh pr review` locally. **Park** — no agent triage, GitHub reconciliation, or merge on this turn.
+2. Emit **`MC_PHASED_RESPONSE_V1`** (`modalTitle`: *Coding session — submit manual review*) with **`display.markdown`** stating the developer may submit a review on GitHub (PR link) or via `gh pr review` locally. **Next-step modal only** — no agent triage, GitHub reconciliation, or merge on this turn.
 3. **Resume modal** on the **developer's response turn** (`modalTitle`: *Coding session — manual review submitted?*):
 
 | Option id | Label (brief) | Agent action |
@@ -1559,7 +1561,14 @@ If any precondition fails, report one line what is missing; offer defer or compl
 
 ### Inline PR review after PR creation
 
-Run only after the developer chooses **`start-pr-review`** at [Post-create-pr handoff gate](#post-create-pr-handoff-gate) (or an explicit *triage PR comments* message on this lane with a known `prUrl`). Do **not** auto-start immediately when inline **`create-pr`** completes unless the developer already picked **`start-pr-review`** on the prior turn.
+Run only after the developer chooses **`start-pr-review`** or **`start-pr-review-delegate-merge`** at [Post-create-pr handoff gate](#post-create-pr-handoff-gate) (or an explicit *triage PR comments* message on this lane with a known `prUrl`). Do **not** auto-start immediately when inline **`create-pr`** completes unless the developer already picked **`start-pr-review`** on the prior turn.
+
+**First-action invariant (binding):** On the **Act** turn after **`start-pr-review`** or **`start-pr-review-delegate-merge`**, the agent **must**:
+
+1. **Read** [pr-review/SKILL.md](../pr-review/SKILL.md) (or confirm it is already loaded this pass).
+2. Run **`pr-review`** **Step 1** — the **`pr-review.py`** collection array from **`HOSTING_ROOT`** — as the **first GitHub-touching shell** in that turn.
+
+**Forbidden:** generic `gh pr view --json reviews,comments`, `gh api`, or GraphQL substitutes before Step 1; prose *review the PR on GitHub* without opening the post-create-pr or disposition gate; external-wait / next-step modal that skips Step 1 when triage was requested.
 
 Inline `pr-review` inputs come from coding-session state:
 

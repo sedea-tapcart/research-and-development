@@ -25,7 +25,10 @@ inputs:
     required: true
   parent:
     type: string
-    description: Parent plan slug/path, or null for a root delivery Master Plan (default).
+    description: >-
+      Parent plan slug, @path, or absolute plan path. For a root delivery Master Plan
+      (no parent), emit spawn wire value `"null"` (JSON string) — never JSON null.
+      Semantic absence is `Parent: null` in the seed block; sidecar uses YAML `parent: null`.
     required: true
   related:
     type: array
@@ -108,10 +111,20 @@ The **Squad Leader** must pass **`inputs`** keys that match this skill’s front
 | `seedBlock` | yes | Full compiled seed block text |
 | `featurePlanningTitle` | yes | Human title — **not** `featurePlanning` |
 | `prdRef` | yes | Readable PRD URL, `@path`, or absolute path |
-| `parent` | yes | Parent slug, `@path`, plan path, or `null` |
+| `parent` | yes | Parent slug, `@path`, or absolute plan path. When §4 seed has **`Parent: null`**, emit **`"parent": "null"`** (string sentinel) in spawn JSON — **not** JSON `null`. |
 | `related` | no | Array; use `[]` when §4 has no related docs |
 
-**Valid example (illustrative — replace UUID, paths, and seed text):**
+### Wire encoding — nullable `parent` (binding)
+
+| Layer | Root delivery (no parent) | Non-null parent |
+|-------|---------------------------|-----------------|
+| §4 seed block | `Parent: null` (semantic) | `Parent: <slug>` or `@path` |
+| Spawn `inputs.parent` | **`"null"`** (JSON **string**) | slug, `@path`, or absolute plan path |
+| Sidecar `.state.yaml` | YAML `parent: null` (unquoted) | `parent: <slug>` |
+
+**Forbidden in spawn JSON:** `"parent": null` (JSON null) — Mission Control validates against frontmatter **`type: string`** and rejects the spawn.
+
+**Valid example (normative wire shape — replace UUID, paths, and seed text):**
 
 ```text
 AGENT_RUN_REQUEST_V1 {"version":1,"correlationId":"00000000-0000-4000-8000-000000000001","skillPath":".sedea/centers/research-and-development/missions/plan-and-deliver/skills/planner/SKILL.md","name":"Planner","slug":"planner-harden-spawn-example","description":"Draft Master Plan from PRD seed","inputs":{"seedBlock":"Feature planning: \"Example feature\"\nPRD: @/path/to/example.prd.md\nParent: null","featurePlanningTitle":"Example feature","prdRef":"/path/to/example.prd.md","parent":"null","related":[]}}

@@ -1,22 +1,28 @@
 ---
 description: >-
   Log-first debug and fix in a dedicated worktree; after verified fix, code
-  promotion runs Ad-Hoc PRD then coding-session, or findings report only.
+  promotion creates a PR plan before coding-session, or the developer can choose
+  Ad-Hoc PRD or findings report only.
 alwaysApply: false
 ---
 
 # Mission plan
 
-**Execution model:** Squad Leader orchestrates stages on separate agent lanes. Stage I (**debug-and-fix**) is always spawned. After a verified fix, the developer picks **code promotion** (sequential **`ad-hoc-prd`** → **`coding-session`**) or **findings report only** (no downstream spawn). When the fix is not verified or blocked, the Squad Leader produces a **Debug session findings report** before dispatch resolution. Reuse **`ad-hoc-prd`** and **`coding-session`** from plan-and-deliver; do not duplicate ship-chain steps in this mission.
+**Execution model:** Squad Leader orchestrates stages on separate agent lanes. Stage I (**debug-and-fix**) is always spawned. After a verified fix, the developer picks **code promotion** (**`new-plan`** with **`pr-plan`** population, then **`coding-session`** with `targetPlanPath`), **Ad-Hoc PRD only**, or **findings report only**. When the fix is not verified or blocked, the Squad Leader produces a **Debug session findings report** before dispatch resolution. Reuse plan-and-deliver planning and ship skills; do not duplicate ship-chain steps in this mission.
 
 ## Objectives
 
 1. **Log-first diagnosis** — Bootstrap a debug worktree, prioritize log access and debug instrumentation before substantive code analysis.
 2. **Fix loop** — Propose fixes with test scenarios; apply on developer approval; run automated tests and guided manual verification; loop on failure until fixed or blocked.
 3. **Post-fix routing** — After a verified fix, the developer selects **exactly one** exit:
-   - **Code promotion** — spawn **`ad-hoc-prd`** (capture fix context), then spawn **`coding-session`** ship chain on the debug worktree.
-   - **Findings report only** — no **`ad-hoc-prd`**, no **`coding-session`**; Squad Leader produces a **Debug session findings report** from child outputs.
+   - **Code promotion** — create a plan anchor (**`new-plan`** plus **`pr-plan`**) before spawning **`coding-session`** on the debug worktree, so deploy tests and additional written tests have a PR plan to update.
+   - **Ad-Hoc PRD only** — spawn **`ad-hoc-prd`** to capture fix context without starting code promotion.
+   - **Findings report only** — no planning, no **`coding-session`**; Squad Leader produces a **Debug session findings report** from child outputs.
 4. **Reuse plan-and-deliver** — Downstream delivery delegates to existing R&D skills; this mission owns debug orchestration only.
+
+### Ship chain inheritance (binding)
+
+**Code promotion** delegates ship execution to plan-and-deliver **`coding-session`** — this mission does **not** duplicate ship-chain or review-cycle procedure. After PR creation on that path, the same inline **`pr-review`** / **`pr-review.py`** boundary applies per [plan-and-deliver/plan.mdc § Post-PR handoff](../plan-and-deliver/plan.mdc). Load [plan-and-deliver `pr-review/SKILL.md`](../plan-and-deliver/skills/pr-review/SKILL.md) from **`coding-session`** [Post-create-pr handoff gate](../plan-and-deliver/skills/coding-session/SKILL.md#post-create-pr-handoff-gate) — do not substitute generic **`gh`** PR inspection.
 
 ## Protocol
 
@@ -27,9 +33,11 @@ flowchart TD
   C --> D{Fix verified?}
   D -->|no / blocked| F[Debug session findings report]
   D -->|yes| E{Post-fix exit}
-  E -->|Code promotion| G[Spawn ad-hoc-prd]
-  G --> H[Spawn coding-session]
+  E -->|Code promotion| G[Spawn new-plan + pr-plan]
+  G --> H[Spawn coding-session with targetPlanPath]
   H --> I[Dispatch resolution]
+  E -->|Ad-Hoc PRD only| J[Spawn ad-hoc-prd]
+  J --> I
   E -->|Findings report only| F
   F --> I
 ```
@@ -73,7 +81,7 @@ flowchart TD
   - `inputs` — validated fields above.
   - `warmUpRules` — skill frontmatter defaults plus mission context paths when needed.
   - `initiatingPrompt` — protocol step, symptom, and any user decisions from step 2.
-- `expected output`: Child **`AGENT_RESULT_RESPONSE_V1`** with `outputs.fixStatus`, `outputs.worktreePath`, `outputs.worktreeName`, `outputs.hostingRoot`, `outputs.exitRecommendation` (`code-promotion` | `findings-report-only` | `blocked`), `outputs.fixSummary`, `outputs.testEvidence`.
+- `expected output`: Child **`AGENT_RESULT_RESPONSE_V1`** with `outputs.fixStatus`, `outputs.worktreePath`, `outputs.worktreeName`, `outputs.hostingRoot`, `outputs.exitRecommendation` (`code-promotion` | `ad-hoc-prd` | `findings-report-only` | `blocked`), `outputs.fixSummary`, `outputs.testEvidence`.
 - `next-step resolution`: On `fixStatus: verified`, continue to step 4. On `blocked` or `failed`, continue to step 6 (debug session findings report). On `partial`, structured choice — retry debug or abandon.
 - **Agent session closure**: Child emits one parseable **`AGENT_RESULT_RESPONSE_V1`** line per skill **`## Completion (spawned)`**. Squad Leader waits for host delivery before continuing.
 - **Dispatch resolution**: Remains Squad Leader responsibility — child does not emit **`MC_DISPATCH_RESOLVED_V1`**.
@@ -82,41 +90,57 @@ flowchart TD
 
 - `type`: Branching logic.
 - `intent`: Developer picks **exactly one** post-fix path when `outputs.fixStatus` is `verified`.
-- `inputs`: Child `outputs.exitRecommendation`, `outputs.fixSummary`, `outputs.worktreePath`, `outputs.worktreeName`, `outputs.hostingRoot`.
-- `expected output`: Exit label `code-promotion` or `findings-report-only`.
+- `inputs`: Child `outputs.exitRecommendation`, `outputs.fixSummary`, `outputs.testEvidence`, `outputs.worktreePath`, `outputs.worktreeName`, `outputs.hostingRoot`.
+- `expected output`: Exit label `code-promotion`, `ad-hoc-prd`, or `findings-report-only`.
 - `next-step resolution`:
   - `code-promotion` → step 5.
+  - `ad-hoc-prd` → step 5c.
   - `findings-report-only` → step 6.
 - `branch predicates`:
   - Developer selects code promotion → step 5 (even when recommendation differs — developer override allowed with structured choice).
+  - Developer selects Ad-Hoc PRD only → step 5c.
   - Developer selects findings report only → step 6.
 - `default/fallback behavior`: Present **`exitRecommendation`** as the suggested default in modal labels; require explicit pick — one path mandatory.
 
-### 5. Create Ad-Hoc PRD (spawned skill — code-promotion path only)
+### 5. Create PR plan anchor (spawned planning handoff — code-promotion path only)
 
 - `type`: Agent engagement and handover.
 - `execution`: spawned.
-- `intent`: Capture fix context as Ad-Hoc PRD before code promotion on the debug worktree.
-- `target agent role`: Ad-Hoc PRD creator (plan-and-deliver).
-- `assigned skill`: [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/ad-hoc-prd/SKILL.md`](../plan-and-deliver/skills/ad-hoc-prd/SKILL.md).
-- `inputs`: `createIntent: true`, `title` from fix summary, `details` from child `outputs.fixSummary`, `operationsUserId`, optional `sourceSummary` referencing debug dispatch.
-- `spawn run-request fields`: `inputs`, `warmUpRules` per target skill frontmatter, `initiatingPrompt` with debug handover.
-- `expected output`: Child terminal with `outputs.adHocPrdPath`, `outputs.developerApprovedPrd` after PRD approval flow inside skill.
-- `next-step resolution`: Continue to step 5b after child terminal and PRD approval inside skill.
+- `intent`: Create the PR plan anchor required before code promotion, so `coding-session` receives `targetPlanPath` and can update deploy-test and written-test sections during ship.
+- `target agent role`: Debug promotion planning agent (plan-and-deliver).
+- `assigned skill`: [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/new-plan/SKILL.md`](../plan-and-deliver/skills/new-plan/SKILL.md), followed by **`pr-plan`** population per [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-plan/SKILL.md`](../plan-and-deliver/skills/pr-plan/SKILL.md).
+- `inputs`: `mode: "standalone"`, `requestedPlanKind: "pr-plan"`, `upstreamSkill: "debug-and-fix"`, `operationsUserId`, and a debug handover seed containing child `outputs.fixSummary`, `outputs.testEvidence`, `outputs.worktreePath`, `outputs.worktreeName`, and `outputs.hostingRoot`. Root plan parent is resolved inside **`new-plan`** (sidecar **`parent: null`**) — **`new-plan`** frontmatter has no `parent` spawn key. When this step spawns a skill whose frontmatter declares **`parent`** as **`type: string`** (for example **`planner`** on other paths), emit **`"parent": "null"`** in spawn JSON for standalone root plans — **never** JSON `null`. See **`plan-and-deliver/skills/README.md`** § *Universal spawn preflight* row **1b**.
+- `spawn run-request fields`: `inputs`, `warmUpRules` per target skill frontmatter, `laneRules` when required by the planning skill manifest, and `initiatingPrompt` with debug handover plus the approved post-fix exit.
+- `pr-plan standalone exception`: Debug fixes do not necessarily originate from an approved parent **`### PR list`**. This mission explicitly permits a standalone **`pr-plan`** population handoff after **`new-plan`** creates the target plan; the handoff must pass `targetPlanPath`, `targetPlanSlug`, and the debug handover seed. If **`pr-plan`** cannot populate without parent topology, stop and use structured choice to revise the plan anchor, create the missing parent planning context, or switch exits — do not spawn **`coding-session`** without a PR plan.
+- `expected output`: Child terminal or aggregate output with `outputs.targetPlanPath`, `outputs.targetPlanSlug`, `outputs.readyForImplementation: true`, and any `outputs.remainingTasks` from **`new-plan`** / **`pr-plan`**.
+- `next-step resolution`: Continue to step 5b only after a readable PR plan path/slug exists and the PR plan is approved as ready for implementation. If the planning child reports unresolved plan target, missing parent topology that blocks standalone population, or approval gaps, close with structured choice to revise planning, retry, or switch exits.
 - **Agent session closure** and **Dispatch resolution**: Same as step 3 — child terminal only; Squad Leader continues protocol.
 
 ### 5b. Code promotion (spawned skill)
 
 - `type`: Agent engagement and handover.
 - `execution`: spawned.
-- `intent`: Run plan-and-deliver ship chain from an already-modified debug worktree after Ad-Hoc PRD.
+- `intent`: Run plan-and-deliver ship chain from an already-modified debug worktree after PR plan creation.
 - `target agent role`: Coding session agent (plan-and-deliver).
 - `assigned skill`: [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`](../plan-and-deliver/skills/coding-session/SKILL.md).
-- `inputs`: `repoPath` / `outputs.hostingRoot`, existing `outputs.worktreePath` and `outputs.worktreeName` from debug child (worktree already created and modified), `developerApprovedImplementation: true`, `upstreamSkill: debug-and-fix`, optional `targetPlanPath` when plan-anchored (usually omitted for debug-only fixes), optional `adHocPrdPath` from step 5 child outputs.
-- `spawn run-request fields`: `inputs`, `initiatingPrompt` — state that implementation is complete; ship chain starts at cut-point / commit per **`coding-session`** authority.
+- `inputs`: `repoPath` / `outputs.hostingRoot`, existing `outputs.worktreePath` and `outputs.worktreeName` from debug child (worktree already created and modified), `developerApprovedImplementation: true`, `upstreamSkill: debug-and-fix`, required `targetPlanPath` and `targetPlanSlug` from step 5, plus `planningHandoffMode: "sections-1-4-complete"` and `planningHandoffApproved: true` when supplied by the **`pr-plan`** handoff.
+- `spawn run-request fields`: `inputs`, `laneRules` / `warmUpRules` per **`coding-session`** frontmatter, and `initiatingPrompt` — state that implementation is complete on the debug worktree and ship chain starts at cut-point / commit per **`coding-session`** authority.
 - `expected output`: Child terminal after ship chain milestones per **`coding-session`** **`## Completion (spawned)`** / inline ship skills.
-- `next-step resolution`: Continue to step 7 after child terminal or when developer parks external review per skill gates.
+- `next-step resolution`: Continue to step 7 after child terminal or when developer selects an external-wait resume option per skill gates.
 - **Note:** Ship steps (commit, deploy-walk, pre-pr-review, create-pr, pr-review, post-merge cleanup, plan-reconcile) are **owned by `coding-session`** — do not duplicate procedure here. For **tapcart-push** and **tapcart-merchant-dashboard**, **`create-pr`** uses **outsider handoff** (no Sedea `gh pr create`) per **`create-pr/SKILL.md`** § *Outsider repos*.
+
+### 5c. Create Ad-Hoc PRD (spawned skill — Ad-Hoc PRD path only)
+
+- `type`: Agent engagement and handover.
+- `execution`: spawned.
+- `intent`: Capture fix context as an Ad-Hoc PRD when the developer wants product-context documentation instead of immediate code promotion.
+- `target agent role`: Ad-Hoc PRD creator (plan-and-deliver).
+- `assigned skill`: [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/ad-hoc-prd/SKILL.md`](../plan-and-deliver/skills/ad-hoc-prd/SKILL.md).
+- `inputs`: `createIntent: true`, `title` from fix summary, `details` from child `outputs.fixSummary`, `operationsUserId`, optional `sourceSummary` referencing debug dispatch and test evidence.
+- `spawn run-request fields`: `inputs`, `warmUpRules` per target skill frontmatter, `initiatingPrompt` with debug handover and the selected Ad-Hoc PRD-only exit.
+- `expected output`: Child terminal with `outputs.adHocPrdPath`, `outputs.developerApprovedPrd` after PRD approval flow inside skill.
+- `next-step resolution`: Continue to step 7 after child terminal; do not spawn **`coding-session`** from this branch unless the developer later selects code promotion and step 5 creates a PR plan anchor.
+- **Agent session closure** and **Dispatch resolution**: Same as step 3 — child terminal only; Squad Leader continues protocol.
 
 ### 6. Debug session findings report
 
@@ -131,7 +155,7 @@ flowchart TD
 
 - `type`: Finish/stop logic.
 - `intent`: Propose dispatch closure after findings report or code-promotion chain completes.
-- `inputs`: All child terminal outputs, selected exit path, findings report from step 6 when applicable, any parked external-wait state.
+- `inputs`: All child terminal outputs, selected exit path, findings report from step 6 when applicable, any external-wait resume selection state.
 - `expected output`: Squad Leader recap and **`MC_DISPATCH_RESOLVED_V1`** when user signals done.
 - `next-step resolution`: Terminal when user accepts resolution or continues from resolution card per [`.sedea/centers/sedea/rules/4_mission.mdc`](.sedea/centers/sedea/rules/4_mission.mdc) § *Dispatch resolution*.
 - `terminal vs resumable`: **`resolved`** when code-promotion chain completed or findings report delivered; **`partial`** when fix verified but ship pending external action; **`aborted`** / **`abandoned`** on user stop or unrecoverable block.
