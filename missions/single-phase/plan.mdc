@@ -86,6 +86,8 @@ flowchart TB
 
 **Child spawns:** Reuse **`plan-and-deliver`** skill **`SKILL.md`** files; follow **`missions/plan-and-deliver/skills/README.md`** § *Definitive `laneRules`* per role **except** §3 uses **`ad-hoc-prd`** (not **`author-prd`**) and spawn **`warmUpRules`** must reference **`single-phase/plan.mdc`** instead of **`plan-and-deliver/plan.mdc`** where the skill default lists the latter.
 
+**Dispatch display refresh (Squad Leader).** When dispatch scope is readable (opening command phrase or scope remainder from the opening message), call MCP **`mission_control_update_dispatch_display`** with non-empty **`dispatchTitle`** (≤64 chars) and optional **`dispatchDescription`** / **`dispatchHoverDescription`** (≤512 chars). **Skip** when current dispatch chrome already matches. **Forbidden:** **`mission_control_update_lane_display`** to relabel **child** slots from the leader lane; hand-editing **`dispatch-tab.v1.json`**. See [`.sedea/centers/sedea/rules/9_display-metadata-authority.mdc`](.sedea/centers/sedea/rules/9_display-metadata-authority.mdc).
+
 ## Protocol
 
 ### 1. Infer intent from the opening command phrase
@@ -99,8 +101,9 @@ flowchart TB
 **Procedure**
 
 1. Match **`plan and deliver a single phase`** case-insensitively (only command phrase for this mission).
-2. Strip the phrase; pass remainder as optional scope hint to §2.
-3. Continue to §2.
+2. When dispatch scope is readable from the opening message (command remainder), run **Dispatch display refresh** (above) — **skip** when current dispatch chrome already matches.
+3. Strip the phrase; pass remainder as optional scope hint to §2.
+4. Continue to §2.
 
 ### 2. Collect ad-hoc scope intake
 
@@ -115,7 +118,8 @@ flowchart TB
 1. Collect **change-request description** (`details`) — required; do not infer from title alone.
 2. Collect optional **title**, **supporting paths/URLs**, or explicit **no sources yet**.
 3. Present intake summary; structured choice to proceed to Ad-Hoc PRD, revise, or pause.
-4. **Forbidden:** spawn before `details` confirmed.
+4. When intake confirms a **title** that improves the dispatch title, re-run **Dispatch display refresh** (§ above) — **skip** when current dispatch chrome already matches.
+5. **Forbidden:** spawn before `details` confirmed.
 
 ### 3. Ad-Hoc PRD via agent
 

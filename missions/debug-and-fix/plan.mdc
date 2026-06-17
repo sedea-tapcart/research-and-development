@@ -24,6 +24,8 @@ alwaysApply: false
 
 **Code promotion** delegates ship execution to plan-and-deliver **`coding-session`** — this mission does **not** duplicate ship-chain or review-cycle procedure. After PR creation on that path, the same inline **`pr-review`** / **`pr-review.py`** boundary applies per [plan-and-deliver/plan.mdc § Post-PR handoff](../plan-and-deliver/plan.mdc). Load [plan-and-deliver `pr-review/SKILL.md`](../plan-and-deliver/skills/pr-review/SKILL.md) from **`coding-session`** [Post-create-pr handoff gate](../plan-and-deliver/skills/coding-session/SKILL.md#post-create-pr-handoff-gate) — do not substitute generic **`gh`** PR inspection.
 
+**Dispatch display refresh (Squad Leader).** When dispatch scope is readable (opening command phrase or issue summary from the opening message), call MCP **`mission_control_update_dispatch_display`** with non-empty **`dispatchTitle`** (≤64 chars) and optional **`dispatchDescription`** / **`dispatchHoverDescription`** (≤512 chars). **Skip** when current dispatch chrome already matches. **Forbidden:** **`mission_control_update_lane_display`** to relabel **child** slots from the leader lane; hand-editing **`dispatch-tab.v1.json`**. See [`.sedea/centers/sedea/rules/9_display-metadata-authority.mdc`](.sedea/centers/sedea/rules/9_display-metadata-authority.mdc).
+
 ## Protocol
 
 ```mermaid
@@ -53,6 +55,10 @@ flowchart TD
   - Opening message starts with `debug and fix` (case-insensitive) → intent `debug-and-fix`.
   - Otherwise → invalid or unsupported command for this mission.
 - `default/fallback behavior`: Ask the user to confirm intent via structured choice before continuing.
+- `ordered actions`:
+  1. Match `debug and fix` case-insensitively.
+  2. When dispatch scope is readable from the opening message (command remainder), run **Dispatch display refresh** (above) — **skip** when current dispatch chrome already matches.
+  3. Continue to step 2.
 
 ### 2. Collect issue context
 
@@ -66,6 +72,7 @@ flowchart TD
   2. Treat remaining text as initial `issueSummary` when present.
   3. Collect missing **`issueSummary`** via structured choice when empty.
   4. Optionally collect **`reproductionSteps`**, **`logHints`**, and **`repoPath`** (default hosting repo root when omitted).
+  5. When **`issueSummary`** improves the dispatch title, re-run **Dispatch display refresh** (§ above) — **skip** when current dispatch chrome already matches.
 - `valid early-exit conditions`: Stop without spawn if the user declines to provide an issue summary.
 
 ### 3. Debug and fix (spawned skill)
