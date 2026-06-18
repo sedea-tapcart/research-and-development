@@ -1196,6 +1196,7 @@ When inline **`create-pr`** completes with a PR URL/number (or the developer ret
 | `start-pr-review` | Start inline PR review only | Run [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) on **next** turn — **you** merge on GitHub when ready |
 | `reconcile-github-only` | Reconcile GitHub only (Step 5) | Run **`pr-review`** Step 5 only — when triage already ran and push landed without reconciliation |
 | `submit-manual-review` | Submit manual review on GitHub | [Manual review submission (external-wait)](#manual-review-submission-external-wait) — open structured choice; developer submits Approve / Comment / Request changes on GitHub |
+| `capture-team-feedback` | Capture team-member feedback (offline) | [Team member feedback (external-wait)](#team-member-feedback-external-wait) — teammates review outside GitHub; developer pastes bullets on resume |
 | `check-pr-status` | Check PR merge status | Refresh `prState` / `mergeSha` / `mergedAt` via `gh` or repo tooling; re-open this gate |
 | `rebase-onto-main` | Rebase onto origin/main | On **next** turn, [Rebase onto origin/main after PR creation](#rebase-onto-origin-main-after-pr-creation) |
 | `spawn-after-deploy-walk` | PR merged — start After deploy deploy-walk | On **next** turn, [After deploy deploy-walk handoff](#after-deploy-deploy-walk-handoff) when merge confirmed |
@@ -1211,7 +1212,7 @@ When inline **`create-pr`** completes with a PR URL/number (or the developer ret
 
 ```
 MC_PHASED_RESPONSE_V1
-{"version":1,"display":{"markdown":"<recap>"},"askQuestion":{"modalTitle":"Coding session — PR opened, next step","questions":[{"id":"post-create-pr","prompt":"What should we do next with this PR?","allowMultiple":false,"options":[{"id":"start-pr-review-delegate-merge","label":"Start PR review — agent approve + merge when clean"},{"id":"start-pr-review","label":"Start inline PR review only (I merge on GitHub)"},{"id":"reconcile-github-only","label":"Reconcile GitHub only (Step 5 — triage already done)"},{"id":"submit-manual-review","label":"Submit manual review on GitHub"},{"id":"check-pr-status","label":"Check PR merge status"},{"id":"rebase-onto-main","label":"Rebase onto origin/main"},{"id":"spawn-after-deploy-walk","label":"PR merged — start After deploy deploy-walk"},{"id":"defer-ship","label":"Defer next ship step"},{"id":"more-details","label":"More details for option _"}]}]}}
+{"version":1,"display":{"markdown":"<recap>"},"askQuestion":{"modalTitle":"Coding session — PR opened, next step","questions":[{"id":"post-create-pr","prompt":"What should we do next with this PR?","allowMultiple":false,"options":[{"id":"start-pr-review-delegate-merge","label":"Start PR review — agent approve + merge when clean"},{"id":"start-pr-review","label":"Start inline PR review only (I merge on GitHub)"},{"id":"reconcile-github-only","label":"Reconcile GitHub only (Step 5 — triage already done)"},{"id":"submit-manual-review","label":"Submit manual review on GitHub"},{"id":"capture-team-feedback","label":"Capture team-member feedback (offline — push or dashboard PR)"},{"id":"check-pr-status","label":"Check PR merge status"},{"id":"rebase-onto-main","label":"Rebase onto origin/main"},{"id":"spawn-after-deploy-walk","label":"PR merged — start After deploy deploy-walk"},{"id":"defer-ship","label":"Defer next ship step"},{"id":"more-details","label":"More details for option _"}]}]}}
 ```
 
 ### Act after post-create-pr pick
@@ -1224,6 +1225,7 @@ Run on the **developer's response turn** — **not** in the same assistant turn 
 | **`start-pr-review`** | [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) on **next** turn — **Step 1 `pr-review.py` collect first** |
 | **`reconcile-github-only`** | Run **`pr-review`** Step 5 only (§ *Post-fix push — Step 5 same turn*); then re-open this gate or pre-merge gate when **`githubReconciliationStatus: complete`** |
 | **`submit-manual-review`** | [Manual review submission (external-wait)](#manual-review-submission-external-wait) |
+| **`capture-team-feedback`** | [Team member feedback (external-wait)](#team-member-feedback-external-wait) |
 | **`check-pr-status`** | Query PR state; update `outputs`; when **`merged`**, run [Post-merge workspace cleanup](#post-merge-workspace-cleanup) **auto-apply** on **next** turn |
 | **`rebase-onto-main`** | [Rebase onto origin/main after PR creation](#rebase-onto-origin-main-after-pr-creation) |
 | **`spawn-after-deploy-walk`** | When merge confirmed: [Post-merge workspace cleanup](#post-merge-workspace-cleanup) **auto-apply** on **next** turn, then [After deploy deploy-walk handoff](#after-deploy-deploy-walk-handoff) after cleanup completes or is skipped |
@@ -1261,6 +1263,35 @@ Run when the developer picks **`submit-manual-review`** at [Post-create-pr hando
 **Forbidden:** prose *review on GitHub and tell me when*; running `gh pr review --approve` or `--request-changes` without the developer naming review type and body in the **same message** after **`more-details`** or an explicit assisted-review request.
 
 **Agent-assisted submission (optional):** When the developer picks **`more-details`** and names Approve / Comment / Request changes with body text in the **same message**, run `gh pr review` with the matching flags on the **next** turn only — then re-open [Post-create-pr handoff gate](#post-create-pr-handoff-gate) after success.
+
+### Team member feedback (external-wait)
+
+Run when the developer picks **`capture-team-feedback`** at [Post-create-pr handoff gate](#post-create-pr-handoff-gate), at **`pr-review`** Step **3b** disposition gate, or when they need to incorporate **offline** teammate review before GitHub triage or merge.
+
+**Purpose:** Capture feedback from teammates who review the PR **outside GitHub** (Slack, design review, screenshots, pairing) — especially **visual/UX** on **`tapcart-merchant-dashboard`** and code feedback on **`tapcart-push`** or **`tapcart-merchant-dashboard`** outsider PRs. Distinct from **`submit-manual-review`** (the **developer** submits their own GitHub Approve / Comment / Request changes).
+
+**Outsider repos (`tapcart-push`, `tapcart-merchant-dashboard`):** Recap **`repoPath`** / submodule name and `prUrl` when known. **Forbidden:** `gh pr merge`, `gh pr review --approve`, or agent-initiated merge on outsider repos — unchanged from [Post-pr-review merge approval gate](#post-pr-review-merge-approval-gate) § *Outsider repos*.
+
+1. Recap: `prUrl`, `prNumber`, active **`WORKTREE_ROOT`** repo (`tapcart-push` vs `tapcart-merchant-dashboard` vs hosting root), and that teammates may review offline while the modal stays open.
+2. Emit **`MC_PHASED_RESPONSE_V1`** (`modalTitle`: *Coding session — team member feedback*) with **`display.markdown`** stating teammates may review the PR diff, staging, or screenshots outside chat. **Next-step modal only** — no code edits, disposition, or merge on this turn.
+3. **Resume modal** on the **developer's response turn** (`modalTitle`: *Coding session — team feedback ready?*):
+
+| Option id | Label (brief) | Agent action |
+|-----------|---------------|--------------|
+| `team-feedback-ready` | Team feedback ready — paste in chat | Developer pastes teammate bullets in the **same** or **next** message; on **next** agent turn, classify each bullet (Must / Should / Skipped / follow-up) in recap and open disposition gate (below) |
+| `start-pr-review` | Skip offline — triage GitHub comments | [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) — Step 1 `pr-review.py` collect first |
+| `defer-ship` | Defer next ship step | `continuationStatus: active` |
+| `merged-pr-proceed` | PR merged — proceed with cleanup | When `prUrl` / `prNumber` known — same Act as [Post-create-pr handoff gate](#post-create-pr-handoff-gate) **`spawn-after-deploy-walk`** path after merge verify |
+| `more-details` | More details for option _ | Elaborate; re-open resume modal |
+
+**Act after `team-feedback-ready`** — run on the **developer's response turn** after pasted bullets (numbered list preferred):
+
+1. Print each teammate bullet quoted; assign **Must fix**, **Should fix**, **Skipped (no follow-up)**, or **Skipped → follow-up** (same semantics as **`pr-review`** Step 3).
+2. Compute **`mustCount`**, **`shouldCount`**, **`followUpCount`**, **`skippedOnly`** from offline bullets only — do **not** run **`pr-review.py`** Step 1 for offline items.
+3. Emit **`MC_PHASED_RESPONSE_V1`** disposition gate with the **contextual** option set from **`pr-review/SKILL.md`** Step 3b § *Build disposition options* (include **`capture-team-feedback`** again when the developer may gather another offline round).
+4. On **`apply-must`** / **`apply-must-should`** / **`follow-ups-only`** picks: apply edits under session **`WORKTREE_ROOT`**; use rule **6** commit/push gate before push; when GitHub threads also exist, optional **`start-pr-review`** afterward for `pr-review.py` collection — offline and GitHub triage may run in sequence, not merged silently.
+
+**Forbidden:** prose *ask teammates and tell me when*; treating pasted Slack bullets as GitHub review nodes for Step 5 minimize without developer approval; agent merge on outsider repos.
 
 ### Rebase onto origin/main after PR creation
 
