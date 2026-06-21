@@ -1,7 +1,8 @@
 ---
 name: planner
 description: >-
- Take a PRD and scaffold a Master Plan file under `.sedea/operations/<operationsUserId>/plans/`,
+ Take a PRD and scaffold a Master Plan file under the dispatch-scoped plans union
+ (explicit `targetPlanPath` / handover paths — do not construct `.sedea/operations/<user-id>/...`),
  pre-populated with sections 1 through 5 (Background, Benefits, Related
  features, Architectural design, Changes — including `### Decomposition
  assessment` and `### Complexity score (plan-scope signal)` under § 5) per
@@ -293,7 +294,7 @@ Don't write "from <related doc>" into the plan body — the plan reads as one co
 
 ## Step 5 — Scaffold the Master Plan file
 
-The plan file is created **before** drafting, so § 4 + § 5 land in a persistent artefact from turn one. Follow the local plan conventions under `.sedea/operations/<operationsUserId>/plans/` (frontmatter contract, slug pattern with 8-char hex suffix, sidecar with `parent:`; child plans via **`new-plan`** after **delivery-phases** or **pr-breakdown**) — but use the **Master Plan template body** from the dev-process doc, not the generic Overview/Phasing stub.
+The plan file is created **before** drafting, so § 4 + § 5 land in a persistent artefact from turn one. Follow the local plan conventions under the dispatch-scoped plans union (frontmatter contract, slug pattern with 8-char hex suffix, sidecar with `parent:`; child plans via **`new-plan`** after **delivery-phases** or **pr-breakdown**) — but use the **Master Plan template body** from the dev-process doc, not the generic Overview/Phasing stub.
 
 ### 5a — Resolve the parent
 
@@ -303,9 +304,9 @@ The seed prompt's `Parent:` line is the **primary** input — the user already c
 
 Parse the `Parent:` line. Accepted forms (case-insensitive on the keywords):
 
-- **`null`, `none`, or empty** — `parent` is `null`. Master Plan file goes under `.sedea/operations/<operationsUserId>/plans/` (or `joint/plans/` when applicable). This is the **default** for net-new **`plan and deliver`** dispatches per **development-process.md** § *Root delivery plans vs legacy Hub parent intake*.
-- **Slug** (e.g. `prior_feature_master_abc12345`) — use directly. Validate that exactly one `.sedea/operations/<operationsUserId>/plans/<slug>.plan.md` (or `joint/plans/<slug>.plan.md`) exists.
-- **`@path` or absolute path to a `.plan.md`** — extract `<slug>` from the filename (`<slug>.plan.md` → `<slug>`). Validate the file exists under the flat `plans/` tree for that operations namespace.
+- **`null`, `none`, or empty** — `parent` is `null`. Master Plan file goes under the flat `plans/` directory for the active dispatch scope (absolute path from spawn handover — see rule **31** § *Plans and docs paths*). This is the **default** for net-new **`plan and deliver`** dispatches per **development-process.md** § *Root delivery plans vs legacy Hub parent intake*.
+- **Slug** (e.g. `prior_feature_master_abc12345`) — use directly. Validate that exactly one `<plans>/<slug>.plan.md` exists at the handover-supplied or resolved absolute path.
+- **`@path` or absolute path to a `.plan.md`** — extract `<slug>` from the filename (`<slug>.plan.md` → `<slug>`). Validate the file exists under the flat `plans/` tree for the active dispatch scope.
 
 When the slot resolves cleanly, acknowledge in one line — `Parent: <slug>` or `Parent: null (root delivery plan)` — and continue to 5b. Do **not** ask the user to confirm when they already wrote `null` or a resolvable parent.
 
@@ -335,7 +336,7 @@ Do **not** offer roadmap-topic roots, `plans/roadmap-topics/`, or Hub **`top_lev
 - **Display name** for `name:` frontmatter: the PRD title (line 1 between the quotes).
 - **Slug base**: lowercase the title, replace spaces with `_` (or `-` to match sibling convention in the target folder).
 - **Slug suffix**: 8-char random hex (`crypto.randomBytes(4).toString('hex')` equivalent).
-- **Filename**: `.sedea/operations/<operationsUserId>/plans/<slug>.plan.md` (or `joint/plans/<slug>.plan.md`) — **always** the flat `plans/` directory; `parent: null` does **not** change the path.
+- **Filename**: `<plans>/<slug>.plan.md` under the active dispatch-scoped plans directory — **always** the flat `plans/` folder; `parent: null` does **not** change the path.
 - **Sidecar**: `<same-dir>/<slug>.state.yaml` with `parent: <resolved-parent-slug-or-null>`.
 
 ### 5c — Write the plan file (Master Plan template body)
@@ -411,7 +412,7 @@ Both files must be written in the same skill turn so the Plan Board picks the pl
 
 After writing, link the plan file with an absolute path so the user can click through:
 
-> Plan file: [.sedea/operations/<operationsUserId>/plans/<slug>.plan.md](file:///Users/<you>/<workspace>/.sedea/operations/<operationsUserId>/plans/<slug>.plan.md)
+> Plan file: [`<slug>.plan.md`](file:///<absolute-targetPlanPath>)
 
 ## Step 6 — Draft sections 1 through 5 into the plan file
 

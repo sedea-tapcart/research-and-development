@@ -1,9 +1,9 @@
 ---
 name: new-plan
 description: >-
- Scaffold a new `.plan.md` plus `.state.yaml` sidecar under the `.sedea/operations/`
- plan union (joint or per-user `operationsUserId` `plans/`), with required frontmatter
- (name, overview, todos, isProject) and `parent` only in the sidecar. Resolves
+ Scaffold a new `.plan.md` plus `.state.yaml` sidecar under the dispatch-scoped plans union
+ (`.sedea/operations/.../plans/` via explicit handover paths — not user-id path construction),
+ with required frontmatter (name, overview, todos, isProject) and `parent` only in the sidecar. Resolves
  parent per planning-target-resolution; confirms parent before write except on
  indexed child spawn when parent + index N are already locked by session context.
  After an indexed handoff, may run **pr-plan** inline or spawn **phase-planner**. When run inline from
@@ -68,7 +68,7 @@ warmUpRules:
 
 # New plan
 
-Scaffold a standalone `.plan.md` and `.state.yaml` under the **`.sedea/operations/`** plan union (`joint/.../plans/` or `<operationsUserId>/.../plans/` — see **Slug and filename**). On first write, frontmatter must be valid YAML and match the shape Sedea tooling expects (see **Write the plan template** and naming guidance in `.sedea/centers/research-and-development/docs/development-process.md` plus `.sedea/centers/research-and-development/rules/10_plan-naming-convention.mdc`).
+Scaffold a standalone `.plan.md` and `.state.yaml` under the **dispatch-scoped plans union** (flat `.../plans/` directory from spawn handover or resolved parent plan path — see **Slug and filename**). On first write, frontmatter must be valid YAML and match the shape Sedea tooling expects (see **Write the plan template** and naming guidance in `.sedea/centers/research-and-development/docs/development-process.md` plus `.sedea/centers/research-and-development/rules/10_plan-naming-convention.mdc`).
 
 **Resolution contract:** read `.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc` and follow it for target selection and snapshots. Resolve parents using **§ Parent derivation** below (explicit session/message → `plan-state resolve` → recent chat references).
 
@@ -182,13 +182,13 @@ Apply the shared planning open-item contract from `../README.md` § *Planning op
 
 **`N` alone with no name:** fall through to prompting for a name inline; parent stays as pre-resolved.
 
-**Placement:** child files live in the same **flat** `plans/` directory as their siblings (the resolved `joint/.../plans/` or `<operationsUserId>/.../plans/` tree). Indexed children and every other plan file use that single folder — no extra plan subfolders for now.
+**Placement:** child files live in the same **flat** `plans/` directory as their siblings (the dispatch-scoped plans tree from spawn handover). Indexed children and every other plan file use that single folder — no extra plan subfolders for now.
 
 Everything else (slug shape, frontmatter, sidecar, after-write steps, scope guard) matches the non-indexed path below.
 
 ## Parent derivation (context-aware)
 
-A plan without a parent is a **root delivery plan** (`parent: null` in the sidecar) — files always live in the flat `plans/` directory (`.sedea/operations/<operationsUserId>/plans/` or `joint/plans/`). There is **no** `roadmap-topics/` subtree for new plans. Resolve a candidate in this order (align with **planning-target-resolution**; highest confidence first), then confirm before writing (unless **Indexed child spawn** already skipped the gate):
+A plan without a parent is a **root delivery plan** (`parent: null` in the sidecar) — files always live in the flat `plans/` directory for the active dispatch scope. There is **no** `roadmap-topics/` subtree for new plans. Resolve a candidate in this order (align with **planning-target-resolution**; highest confidence first), then confirm before writing (unless **Indexed child spawn** already skipped the gate):
 
 1. **Explicit in session or message** — slug, path under `plans/`, or absolute `.sedea/operations/.../*.plan.md`.
 2. **Session anchor** — from hosting repo root:
@@ -197,7 +197,7 @@ A plan without a parent is a **root delivery plan** (`parent: null` in the sidec
  node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs resolve --cwd "$PWD"
  ```
 
- Exit **0** means `$PWD` is inside a worktree listed in some plan’s sidecar; that plan is a strong passive parent candidate. Optional scope: **`--operations-user-id <id>`** before the subcommand (Mission Control **`operationsUserId`** in agent runs); if omitted, only `joint` plans are searched.
+ Exit **0** means `$PWD` is inside a worktree listed in some plan’s sidecar; that plan is a strong passive parent candidate. Prefer explicit **`parentPlanPath`** / **`targetPlanPath`** from spawn **`inputs`** when present; legacy **`--operations-user-id`** is CLI-only per rule **31** § *Legacy CLI*.
 3. **Recent chat references** — last turns name a slug or absolute plan path.
 4. **Nothing resolved** — ask the developer for a parent slug, or the literal `null` for a **root delivery plan** (`parent: null`).
 
@@ -229,9 +229,9 @@ Example recap line when no open items:
 - **Title prefix (indexed spawn):** prepend `<N>. ` to **display title** in `name:` and H1; item 10 uses filename `A_...` but title prefix `10. `. Apply this prefix only for indexed digit-only **N**; omit for other spawns.
 - **Slug base (indexed):** from raw bolded title only (normalized). **Slug base (non-indexed):** from user name, lowercased, spaces → `_` or `-`, match sibling conventions.
 - **Suffix:** append 8 hex chars (e.g. `crypto.randomBytes(4).toString('hex')`) for uniqueness.
-- **Paths:** under `.sedea/operations/joint/plans/` or `.sedea/operations/<operationsUserId>/plans/` (same directory for `.plan.md` and `.state.yaml`). Indexed: `<C>_<slugBase>_<hex>.plan.md` / `.state.yaml`; otherwise `<slugBase>_<hex>.plan.md` / `.state.yaml`.
+- **Paths:** under the dispatch-scoped flat `plans/` directory (same folder for `.plan.md` and `.state.yaml`). Indexed: `<C>_<slugBase>_<hex>.plan.md` / `.state.yaml`; otherwise `<slugBase>_<hex>.plan.md` / `.state.yaml`.
 
-All new plans are sibling files in the flat `.../plans/` directory for the resolved operations tree (`joint` or `<operationsUserId>`). **Root delivery plan** means `parent: null` in the sidecar — same flat `.../plans/` path as child plans; never scaffold under `roadmap-topics/`.
+All new plans are sibling files in the flat `plans/` directory for the active dispatch scope. **Root delivery plan** means `parent: null` in the sidecar — same flat `plans/` path as child plans; never scaffold under `roadmap-topics/`.
 
 ### Handling 10–35 children
 

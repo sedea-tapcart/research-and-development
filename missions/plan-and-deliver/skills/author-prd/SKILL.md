@@ -31,20 +31,14 @@ inputs:
     type: string
     description: Existing PRD content when operation is manage.
     required: false
-  operationsUserId:
-    type: string
-    description: Current Mission Control operations user id for user-private operations paths.
-    required: true
 laneRules:
   - ".sedea/centers/sedea/rules/2_ask-question-instructions.mdc"
   - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/author-prd/SKILL.md"
   - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
-  - ".sedea/centers/research-and-development/rules/31_operations-user-id.mdc"
 warmUpRules:
   - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
   - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
   - ".sedea/centers/research-and-development/docs/development-process.md"
-  - ".sedea/centers/research-and-development/rules/31_operations-user-id.mdc"
 ---
 
 # Skill: author-prd
@@ -66,7 +60,6 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 | `.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc` | Squad Leader §§1–3 PRD intake |
 | `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` | Spawn contracts, terminal stop |
 | `.sedea/centers/research-and-development/docs/development-process.md` | PRD templates, planning readiness |
-| `.sedea/centers/research-and-development/rules/31_operations-user-id.mdc` | User-private docs path |
 
 ### `laneRules` — frontmatter `laneRules`
 
@@ -75,7 +68,6 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 | `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc` | Structured choice, PRD approval |
 | `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/author-prd/SKILL.md` | This skill procedure |
 | `.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc` | Squad Leader §§1–3 (role minimum) |
-| `.sedea/centers/research-and-development/rules/31_operations-user-id.mdc` | Operations user id resolution |
 
 ## Purpose
 
@@ -88,7 +80,7 @@ Gather evidence, calibrate section policy, and draft or update a Product or Feat
 - `operation`: `create` or `manage`
 - `targetPath` when supplied
 - `sourceMaterials` (optional seed materials)
-- `operationsUserId` — `create` writes under `.sedea/operations/<operationsUserId>/docs/`
+- **Dispatch scope** — `create` writes under `<bundleDirectory>/docs/` (absolute bundle path from lane identity / spawn preamble); do not construct `.sedea/operations/<user-id>/...` paths
 - `sectionPolicy`
 - `existingPrdBody` for updates
 
@@ -97,7 +89,7 @@ Gather evidence, calibrate section policy, and draft or update a Product or Feat
 1. Validate the operation:
  - `create` drafts a new PRD.
  - `manage` updates or reviews an existing PRD.
- - `create` always resolves output under `.sedea/operations/<operationsUserId>/docs/`; do not create PRDs under `.sedea/operations/joint/docs/`.
+ - `create` always resolves output under `<bundleDirectory>/docs/` on the active dispatch scope (absolute path from lane identity / spawn preamble). Reject paths outside that bundle directory.
 1b. **Leader intake guard** (spawned from **`plan and deliver`**):
  - If `prdDescription` is missing or empty → end with `failure` and ask the Squad Leader to complete **plan.mdc** §2 intake (do not draft).
  - When `sourceMaterials` is empty and the user did not explicitly choose **no sources yet** on the leader lane → run step 3 (evidence loop) before drafting; **do not** infer goals, requirements, or acceptance criteria from `prdTitle` alone.
@@ -330,5 +322,5 @@ Report **`## Completion (spawned)`** `outputs` in prose. Do **not** emit host pr
 - Do not invent source evidence.
 - Do not treat optional sections as mandatory unless the caller or user explicitly marks them mandatory.
 - Do not overwrite an existing PRD without preserving useful existing content.
-- In `create` mode, do not write outside `.sedea/operations/<operationsUserId>/docs/`.
+- In `create` mode, do not write outside `<bundleDirectory>/docs/` on the active dispatch scope.
 - In `manage` mode, update only the existing PRD target supplied by the caller or user.
