@@ -549,6 +549,9 @@ When an explicit developer override applies, replace the **`Parent:`** line with
 | 6 | Agent-delegated approve + merge | **coding-session** (inline) after clean **`pr-review`** when `mergeDelegationAuthorized` | `skills/coding-session/SKILL.md` § *Agent-delegated PR approve and merge* |
 | 7 | `deploy-walk` (After deploy) | **coding-session** (inline) after merge and post-merge cleanup | `skills/deploy-walk/SKILL.md` — **development-process.md** § *deploy-walk entry points* |
 | 8 | `plan-reconcile` | **`coding-session`** (inline) after deploy done or developer choice (not auto from deploy-walk) | `skills/plan-reconcile/SKILL.md` |
+| 9 | `hosting-repo-rules` (parallel fork) | **`planner`** Step **7c** or **`phase-planner`** Step **5e** — fire-and-forget after **`coding-session`** terminal when spawn trigger matches | `skills/hosting-repo-rules/SKILL.md` — **not** a Squad Leader spawn; runs detached; parent does **not** wait on rules PR merge |
+
+**`hosting-repo-rules` parallel fork (binding):** Emitted from planning child lanes when **`coding-session`** terminal outputs satisfy the three-condition trigger documented in **`coding-session/SKILL.md`** § *Spawner spawn-detection outputs* and **`planner`** / **`phase-planner`** spawn tables. Tracks **`rulesUpdatesStatus`** on the product PR row — **forbidden:** separate **`shipRows`** entry or **`pendingByParent`** wait on the rules lane.
 
 **`deploy-walk` entry points (binding timing):**
 
