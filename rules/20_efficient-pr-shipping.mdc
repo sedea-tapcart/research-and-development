@@ -122,7 +122,7 @@ After implementing changes, **stop**. Do not `git add`, `git commit`, or `git pu
 - Present a summary of what changed and ask for next steps using `AskQuestion`. 
 - This applies to **all** workflows: feature PRs, PR comment fixes, and any other code changes.
 - **Pre-review verification (hosting repo):** Before the summary and review modal / ship cut-point, complete **pre-review verification** prescribed by applicable **hosting-repo** **`.cursor/rules/*.mdc`** files. Resolve which rules apply from the PR plan **§5**, **Project rules** curation in **`coding-session`**, or rules already loaded from the worktree — per [`.sedea/centers/research-and-development/rules/40_maintain-rules.mdc`](40_maintain-rules.mdc). Do **not** duplicate hosting-repo commands in center rules or skills. Do not open developer review until prescribed verification passes (**exit 0**); fix failures and re-run.
-- The exceptions are creating worktrees (fine without confirmation). The coding agent must not silently commit. After developer approves implementation at the ship cut-point, `coding-session` commits (with explicit consent), runs **Before deploy** via inline **`deploy-walk`** when applicable, then **auto-spawns** the `pre-pr-review` reviewer lane (no separate pre-PR spawn modal).
+- The exceptions are creating worktrees (fine without confirmation). The coding agent must not silently commit. After developer approves implementation at the ship cut-point, `coding-session` commits (with explicit consent), runs **Local test** via inline **`deploy-walk`** when applicable, then **auto-spawns** the `pre-pr-review` reviewer lane (no separate pre-PR spawn modal). After **`create-pr`**, run **Staging test** inline when §7 **`### Staging test`** has unchecked items.
 
 **Sedea git gate (same message):** This section is a **workflow** pause — it does **not** replace [`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`](.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc). Agents must satisfy **both** layers in § *Ship git consent (workflow + Sedea gate)* below.
 
@@ -135,7 +135,7 @@ Two **independent** layers apply on **implementation** lanes (`coding-session` a
 | **1 — Workflow** | § *Review before commit* (above) | Pause before advancing ship stage (summary, next skill, cut point) | **AskQuestion** — workflow-only options (*more changes*, *defer*, …) at cut-point; **auto-advance** after cut-point for pre-PR spawn, clean-go create-PR, and post-merge cleanup |
 | **2 — Git history** | [`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`](.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc) | `git commit`, `git push`, PR steps that imply push | **Same user message** includes *commit* / *push*, **or** an **AskQuestion** pick on **that turn** whose `id` is `commit-only`, `executive-override-push`, or `commit-push-pr` (rule 6 § *After the user is satisfied*) — on **`coding-session`**, **`git push`** before **`pre-pr-review`** **`go`** requires **`executive-override-push`** or explicit same-message *push* per [`coding-session/SKILL.md`](../missions/plan-and-deliver/skills/coding-session/SKILL.md) § *Pre-PR ship gate (push/PR)* |
 
-**Cross-turn rule:** A workflow **AskQuestion** pick in a **prior** turn does **not** authorize commit or push. Ship cut-point approval authorizes commit + Before deploy + **auto** pre-PR spawn on the **next** turn — it does **not** require a separate *run pre-pr-review* pick.
+**Cross-turn rule:** A workflow **AskQuestion** pick in a **prior** turn does **not** authorize commit or push. Ship cut-point approval authorizes commit + Local test + **auto** pre-PR spawn on the **next** turn — it does **not** require a separate *run pre-pr-review* pick.
 
 **When both layers apply in one turn**, use **one AskQuestion** with separate workflow options and git options (brief `label` text per [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](.sedea/centers/sedea/rules/2_ask-question-instructions.mdc)), **or** split turns: workflow **AskQuestion** first, then a **new** user message with *commit* / *push*.
 
@@ -151,8 +151,8 @@ Planning-tree picks use [`.sedea/centers/research-and-development/rules/30_plann
 
 | Developer signal (this turn or **AskQuestion** pick) | May continue workflow / spawn next skill? | May run **`git commit`**? | May run **`git push`**? |
 |------------------------------------------------------|----------------------------------------|---------------------------|-------------------------|
-| *Proceed*, *next stage*, *looks good*, *approved cut point* (workflow only) | **Yes** — advance to commit + Before deploy on pick turn | **No** — unless the **same user message** also says *commit* (or equivalent) | **No** — unless the **same message** says *push* or *commit and push* |
-| *Committed* / *ready for pre-PR review* (after implementation approval + commit + Before deploy when applicable) | **Yes** — **auto-spawn **`pre-pr-review`** per **`coding-session`** (no spawn modal) | **No** — unless the **same message** authorizes a **new** *commit* | **No** — until the **same message** says *push* |
+| *Proceed*, *next stage*, *looks good*, *approved cut point* (workflow only) | **Yes** — advance to commit + Local test on pick turn | **No** — unless the **same user message** also says *commit* (or equivalent) | **No** — unless the **same message** says *push* or *commit and push* |
+| *Committed* / *ready for pre-PR review* (after implementation approval + commit + Local test when applicable) | **Yes** — **auto-spawn **`pre-pr-review`** per **`coding-session`** (no spawn modal) | **No** — unless the **same message** authorizes a **new** *commit* | **No** — until the **same message** says *push* |
 | *commit*, *land the worktree*, *create a commit* in **same user message** | **Yes** | **Yes** (if there are changes to commit; skip if tree clean per cadence) | **No** — unless the message also says *push* |
 | *push*, *commit and push*, *publish the worktree* in **same user message** | **Yes** | **Yes** when commit is included or already done | **Yes** |
 
@@ -168,7 +168,7 @@ When Mission Control dispatches **`plan and deliver`** on **research-and-develop
 | **`plan and deliver`** Squad Leader (planning only) | Usually no hosting-repo writes — rule 6 often N/A on that lane |
 | Edits under **`.sedea/centers/`** on a **center-maintenance** or hosting dispatch | Rule 6 **applies** (not mission-owned) unless another mission owns git for that lane |
 
-**Both layers still apply** on implementation lanes — see § *Ship git consent (workflow + Sedea gate)*. Ship cut-point approval is **not** commit or push consent by itself on the modal turn — **Act** runs on the response turn. Approving cut-point **does** authorize **auto** pre-PR spawn after commit + Before deploy complete.
+**Both layers still apply** on implementation lanes — see § *Ship git consent (workflow + Sedea gate)*. Ship cut-point approval is **not** commit or push consent by itself on the modal turn — **Act** runs on the response turn. Approving cut-point **does** authorize **auto** pre-PR spawn after commit + Local test complete.
 
 ## deploy-walk vs plan-reconcile (not chained)
 
@@ -183,26 +183,45 @@ Start **`plan-reconcile`** separately: developer phrase on active **`coding-sess
 
 ## PR creation — inline **`create-pr`** on **`coding-session`**
 
-**Rule (read first).** The **only** path that may call `gh pr create` (or any equivalent GitHub API/MCP call that creates, drafts, or reopens a PR) is the active **`coding-session`** agent **executing [`create-pr/SKILL.md`](../missions/plan-and-deliver/skills/create-pr/SKILL.md) inline** after **`pre-pr-review`** returns `go` and that skill's gates pass. Clean **`go`** runs inline **`create-pr`** **automatically** on the next turn ([Inline create-pr (auto on clean go)](../missions/plan-and-deliver/skills/coding-session/SKILL.md#inline-create-pr-auto-on-clean-go)); exceptional follow-up append uses [Create-PR handoff after go](../missions/plan-and-deliver/skills/coding-session/SKILL.md#create-pr-handoff-after-go).
+**Rule (read first).** The **only** path that may call `gh pr create` (or any equivalent GitHub API/MCP call that creates, drafts, or reopens a PR) is the active **`coding-session`** agent **executing [`create-pr/SKILL.md`](../missions/plan-and-deliver/skills/create-pr/SKILL.md) inline** on the **inline GitHub** route after **`pre-pr-review`** returns `go` and that skill's gates pass. Clean **`go`** runs inline **`create-pr`** **automatically** on the next turn ([Inline create-pr (auto on clean go)](../missions/plan-and-deliver/skills/coding-session/SKILL.md#inline-create-pr-auto-on-clean-go)); exceptional follow-up append uses [Create-PR handoff after go](../missions/plan-and-deliver/skills/coding-session/SKILL.md#create-pr-handoff-after-go).
+
+### Outsider repos (tapcart product submodules)
+
+**`create-pr`** classifies **outsider repos** before any GitHub API call. When the worktree targets **`tapcart-push`** or **`tapcart-merchant-dashboard`** (see **`.cursor/rules/push-monorepo-submodules.mdc`**), Sedea agents **must not** call `gh pr create`. Instead, **`create-pr`** emits an **outsider PR handoff prompt** for an external agent outside Mission Control **after** verifying the branch exists on `origin`; the developer pastes it and resumes **`coding-session`** when the PR URL is known. See **`create-pr/SKILL.md`** § *PR route evaluation*, § *Remote branch gate*, and § *Outsider PR handoff prompt*.
+
+**Remote branch before outsider handoff:** On outsider repos, **`create-pr`** runs `git ls-remote --heads origin <worktreeName>` before emitting the outsider prompt. If empty, it blocks with **`blockedReason: remote-branch-missing`** and offers a push modal — **do not** emit the handoff prompt. **`commit-only`** at [Ship cut-point gate](../missions/plan-and-deliver/skills/coding-session/SKILL.md#ship-cut-point-gate-approve-commit-before-deploy) leaves the branch **local-only** by design; outsider handoff requires an explicit push (`commit-push` at cut-point, or **`push-branch-now`** when blocked).
+
+| Lane | Outsider repo | May call `gh pr create`? | Handoff |
+|------|---------------|--------------------------|---------|
+| **`coding-session`** running **`create-pr` inline** | **Yes** (`tapcart-push`, `tapcart-merchant-dashboard`) | **No** | Outsider-handoff prompt only; [Post-outsider-handoff gate](../missions/plan-and-deliver/skills/coding-session/SKILL.md#post-outsider-handoff-gate) |
+| **`coding-session`** running **`create-pr` inline** | **No** (other repos) | **Yes** when inline route + gates pass | `gh pr create` when authorized |
 
 | Lane | May call `gh pr create`? | Handoff |
 |------|--------------------------|---------|
-| **`coding-session`** running **`create-pr` inline** | **Yes** — sole supported opener | Load **`create-pr/SKILL.md`** on this lane after clean **`go`** auto path or exceptional Create-PR gate |
-| **`coding-session`** (other steps) | **No** | Complete ship order through cut-point → Before deploy → **`pre-pr-review`** → inline **`create-pr`** |
-| **Other lanes** (Squad Leader, planning, `pre-pr-review`, `pr-review`, `planner`, …) | **No** | Prepare worktree/context; direct developer to **`coding-session`** ship chain or emit copy-paste prompt — never open from the current lane |
+| **`coding-session`** running **`create-pr` inline** (non-outsider repo) | **Yes** — sole supported opener | Load **`create-pr/SKILL.md`** on this lane after clean **`go`** auto path or exceptional Create-PR gate |
+| **`coding-session`** (other steps) | **No** | Complete ship order through cut-point → Local test → **`pre-pr-review`** → inline **`create-pr`** → Staging test |
+| **Other lanes** (Squad Leader, planning, `pre-pr-review`, `pr-review`, `planner`, …) | **No** | Prepare worktree/context; direct developer to **`coding-session`** ship chain or emit copy-paste prompt per **`create-pr`** — never open from the current lane |
 
-**Developer accountability:** the developer decides **when** to open a PR and approves creation in the ship chain; **`coding-session`** runs inline **`create-pr`** (including `gh pr create` when authorized). Other lanes prepare context and hand off — they do not open GitHub themselves.
+**Developer accountability:** the developer decides **when** to open a PR and approves creation in the ship chain; **`coding-session`** runs inline **`create-pr`** (including `gh pr create` on the inline route when authorized, or outsider handoff on tapcart product repos). Other lanes prepare context and hand off — they do not open GitHub themselves.
 
-**All other lanes:** do **not** call `gh pr create` except **`coding-session`** while executing inline **`create-pr`** per the table above.
+**All other lanes:** do **not** call `gh pr create` except **`coding-session`** while executing inline **`create-pr`** on the **inline GitHub** route per the table above.
 
 When the user or task says "open a PR", "push and open a PR", or "create a pull request" on a **non–`coding-session`** lane, interpret it as **hand off to the `coding-session` ship chain** — not as permission to run `gh pr create` on this lane.
+
+## PR merge — inline **`coding-session`** after clean **`pr-review`**
+
+**Rule.** The **only** path that may call `gh pr merge` (or equivalent GitHub merge API) is the active **`coding-session`** agent on the **non-outsider** repo route after inline **`pr-review`** is clean and the developer selects **`approve-merge`** at [Post-pr-review merge approval gate](../missions/plan-and-deliver/skills/coding-session/SKILL.md#post-pr-review-merge-approval-gate).
+
+**Outsider repos** (`tapcart-push`, `tapcart-merchant-dashboard`) — after reviewers give **go** and a **skip-only** **`pr-review`** pass, the developer **approves and merges on GitHub** themselves. The agent opens the outsider merge gate (*Coding session — outsider PR ready to merge*), may recap `prUrl`, and continues only after **`merged-manually`** (or equivalent) when `gh pr view` shows **`MERGED`**. **Forbidden:** `gh pr merge`, `gh pr review --approve`, or agent-initiated merge on outsider repos from any lane.
+
+See [`pr-review/SKILL.md`](../missions/plan-and-deliver/skills/pr-review/SKILL.md) § *PR review cycle (normative)* and [`coding-session/SKILL.md`](../missions/plan-and-deliver/skills/coding-session/SKILL.md) § *PR review cycle (after PR open)*.
 
 ### User phrases → required handoff (not `gh pr create`)
 
 | User says (paraphrase OK) | Current lane | Required action |
 |---------------------------|--------------|-----------------|
-| *Open a PR* / *create the pull request* | **`coding-session`** before **`pre-pr-review`** **go** | **Do not** call `gh pr create`. Explain ship order: implementation review → cut-point (approve, commit, Before deploy **`deploy-walk`**) → auto **`pre-pr-review`** → inline **`create-pr`** on clean **go**. |
-| *Open a PR* / *create the pull request* | **`coding-session`** after **`pre-pr-review`** clean **`go`** | Run inline **`create-pr`** automatically per § *Inline create-pr (auto on clean go)* in [`coding-session/SKILL.md`](../missions/plan-and-deliver/skills/coding-session/SKILL.md) — `gh pr create` only inside that procedure when gates pass. |
+| *Open a PR* / *create the pull request* | **`coding-session`** before **`pre-pr-review`** **go** | **Do not** call `gh pr create`. Explain ship order: implementation review → cut-point (approve, commit, Local test **`deploy-walk`**) → auto **`pre-pr-review`** → inline **`create-pr`** → Staging test **`deploy-walk`** on clean **go**. |
+| *Open a PR* / *create the pull request* | **`coding-session`** after **`pre-pr-review`** clean **`go`** | Run inline **`create-pr`** automatically per § *Inline create-pr (auto on clean go)* in [`coding-session/SKILL.md`](../missions/plan-and-deliver/skills/coding-session/SKILL.md) — `gh pr create` only on the **inline GitHub** route when gates pass; **outsider repos** emit handoff prompt only |
 | *Open a PR* | Planning, Squad Leader, **`pre-pr-review`**, **`pr-review`**, **`planner`**, … | Prepare context; direct developer to **`coding-session`** ship chain — **never** `gh pr create` here. |
 | *Push and open a PR* | **`coding-session`** | Run § *Commit and push cadence* (same-message *commit* / *push*) **first** when changes exist; then pre-PR / inline **`create-pr`** handoff — not one combined `gh pr create` step outside the inline procedure. |
 
@@ -259,7 +278,7 @@ Use **`origin/main`** as **`--base-ref`**, **not** local **`main`** — local **
 
 ### Dirty hosting repo before center setup
 
-[`coding-session/SKILL.md`](../missions/plan-and-deliver/skills/coding-session/SKILL.md) § *Generic flow* runs a **dirty-tree gate** inside center **`worktree-setup.sh`** (exit **10**). On hosting repos that pin `.sedea/` via git submodules (**.cursor/rules/dot-sedea.mdc** § *Submodule pins* on the active hosting repo), **submodule gitlink-only** porcelain under `.sedea/centers/` and `.sedea/operations/` does **not** block worktrees when `git diff --stat -- <submodule-path>` shows pointer-only drift (2 +/- per submodule). All other non-empty porcelain still blocks.
+[`coding-session/SKILL.md`](../missions/plan-and-deliver/skills/coding-session/SKILL.md) § *Generic flow* runs a **dirty-tree gate** inside center **`worktree-setup.sh`** (exit **10**). On **operational hosting repos** (for example **sedea-push**), **`.cursor/rules/dot-sedea.mdc`** § *Operational repo — dirty tree and worktrees* and § *Housekeeping pass (dirty hosting tree before bootstrap)* override generic blocking: commit + push + promote center pin when needed, then retry setup — do not refuse worktrees solely for submodule gitlink drift or documented submodule porcelain once upstream center scripts align. When dot-sedea does **not** declare an operational exception, on hosting repos that pin `.sedea/` via git submodules (**.cursor/rules/dot-sedea.mdc** § *Submodule pins* on the active hosting repo), **submodule gitlink-only** porcelain under `.sedea/centers/` and `.sedea/operations/` does **not** block worktrees when `git diff --stat -- <submodule-path>` shows pointer-only drift (2 +/- per submodule). All other non-empty porcelain still blocks.
 
 ## Center submodule pin promotion (hosting repo)
 
@@ -349,7 +368,7 @@ Apply § *Hosting repo cwd for scripts (canonical)* for every script invocation 
    The [`pr-review` protocol branch](../missions/plan-and-deliver/skills/pr-review/SKILL.md) runs the same `upsert-pr` call at its Step 0 (after the PR is resolved) as a belt-and-braces linker for cases where no follow-up commit-and-push pass ever happens — `pr-review` triage that ends with all comments skipped (no commit, no push), quiet PRs with zero reviewer rounds, or single-commit PRs merged straight from GitHub. **`pr-review`** and this cadence upserts are idempotent against each other.
 5. Check if this is the **first push** for the worktree (e.g. `git push` output contains `[new branch]` for the worktree ref, or `gh pr list` in step 4 returned empty). If so, **`create-pr`** handoff is mandatory — **not** a modal option before **`pre-pr-review`** **`go`**. The handoff **replaces** any GitHub create-PR URL.
    - **Active `coding-session` lane** — follow [`coding-session/SKILL.md`](../missions/plan-and-deliver/skills/coding-session/SKILL.md) § *Pre-PR ship gate (push/PR)*: **no** push or create-PR modal options until **`prePrReviewCleared`**. First push + inline **`create-pr`** run automatically after **`pre-pr-review`** clean **`go`** per § *Inline create-pr (auto on clean go)* — not from cut-point or implementation continuation modals. If pre-PR review has not run yet, do not skip to prompt-only PR creation; run cut-point and **`pre-pr-review`** first.
-   - **Other lanes** — generate a copy-paste PR prompt per **`create-pr/SKILL.md`** § *PR prompt fallback*, or direct the developer to **`coding-session`** ship chain.
+   - **Other lanes** — generate a copy-paste PR prompt per **`create-pr/SKILL.md`** § *Outsider PR handoff prompt* or § *Prompt fallback*, or direct the developer to **`coding-session`** ship chain.
    On subsequent pushes, only commit/push/reconcile/upsert — skip **`create-pr`** handoff until a new first-push worktree needs a PR.
 
 6. **Leader §8 host sync (detached lanes).** This cadence usually runs on **`coding-session`** or another **detached** lane — not on the **plan and deliver** Squad Leader dispatch. The leader §8 table does **not** auto-update from commit/push, `upsert-pr`, or **`pr-review`** reconciliation on this lane alone.
@@ -548,7 +567,7 @@ Do not conflate **pre-PR review** with **PR-surface review**:
 
 | Role | Session | When | Skill / surface |
 |------|---------|------|-----------------|
-| **Pre-PR reviewer agent** | **Fresh** child lane — no coding-session transcript carry-over | After implementation approval, commit, and Before deploy **`deploy-walk`** (when applicable), before **`create-pr`** | [`pre-pr-review/SKILL.md`](../missions/plan-and-deliver/skills/pre-pr-review/SKILL.md) |
+| **Pre-PR reviewer agent** | **Fresh** child lane — no coding-session transcript carry-over | After implementation approval, commit, and Local test **`deploy-walk`** (when applicable), before **`create-pr`** | [`pre-pr-review/SKILL.md`](../missions/plan-and-deliver/skills/pre-pr-review/SKILL.md) |
 | **Reviewer agent** | GitHub PR diff + description (Sedea or third-party) | After PR is open | [`pr-review/SKILL.md`](../missions/plan-and-deliver/skills/pr-review/SKILL.md) for comment triage; not a substitute for pre-PR |
 
 Full definitions: [`.sedea/centers/research-and-development/docs/development-process.md`](../docs/development-process.md) § *Agents and roles*.

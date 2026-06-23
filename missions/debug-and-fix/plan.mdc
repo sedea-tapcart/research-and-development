@@ -138,7 +138,7 @@ flowchart TD
 - `spawn run-request fields`: `inputs`, `laneRules` / `warmUpRules` per **`coding-session`** frontmatter, and `initiatingPrompt` — state that implementation is complete on the debug worktree and ship chain starts at cut-point / commit per **`coding-session`** authority.
 - `expected output`: Child terminal after ship chain milestones per **`coding-session`** **`## Completion (spawned)`** / inline ship skills.
 - `next-step resolution`: Continue to step 7 after child terminal or when developer selects an external-wait resume option per skill gates.
-- **Note:** Ship steps (commit, deploy-walk, pre-pr-review, create-pr, pr-review, post-merge cleanup, plan-reconcile) are **owned by `coding-session`** — do not duplicate procedure here.
+- **Note:** Ship steps (commit, deploy-walk, pre-pr-review, create-pr, pr-review, post-merge cleanup, plan-reconcile) are **owned by `coding-session`** — do not duplicate procedure here. For **tapcart-push** and **tapcart-merchant-dashboard**, **`create-pr`** uses **outsider handoff** (no Sedea `gh pr create`) per **`create-pr/SKILL.md`** § *Outsider repos*.
 
 ### 5c. Create Ad-Hoc PRD (spawned skill — Ad-Hoc PRD path only)
 

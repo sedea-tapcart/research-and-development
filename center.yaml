@@ -73,6 +73,8 @@ missions:
   - slug: quick-fix
     plan: missions/quick-fix/plan.mdc
     skills: missions/quick-fix/skills/
+    skillEntries:
+      - missions/quick-fix/skills/quick-fix-plan-agent/SKILL.md
     commands:
       - quick fix
     skillEntries:

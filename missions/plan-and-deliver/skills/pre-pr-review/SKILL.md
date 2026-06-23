@@ -4,8 +4,9 @@ description: >-
  Pre-PR reviewer agent (fresh spawned lane): review a committed implementation
  diff against a PR plan or free-form scope, score plan/rules/quality categories,
  propose Code Review Follow-ups when plan-anchored, and report go/no-go before PR
- creation. Scores §7 Before deploy only; After deploy is post-merge (deploy-walk) and
- is omitted entirely from this report (not Defer, flags, or summary). Spawned by
+ creation. Scores §7 Local test only; Staging test and After deploy are post–create-pr /
+ post-merge (deploy-walk) and are omitted entirely from this report (not Defer, flags,
+ or summary). Spawned by
  coding-session after the implementation cut point;
  coding-session obtains developer approval before any follow-up mutation.
 designation:
@@ -93,7 +94,7 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 | `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pre-pr-review/SKILL.md` | This skill procedure |
 | `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` | Spawn preflight |
 
-**Who runs this:** a fresh **pre-PR reviewer agent** lane spawned by **`coding-session`** after developer implementation approval, **commit**, and inline **Before deploy** **`deploy-walk`** (or documented skip). The reviewer must have no carry-over from the coding agent that changed the worktree.
+**Who runs this:** a fresh **pre-PR reviewer agent** lane spawned by **`coding-session`** after developer implementation approval, **commit**, and inline **Local test** **`deploy-walk`** (or documented skip). The reviewer must have no carry-over from the coding agent that changed the worktree.
 
 This pass complements, and does not replace, the later GitHub-surface **reviewer agent**.
 
@@ -188,27 +189,28 @@ This skill runs **before** the PR is opened or merged. Scope is **pre-merge read
 | Plan section | Pre-PR scope | Owner after merge |
 |--------------|--------------|-------------------|
 | §§ **1–6**, § **8** | In scope for scoring and follow-ups | — |
-| § **7** `### Before deploy` | In scope — verify against diff / § 6 tests | **`coding-session`** runs **`deploy-walk`** inline (`before-deploy-only`) before this review |
+| § **7** `### Local test` | In scope — verify against diff / § 6 tests (legacy **`### Before deploy`**) | **`coding-session`** runs **`deploy-walk`** inline (`local-test-only`) before this review |
+| § **7** `### Staging test` | **Out of scope** — omit from the entire pre-PR report (see below) | **`deploy-walk`** after PR open (**development-process.md** § *Ship chain*) |
 | § **7** `### After deploy` | **Out of scope** — omit from the entire pre-PR report (see below) | **`deploy-walk`** after merge (**development-process.md** § *Ship chain*) |
 
-### §7 After deploy — silent omission (binding)
+### §7 Staging test and After deploy — silent omission (binding)
 
-**`### After deploy`** is **post-merge** work. This pre-PR pass does **not** score it and does **not** mention it anywhere in output — including under **`Defer`**, flags, blockers, proposed follow-ups, category **G** narrative, chat recap, `outputs.codingAgentHandback`, or the terminal `summary`.
+**`### Staging test`** and **`### After deploy`** are **not** pre-PR reviewer scope. This pass does **not** score them and does **not** mention them anywhere in output — including under **`Defer`**, flags, blockers, proposed follow-ups, category **G** narrative, chat recap, `outputs.codingAgentHandback`, or the terminal `summary`.
 
 Do **not** report (and do **not** echo for awareness):
 
-- Unchecked **`[ ]`** lines under **`### After deploy`**.
-- Missing execution of **After deploy** steps before the PR exists.
-- Requests to complete **After deploy** before PR.
+- Unchecked **`[ ]`** lines under **`### Staging test`** or **`### After deploy`**.
+- Missing execution of staging or production deploy steps before the PR exists.
+- Requests to complete **Staging test** or **After deploy** before PR.
 - Summary bullets such as *Post-merge production smoke via deploy-walk; not a pre-PR gate* or tags like **`[G §7 After deploy — post-merge]`**.
 
-If the only “deferred” work you would list is post-merge deploy verification, **omit the `Defer` group entirely** from the report and leave `codingAgentHandback.Defer` empty (or omit the key).
+If the only “deferred” work you would list is staging or post-merge deploy verification, **omit the `Defer` group entirely** from the report and leave `codingAgentHandback.Defer` empty (or omit the key).
 
-### §7 Before deploy — scoring
+### §7 Local test — scoring
 
-- **`PASS`** when every Before-deploy item is satisfied by the diff, § 6 tests, or an explicit *None — …* line in the plan.
-- **`FLAG`** only for Before-deploy gaps that are **merge-blocking** (missing PR-specific verification not covered by § 6 or standing CI).
-- **`FAIL`** only when a Before-deploy gap would make merging unsafe **now** — never because After-deploy is still `[ ]`.
+- **`PASS`** when every Local-test item is satisfied by the diff, § 6 tests, or an explicit *None — …* line in the plan.
+- **`FLAG`** only for Local-test gaps that are **merge-blocking** (missing PR-specific verification not covered by § 6 or standing CI).
+- **`FAIL`** only when a Local-test gap would make opening the PR unsafe **now** — never because Staging-test or After-deploy is still `[ ]`.
 
 ## Step 6 — Score categories
 
@@ -224,7 +226,7 @@ Verdict per row: `PASS`, `FLAG`, or `FAIL`. `FAIL` blocks PR creation or merge r
 | **D** | § 4 Reasoning quality |
 | **E** | § 5 Repo rules impact |
 | **F** | § 6 Tests to write |
-| **G** | § 7 Deploy test plan — **`### Before deploy` only** (see [Pre-PR phase boundary](#pre-pr-phase-boundary-plan-anchor)); After deploy is post-merge |
+| **G** | § 7 Deploy test plan — **`### Local test` only** (see [Pre-PR phase boundary](#pre-pr-phase-boundary-plan-anchor)); Staging test and After deploy are post–create-pr / post-merge |
 | **H** | § 8 Caveats vs surprises |
 | **I** | Repo-rule compliance |
 | **J** | General code quality |
@@ -248,7 +250,7 @@ Rules:
 3. Add optional `(target: ...)` routing hints.
 4. Do not append `FAIL` items; blockers stay in the report.
 5. Return proposed follow-ups in `outputs.proposedFollowUps`; leave `outputs.followUpsAppended` empty unless the invocation context explicitly includes prior developer approval for this exact mutation.
-6. **Exclude** every item that only restates **`### After deploy`** or post-merge production verification — omit entirely (see **§7 After deploy — silent omission** above), not in `proposedFollowUps` or handback.
+6. **Exclude** every item that only restates **`### Staging test`**, **`### After deploy`**, or post-merge production verification — omit entirely (see **§7 Staging test and After deploy — silent omission** above), not in `proposedFollowUps` or handback.
 
 For `free-form`, skip file writes.
 
@@ -263,8 +265,8 @@ Report:
 5. Coding-agent handback: what to fix next, with **`Must`** and **`Should`** groups when non-empty. Apply [Pre-PR phase boundary](#pre-pr-phase-boundary-plan-anchor):
  - **`Must`** — merge-blocking `FAIL` rows and true pre-merge gaps only.
  - **`Should`** — pre-merge improvements only.
- - **`Defer`** — **do not use** for **`### After deploy`**, **`deploy-walk`**, or post-merge production smoke (see **§7 After deploy — silent omission** above). Include **`Defer`** only for other genuinely deferred pre-PR-adjacent items; if none, omit the **`Defer`** section and do not populate post-merge deploy bullets in `outputs.codingAgentHandback`.
-6. **Deploy test plan (§7):** when the developer reported manual §7 smoke during review, list which numbered **`### Before deploy`** steps they said passed — the coding agent should flip those lines in `targetPlanPath` only after the developer **confirms each step** in session (see **`coding-session`** § *Deploy test plan confirmations*). Do **not** mention **`### After deploy`** in this pass. This reviewer skill does **not** append `[x]` without that per-step confirmation.
+ - **`Defer`** — **do not use** for **`### Staging test`**, **`### After deploy`**, **`deploy-walk`**, or post-merge production smoke (see **§7 Staging test and After deploy — silent omission** above). Include **`Defer`** only for other genuinely deferred pre-PR-adjacent items; if none, omit the **`Defer`** section and do not populate staging/post-merge deploy bullets in `outputs.codingAgentHandback`.
+6. **Deploy test plan (§7):** when the developer reported manual §7 smoke during review, list which numbered **`### Local test`** steps they said passed — the coding agent should flip those lines in `targetPlanPath` only after the developer **confirms each step** in session (see **`coding-session`** § *Deploy test plan confirmations*). Do **not** mention **`### Staging test`** or **`### After deploy`** in this pass. This reviewer skill does **not** append `[x]` without that per-step confirmation.
 
 The handback is advisory until the developer approves the fix pass. Do not frame reviewer feedback as automatic authorization for **`coding-session`** to edit code. The coding agent must present the review result to the developer, **recommend** addressing relevant findings when **`actionablePrePrFindings`** applies, and open its **Review feedback approval gate** (including **Implement pre-PR review findings now (this session)** as the first option — **even when** `recommendation` is `go` but `flags` or **Must** / **Should** handback remain) before applying fixes or proceeding to Create-PR.
 

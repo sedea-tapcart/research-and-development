@@ -25,6 +25,23 @@ If Mission Control opened a session whose only intent is **`pr-review`** / *tria
 
 **Required upstream context:** `prUrl` or `prNumber`, repository identity, worktree path, worktree name, linked PR plan when available, and coding-session ledger state. If this context is missing, return to `coding-session` to recover it before running PR review.
 
+## PR review cycle (normative)
+
+After a PR exists, **`coding-session`** runs this skill **inline** in a loop until merge preconditions hold. The cycle matches the ship chain on the implementation lane:
+
+| Step | Actor | Action |
+|------|-------|--------|
+| **1** | Ship chain | PR created (`create-pr` or outsider handoff → PR URL recorded) |
+| **2** | Reviewers (GitHub) | Humans / external agents review the open PR |
+| **3** | **`coding-session`** | Developer picks **`start-pr-review`** → this skill Steps **1–5** |
+| **4** | Developer | **Skip-only triage** (0 Must / 0 Should / 0 follow-up) → [Post-pr-review merge approval gate](../coding-session/SKILL.md#post-pr-review-merge-approval-gate) on the **next** turn |
+| **5** | **`coding-session`** | **Must/Should fixes** → approved edits → commit/push gate → Step **5 — GitHub only** |
+| **6** | Reviewers (GitHub) | Re-review after push (Step **5** may **`request-review`** for `slink-ai` when **`CHANGES_REQUESTED`**) |
+
+**After step 5 (code-fix path):** do **not** open the merge approval gate on the same pass. The invoker (**`coding-session`**) **must** re-open [Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate) on the **next** turn so the developer can wait for step **6**, then pick **`start-pr-review`** again (step **3**). Only after a **fresh** triage pass that is **skip-only** (or merge preconditions in the merge gate all hold) may step **4** offer merge.
+
+**Outsider repos** (`tapcart-push`, `tapcart-merchant-dashboard`): step **4** uses the outsider merge gate — developer **approve and merges on GitHub**; agent never calls `gh pr merge`. See [Post-pr-review merge approval gate](../coding-session/SKILL.md#post-pr-review-merge-approval-gate) § *Outsider repos*.
+
 **Worktree removal ownership (binding).** **Do not remove worktrees you do not own.** PR review runs in **`WORKTREE_ROOT`** for edits; it does **not** authorize **`git worktree remove`**, **`git worktree prune`**, or **`sedea_remove_worktree_folder`** on any other path. See [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § *Worktree ownership* and rule **20** § *Worktree removal ownership (binding)*. **`git worktree list` is read-only** when ownership is unclear — **stop; do not remove**.
 
 ## Global `gh` exception (binding)
@@ -303,12 +320,13 @@ After Step 3 classification, compute:
 | `follow-ups-only` | **`followUpCount > 0`** | Follow-ups only — no source edits |
 | `skip-reject` | Triage non-empty | When **`skippedOnly`**: *Skip / reject — reconcile on GitHub (recommended)*; else *Skip / reject selected comments* |
 | `submit-manual-review` | **`skippedOnly`** or (**`followUpCount > 0`** and **`mustCount === 0`** and **`shouldCount === 0`**) | Submit manual review on GitHub — open **`coding-session`** [Manual review submission (external-wait)](../coding-session/SKILL.md#manual-review-submission-external-wait) |
+| `capture-team-feedback` | **`prNumber`** or **`prUrl`** known (always during PR ship chain) | Capture offline teammate feedback — open **`coding-session`** [Team member feedback (external-wait)](../coding-session/SKILL.md#team-member-feedback-external-wait) |
 | `merged-pr-proceed` | **`prNumber`** or **`prUrl`** known (always during PR ship chain) | PR merged — proceed with cleanup — **Act** per § *Merged-forward act mapping* below |
 | `more-details` | Always | More details for option _ |
 
 **Merged-forward (binding):** Include **`merged-pr-proceed`** on **every** disposition gate, post-fix commit/push gate, and external-wait resume modal while **`prNumber`** or **`prUrl`** is set — **even when** last `gh pr view` showed **`OPEN`**. **Forbidden:** omitting **`merged-pr-proceed`** because merge status was stale; using **`check-pr-status`** alone as the only way to discover developer merge on GitHub.
 
-**Act mapping:** selecting an option not shown in the modal is impossible; do not treat hidden options as implicit consent. When the developer picks **`submit-manual-review`**, run **`coding-session`** [Manual review submission (external-wait)](../coding-session/SKILL.md#manual-review-submission-external-wait) — do not run Step **5 — GitHub only** on that turn. When the developer picks **`merged-pr-proceed`**, run § *Merged-forward act mapping* below.
+**Act mapping:** selecting an option not shown in the modal is impossible; do not treat hidden options as implicit consent. When the developer picks **`submit-manual-review`**, run **`coding-session`** [Manual review submission (external-wait)](../coding-session/SKILL.md#manual-review-submission-external-wait) — do not run Step **5 — GitHub only** on that turn. When the developer picks **`capture-team-feedback`**, run **`coding-session`** [Team member feedback (external-wait)](../coding-session/SKILL.md#team-member-feedback-external-wait) — do not run Step **5 — GitHub only** on that turn. When the developer picks **`merged-pr-proceed`**, run § *Merged-forward act mapping* below.
 
 #### Merged-forward act mapping (binding)
 
@@ -322,12 +340,12 @@ Run on the **developer's response turn** when they pick **`merged-pr-proceed`**:
 
 | Scenario | Typical options |
 |----------|-----------------|
-| Must present | `apply-must`, `apply-must-should`, `skip-reject`, `merged-pr-proceed`, `more-details` |
-| Rule-update only (0 Must / 0 Should / 0 follow-up) | `apply-rule-updates`, `skip-reject`, `submit-manual-review`, `merged-pr-proceed`, `more-details` |
-| Skip-only (0 Must / 0 Should / 0 rule-update / 0 follow-up) | `skip-reject` (recommended), `submit-manual-review`, `merged-pr-proceed`, `more-details` |
-| Follow-up only (0 Must / 0 Should / 0 rule-update) | `follow-ups-only`, `submit-manual-review`, `skip-reject`, `merged-pr-proceed`, `more-details` |
-| Mixed (Must + follow-up) | `apply-must`, `apply-must-should`, `follow-ups-only`, `skip-reject`, `merged-pr-proceed`, `more-details` |
-| Mixed (rule-update + code) | `apply-must`, `apply-must-should`, `apply-rule-updates`, `skip-reject`, `merged-pr-proceed`, `more-details` |
+| Must present | `apply-must`, `apply-must-should`, `skip-reject`, `capture-team-feedback`, `merged-pr-proceed`, `more-details` |
+| Rule-update only (0 Must / 0 Should / 0 follow-up) | `apply-rule-updates`, `skip-reject`, `submit-manual-review`, `capture-team-feedback`, `merged-pr-proceed`, `more-details` |
+| Skip-only (0 Must / 0 Should / 0 rule-update / 0 follow-up) | `skip-reject` (recommended), `submit-manual-review`, `capture-team-feedback`, `merged-pr-proceed`, `more-details` |
+| Follow-up only (0 Must / 0 Should / 0 rule-update) | `follow-ups-only`, `submit-manual-review`, `capture-team-feedback`, `skip-reject`, `merged-pr-proceed`, `more-details` |
+| Mixed (Must + follow-up) | `apply-must`, `apply-must-should`, `follow-ups-only`, `skip-reject`, `capture-team-feedback`, `merged-pr-proceed`, `more-details` |
+| Mixed (rule-update + code) | `apply-must`, `apply-must-should`, `apply-rule-updates`, `skip-reject`, `capture-team-feedback`, `merged-pr-proceed`, `more-details` |
 
 **Forbidden:** “Review the PR and tell me when to continue”, “wait for the user to review”, fixed five-option menus when counts make options inert, or ending the turn without structured choice when dispositions need approval.
 
@@ -357,7 +375,7 @@ If all comments were **Skipped (no follow-up)** with **no** code edits, the Step
 
 1. **Reply + resolve** each inline thread using approved dispositions from Step 4 — **Must fix**, **Should fix**, **Skipped (no follow-up)**, or **Skipped → follow-up** (same paraphrase + `(target: …)` as Step 3a) plus short reasoning, then resolve the thread.
 
-2. **Minimize** every top-level review (`PRR_` node) from **every** reviewer (CodeRabbit, Brin, humans) with `{"command":"minimize",...,"node_id":"PRR_...","classifier":"RESOLVED"}`. Use GraphQL `reviews` + REST `pull-reviews` from Step 1. One JSON **array** of `minimize` objects; one script invocation.
+2. **Minimize** every top-level review (`PRR_` node) from **every** reviewer (outsider / external agents, humans) with `{"command":"minimize",...,"node_id":"PRR_...","classifier":"RESOLVED"}`. Use GraphQL `reviews` + REST `pull-reviews` from Step 1. One JSON **array** of `minimize` objects; one script invocation.
 
 3. **Re-request review** from the **automated reviewer** when any `pull-reviews` entry from that reviewer has `state` **CHANGES_REQUESTED** — use the reviewer login from Step 1 `pull-reviews` (for example `{"command":"request-review",...,"reviewers":["<automated-reviewer-login>"]}`).
 
@@ -442,5 +460,15 @@ Otherwise set **`mergeDelegationReady: false`** — **`coding-session`** must no
 **`githubReconciliationStatus` values:** `complete` (checklist passed or skipped-only path with no GitHub actions required), `pending` (Step 5 required or incomplete). Do **not** use a separate **`skipped`** value when **`mergeDelegationReady`** must be true — map skipped-only to **`complete`**.
 
 Keep `continuationStatus: "active"` until every PR review comment is fixed, skipped with rationale, converted to follow-up, or explicitly deferred by the developer, and GitHub reconciliation has run when required.
+
+**Handback when triage completes:**
+
+| Path | Set outputs | Next turn on **`coding-session`** |
+|------|-------------|-----------------------------------|
+| **Skipped-only** (no code edits; Step **5** or skip-only Step **3b**) | `githubReconciliationStatus: complete`, `prReviewStatus: complete` | [Post-pr-review merge approval gate](../coding-session/SKILL.md#post-pr-review-merge-approval-gate) |
+| **Fix + push** (approved Must/Should applied; commit/push + Step **5** ran) | Same completion fields; set `outputs.prReviewFixPushed: true` | [Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate) — **not** merge gate until a **fresh** **`start-pr-review`** pass is skip-only or merge preconditions hold |
+| **Open blockers / pending `CHANGES_REQUESTED`** | `continuationStatus: active` | Loop **`pr-review`** or [Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate) |
+
+**Forbidden:** passive “tell me when merged” prose; opening merge approval immediately after a fix+push pass without re-review.
 
 This skill is **inline-only** on the **`plan and deliver`** mission — no **`AGENT_RUN_REQUEST_V1`**, no **`AGENT_RESULT_RESPONSE_V1`** on this lane. See **[`../README.md`](../README.md)** § Inline-only.

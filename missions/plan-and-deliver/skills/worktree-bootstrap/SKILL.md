@@ -141,11 +141,13 @@ Required:
 | **`script-bootstrap`** | `./scripts/bootstrap-worktree-dev.sh "<worktreePath>"` — append `bootstrapSkipFlags` only when dot-sedea documents honored skip flags |
 | **`full`** | `./scripts/bootstrap-worktree-dev.sh "<worktreePath>"` + attested `bootstrapSkipFlags` when applicable |
 | **`extensions-only-link`** | `./scripts/bootstrap-worktree-dev.sh "<worktreePath>"` with linked-build flags per dot-sedea § *Worktree bootstrap mode* and that repo's script **`--help`** + attested `bootstrapSkipFlags` when applicable |
-| **`submodule-init`** | `cd "<worktreePath>" && git submodule update --init --recursive` — seed empty `.sedea/centers/*` from **`hostingRoot`** when init leaves an empty tree (see dot-sedea) |
+| **`submodule-init`** | `cd "<worktreePath>" && git submodule update --init --recursive --force` — seed empty `.sedea/centers/*` from **`hostingRoot`** when init leaves an empty tree (see dot-sedea). Submodule **working-tree** dirty does not fail bootstrap when **`--force`** update exits **0**. |
+
+**Operational hosting repos (sedea-push):** when **`bootstrap-worktree-dev.sh`** runs on **`HOSTING_ROOT`**, it uses **`--force`** on submodule update. Center **`worktree-setup.sh`** / **`worktree-cleanup.sh`** behavior is upstream — agents follow **`.cursor/rules/dot-sedea.mdc`** § *Housekeeping pass* when setup exits **10** for dirty primary.
 
 The bootstrap script is idempotent where the hosting repo documents idempotency — safe to re-run after partial failure.
 
-**Script-bootstrap repos:** submodule init, operations seed, deps, configure, and docker (when applicable) are owned by that repo's script — see **`--help`**, not this skill.
+**Script-bootstrap repos:** submodule init, operations seed, **local-dev-files** (gitignored **`tapcart-merchant-dashboard/.npmrc`** and **`.env`** from primary clone when missing), deps, configure, docker (when applicable) are owned by that repo's script — see **`--help`**, not this skill.
 
 **Forbidden on this lane:** `git worktree add` / `remove` / `prune`, `sedea_add_worktree_folder` / `sedea_remove_worktree_folder`, hosting-repo product edits, `gh pr create`, spawning other plan-and-deliver skills. **Worktree removal ownership:** bootstrap never removes worktrees — see rule **20** § *Worktree removal ownership (binding)* and [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § *Worktree ownership*.
 

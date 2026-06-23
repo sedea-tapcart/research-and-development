@@ -193,6 +193,8 @@ If the PRD or the title strongly implies a single repo (e.g. it mentions "mercha
 
 If only one repo remains after filtering, skip the AskQuestion and tell the user *"Only one hosting repo in this workspace — defaulting to <name>. Reply 'add <path>' if you want to include another."*
 
+**Cross-repo sedea-push (both submodules).** When Step 3a selects **both** `tapcart-push/` and `tapcart-merchant-dashboard/` on a **sedea-push** hosting repo, read `.cursor/rules/push-monorepo-submodules.mdc` § *Cross-repo plan-and-deliver sequencing* and **development-process.md** § *Cross-repo dashboard-first sequencing (sedea-push)* before drafting § 5. In **`### Decomposition assessment`**, set **Sequencing / coupling** to `cross-repo dashboard-first (shell → push API → dashboard wiring)` unless the user explicitly overrides. Recommend **Delivery phases** or **PR breakdown** boundaries aligned to shell → backend → wiring per slice.
+
 ### 3b — Sync each selected repo to its default branch
 
 Architectural rules are loaded from the working tree, not from a fixed git ref — drafting against a stale local tree produces a Master Plan grounded in code that no longer matches `main`. Before loading rules, fast-forward each selected repo to its default branch.

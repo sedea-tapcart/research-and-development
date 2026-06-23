@@ -269,6 +269,16 @@ Pick PR boundaries that respect Strategy #6 (single concern per deliverable) and
 - **Size each candidate PR by test-case count, not by lines** (canonical: **development-process.md** § *PR sizing — test cases and kinds of changes*). For each PR under consideration, estimate **test cases** it introduces or meaningfully changes — unit + integration / snapshot + exploratory recordings, each enumerated case counted once. Buckets: **≤ 10** simple, **11–20** mid-sized, **21+** heavy (same thresholds as rule **20** § *Keep PRs small and focused*). Heavy is a signal to **investigate** splitting — not automatically wrong. Do not split within one **kind** of change (instance batching). Raw changed-line count is **not** a size signal.
 - **Kinds-of-changes lens** (same canonical subsection). Count **distinct kinds** — N instances of the same shape across N files is one kind. **A reviewer agent** reads the first instance carefully and skims the rest. Split only when each half ships value on its own.
 
+**Cross-repo sedea-push (Step 5a boundary inference).** When the parent plan's scope or **`### Decomposition assessment`** lists **both** `tapcart-push/` and `tapcart-merchant-dashboard/` (or planner Step 3a selected both on sedea-push), read **development-process.md** § *Cross-repo dashboard-first sequencing (sedea-push)* and the hosting rule § *Cross-repo plan-and-deliver sequencing*. **Default PR stages per slice** to shell → backend → wiring unless the developer overrides in structured choice:
+
+```text
+Stage 1 (sequential): PR — dashboard shell (+ FF when applicable) (tapcart-merchant-dashboard)
+Stage 2 (sequential): PR — backend API/work (tapcart-push)
+Stage 3 (sequential): PR — dashboard wiring (tapcart-merchant-dashboard)
+```
+
+When the backend already exists for a slice, document **backend exists** in the assessment and plan **shell → wiring only**. Parallel stages are allowed **across independent slices**, not within one slice's chain.
+
 ### 5b — Draft each sub-section per the doc’s § 3 set-level template
 
 Apply **development-process.md** § 3 *Set-level template* literally. The three sub-sections, in order:
