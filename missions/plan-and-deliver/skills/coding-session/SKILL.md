@@ -1335,7 +1335,7 @@ Run when the developer picks **`capture-team-feedback`** at [Post-create-pr hand
 | Option id | Label (brief) | Agent action |
 |-----------|---------------|--------------|
 | `team-feedback-ready` | Team feedback ready — paste in chat | Developer pastes teammate bullets in the **same** or **next** message; on **next** agent turn, classify each bullet (Must / Should / Skipped / follow-up) in recap and open disposition gate (below) |
-| `start-pr-review` | Skip offline — triage GitHub comments | [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) — Step 1 `pr-review.py` collect first |
+| `start-pr-review` | Skip offline — triage GitHub comments | [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) — Step 1 `pr-review.mjs` collect first |
 | `defer-ship` | Defer next ship step | `continuationStatus: active` |
 | `merged-pr-proceed` | PR merged — proceed with cleanup | When `prUrl` / `prNumber` known — same Act as [Post-create-pr handoff gate](#post-create-pr-handoff-gate) **`spawn-after-deploy-walk`** path after merge verify |
 | `more-details` | More details for option _ | Elaborate; re-open resume modal |
@@ -1343,9 +1343,9 @@ Run when the developer picks **`capture-team-feedback`** at [Post-create-pr hand
 **Act after `team-feedback-ready`** — run on the **developer's response turn** after pasted bullets (numbered list preferred):
 
 1. Print each teammate bullet quoted; assign **Must fix**, **Should fix**, **Skipped (no follow-up)**, or **Skipped → follow-up** (same semantics as **`pr-review`** Step 3).
-2. Compute **`mustCount`**, **`shouldCount`**, **`followUpCount`**, **`skippedOnly`** from offline bullets only — do **not** run **`pr-review.py`** Step 1 for offline items.
+2. Compute **`mustCount`**, **`shouldCount`**, **`followUpCount`**, **`skippedOnly`** from offline bullets only — do **not** run **`pr-review.mjs`** Step 1 for offline items.
 3. Emit **`MC_PHASED_RESPONSE_V1`** disposition gate with the **contextual** option set from **`pr-review/SKILL.md`** Step 3b § *Build disposition options* (include **`capture-team-feedback`** again when the developer may gather another offline round).
-4. On **`apply-must`** / **`apply-must-should`** / **`follow-ups-only`** picks: apply edits under session **`WORKTREE_ROOT`**; use rule **6** commit/push gate before push; when GitHub threads also exist, optional **`start-pr-review`** afterward for `pr-review.py` collection — offline and GitHub triage may run in sequence, not merged silently.
+4. On **`apply-must`** / **`apply-must-should`** / **`follow-ups-only`** picks: apply edits under session **`WORKTREE_ROOT`**; use rule **6** commit/push gate before push; when GitHub threads also exist, optional **`start-pr-review`** afterward for `pr-review.mjs` collection — offline and GitHub triage may run in sequence, not merged silently.
 
 **Forbidden:** prose *ask teammates and tell me when*; treating pasted Slack bullets as GitHub review nodes for Step 5 minimize without developer approval; agent merge on outsider repos.
 
@@ -1698,7 +1698,7 @@ All must hold before opening this gate:
 
 1. **`githubReconciliationStatus: complete`** from the latest **`pr-review`** pass.
 2. **No open `prReviewBlockers`** — no unresolved Must/Should items awaiting code edits on this lane.
-3. **`gh pr view`** (or **`pr-review.py`** `pull-reviews`) shows **no** pending **`CHANGES_REQUESTED`** reviews for the PR.
+3. **`gh pr view`** (or **`pr-review.mjs`** `pull-reviews`) shows **no** pending **`CHANGES_REQUESTED`** reviews for the PR.
 4. **`prState: open`** (or unknown — refresh via `gh pr view` first).
 5. **`prUrl`** / **`prNumber`** known on this lane.
 
