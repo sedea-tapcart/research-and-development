@@ -18,7 +18,8 @@ This mission uses **three execution shapes** (see **`.sedea/centers/sedea/skills
 | **`phase-planner` + `autoContinue: true`** → inline **`pr-breakdown`** (single-PR K=1) | Inline on **`phase-planner`** lane after Step **5b** route approval | **`phase-planner`** | May **skip **`pr-breakdown`** Step **6** modal** when **`skipPrBreakdownApprovalModal: true`** — drafts § 5 on **phase plan**; same-turn **`approve-list`** act-after-select matches **`planner`** **`approve-list`** auto-expand semantics |
 | **`phase-planner` + single-PR** | **`pr-breakdown`** writes § 5 **`PR breakdown`** on **this phase plan** (not the ancestor Master Plan) | **`phase-planner`** | See **`phase-planner/SKILL.md`** Step **5b-decompose** and **`pr-breakdown/SKILL.md`** § *Inline invoker lane* — does **not** replace **`planner`** Step **7** Master Plan **`route-6`** when no phase-planner child is active |
 | **`coding-session`** | Spawned (from **`pr-plan`** §5d or **`phase-planner`** §5f) or detached entry | **`pr-plan`**, **`phase-planner`** (inline subtree), developer, dispatch | Child terminal + inline ship skills |
-| **`pr-review`**, **`create-pr`**, **`deploy-walk`**, **`plan-reconcile`** | **Inline only** on active **`coding-session`** | **`coding-session`** | Prose to coding-session — no child lane |
+| **`hosting-repo-rules`** | **Spawned only** — detached parallel fork after **`coding-session`** terminal when spawn contract matches | **`planner`** Step **7c**, **`phase-planner`** Step **5e** (fire-and-forget — not **`pendingByParent`**) | Child **`AGENT_RESULT_RESPONSE_V1`**; parent updates product row **`rulesUpdatesStatus`** |
+| **`pr-review`**, **`create-pr`**, **`deploy-walk`**, **`plan-reconcile`** | **Inline only** on active **`coding-session`** or **`hosting-repo-rules`** | **`coding-session`**, **`hosting-repo-rules`** | Prose to invoker ship lane — no separate child terminal |
 
 **Common mistake:** Spawning **`planner`** from **`new-plan`** or running **`pr-plan`** on a standalone child lane without **`new-plan-agent`** — wrong unless the mission protocol explicitly says otherwise.
 
@@ -119,7 +120,7 @@ Field-level `outputs` and `continuationStatus` rules: each skill’s **`## Compl
 
 ### Worktree removal ownership (binding)
 
-**Do not remove worktrees you do not own.** Applies to every ship skill on **`coding-session`** and **`plan-reconcile`** §5.
+**Do not remove worktrees you do not own.** Applies to every ship skill on **`coding-session`**, **`hosting-repo-rules`**, and **`plan-reconcile`** §5.
 
 | Source | Contract |
 |--------|----------|
@@ -137,7 +138,9 @@ These skills run on **detached** or **nested** lanes (often **not** the Squad Le
 | Skill | Typical spawner | Outputs section | §8 ship phase hints |
 |-------|-----------------|-----------------|---------------------|
 | `coding-session` | Developer / mission dispatch; **`pr-plan`** spawn (default **spawned-lane** implement) | `## Implementation handoff result` (+ **`## Completion (inline)`** if same-lane) | Layer 2: `developerApprovedImplementation` after worktree-open gate; `shipPhase: implementing` when spawned child codes on lane (not prompt-only stop); **`worktree`** / bootstrap via this lane's terminal — not a separate child |
-| `pre-pr-review` | `coding-session` | Step 8 — Report and result | `pre-pr-review`; `recommendation: go` |
+| `hosting-repo-rules` | **`planner`** / **`phase-planner`** fire-and-forget after **`coding-session`** terminal (`repoRulesReconciliationStatus: pending` or uncovered §5 `.mdc` bullets) | `## Completion (spawned)` | `shipPhase: implementing` → `done`; `prShipComplete` on rules PR merge; parent product row **`rulesUpdatesStatus`** — not a separate **`shipRows`** entry |
+| `worktree-bootstrap` | **Deprecated** — do not spawn by default; normative bootstrap is center **`worktree-setup.sh`** on **`coding-session`**. Exception-only **inline** retry when setup failed (see **`coding-session/SKILL.md`** § *Worktree bootstrap (inline mandatory)*) | `## Spawned result contract` (legacy in-flight dispatches only) | `worktree`; `bootstrapStatus` |
+| `pre-pr-review` | `coding-session`, **`hosting-repo-rules`** | Step 8 — Report and result | `pre-pr-review`; `recommendation: go` |
 
 **Not §8 host-sync children:** inline **`pr-review`**, **`create-pr`**, **`deploy-walk`**, **`plan-reconcile`**, and deprecated inline **`worktree-bootstrap`** retry — milestones **must** ship §8 fields on the next **`coding-session`** terminal re-emit (see § *§8 terminal contract* below).
 
@@ -165,12 +168,25 @@ When a ship skill finishes a milestone on a **detached** lane, the terminal **`A
 
 | Skill | Invoker | Result section | §8 ship ledger |
 |-------|---------|------------------|----------------|
-| `pr-review` | Active **`coding-session`** agent on its lane | `## Inline result for coding-session` | **`coding-session`** re-emit with `shipPhase: pr-review` — host sync |
-| `create-pr` | Active **`coding-session`** agent on its lane | `## Completion (inline)` | `pr-open` via **`coding-session`** terminal re-emit — no separate child terminal |
+| `pr-review` | Active **`coding-session`** or **`hosting-repo-rules`** agent on its lane | `## Inline result for coding-session` (coding) or invoker prose (rules) | Invoker re-emit with `shipPhase: pr-review` — host sync when §8 fields present |
+| `create-pr` | Active **`coding-session`** or **`hosting-repo-rules`** agent on its lane | `## Completion (inline)` | `pr-open` via invoker terminal re-emit — no separate child terminal |
 | `deploy-walk` | Active **`coding-session`** agent on its lane (Before deploy after commit, After deploy after merge, or deploy phrases) | `## Completion (inline)` | `deploy-walk` via **`coding-session`** terminal re-emit — no separate child terminal |
 | `plan-reconcile` | Active **`coding-session`** agent on its lane (after deploy, stale worktree pick, or *plan reconcile* phrase) | `## Completion (inline)` | `reconcile` / `done` via **`coding-session`** terminal re-emit — no separate child terminal |
 
-**`pr-review`**, **`create-pr`**, **`deploy-walk`**, and **`plan-reconcile`** return through **`coding-session`** on the coding lane. §8 updates on the leader dispatch via **`coding-session`** terminal re-emit and host sync only (**`../plan.mdc`** §8).
+**`pr-review`**, **`create-pr`**, **`deploy-walk`**, and **`plan-reconcile`** return through the **active ship invoker** (**`coding-session`** or **`hosting-repo-rules`**). §8 updates on the leader dispatch via invoker terminal re-emit and host sync when documented (**`../plan.mdc`** §8).
+
+### Parallel **`hosting-repo-rules`** fork (fire-and-forget)
+
+When **`coding-session`** terminal outputs satisfy the spawn contract in **`hosting-repo-rules/SKILL.md`** § *Spawn trigger*, parent **`planner`** / **`phase-planner`**:
+
+| Behavior | Rule |
+|----------|------|
+| Spawn | **`AGENT_RUN_REQUEST_V1`** for **`hosting-repo-rules`** with handoff fields (`sourceCodingSessionCorrelationId`, `pendingRepoRulesPaths`, `repoRulesReconciliationStatus`) |
+| Wait | **Do not** wait on rules PR merge before next PR row / phase expand |
+| Ledger | Set product row **`rulesUpdatesStatus`** (`spawned` → `complete` \| `failed`); optional `hostingRepoRulesCorrelationId`, `rulesPrUrl` |
+| Forbidden | Separate **`shipRows`** sub-row; adding rules child to **`pendingByParent`** |
+| Scope escape | Center/mission gaps → **Alignment Drift Brief** (rule **5**) — not **`hosting-repo-rules`** |
+| Mutual exclusion | Inline **`coding-session`** reconcile remains authoritative when satisfiable on product lane; parallel lane handles **`pending`** / deferred §5 after product terminal |
 
 **Inline `pr-review` ship-chain note (binding):** After fix push when Steps **1–4** ran in-session, **`pr-review`** Step **5 (GitHub reconciliation)** is **not optional** — same assistant turn as push per rule **20** § *Commit and push cadence* step 3 and **`pr-review/SKILL.md`** § *Step 5 turn invariant*. Set **`outputs.githubReconciliationStatus: complete`** before **`mergeDelegationReady: true`**. Distinguish **`reconcile-github-only`** (Step 5 only) from **`rerun-pr-review`** (full triage) at **`coding-session`** post-create-pr and pre-merge gates.
 
