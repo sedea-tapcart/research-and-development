@@ -10,7 +10,7 @@ alwaysApply: false
 
 **Execution model:** Squad Leader collects a developer-confirmed quick-fix bullet list, spawns a **Quick Fix Plan agent** that scaffolds a minimal parent plan and runs **`new-plan`** + **`pr-plan`** inline. **`pr-plan`** spawns **`coding-session`** (§5d). Ship execution stays on the detached **`coding-session`** lane; the Squad Leader tracks planning closure and ship progress, then proposes dispatch resolution.
 
-**Skill reuse:** [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/`](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/) — **`new-plan`**, **`pr-plan`**, **`coding-session`**. Spawn contracts: [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md`](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md).
+**Skill reuse:** [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/`](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/) — **`quick-fix-plan`** (§3 spawn), **`new-plan`**, **`pr-plan`**, **`coding-session`**. Spawn contracts: [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md`](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md).
 
 ## Mission constraints (binding)
 
@@ -19,10 +19,10 @@ alwaysApply: false
 | **Scope** | Small fixes — cosmetic UI/styling and **simple functional changes**; few lines per item |
 | **Complexity** | **≤6** — developer **must** only task this dispatch with low-complexity work |
 | **Developer responsibility** | Developer confirms each dispatch item is complexity **6 or under** before opening; agent validates at intake |
-| **Intake** | Short bullet list; items may be unrelated but each must qualify under scope and complexity |
+| **Intake** | Short bullet list **or** free-form fix description (prose path synthesizes bullets for confirmation); items may be unrelated but each must qualify under scope and complexity |
 | **PR count** | **Exactly one** PR plan per dispatch (single indexed child) |
 | **Skipped** | Full **`author-prd`**, **`planner`** Master Plan, **`pr-breakdown`**, **`delivery-phases`**, **`phase-planner`** |
-| **Out of scope redirect** | Complexity **>6**, multi-PR decomposition, or work needing Master Plan → **`plan and deliver a single phase`** or **`plan and deliver`** (detached dispatch) |
+| **Out of scope redirect** | Complexity **>6**, multi-PR decomposition, or work needing Master Plan → **`plan and deliver a single phase`** (**1–6** PRs, complexity **≤ 20**) or **`plan and deliver`** (detached dispatch) |
 | **Ship chain** | Same detached **`coding-session`** order as plan-and-deliver §8 |
 
 ### Operations filesystem invariant (binding)
@@ -35,11 +35,17 @@ Same as plan-and-deliver — [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.
 
 ### Post-PR review inheritance (binding)
 
-Detached **`coding-session`** ship chains reuse plan-and-deliver mechanics — this wrapper does **not** own PR review-cycle steps. After **`create-pr`**, the inline **`pr-review`** / **`pr-review.py`** boundary from [plan-and-deliver/plan.mdc § Post-PR handoff](.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc) applies unchanged. Do **not** restate the review procedure here; when the developer picks **`start-pr-review`**, load [plan-and-deliver `pr-review/SKILL.md`](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-review/SKILL.md) via [Post-create-pr handoff gate](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md#post-create-pr-handoff-gate).
+Detached **`coding-session`** ship chains reuse plan-and-deliver mechanics — this wrapper does **not** own PR review-cycle steps. After **`create-pr`**, the inline **`pr-review`** / **`pr-review.mjs`** boundary from [plan-and-deliver/plan.mdc § Post-PR handoff](.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc) applies unchanged. Do **not** restate the review procedure here; when the developer picks **`start-pr-review`**, load [plan-and-deliver `pr-review/SKILL.md`](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-review/SKILL.md) via [Post-create-pr handoff gate](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md#post-create-pr-handoff-gate).
+
+### Repo rules ship inheritance (binding)
+
+Detached **`coding-session`** lanes execute canonical plan-and-deliver repo-rules behavior — this wrapper does **not** duplicate reconcile or post-review rule-update steps. **Pre-PR:** [plan-and-deliver `coding-session/SKILL.md` § *Repo rules reconciliation (binding)*](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md#repo-rules-reconciliation-binding) and [Repo rules reconciliation gate](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md#repo-rules-reconciliation-gate) — plan §5 → **`.cursor/rules/*.mdc`** before ship cut-point. **Post-review:** when inline **`pr-review`** classifies **Rule-update required**, follow [Post-review repo rules handoff](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md#post-review-repo-rules-handoff) after the disposition gate — see [plan-and-deliver `pr-review/SKILL.md`](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-review/SKILL.md).
+
+**Parallel `hosting-repo-rules` fork (cross-ref only):** When product **`coding-session`** terminals carry **`repoRulesReconciliationStatus: pending`**, parent **`planner`** / **`phase-planner`** may fire-and-forget spawn **`hosting-repo-rules`** per canonical [plan-and-deliver `coding-session/SKILL.md` § *Spawner spawn-detection outputs*](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md#spawner-spawn-detection-outputs) and [plan-and-deliver/plan.mdc §8 detached branches](.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc). This wrapper inherits that contract — **no duplicate spawn prose here**.
 
 ## Objectives
 
-1. **Quick-fix intake** — Collect a developer-confirmed bullet list of small fixes (cosmetic UI/styling, copy tweaks, and simple functional changes) with complexity **≤6**.
+1. **Quick-fix intake** — Collect developer-confirmed scope via **`provide-list`** (bullet list) or **`description-of-fix`** (free-form prose synthesized into bullets for confirmation); each item is a small fix with complexity **≤6**.
 
 2. **Single PR plan** — Produce one PR plan under `.sedea/operations/` via minimal parent scaffold, **`new-plan`** (indexed child), and **`pr-plan`** inline (§§1–4 populated).
 
@@ -82,6 +88,8 @@ flowchart TB
 
 **Quick Fix Plan agent spawn `warmUpRules` (binding):** Merge target skill frontmatter defaults but **replace** `plan-and-deliver/plan.mdc` with **`quick-fix/plan.mdc`**.
 
+**Dispatch display refresh (Squad Leader).** When dispatch scope is readable (opening command phrase or scope remainder from the opening message), call MCP **`mission_control_update_dispatch_display`** with non-empty **`dispatchTitle`** (≤64 chars) and optional **`dispatchDescription`** / **`dispatchHoverDescription`** (≤512 chars). **Skip** when current dispatch chrome already matches. **Forbidden:** **`mission_control_update_lane_display`** to relabel **child** slots from the leader lane; hand-editing **`dispatch-tab.v1.json`**. See [`.sedea/centers/sedea/rules/9_display-metadata-authority.mdc`](.sedea/centers/sedea/rules/9_display-metadata-authority.mdc).
+
 ## Protocol
 
 ### 1. Infer intent from the opening command phrase
@@ -95,25 +103,34 @@ flowchart TB
 **Procedure**
 
 1. Match **`quick fix`** case-insensitively (longest phrase first per [`.sedea/centers/sedea/rules/4_mission.mdc`](.sedea/centers/sedea/rules/4_mission.mdc) § **Mission command phrases**).
-2. Strip the phrase; pass remainder as optional scope hint to §2.
-3. Continue to §2.
+2. When dispatch scope is readable from the opening message (command remainder), run **Dispatch display refresh** (above) — **skip** when current dispatch chrome already matches.
+3. Strip the phrase; pass remainder as optional scope hint to §2.
+4. Continue to §2.
 
 ### 2. Collect quick fix intake
 
 - **Type:** Branching logic
-- **Intent:** Gather a confirmed quick-fix bullet list on the Squad Leader lane before §3 spawn.
-- **Inputs:** Opening remainder; `operationsUserId`.
-- **Expected output:** `changeList` (non-empty bullet list), `complexityConfirmed: true` (each item ≤6), `scopeConfirmed: true`, optional `title`.
-- **Next-step resolution:** List confirmed in scope and complexity → §3. Out-of-scope or complexity **>6** → structured choice: narrow list, redirect to **`plan and deliver a single phase`** or **`plan and deliver`** (detached), or abandon.
+- **Intent:** Gather confirmed quick-fix scope on the Squad Leader lane before §3 spawn — via bullet list or free-form fix description.
+- **Inputs:** Opening remainder; `operationsUserId`; `intakeMode` (`provide-list` | `description-of-fix`).
+- **Expected output:** `intakeMode`, `changeList` (non-empty confirmed bullet list), optional `changeDescription` (when prose path used), `complexityConfirmed: true` (each item ≤6), `scopeConfirmed: true`, optional `title`.
+- **Next-step resolution:** List confirmed in scope and complexity → §3. Out-of-scope or complexity **>6** → structured choice: narrow list, redirect to **`plan and deliver a single phase`** (**1–6** PRs, complexity **≤ 20**) or **`plan and deliver`** (detached), or abandon.
 
 **Procedure**
 
-1. Collect **bullet list** of changes — required; may pre-fill from opening remainder.
-2. **Scope gate:** Confirm each item is a small fix — cosmetic UI/styling/copy **or** a **simple functional change** within this mission's line-count expectations. Reject items that need Master Plan decomposition, multiple PRs, or broad refactors.
-3. **Complexity gate:** Confirm developer attests each item is complexity **6 or under**. When any item likely exceeds **6**, stop and offer redirect (see **Mission constraints**).
-4. Collect optional **title** for the plan tree (default from first bullet or user phrase).
-5. Present summary (title, bullet list, complexity attestation); structured choice to proceed to Quick Fix Plan agent, revise list, redirect scope, or pause.
-6. **Forbidden:** spawn before list is confirmed in scope and complexity.
+1. **Intake mode (required first):** Structured choice on the Squad Leader lane:
+   - **`provide-list`** — I'll paste my bullet list next — proceed to collect it
+   - **`description-of-fix`** — free-form prose with all details of what to change and do (collect on follow-up turn, or same turn when opening remainder already contains the description)
+   - **`redirect-scope`** — out of scope or complexity **>6** → **`plan and deliver a single phase`** or **`plan and deliver`** (detached)
+   - **`pause`**
+   - **More details for option _**
+2. **`provide-list` path:** Collect **bullet list** of changes — required; may pre-fill from opening remainder when bullets are already present.
+3. **`description-of-fix` path:** Collect **free-form prose** (`changeDescription`) — required; do not infer missing details from title alone. Propose a **synthesized bullet list** derived from the prose; present for developer review with structured choice before scope/complexity gates. When the developer chooses **revise intake** at that confirmation, return to step 1 — they may re-enter prose for re-synthesis, switch to **`provide-list`**, or edit the synthesized bullets inline before re-running steps 4–9.
+4. **Scope gate:** Confirm each item is a small fix — cosmetic UI/styling/copy **or** a **simple functional change** within this mission's line-count expectations. Reject items that need Master Plan decomposition, multiple PRs, or broad refactors.
+5. **Complexity gate:** Confirm developer attests each item is complexity **6 or under**. When any item likely exceeds **6**, stop and offer redirect (see **Mission constraints**).
+6. Collect optional **title** for the plan tree (default from first bullet, prose summary, or user phrase).
+7. Present summary (title, final bullet list, complexity attestation, intake mode used); structured choice to proceed to Quick Fix Plan agent, **revise intake** (return to step 1 per step 3), redirect scope, or pause.
+8. When intake confirms a **title** that improves the dispatch title, re-run **Dispatch display refresh** (§ above) — **skip** when current dispatch chrome already matches.
+9. **Forbidden:** spawn before list is confirmed in scope and complexity (both paths).
 
 ### 3. Spawn Quick Fix Plan agent
 
@@ -121,16 +138,18 @@ flowchart TB
 - **execution:** spawned
 - **Intent:** Delegate minimal parent scaffold and **`new-plan`** + **`pr-plan`** inline to a focused planning agent.
 - **Target agent role:** Quick Fix Plan agent
-- **Assigned skills:** [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/new-plan/SKILL.md`](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/new-plan/SKILL.md), [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-plan/SKILL.md`](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-plan/SKILL.md) — executed **inline on the child lane** per §4 (not separate spawns).
+- **skillPath (binding):** [`.sedea/centers/research-and-development/missions/quick-fix/skills/quick-fix-plan/SKILL.md`](.sedea/centers/research-and-development/missions/quick-fix/skills/quick-fix-plan/SKILL.md) — host **`AGENT_RUN_REQUEST_V1`** uses this single path per [spawn contracts README](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md) § *Universal spawn preflight*.
+- **Inline on child lane (not separate spawns):** [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/new-plan/SKILL.md`](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/new-plan/SKILL.md), [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-plan/SKILL.md`](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-plan/SKILL.md) — executed per §4 inside the **`quick-fix-plan`** child lane.
 - **Required rule context:** Sedea baseline, **this `plan.mdc`**, **`development-process.md`**, [`.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`](.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc), plan-and-deliver **`skills/README.md`**.
-- **Inputs:** `changeList`, `title`, `operationsUserId`, `centerSlug: research-and-development`, `complexityConfirmed: true`.
+- **Inputs:** `intakeMode` (`provide-list` | `description-of-fix`), `changeList`, optional `changeDescription` (required when `intakeMode` is `description-of-fix`), `title`, `operationsUserId`, `centerSlug: research-and-development`, `complexityConfirmed: true`.
 - **Expected output:** Child terminal with `outputs.parentPlanPath`, `outputs.targetPlanPath`, `outputs.readyForImplementation`, `outputs.prPlanHandoffReady` (or equivalent per **`pr-plan`** **`## Completion (spawned)`** when spawn path used), ledger fields.
 - **Next-step resolution:** Terminal success with PR plan path → §6 ack on leader. Failure/partial → structured choice retry or abandon.
 
 **Spawn preflight**
 
+- **`skillPath`:** `.sedea/centers/research-and-development/missions/quick-fix/skills/quick-fix-plan/SKILL.md` (workspace-relative on emit).
 - **`name`** / **`description`** from intake **title** or first bullet — not generic placeholders.
-- **`initiatingPrompt`:** full bullet list and scope/complexity confirmation.
+- **`initiatingPrompt`:** one narrative prompt string weaving the confirmed bullet list, scope/complexity confirmation, and full `changeDescription` when the prose intake path was used — not separate structured sub-fields.
 - **`warmUpRules`:** include **`quick-fix/plan.mdc`** instead of **`plan-and-deliver/plan.mdc`**.
 
 **Agent session closure:** Child **`AGENT_RESULT_RESPONSE_V1`**; leader waits for host delivery before §6.
@@ -199,5 +218,5 @@ Per [`.sedea/centers/sedea/rules/4_mission.mdc`](.sedea/centers/sedea/rules/4_mi
 ## Related assets
 
 - Plan-and-deliver reference: [`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`](.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc)
-- Single-phase (broader small-feature path): [`.sedea/centers/research-and-development/missions/single-phase/plan.mdc`](.sedea/centers/research-and-development/missions/single-phase/plan.mdc)
+- Single-phase (broader small-feature path — **1–6** PRs, complexity **≤ 20**): [`.sedea/centers/research-and-development/missions/single-phase/plan.mdc`](.sedea/centers/research-and-development/missions/single-phase/plan.mdc)
 - Cadence: [`.sedea/centers/research-and-development/docs/development-process.md`](.sedea/centers/research-and-development/docs/development-process.md)

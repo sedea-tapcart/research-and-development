@@ -15,7 +15,7 @@ The outcomes below span the **full cadence** (PRD → plans → implementation �
 
 ### Cadence reference (all branches — not Squad Leader protocol steps)
 
-**Planning** milestones below are logical — not strict spawn order. **`coding-session` ship chain** is **normative step order** on the implementation lane (inline · spawn · gate · procedure). **`pr-review`** runs **inline** after **`create-pr`** while the PR is open — developer selection of **`start-pr-review`** loads **`pr-review/SKILL.md`** and runs **`pr-review.py`** Step 1 before generic review/wait/merge options. Generic **`gh`** PR inspection is **not** a substitute for that cycle. **`plan-reconcile`** requires an **explicit start** — not auto after **`deploy-walk`** (rule **20** § *deploy-walk vs plan-reconcile*).
+**Planning** milestones below are logical — not strict spawn order. **`coding-session` ship chain** is **normative step order** on the implementation lane (inline · spawn · gate · procedure). **`pr-review`** runs **inline** after **`create-pr`** while the PR is open — developer selection of **`start-pr-review`** loads **`pr-review/SKILL.md`** and runs **`pr-review.mjs`** Step 1 before generic review/wait/merge options. Generic **`gh`** PR inspection is **not** a substitute for that cycle. **`plan-reconcile`** requires an **explicit start** — not auto after **`deploy-walk`** (rule **20** § *deploy-walk vs plan-reconcile*).
 
 ```mermaid
 flowchart TB
@@ -547,10 +547,13 @@ When an explicit developer override applies, replace the **`Parent:`** line with
 | 3 | `pre-pr-review` | **coding-session** (spawn) after Local test walk or skip | `skills/pre-pr-review/SKILL.md` |
 | 4 | `create-pr` | **coding-session** (inline) after pre-PR **go** | `skills/create-pr/SKILL.md` |
 | 5 | `deploy-walk` (Staging test) | **coding-session** (inline) after PR open | `skills/deploy-walk/SKILL.md` — `deployWalkScope: staging-test-only` |
-| 6 | `pr-review` | **coding-session** (inline) after PR exists | `skills/pr-review/SKILL.md` |
+| 6 | `pr-review` | **coding-session** (inline) after PR exists; agent merge when delegated | `skills/pr-review/SKILL.md` |
 | 7 | Merge approval | **coding-session** (inline) after clean **`pr-review`** | [Post-pr-review merge approval gate](skills/coding-session/SKILL.md#post-pr-review-merge-approval-gate) (outsider repos + manual path) or [Agent-delegated PR approve and merge](skills/coding-session/SKILL.md#agent-delegated-pr-approve-and-merge) when `mergeDelegationAuthorized` |
 | 8 | `deploy-walk` (After deploy) | **coding-session** (inline) after merge and post-merge cleanup | `skills/deploy-walk/SKILL.md` — **development-process.md** § *deploy-walk entry points* |
 | 9 | `plan-reconcile` | **`coding-session`** (inline) after deploy done or developer choice (not auto from deploy-walk) | `skills/plan-reconcile/SKILL.md` |
+| 10 | `hosting-repo-rules` (parallel fork) | **`planner`** Step **7c** or **`phase-planner`** Step **5e** — fire-and-forget after **`coding-session`** terminal when spawn trigger matches | `skills/hosting-repo-rules/SKILL.md` — **not** a Squad Leader spawn; runs detached; parent does **not** wait on rules PR merge |
+
+**`hosting-repo-rules` parallel fork (binding):** Emitted from planning child lanes when **`coding-session`** terminal outputs satisfy the three-condition trigger documented in **`coding-session/SKILL.md`** § *Spawner spawn-detection outputs* and **`planner`** / **`phase-planner`** spawn tables. Tracks **`rulesUpdatesStatus`** on the product PR row — **forbidden:** separate **`shipRows`** entry or **`pendingByParent`** wait on the rules lane.
 
 **`deploy-walk` entry points (binding timing):**
 
@@ -591,15 +594,15 @@ flowchart TB
 | Cycle step | Normative owner | Skill / gate |
 |------------|-----------------|--------------|
 | **1 — PR created** | **`coding-session`** (inline **`create-pr`**) | [Post-create-pr handoff gate](skills/coding-session/SKILL.md#post-create-pr-handoff-gate) opens same turn |
-| **2 — Reviewers review** | Developer + GitHub reviewers (Slink, CodeRabbit, humans) | External — not a Sedea spawn |
+| **2 — Reviewers review** | Developer + GitHub reviewers (automated reviewers such as CodeRabbit, humans) | External — not a Sedea spawn |
 | **3 — Run `pr-review`** | **`coding-session`** (inline) | Developer picks **`start-pr-review`** at post-create-pr gate, or explicit *triage PR comments* on the lane |
-| **4 — No actionable comments** | Developer or agent (when delegated) | **`pr-review`** skip-only path: **`skip-reject`** → Step 5 GitHub reconciliation. **Non-outsider repos:** [Post-pr-review merge approval gate](skills/coding-session/SKILL.md#post-pr-review-merge-approval-gate) or [Agent-delegated PR approve and merge](skills/coding-session/SKILL.md#agent-delegated-pr-approve-and-merge) when `mergeDelegationAuthorized`. **Outsider repos** (`tapcart-push`, `tapcart-merchant-dashboard`): developer approves and merges on GitHub — see outsider table at merge gate |
-| **5 — Push fixes** | **`coding-session`** + inline **`pr-review`** | Disposition gate → approved edits → commit/push gate (rule **6**) → **`pr-review`** Step 5 (reply, resolve, minimize, re-request `slink-ai` when **CHANGES_REQUESTED**) |
+| **4 — No actionable comments** | Developer or agent (when delegated) | **`pr-review`** skip-only path: **`skip-reject`** → Step 5 GitHub reconciliation. **Non-outsider repos:** [Post-pr-review merge approval gate](skills/coding-session/SKILL.md#post-pr-review-merge-approval-gate) or [Agent-delegated PR approve and merge](skills/coding-session/SKILL.md#agent-delegated-pr-approve-and-merge) when `mergeDelegationAuthorized`. **Outsider repos** (`tapcart-push`, `tapcart-merchant-dashboard`): developer approves and merges on GitHub — see outsider table at merge gate. **Merge is on GitHub** — there is no **Merge PR** modal in `pr-review` or `coding-session`. After merge, pick **`check-pr-status`** or **`spawn-after-deploy-walk`** at post-create-pr gate |
+| **5 — Push fixes** | **`coding-session`** + inline **`pr-review`** | Disposition gate → approved edits → commit/push gate (rule **6**) → **`pr-review`** Step 5 (reply, resolve, minimize, re-request automated reviewer when **CHANGES_REQUESTED**) |
 | **6 — Loop to step 2** | Developer + reviewers | After Step 5, **`coding-session`** re-opens [Post-create-pr handoff gate](skills/coding-session/SKILL.md#post-create-pr-handoff-gate). When new comments land, pick **`start-pr-review`** again. **`continuationStatus: active`** until comments are resolved, skipped, follow-up-captured, or deferred |
 
-**Binding references:** [pr-review/SKILL.md](skills/pr-review/SKILL.md) (triage + reconciliation — **`pr-review.py`** Step 1 is the first GitHub-touching action after **`start-pr-review`**); [coding-session/SKILL.md § Inline PR review after PR creation](skills/coding-session/SKILL.md#inline-pr-review-after-pr-creation); rule **20** § *Commit and push cadence* step 3.
+**Binding references:** [pr-review/SKILL.md](skills/pr-review/SKILL.md) (triage + reconciliation — **`pr-review.mjs`** Step 1 is the first GitHub-touching action after **`start-pr-review`**); [coding-session/SKILL.md § Inline PR review after PR creation](skills/coding-session/SKILL.md#inline-pr-review-after-pr-creation); rule **20** § *Commit and push cadence* step 3.
 
-**Post-PR handoff (binding):** Inline **`create-pr`** opens the PR; [Post-create-pr handoff gate](skills/coding-session/SKILL.md#post-create-pr-handoff-gate) resumes the ship chain on the same **`coding-session`** turn. Generic **`gh`** PR inspection is **not** a substitute for inline **`pr-review`** — the lane must run **`pr-review.py`** Step 1 when the developer picks **`start-pr-review`**.
+**Post-PR handoff (binding):** Inline **`create-pr`** opens the PR; [Post-create-pr handoff gate](skills/coding-session/SKILL.md#post-create-pr-handoff-gate) resumes the ship chain on the same **`coding-session`** turn. Generic **`gh`** PR inspection is **not** a substitute for inline **`pr-review`** — the lane must run **`pr-review.mjs`** Step 1 when the developer picks **`start-pr-review`**.
 
 **§8 phase hints:** `pr-open` after PR URL exists; advance to `pr-review` when **`coding-session`** re-emits with `prReviewStatus` terminal + `githubReconciliationStatus`. Repeated rounds stay on `pr-review` until merge moves toward `deploy-walk`.
 
@@ -658,7 +661,7 @@ When Mission Control hosts a **`plan and deliver`** dispatch, the extension **mu
 
 | Step | Behavior |
 |------|----------|
-| **Trigger** | A ship child lane emits terminal or **re-emitted** **`AGENT_RESULT_RESPONSE_V1`** for a **ship skill** (`coding-session`, `pre-pr-review`, `worktree-bootstrap`, `create-pr`, `deploy-walk`, `plan-reconcile`) with **`outputs.targetPlanPath`** and a derivable **`outputs.shipPhase`** (explicit or host-inferred). Inline **`pr-review`**, inline **`create-pr`**, inline **`deploy-walk`**, and inline **`plan-reconcile`** on **`coding-session`** are **not** separate child terminals — those milestones **must** include ship fields on the next **`coding-session`** terminal re-emit. |
+| **Trigger** | A **spawned ship child** lane emits terminal or **re-emitted** **`AGENT_RESULT_RESPONSE_V1`** for **`coding-session`** or **`pre-pr-review`** with **`outputs.targetPlanPath`** and a derivable **`outputs.shipPhase`** (explicit or host-inferred). **`coding-session`** **re-emits** also qualify when they carry §8 fields after inline milestones (**`pr-review`**, **`create-pr`**, **`deploy-walk`**, **`plan-reconcile`**) or inline deprecated **`worktree-bootstrap`** retry — those skills are **not** separate host-sync child terminals. |
 | **Persist** | Merge one row per `targetPlanPath` into **`ship-ledger.v1.json`** in the dispatch bundle directory (alongside **`dispatch.yaml`**). |
 | **Deliver** | Queue a silent **UserSend** on the **Squad Leader** lane whose body starts with **`Mission Control: ship-ledger sync (section 8).`** and includes the host-sync field block (same keys as *Host-sync field reference* below). The leader agent **must** parse it and refresh §8 rows before other protocol work. |
 | **Audit** | Append **`ship-ledger-row-updated`** to **`dispatch-events.v1.ndjson`**. |

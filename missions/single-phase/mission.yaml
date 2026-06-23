@@ -1,11 +1,11 @@
 name: Single Phase
 description: >-
   Simplified plan-and-deliver for small, single-phase features — ad-hoc PRD,
-  Master Plan with PR breakdown only (max 3 PRs), complexity score ≤ 12,
+  Master Plan with PR breakdown only (1–6 PRs), complexity score ≤ 20,
   then standard coding-session ship chain.
 commands:
   - phrase: plan and deliver a single phase
     default: true
     description: >-
       Open a single-phase delivery dispatch — ad-hoc PRD → Master Plan (PR
-      breakdown only) → up to three PR plans → coding-session ship chain.
+      breakdown only) → 1–6 PR plans → coding-session ship chain.

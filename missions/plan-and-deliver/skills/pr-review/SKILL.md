@@ -4,6 +4,9 @@ description: >-
  Inline coding-session procedure for GitHub PR comment triage and fix loops.
  Executed by the active coding-session agent only — not spawned, no warmUpRules.
  Resolves comments only after developer approval.
+designation:
+  allowed: Triage PR review comments; authorized comment fixes in worktree
+  forbidden: Open PRs; merge; planning rewrites; dispatch resolution
 ---
 
 # PR Review Workflow
@@ -14,7 +17,7 @@ description: >-
 
 If Mission Control opened a session whose only intent is **`pr-review`** / *triage PR comments* with **no** active **`coding-session`** context (`prUrl`, worktree, worktree name, PR plan, pre-PR history):
 
-1. **Stop** — do not run Steps 1–5 or **`pr-review.py`**.
+1. **Stop** — do not run Steps 1–5 or **`pr-review.mjs`**.
 2. Tell the developer **`pr-review`** is **inline-only** on the **`coding-session`** lane.
 3. Direct them to open or return to **`coding-session`** (detached phrase, snapshot, or **`plan and deliver`** ship path) with PR identity loaded, then invoke triage from that lane.
 
@@ -43,7 +46,7 @@ After a PR exists, **`coding-session`** runs this skill **inline** in a loop unt
 
 ## Global `gh` exception (binding)
 
-When a **global Cursor or developer rule** directs agents to use `gh` for GitHub tasks, that default **yields to this skill** for PR review-cycle operations. While inline **`pr-review`** is active on a **`coding-session`** lane, **`pr-review.py` is the only permitted interface** for comment collection, thread/review state, classification, reconciliation, replies, resolves, minimizes, and review re-requests — not generic `gh`, REST, or GraphQL substitutes.
+When a **global Cursor or developer rule** directs agents to use `gh` for GitHub tasks, that default **yields to this skill** for PR review-cycle operations. While inline **`pr-review`** is active on a **`coding-session`** lane, **`pr-review.mjs` is the only permitted interface** for comment collection, thread/review state, classification, reconciliation, replies, resolves, minimizes, and review re-requests — not generic `gh`, REST, or GraphQL substitutes.
 
 **Permitted `gh` on this skill (narrow allowlist):** Step 0 worktree/URL resolution in the **worktree**; **`merged-pr-proceed`** merge-state verify (`gh pr view` for **`state` / merge metadata only**); invoker-owned **`gh pr create`** upstream (not this skill). **`check-pr-status`**, manual review submission, rebase, and merge paths on **`coding-session`** may use `gh` for **status/control** only — they do **not** replace Step 1 collection or Step 5 reconciliation.
 
@@ -75,20 +78,20 @@ Give developers a **consistent state snapshot** during PR review cycles so they 
 
 ## Helper script
 
-Script: `.sedea/centers/research-and-development/missions/plan-and-deliver/scripts/pr-review.py` (reads PAT from `GH_TOKEN`, then hosting-repo **`.sedea/mcp.json`**, then `~/.sedea/mcp.json` for token lookup only — see § *GitHub access*).
+Script: `.sedea/centers/sedea/scripts/pr-review.mjs` (reads PAT from `GH_TOKEN`, then hosting-repo **`.sedea/mcp.json`**, then `~/.sedea/mcp.json` for token lookup only — see § *GitHub access*).
 
-### Hosting repo cwd (`pr-review.py` and `plan-state.mjs`)
+### Hosting repo cwd (`pr-review.mjs` and `plan-state.mjs`)
 
-**`pr-review.py`** and **`plan-state.mjs`** run from **`HOSTING_ROOT`** (hosting repo whose root contains **`.sedea/`**), not from a worktree’s `git rev-parse --show-toplevel` alone. Canonical contract: [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](../../../../rules/20_efficient-pr-shipping.mdc) § *Hosting repo cwd for scripts (canonical)* and [`.sedea/centers/research-and-development/rules/31_operations-user-id.mdc`](../../../../rules/31_operations-user-id.mdc) § *Worked example*.
+**`pr-review.mjs`** and **`plan-state.mjs`** run from **`HOSTING_ROOT`** (hosting repo whose root contains **`.sedea/`**), not from a worktree’s `git rev-parse --show-toplevel` alone. Canonical contract: [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](../../../../rules/20_efficient-pr-shipping.mdc) § *Hosting repo cwd for scripts (canonical)* and [`.sedea/centers/research-and-development/rules/31_operations-user-id.mdc`](../../../../rules/31_operations-user-id.mdc) § *Worked example*.
 
 - **`WORKTREE_ROOT`** — hosting repo worktree where you edit code (`git` / `gh` in Step 0).
-- **`HOSTING_ROOT`** — walk up until **`.sedea/centers/sedea/`** or **`.sedea/`** exists; **`cd "$HOSTING_ROOT"`** before **`node …/plan-state.mjs`** or **`python3 …/pr-review.py`**.
+- **`HOSTING_ROOT`** — walk up until **`.sedea/centers/sedea/`** or **`.sedea/`** exists; **`cd "$HOSTING_ROOT"`** before **`node …/plan-state.mjs`** or **`node …/pr-review.mjs`**.
 
 The script reads input from (in order): **`PR_REVIEW_INPUT`** (absolute path to a JSON file — keeps payloads **outside** the repo).
 
 ### Input file and script: **always two separate steps**
 
-The point is a **reviewable JSON payload** and a **stable allowlisted shell command** (`python3 .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/pr-review.py` only) — **never** `printf … && python3 …` in one line.
+The point is a **reviewable JSON payload** and a **stable allowlisted shell command** (`node .sedea/centers/sedea/scripts/pr-review.mjs` only) — **never** `printf … && node …` in one line.
 
 1. **First step — write the input file only**
  Create a temp path outside the repo, e.g. `PRR_INPUT=$(mktemp /tmp/cursor-pr-review-input.XXXXXX)` (six trailing `X`). Use the **Write** tool to write the JSON to that **absolute** path (or a **Shell** that **only** writes the file and exits — **no** `&&` to the script).
@@ -96,17 +99,17 @@ The point is a **reviewable JSON payload** and a **stable allowlisted shell comm
 2. **Second step — run the script only**
  A **separate** **Shell** invocation (from **`HOSTING_ROOT`**, not the worktree root alone):
 
- `cd "$HOSTING_ROOT" && PR_REVIEW_INPUT="<absolute-path-from-step-1>" python3 .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/pr-review.py`
+ `cd "$HOSTING_ROOT" && PR_REVIEW_INPUT="<absolute-path-from-step-1>" node .sedea/centers/sedea/scripts/pr-review.mjs`
 
  No `echo`/`printf`/heredoc, no redirection, no `&&` chaining write + script on this line.
 
 **Never** chain writing and executing in one shell line, for example:
 
-`printf '…' > /tmp/foo.json && python3 .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/pr-review.py`
+`printf '…' > /tmp/foo.json && node .sedea/centers/sedea/scripts/pr-review.mjs`
 
 That defeats the two-step workflow (re-approval noise, hides the clean script-only command). **Never** use a shell `for` loop that overwrites the input file and calls the script each iteration — put the full sequence in **one** JSON payload (single object or **array** of commands) and run the script **once**.
 
-After success, `rm -f` the temp input file (optional). To invoke end-to-end: **Write** JSON to the temp path, then **Shell** the `cd … && PR_REVIEW_INPUT=… python3 …` line **once**.
+After success, `rm -f` the temp input file (optional). To invoke end-to-end: **Write** JSON to the temp path, then **Shell** the `cd … && PR_REVIEW_INPUT=… node …` line **once**.
 
 Input format — **one object** (single command) or a **JSON array** of command objects executed in order:
 
@@ -127,13 +130,13 @@ Supported `command` values: `threads`, `reply`, `resolve`, `minimize`, `pr-for-b
 
 ### GitHub interface (binding)
 
-When this skill is active, **`pr-review.py` is the only permitted GitHub interface** for PR review comment collection, thread/review state used for classification, and reconciliation.
+When this skill is active, **`pr-review.mjs` is the only permitted GitHub interface** for PR review comment collection, thread/review state used for classification, and reconciliation.
 
 | Operation | Required interface |
 |-----------|--------------------|
-| Collect comments (Step 1) | **`pr-review.py`** array only |
-| Re-fetch before reconcile (Step 2 / Step 5) | **`pr-review.py`** array only |
-| Reply / resolve / minimize / summary (Step 5) | **`pr-review.py`** array only |
+| Collect comments (Step 1) | **`pr-review.mjs`** array only |
+| Re-fetch before reconcile (Step 2 / Step 5) | **`pr-review.mjs`** array only |
+| Reply / resolve / minimize / summary (Step 5) | **`pr-review.mjs`** array only |
 | PR identity in worktree (Step 0) | **`pr-for-branch`** script command or known **`prUrl`** |
 | Merge-state verify (`merged-pr-proceed`) | **`gh pr view`** for merge state only — no comment, thread, or review endpoints |
 
@@ -142,21 +145,21 @@ When this skill is active, **`pr-review.py` is the only permitted GitHub interfa
 **First-action invariant:** If invoker context, user context, or an open gate references **`pr-review`**, the first GitHub-touching shell in that turn must be the Step 1 collect array:
 
 ```bash
-cd "$HOSTING_ROOT" && PR_REVIEW_INPUT="<absolute-path>" python3 .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/pr-review.py
+cd "$HOSTING_ROOT" && PR_REVIEW_INPUT="<absolute-path>" node .sedea/centers/sedea/scripts/pr-review.mjs
 ```
 
 Checking PR status during an open **`pr-review`** cycle is **not** exempt from this invariant unless the active pick is **`merged-pr-proceed`** or **`check-pr-status`** on **`coding-session`** (merge metadata only).
 
 **Verification:** After Step 5, re-fetch using the same Step 1 script array. **Forbidden:** using **`gh api graphql`** for thread counts or review-state verification.
 
-Superseded paths (token/config lookup only — **not** for listing threads or posting replies): GitHub MCP server ids such as **`github`** or **`user-github`** in **`.sedea/mcp.json`**. Those tools duplicate **`pr-review.py`** and inflate agent context.
+Superseded paths (token/config lookup only — **not** for listing threads or posting replies): GitHub MCP server ids such as **`github`** or **`user-github`** in **`.sedea/mcp.json`**. Those tools duplicate **`pr-review.mjs`** and inflate agent context.
 
 ## Cyclic review loop (binding)
 
 After inline **`create-pr`** opens a PR, **`coding-session`** runs this skill **in cycles** until **`continuationStatus`** is **`terminal`**:
 
 1. **Open PR** — inline **`create-pr`** records `prUrl` / `prNumber`; [Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate) opens same turn.
-2. **Developer picks `start-pr-review`** — load this skill; **Step 1 `pr-review.py` collect array is the first GitHub-touching action** (not generic `gh` inspection).
+2. **Developer picks `start-pr-review`** — load this skill; **Step 1 `pr-review.mjs` collect array is the first GitHub-touching action** (not generic `gh` inspection).
 3. **Triage** — Steps **1–4** below.
 4. **Developer gate** — structured choice for dispositions and commit/push depth per rule **6**.
 5. **Reconcile on GitHub** — Step **5** when required (same turn as push when fixes landed).
@@ -208,10 +211,10 @@ Skip silently when `resolve` exits non-zero (session has no plan) or when `pull_
 
 **Capture the resolved slug + full `planPath`** (or the lack thereof) for Step 3a. After `resolve`, parse the path segment immediately after `.sedea/operations/` — it is either **`joint`** or the **user uuid** — and edit that same `<slug>.plan.md` (sidecar `<slug>.state.yaml` sits beside it). Re-running `resolve` later only to recover the path wastes a shell call.
 
-### Step 1 — Collect comments (`pr-review.py` only — no `gh` substitute)
+### Step 1 — Collect comments (`pr-review.mjs` only — no `gh` substitute)
 
 1. Use the resolved `owner`, `repo`, and `pull_number`.
-2. Run **`pr-review.py` once** with a JSON **array** of commands (same `PR_REVIEW_INPUT` two-step workflow as above), in this order:
+2. Run **`pr-review.mjs` once** with a JSON **array** of commands (same `PR_REVIEW_INPUT` two-step workflow as above), in this order:
  - `{"command":"review-comments",...}` — REST: all inline PR review comments (ids, bodies, paths, lines, authors). Paginated inside the script.
  - `{"command":"pull-reviews",...}` — REST: all submitted pull request reviews (bodies, states, `node_id` for Step 5 minimize, authors).
  - `{"command":"threads",...}` — GraphQL: thread `id`, `isResolved`, per-comment `databaseId`, `isMinimized` / `minimizedReason`, path/line (thread metadata for resolve; **merge** with `review-comments` by matching `databaseId` to REST comment `id`).
@@ -234,10 +237,11 @@ From the **`issue-comments`** line in the Step 1 script output, scan for prior *
 
 ### Step 3 — Validate and classify
 
-For each **new** (not filtered in Step 2) comment, verify it against the **current** codebase and assign one of four dispositions:
+For each **new** (not filtered in Step 2) comment, verify it against the **current** codebase and assign one of five dispositions:
 
 - **Must fix** — issue is valid, actionable, and blocks the PR before merge.
 - **Should fix** — issue is valid and worth addressing in this PR if the developer approves the extra fix pass.
+- **Rule-update required** — review feedback requires creating or updating hosting-repo **`.cursor/rules/*.mdc`** files (not product source alone). Classify here when the comment targets rule documentation, governance text, or §5-style hosting-repo rule alignment — even when no code change is needed. Hand off to **`coding-session`** [Post-review repo rules handoff](../coding-session/SKILL.md#post-review-repo-rules-handoff) after developer approval — do **not** silently edit `.mdc` files before the disposition gate.
 - **Skipped (no follow-up)** — issue is already fixed in the working tree, factually wrong, or pure noise (e.g. linter chatter the project doesn't enforce). Nothing to track.
 - **Skipped → follow-up** — issue is *valid* but *out of scope* for this PR's single concern. Strategy #6 forbids silently expanding the PR; propose a `## Follow-ups` bullet in Step 3a so the item isn't lost.
 
@@ -249,7 +253,7 @@ Run this gate only after Step 3a has prepared proposed follow-ups and Step **4**
 
 Before applying any code, plan, or GitHub changes, open the **disposition gate** in Step **4** (`MC_PHASED_RESPONSE_V1` or **AskQuestion** with the **contextual** option set in Step **4** § *Build disposition options*). **Do not** duplicate the gate in prose.
 
-**Contextual options (binding):** List **only** disposition actions valid for this PR's Step 3 classification counts — see Step **4** § *Build disposition options*. **Forbidden:** showing **`apply-must`** or **`apply-must-should`** when **`mustCount`** and **`shouldCount`** are both **0**; showing **`follow-ups-only`** when **`followUpCount`** is **0**. **`more-details`** is always included.
+**Contextual options (binding):** List **only** disposition actions valid for this PR's Step 3 classification counts — see Step **4** § *Build disposition options*. **Forbidden:** showing **`apply-must`** or **`apply-must-should`** when **`mustCount`** and **`shouldCount`** are both **0**; showing **`apply-rule-updates`** when **`ruleUpdateCount`** is **0**; showing **`follow-ups-only`** when **`followUpCount`** is **0**. **`more-details`** is always included.
 
 No source edits, plan edits, commits, pushes, GitHub replies, resolves, minimizes, or review re-requests may happen until the developer chooses an approval option shown in the modal.
 
@@ -259,7 +263,7 @@ After approved fixes are applied, open a **second** structured-choice gate (comm
 
 ### Step 3a — Propose out-of-scope flags as follow-ups
 
-Per [`development-process.md`](../../../../docs/development-process.md) § *Cadence — Feedback Collection*, items surfaced by **a reviewer-agent (Slink)** during PR review that aren't worth blocking the PR on land in the PR plan's `## Follow-ups` section as **Code Review Follow-ups** (Strategy #6 forbids the silent scope expansion; the follow-up is the safe escape valve). This step mirrors `pre-pr-review` runner Step 6 — same section, same bullet shape, same routing semantics — so **`plan-reconcile`** can drain both sources at archive time without distinguishing.
+Per [`development-process.md`](../../../../docs/development-process.md) § *Cadence — Feedback Collection*, items surfaced by **an automated reviewer agent (for example Code Rabbit)** during PR review that aren't worth blocking the PR on land in the PR plan's `## Follow-ups` section as **Code Review Follow-ups** (Strategy #6 forbids the silent scope expansion; the follow-up is the safe escape valve). This step mirrors `pre-pr-review` runner Step 6 — same section, same bullet shape, same routing semantics — so **`plan-reconcile`** can drain both sources at archive time without distinguishing.
 
 **Skip this step entirely** when Step 0's sub-step returned no slug (`resolve` exited non-zero, or no PR plan is linked yet). Acknowledge once: *"No plan linked to this PR; skipping follow-ups capture. Out-of-scope flags surface in the Step 4 report only — copy anything actionable into a new plan or follow-up issue if needed."*
 
@@ -277,10 +281,11 @@ Plan files live under **`.sedea/operations/`** on the primary hosting repo. In t
 
 ### Step 4 — Report and disposition gate
 
-Print **every** comment in its original form (quote the body). For each one, state one of four dispositions:
+Print **every** comment in its original form (quote the body). For each one, state one of five dispositions:
 
 - **Must fix** — why it blocks and what edit is proposed or applied after approval.
 - **Should fix** — why it is useful and what edit is proposed or applied after approval.
+- **Rule-update required** — which **`.cursor/rules/*.mdc`** path(s) need create/update and why; reference [Post-review repo rules handoff](../coding-session/SKILL.md#post-review-repo-rules-handoff) as the follow-up path on the open PR.
 - **Skipped (no follow-up)** — why it doesn't apply (already fixed, factually wrong, pure noise).
 - **Skipped → follow-up** — paraphrase the planning concern + the `(target: …)` hint (if any) proposed in Step 3a. Reference the slug so the user can approve or reject: *"Proposed for `<slug>.plan.md` § Follow-ups."*
 
@@ -296,12 +301,13 @@ After Step 3 classification, compute:
 |----------|------|
 | **`mustCount`** | Comments classified **Must fix** |
 | **`shouldCount`** | Comments classified **Should fix** |
+| **`ruleUpdateCount`** | Comments classified **Rule-update required** |
 | **`followUpCount`** | Comments classified **Skipped → follow-up** |
-| **`skippedOnly`** | **`mustCount === 0`** and **`shouldCount === 0`** and **`followUpCount === 0`** and at least one **Skipped (no follow-up)** |
+| **`skippedOnly`** | **`mustCount === 0`** and **`shouldCount === 0`** and **`ruleUpdateCount === 0`** and **`followUpCount === 0`** and at least one **Skipped (no follow-up)** |
 
 **`display.markdown`** (required before modal):
 
-1. Triage counts — one line or table: Must / Should / Skipped (no follow-up) / Skipped → follow-up.
+1. Triage counts — one line or table: Must / Should / Rule-update required / Skipped (no follow-up) / Skipped → follow-up.
 2. **Omitted-options explainer** when any standard option is hidden — e.g. *"Apply Must / Apply Must + Should are not shown — 0 Must and 0 Should items on this PR."*
 
 **`askQuestion.options`** — include **only** applicable rows (always end with **`more-details`**):
@@ -310,6 +316,7 @@ After Step 3 classification, compute:
 |-----------|--------------|---------------|
 | `apply-must` | **`mustCount > 0`** | Apply Must fixes only |
 | `apply-must-should` | **`mustCount > 0` or `shouldCount > 0`** | Apply Must + Should fixes |
+| `apply-rule-updates` | **`ruleUpdateCount > 0`** | Apply rule updates — `.mdc` edits on open PR |
 | `follow-ups-only` | **`followUpCount > 0`** | Follow-ups only — no source edits |
 | `skip-reject` | Triage non-empty | When **`skippedOnly`**: *Skip / reject — reconcile on GitHub (recommended)*; else *Skip / reject selected comments* |
 | `submit-manual-review` | **`skippedOnly`** or (**`followUpCount > 0`** and **`mustCount === 0`** and **`shouldCount === 0`**) | Submit manual review on GitHub — open **`coding-session`** [Manual review submission (external-wait)](../coding-session/SKILL.md#manual-review-submission-external-wait) |
@@ -334,13 +341,17 @@ Run on the **developer's response turn** when they pick **`merged-pr-proceed`**:
 | Scenario | Typical options |
 |----------|-----------------|
 | Must present | `apply-must`, `apply-must-should`, `skip-reject`, `capture-team-feedback`, `merged-pr-proceed`, `more-details` |
-| Skip-only (0 Must / 0 Should / 0 follow-up) | `skip-reject` (recommended), `submit-manual-review`, `capture-team-feedback`, `merged-pr-proceed`, `more-details` |
-| Follow-up only (0 Must / 0 Should) | `follow-ups-only`, `submit-manual-review`, `capture-team-feedback`, `skip-reject`, `merged-pr-proceed`, `more-details` |
+| Rule-update only (0 Must / 0 Should / 0 follow-up) | `apply-rule-updates`, `skip-reject`, `submit-manual-review`, `capture-team-feedback`, `merged-pr-proceed`, `more-details` |
+| Skip-only (0 Must / 0 Should / 0 rule-update / 0 follow-up) | `skip-reject` (recommended), `submit-manual-review`, `capture-team-feedback`, `merged-pr-proceed`, `more-details` |
+| Follow-up only (0 Must / 0 Should / 0 rule-update) | `follow-ups-only`, `submit-manual-review`, `capture-team-feedback`, `skip-reject`, `merged-pr-proceed`, `more-details` |
 | Mixed (Must + follow-up) | `apply-must`, `apply-must-should`, `follow-ups-only`, `skip-reject`, `capture-team-feedback`, `merged-pr-proceed`, `more-details` |
+| Mixed (rule-update + code) | `apply-must`, `apply-must-should`, `apply-rule-updates`, `skip-reject`, `capture-team-feedback`, `merged-pr-proceed`, `more-details` |
 
 **Forbidden:** “Review the PR and tell me when to continue”, “wait for the user to review”, fixed five-option menus when counts make options inert, or ending the turn without structured choice when dispositions need approval.
 
 **Act** (edits, plan append, GitHub reconciliation) runs on the **developer's response turn** after modal selection — not in the same turn as the disposition gate.
+
+When the developer picks **`apply-rule-updates`**, run **`coding-session`** [Post-review repo rules handoff](../coding-session/SKILL.md#post-review-repo-rules-handoff) on the **next** turn — apply approved **`.mdc`** edits in **`WORKTREE_ROOT`**, commit/push to the **same open PR**, then re-run Step **5** in the **same turn** as push. When **`apply-rule-updates`** is combined with **`apply-must`** / **`apply-must-should`**, complete code fixes first, then run the rule-update handoff before Step **5**.
 
 When fixes are applied and ready to land, use a **separate** structured-choice gate before commit/push. Include at least:
 
@@ -360,13 +371,13 @@ If all comments were **Skipped (no follow-up)** with **no** code edits, the Step
 
 - **Skipped-only triage** — Step 3 marked every comment **Skipped (no follow-up)** with **no** code edits: run **GitHub only** immediately (no commit/push).
 
-**GitHub only** (two-step `PR_REVIEW_INPUT` + `python3 .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/pr-review.py` per § *Input file and script* — never chain write + script):
+**GitHub only** (two-step `PR_REVIEW_INPUT` + `node .sedea/centers/sedea/scripts/pr-review.mjs` per § *Input file and script* — never chain write + script):
 
 1. **Reply + resolve** each inline thread using approved dispositions from Step 4 — **Must fix**, **Should fix**, **Skipped (no follow-up)**, or **Skipped → follow-up** (same paraphrase + `(target: …)` as Step 3a) plus short reasoning, then resolve the thread.
 
 2. **Minimize** every top-level review (`PRR_` node) from **every** reviewer (outsider / external agents, humans) with `{"command":"minimize",...,"node_id":"PRR_...","classifier":"RESOLVED"}`. Use GraphQL `reviews` + REST `pull-reviews` from Step 1. One JSON **array** of `minimize` objects; one script invocation.
 
-3. **Re-request review** from `slink-ai` if any `pull-reviews` entry from `slink-ai` has `state` **CHANGES_REQUESTED** — `{"command":"request-review",...,"reviewers":["slink-ai"]}`.
+3. **Re-request review** from the **automated reviewer** when any `pull-reviews` entry from that reviewer has `state` **CHANGES_REQUESTED** — use the reviewer login from Step 1 `pull-reviews` (for example `{"command":"request-review",...,"reviewers":["<automated-reviewer-login>"]}`).
 
 4. **Summary** comment — `{"command":"summary",...}` with body shaped like:
 
@@ -381,7 +392,7 @@ If all comments were **Skipped (no follow-up)** with **no** code edits, the Step
 
 The `[~]` marker plus the explicit "captured to … § Follow-ups" pointer lets reviewers cross-reference what was deferred without leaving the GitHub comment thread. Use one bullet per comment, mirroring the dispositions assigned in Step 4. Replace `abc1234` with `git rev-parse --short HEAD` after the push in rule **20** § *Commit and push cadence* (or the commit you just pushed).
 
-If Step 1 payloads are **missing or stale** in context (new comments since fetch, fresh chat), re-run **Step 1**’s `pr-review.py` array for the same `owner` / `repo` / `pull_number`, then run **GitHub only** above — do **not** start a second full **`pr-review`** triage unless you truly cannot resolve the PR identity.
+If Step 1 payloads are **missing or stale** in context (new comments since fetch, fresh chat), re-run **Step 1**’s `pr-review.mjs` array for the same `owner` / `repo` / `pull_number`, then run **GitHub only** above — do **not** start a second full **`pr-review`** triage unless you truly cannot resolve the PR identity.
 
 ### Step 5 turn invariant (binding)
 

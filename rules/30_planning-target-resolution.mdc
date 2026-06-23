@@ -41,8 +41,9 @@ Squad Leader **§8** on the **`plan and deliver`** dispatch is updated **only** 
 
 | Source | Host sync? | Leader §8 action |
 |--------|------------|------------------|
-| **`coding-session`**, **`pre-pr-review`**, **`worktree-bootstrap`**, **`create-pr`**, **`deploy-walk`**, **`plan-reconcile`** child terminal with `outputs.targetPlanPath` and derivable `shipPhase` | **Yes** | Parse silent **`Mission Control: ship-ledger sync (section 8).`** — **`plan.mdc`** §8 |
-| **`pr-review`** (inline on **`coding-session`**) | Via **`coding-session`** re-emit | **`coding-session`** **must** re-emit with `shipPhase: pr-review` after triage — **`pr-review/SKILL.md`** § *§8 host sync (via coding-session)* |
+| **`coding-session`** or **`pre-pr-review`** spawned child terminal with `outputs.targetPlanPath` and derivable `shipPhase` | **Yes** | Parse silent **`Mission Control: ship-ledger sync (section 8).`** — **`plan.mdc`** §8 |
+| **`pr-review`**, **`create-pr`**, **`deploy-walk`**, **`plan-reconcile`** (inline on **`coding-session`**) | Via **`coding-session`** re-emit | **`coding-session`** **must** re-emit with §8 **`outputs`** after each inline milestone — see each skill § *Mission Control section 8 sync* / *§8 host sync* |
+| **`worktree-bootstrap`** (deprecated — inline exception retry on **`coding-session`** only) | Via **`coding-session`** re-emit | **Not** a separate host-sync child — report `bootstrapStatus` / `shipPhase: worktree` on **`coding-session`** terminal only |
 
 Do not report §8 as up to date, or propose dispatch **`resolved`**, because **`pr-review`** finished on a coding lane without a subsequent **`coding-session`** terminal that includes §8 **`outputs`**.
 
@@ -52,7 +53,7 @@ Two different **step 3** labels appear in ship docs. **Do not** conflate them wi
 
 | Label | Where | Meaning |
 |-------|--------|---------|
-| **Rule 20 — cadence step 3** | [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](20_efficient-pr-shipping.mdc) § *Commit and push cadence* → *Steps* item **3** | On a **`coding-session`** (implementation) lane, **after** commit and push: run **`pr-review`** skill **Step 5 — GitHub only** via `pr-review.py` — **only** when that skill’s Steps **1–4** already ran in this chat. **Skip** cadence step 3 when there was no **`pr-review`** triage. **Not** a second full triage from scratch. |
+| **Rule 20 — cadence step 3** | [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](20_efficient-pr-shipping.mdc) § *Commit and push cadence* → *Steps* item **3** | On a **`coding-session`** (implementation) lane, **after** commit and push: run **`pr-review`** skill **Step 5 — GitHub only** via `pr-review.mjs` — **only** when that skill’s Steps **1–4** already ran in this chat. **Skip** cadence step 3 when there was no **`pr-review`** triage. **Not** a second full triage from scratch. |
 | **`pr-review` Steps 1–5** | [`pr-review/SKILL.md`](../missions/plan-and-deliver/skills/pr-review/SKILL.md) | Inline on the active **`coding-session`** lane. **Step 5** is the GitHub reconciliation that rule 20 cadence step 3 names. |
 
 Pitfall cross-reference: **`.sedea/centers/research-and-development/docs/development-process.md`** § *Agent UX pitfalls* — *Commit and push cadence step 3*.

@@ -51,13 +51,13 @@ When the Squad Leader receives an implementation request, PR review, or cross-re
 
 ## Hosting repo cwd for scripts (canonical)
 
-R&D automation scripts **`plan-state.mjs`**, **`plan-ws-completeness.mjs`**, and **`pr-review.py`** live under **`.sedea/centers/research-and-development/missions/plan-and-deliver/scripts/`** in the **hosting repo** whose root contains **`.sedea/`** (and usually **`.sedea/centers/sedea/`**).
+R&D automation scripts **`plan-state.mjs`** and **`plan-ws-completeness.mjs`** live under **`.sedea/centers/research-and-development/missions/plan-and-deliver/scripts/`** in the **hosting repo** whose root contains **`.sedea/`** (and usually **`.sedea/centers/sedea/`**). Canonical **`pr-review.mjs`** lives under **`.sedea/centers/sedea/scripts/`** — see § *`pr-review.mjs`* below.
 
 **Hosting repo worktrees** (`git worktree add` for `user-auth`, `payments-web`, etc.) often have a **different** `git rev-parse --show-toplevel` and **no** `.sedea/centers/` tree. Do **not** derive script paths from the worktree root alone.
 
 ### Resolve `HOSTING_ROOT`
 
-Before any `node …/plan-state.mjs` or `python3 …/pr-review.py` invocation:
+Before any `node …/plan-state.mjs` or `node …/pr-review.mjs` invocation:
 
 1. Start from the hosting repo worktree or primary hosting repo cwd.
 2. Walk **up** parent directories until **`.sedea/centers/sedea/`** exists (preferred) or at minimum **`.sedea/`** at the hosting repo root.
@@ -66,7 +66,7 @@ Before any `node …/plan-state.mjs` or `python3 …/pr-review.py` invocation:
 
 When the agent already knows the Mission Control primary hosting repo path, set **`HOSTING_ROOT`** explicitly instead of guessing.
 
-5. If no ancestor contains **`.sedea/`**, **stop** — use **AskQuestion** once for the hosting repo root (absolute path). Do not run **`plan-state.mjs`**, **`plan-ws-completeness.mjs`**, or **`pr-review.py`** from a worktree path alone.
+5. If no ancestor contains **`.sedea/`**, **stop** — use **AskQuestion** once for the hosting repo root (absolute path). Do not run **`plan-state.mjs`**, **`plan-ws-completeness.mjs`**, or **`pr-review.mjs`** from a worktree path alone.
 
 ### Worktree context for `resolve --cwd`
 
@@ -83,9 +83,9 @@ node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/p
 
 For **`upsert-pr --repo`**, use **`$(basename "$HOSTING_ROOT")`** — the **hosting repo git remote label** (for example `app`), **not** **`$(basename "$WORKTREE_ROOT")`**. Worktree directory names (for example `app-feat-02-…`) are ephemeral paths; sidecar **`prs[].repo`** must stay stable so **`plan-state.mjs`** reconcile and post-merge **`mergedPr`** detection still work after **`worktrees[]`** is pruned.
 
-### `pr-review.py`
+### `pr-review.mjs`
 
-Run **`python3 .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/pr-review.py`** with **`cd "$HOSTING_ROOT"`** (two-step **`PR_REVIEW_INPUT`** per [`pr-review/SKILL.md`](../missions/plan-and-deliver/skills/pr-review/SKILL.md)). Git / `gh` in **`pr-review`** Step 0 may use the **hosting repo worktree**; the script binary path must not assume `.sedea/` exists under the worktree root.
+Run **`node .sedea/centers/sedea/scripts/pr-review.mjs`** with **`cd "$HOSTING_ROOT"`** (two-step **`PR_REVIEW_INPUT`** per [`pr-review/SKILL.md`](../missions/plan-and-deliver/skills/pr-review/SKILL.md)). Git / `gh` in **`pr-review`** Step 0 may use the **hosting repo worktree**; the script binary path must not assume `.sedea/` exists under the worktree root.
 
 ### Forbidden pattern
 
@@ -326,13 +326,13 @@ Apply § *Hosting repo cwd for scripts (canonical)* for every script invocation 
 
 1. **Commit** (step 1). **Skip this step if `git status --short` is empty** — typical when the worktree is already committed after **`pre-pr-review`** **go**. Do not amend the previous commit and do not pass `--allow-empty`; just proceed to step 2.
 2. Push to remote.
-3. **PR comment reconciliation (`pr-review` → this cadence).** This step is **only** [`pr-review`](../missions/plan-and-deliver/skills/pr-review/SKILL.md) **Step 5 — GitHub only** (not Steps 1–4). When this coding session already ran that skill’s Steps 1–4 (per-comment dispositions in the Step 4 report) and **GitHub** reply / resolve / minimize / summary from Step 5 has **not** run yet, the **commit and push cadence is incomplete** until Step 5 runs — **same agent turn**, immediately after the push succeeds (so the summary can cite `git rev-parse --short HEAD` in the **worktree**). Execute from **`HOSTING_ROOT`**: `cd "$HOSTING_ROOT" && python3 .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/pr-review.py` (two-step `PR_REVIEW_INPUT` per that skill). If thread IDs or PR identity are missing from context, re-run that skill’s **Step 1** script array for the same PR, then Step 5. If there was no `pr-review` triage in this chat, **skip step 3 entirely** — do not run the script.
+3. **PR comment reconciliation (`pr-review` → this cadence).** This step is **only** [`pr-review`](../missions/plan-and-deliver/skills/pr-review/SKILL.md) **Step 5 — GitHub only** (not Steps 1–4). When this coding session already ran that skill’s Steps 1–4 (per-comment dispositions in the Step 4 report) and **GitHub** reply / resolve / minimize / summary from Step 5 has **not** run yet, the **commit and push cadence is incomplete** until Step 5 runs — **same agent turn**, immediately after the push succeeds (so the summary can cite `git rev-parse --short HEAD` in the **worktree**). Execute from **`HOSTING_ROOT`**: `cd "$HOSTING_ROOT" && node .sedea/centers/sedea/scripts/pr-review.mjs` (two-step `PR_REVIEW_INPUT` per that skill). If thread IDs or PR identity are missing from context, re-run that skill’s **Step 1** script array for the same PR, then Step 5. If there was no `pr-review` triage in this chat, **skip step 3 entirely** — do not run the script.
 
    **Anti-patterns (agent failure):**
 
    | Symptom | Required response |
    |---------|-------------------|
-   | Push succeeded, **`pr-review`** Steps 1–4 ran in this chat, no **`pr-review.py`** Step 5 invocation | Run Step 5 **before ending the turn** — cadence incomplete |
+   | Push succeeded, **`pr-review`** Steps 1–4 ran in this chat, no **`pr-review.mjs`** Step 5 invocation | Run Step 5 **before ending the turn** — cadence incomplete |
    | **`CHANGES_REQUESTED`** unchanged, assistant turn ends at push recap | Same — see **`pr-review`** § *Step 5 turn invariant* |
    | Post-fix modal offers merge / full re-triage without Step 5 | **Forbidden** — [`coding-session/SKILL.md`](../missions/plan-and-deliver/skills/coding-session/SKILL.md) § *Inline PR review after PR creation* |
 

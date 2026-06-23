@@ -1,7 +1,8 @@
 ---
 name: planner
 description: >-
- Take a PRD and scaffold a Master Plan file under `.sedea/operations/<operationsUserId>/plans/`,
+ Take a PRD and scaffold a Master Plan file under the dispatch-scoped plans union
+ (explicit `targetPlanPath` / handover paths — do not construct `.sedea/operations/<user-id>/...`),
  pre-populated with sections 1 through 5 (Background, Benefits, Related
  features, Architectural design, Changes — including `### Decomposition
  assessment` and `### Complexity score (plan-scope signal)` under § 5) per
@@ -10,6 +11,9 @@ description: >-
  and section 7 (Caveats) stay as TBD stubs for follow-up turns. Use when the user
  opens a fresh planning chat from the "feature plan: design + changes"
  plan-board prompt, or says "planner" / "draft a master plan".
+designation:
+  allowed: Master Plan authoring; inline pr-breakdown, new-plan, pr-plan on planning lane
+  forbidden: Application implementation; worktree ship; MC_DISPATCH_RESOLVED_V1 on child
 inputs:
   seedBlock:
     type: string
@@ -295,7 +299,7 @@ Don't write "from <related doc>" into the plan body — the plan reads as one co
 
 ## Step 5 — Scaffold the Master Plan file
 
-The plan file is created **before** drafting, so § 4 + § 5 land in a persistent artefact from turn one. Follow the local plan conventions under `.sedea/operations/<operationsUserId>/plans/` (frontmatter contract, slug pattern with 8-char hex suffix, sidecar with `parent:`; child plans via **`new-plan`** after **delivery-phases** or **pr-breakdown**) — but use the **Master Plan template body** from the dev-process doc, not the generic Overview/Phasing stub.
+The plan file is created **before** drafting, so § 4 + § 5 land in a persistent artefact from turn one. Follow the local plan conventions under the dispatch-scoped plans union (frontmatter contract, slug pattern with 8-char hex suffix, sidecar with `parent:`; child plans via **`new-plan`** after **delivery-phases** or **pr-breakdown**) — but use the **Master Plan template body** from the dev-process doc, not the generic Overview/Phasing stub.
 
 ### 5a — Resolve the parent
 
@@ -305,9 +309,9 @@ The seed prompt's `Parent:` line is the **primary** input — the user already c
 
 Parse the `Parent:` line. Accepted forms (case-insensitive on the keywords):
 
-- **`null`, `none`, or empty** — `parent` is `null`. Master Plan file goes under `.sedea/operations/<operationsUserId>/plans/` (or `joint/plans/` when applicable). This is the **default** for net-new **`plan and deliver`** dispatches per **development-process.md** § *Root delivery plans vs legacy Hub parent intake*.
-- **Slug** (e.g. `prior_feature_master_abc12345`) — use directly. Validate that exactly one `.sedea/operations/<operationsUserId>/plans/<slug>.plan.md` (or `joint/plans/<slug>.plan.md`) exists.
-- **`@path` or absolute path to a `.plan.md`** — extract `<slug>` from the filename (`<slug>.plan.md` → `<slug>`). Validate the file exists under the flat `plans/` tree for that operations namespace.
+- **`null`, `none`, or empty** — `parent` is `null`. Master Plan file goes under the flat `plans/` directory for the active dispatch scope (absolute path from spawn handover — see rule **31** § *Plans and docs paths*). This is the **default** for net-new **`plan and deliver`** dispatches per **development-process.md** § *Root delivery plans vs legacy Hub parent intake*.
+- **Slug** (e.g. `prior_feature_master_abc12345`) — use directly. Validate that exactly one `<plans>/<slug>.plan.md` exists at the handover-supplied or resolved absolute path.
+- **`@path` or absolute path to a `.plan.md`** — extract `<slug>` from the filename (`<slug>.plan.md` → `<slug>`). Validate the file exists under the flat `plans/` tree for the active dispatch scope.
 
 When the slot resolves cleanly, acknowledge in one line — `Parent: <slug>` or `Parent: null (root delivery plan)` — and continue to 5b. Do **not** ask the user to confirm when they already wrote `null` or a resolvable parent.
 
@@ -337,7 +341,7 @@ Do **not** offer roadmap-topic roots, `plans/roadmap-topics/`, or Hub **`top_lev
 - **Display name** for `name:` frontmatter: the PRD title (line 1 between the quotes).
 - **Slug base**: lowercase the title, replace spaces with `_` (or `-` to match sibling convention in the target folder).
 - **Slug suffix**: 8-char random hex (`crypto.randomBytes(4).toString('hex')` equivalent).
-- **Filename**: `.sedea/operations/<operationsUserId>/plans/<slug>.plan.md` (or `joint/plans/<slug>.plan.md`) — **always** the flat `plans/` directory; `parent: null` does **not** change the path.
+- **Filename**: `<plans>/<slug>.plan.md` under the active dispatch-scoped plans directory — **always** the flat `plans/` folder; `parent: null` does **not** change the path.
 - **Sidecar**: `<same-dir>/<slug>.state.yaml` with `parent: <resolved-parent-slug-or-null>`.
 
 ### 5c — Write the plan file (Master Plan template body)
@@ -413,7 +417,7 @@ Both files must be written in the same skill turn so the Plan Board picks the pl
 
 After writing, link the plan file with an absolute path so the user can click through:
 
-> Plan file: [.sedea/operations/<operationsUserId>/plans/<slug>.plan.md](file:///Users/<you>/<workspace>/.sedea/operations/<operationsUserId>/plans/<slug>.plan.md)
+> Plan file: [`<slug>.plan.md`](file:///<absolute-targetPlanPath>)
 
 ## Step 6 — Draft sections 1 through 5 into the plan file
 
@@ -638,6 +642,43 @@ Execute **only** what the user selected in **AskQuestion** (or the matching **`o
 
 **Spawn-chain ship notifications:** When Mission Control delivers **`agent-result-response delivered`** with **`outputs.prShipComplete`** or **`outputs.phaseShipComplete`** (bubbled from **`coding-session`** → **`pr-plan`** / **`new-plan`** → **`pr-breakdown`** / **`phase-planner`** → **`delivery-phases`**), merge into the ledger per **`../README.md`** § *Upstream ship-complete notification*, **re-emit updated** **`AGENT_RESULT_RESPONSE_V1`** (same **`correlationId`**) when this lane is standalone spawned, then return to Step **7b** with expand options when indices unlock.
 
+#### Parallel **`hosting-repo-rules`** fork after **`coding-session`** terminal (fire-and-forget)
+
+When Mission Control delivers a **`coding-session`** child **`AGENT_RESULT_RESPONSE_V1`** terminal (direct spawn from inline **`pr-plan`** §5d or bubbled through Step **7c** aggregation), evaluate the parallel rules fork **in the same aggregation pass** as **`prShipComplete`** merge — **before** returning to Step **7b** expand menus.
+
+**Spawn trigger (all required):**
+
+| # | Condition |
+|---|-----------|
+| 1 | Plan-anchored run — `outputs.targetPlanPath` present on **`coding-session`** terminal |
+| 2 | `outputs.repoRulesReconciliationStatus` is **`pending`** **or** product PR plan §5 lists `.mdc` action bullets not covered by `outputs.reconciledRepoRulesPaths` |
+| 3 | Product terminal merge-ready — `outputs.prShipComplete: true` **or** documented deferral on the product row |
+
+**Do not spawn when:** `outputs.repoRulesReconciliationStatus` is **`complete`** or **`skipped-none`**; §5 is `_None — no repo rule updates required for this PR._` only; scope is center/mission governance (route **Alignment Drift Brief** per rule **5** instead).
+
+**When all triggers match:**
+
+1. Emit fire-and-forget **`AGENT_RUN_REQUEST_V1`** for **`hosting-repo-rules/SKILL.md`** — **same turn** as terminal merge when possible. **Forbidden:** add the rules child to **`pendingByParent`**, **`activeLanes`** wait sets, or a separate **`shipRows`** entry.
+2. Spawn **`inputs`** (from **`coding-session`** terminal + product PR plan):
+
+| Input | Source |
+|-------|--------|
+| `targetPlanPath` | Product PR plan from **`coding-session`** `outputs.targetPlanPath` |
+| `targetPlanSlug` | Same plan slug |
+| `sourceCodingSessionCorrelationId` | **`coding-session`** child `correlationId` |
+| `pendingRepoRulesPaths` | Gap between §5 bullets and `outputs.reconciledRepoRulesPaths`, or terminal handoff list |
+| `repoRulesReconciliationStatus` | Echo from terminal — must be **`pending`** or deferral signal |
+| `ledgerParent` | **`outputs.masterPlanSlug`** or spawn **`inputs.ledgerParent`** |
+
+3. On the **existing product PR row** in this lane's ledger, set **`rulesUpdatesStatus: spawned`** and record **`hostingRepoRulesCorrelationId`**. Let the async child update **`rulesUpdatesStatus`** / **`rulesPrUrl`** on return.
+4. **Continue depth-first expand** — offer Step **7b** **`expand-next-eligible`** when sequencing gates allow **without** waiting on rules PR merge.
+
+**Async rules child terminal merge:** When Mission Control later delivers **`hosting-repo-rules`** **`AGENT_RESULT_RESPONSE_V1`**, match by **`hostingRepoRulesCorrelationId`**. Update product row **`rulesUpdatesStatus`** (`complete` | `failed` | `abandoned`) and optional **`rulesPrUrl`**. **Re-emit updated** **`AGENT_RESULT_RESPONSE_V1`** (same **`correlationId`**) when standalone spawned.
+
+**Forbidden:** blocking next-row PR expand until rules PR merges; separate **`shipRows`** sub-row; adding rules lane to **`pendingByParent`**.
+
+Normative overview: **`../README.md`** § *Parallel **`hosting-repo-rules`** fork (fire-and-forget)* and **`hosting-repo-rules/SKILL.md`** § *Spawn trigger*.
+
 ### Resume / PR-expand handoff (binding)
 
 When this skill resumes on a spawned **Master Plan** child lane (Mission Control reload, Squad Leader re-spawn for one PR index, or **`single-phase`** / **`plan and deliver`** resume after inline **`new-plan` + `pr-plan`** completes §§1–4):
@@ -749,6 +790,7 @@ Required `outputs` fields:
 - `outputs.remainingTasks` — pending user or agent actions; empty only when `continuationStatus` is `terminal`
 - `outputs.expandEligibleIndices`, `outputs.expandNextEligibleIndex` — echo from inline decomposition after spawn-chain ship-complete merges
 - `outputs.prShipComplete`, `outputs.phaseShipComplete` — when this lane merged bubbled ship terminals from nested **`coding-session`** / **`phase-planner`** chains
+- Product PR row ledger (parallel rules fork) — per affected PR row when Step **7c** spawns or merges **`hosting-repo-rules`**: **`rulesUpdatesStatus`** (`not-spawned` | `spawned` | `in-progress` | `complete` | `failed` | `abandoned`), optional **`hostingRepoRulesCorrelationId`**, optional **`rulesPrUrl`**
 - `outputs.parentPlanningFollowUpNotification`, `outputs.parentPlanningFollowUps`, `outputs.pendingParentFollowUps` — when bubbled from nested **`coding-session`** with parent follow-up notification (**`../README.md`** § *Upstream parent follow-up notification*)
 - `outputs.implementationHandoffStatus` — `not-offered` | `offered` | `deferred` | `spawned-coding-session` merged from inline **`pr-plan`** (required when a PR plan handoff is pending or completed on this lane)
 - `outputs.spawnCorrelationId` — UUID from inline **`pr-plan`** §5d when **`implementationHandoffStatus`** is **`spawned-coding-session`**

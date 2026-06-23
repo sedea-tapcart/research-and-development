@@ -27,7 +27,8 @@ inputs:
 warmUpRules:
   - ".sedea/centers/research-and-development/missions/debug-and-fix/plan.mdc"
   - ".sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc"
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md"
+  - ".sedea/centers/sedea/skills/worktree-setup/SKILL.md"
+  - ".sedea/centers/sedea/rules/0_hosting-repo.mdc"
   - ".cursor/rules/dot-sedea.mdc"
   - ".cursor/rules/sedea-debug-logging-settings.mdc"
 ---
@@ -74,15 +75,17 @@ flowchart TD
 
 ### 2 — Worktree create, attach, bootstrap (binding)
 
-Follow [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § *Attach worktree to VS Code workspace* and **`coding-session`** hard rules:
+Follow [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § *Attach worktree to VS Code workspace*, [`.sedea/centers/sedea/skills/worktree-setup/SKILL.md`](../../../../../sedea/skills/worktree-setup/SKILL.md), and [rule **20**](.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc) § *Worktree setup in plans* / *Bootstrap profiles*:
 
 | Step | Action |
 |------|--------|
-| 1 | **`git worktree add <absolute-path> -b <worktree-name> origin/main`** from **`HOSTING_ROOT`** |
-| 2 | MCP **`sedea_add_worktree_folder`** with absolute **`WORKTREE_ROOT`** |
-| 3 | Bootstrap **inline** on this lane per [rule **20**](.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc) § *Bootstrap profiles* and [`worktree-bootstrap/SKILL.md`](../../../plan-and-deliver/skills/worktree-bootstrap/SKILL.md): read dot-sedea § *Worktree bootstrap mode*; resolve `bootstrapMode`; run from **primary** **`HOSTING_ROOT`** (script modes) or `submodule-init` under **`WORKTREE_ROOT`** |
+| 1 | From **`HOSTING_ROOT`**, run center **`worktree-setup.sh`** with `--hosting-root`, `--worktree-path` (absolute **`WORKTREE_ROOT`** from step **1**), `--worktree-name`, `--base-ref origin/main`. **Forbidden on the default path:** inline **`git worktree add`**. |
+| 2 | Parse the **one JSON line on stdout**. Set **`WORKTREE_ROOT`** from hint **`worktreeRoot`**. When hint **`bootstrapStatus`** is **`success`**, **`skipped-noop`**, or **`skipped-idempotent`**, set **`outputs.bootstrapStatus: success`** and **`outputs.bootstrapMode`** from the hint. **Do not** run inline [`worktree-bootstrap/SKILL.md`](../../../plan-and-deliver/skills/worktree-bootstrap/SKILL.md) after successful setup. |
+| 3 | When JSON **`nextAction`** is **`attach-required`**, MCP **`sedea_add_worktree_folder`** with absolute **`WORKTREE_ROOT`**. **Forbidden:** attach before setup exits **0**. |
 
-Do **not** edit product code before bootstrap succeeds (`outputs.bootstrapStatus: success`).
+**Exception (inline retry only):** When step **1** fails or bootstrap is not success-class, stop product edits and offer retry per rule **20** § *Bootstrap profiles* — inline deprecated [`worktree-bootstrap/SKILL.md`](../../../plan-and-deliver/skills/worktree-bootstrap/SKILL.md) **only** when setup failed and the developer attests retry (not spawn-by-default).
+
+Do **not** edit product code before **`outputs.bootstrapStatus: success`**.
 
 ### 3 — Logs first (mandatory gate)
 
@@ -143,6 +146,8 @@ Every assistant turn closes with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** 
 | `worktreePath` | Absolute **`WORKTREE_ROOT`** |
 | `worktreeName` | Branch / worktree name |
 | `hostingRoot` | Absolute **`HOSTING_ROOT`** |
+| `bootstrapStatus` | `success` \| `failed` \| `pending` — from center setup JSON hints (default path) or inline retry |
+| `bootstrapMode` | Hosting overlay mode when reported by setup hints |
 | `exitRecommendation` | `code-promotion` \| `ad-hoc-prd` \| `findings-report-only` \| `blocked` |
 | `remainingTasks` | Open items for parent or developer |
 

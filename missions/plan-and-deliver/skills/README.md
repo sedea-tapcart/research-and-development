@@ -12,13 +12,16 @@ This mission uses **three execution shapes** (see **`.sedea/centers/sedea/skills
 | **`pr-plan`** | **Inline only** — same lane as invoker | **`new-plan`** step 4 (`parentAgentRole: new-plan-agent`) | **`## Completion (inline)`** — no `AGENT_RESULT_RESPONSE_V1` for **`pr-plan`** |
 | **`pr-plan`** → **`coding-session`** | Spawn after §5c **Start coding session** (or **`phase-planner`** Step **5f** when inline **`pr-plan`** skipped §5c) | **`pr-plan`** lane, or **`phase-planner`** after **`prPlanHandoffSkipped`** | Child **`coding-session`** uses **`AGENT_RESULT_RESPONSE_V1`** |
 | **`author-prd`** | **Spawned only** | Squad Leader §3 | Child terminal |
-| **`ad-hoc-prd`** | Spawned (**`debug-and-fix`** only — not plan-and-deliver §3) | debug-and-fix Squad Leader | Child terminal |
-| **`delivery-phases`**, **`pr-breakdown`**, **`new-plan`** | Inline on **`planner`** / **`phase-planner`** lane | Parent planning skill | Inline completion merged into parent |
+| **`ad-hoc-prd`** | Spawned (**`single-phase`** §3, **`debug-and-fix`** §5c — **not** plan-and-deliver §3) | **`single-phase`** / **`debug-and-fix`** Squad Leader | Child terminal |
+| **`delivery-phases`**, **`pr-breakdown`**, **`new-plan`** | **Primary:** inline on **`planner`** / **`phase-planner`** lane on **`plan and deliver`** | Parent planning skill | Inline completion merged into parent |
 | **`phase-planner`** | Spawned from inline **`new-plan`** (optional) | **`new-plan`** | Child terminal; **owns phase delivery** on its lane until **`phaseShipComplete`** or explicit defer/abandon — Master Plan lane ack-only meanwhile |
 | **`phase-planner` + `autoContinue: true`** → inline **`pr-breakdown`** (single-PR K=1) | Inline on **`phase-planner`** lane after Step **5b** route approval | **`phase-planner`** | May **skip **`pr-breakdown`** Step **6** modal** when **`skipPrBreakdownApprovalModal: true`** — drafts § 5 on **phase plan**; same-turn **`approve-list`** act-after-select matches **`planner`** **`approve-list`** auto-expand semantics |
 | **`phase-planner` + single-PR** | **`pr-breakdown`** writes § 5 **`PR breakdown`** on **this phase plan** (not the ancestor Master Plan) | **`phase-planner`** | See **`phase-planner/SKILL.md`** Step **5b-decompose** and **`pr-breakdown/SKILL.md`** § *Inline invoker lane* — does **not** replace **`planner`** Step **7** Master Plan **`route-6`** when no phase-planner child is active |
 | **`coding-session`** | Spawned (from **`pr-plan`** §5d or **`phase-planner`** §5f) or detached entry | **`pr-plan`**, **`phase-planner`** (inline subtree), developer, dispatch | Child terminal + inline ship skills |
-| **`pr-review`**, **`create-pr`**, **`deploy-walk`**, **`plan-reconcile`** | **Inline only** on active **`coding-session`** | **`coding-session`** | Prose to coding-session — no child lane |
+| **`hosting-repo-rules`** | **Spawned only** — detached parallel fork after **`coding-session`** terminal when spawn contract matches | **`planner`** Step **7c**, **`phase-planner`** Step **5e** (fire-and-forget — not **`pendingByParent`**) | Child **`AGENT_RESULT_RESPONSE_V1`**; parent updates product row **`rulesUpdatesStatus`** |
+| **`pr-review`**, **`create-pr`**, **`deploy-walk`**, **`plan-reconcile`** | **Inline only** on active **`coding-session`** or **`hosting-repo-rules`** | **`coding-session`**, **`hosting-repo-rules`** | Prose to invoker ship lane — no separate child terminal |
+
+**Dual-mode planning skills (binding):** On **`plan and deliver`**, **`delivery-phases`**, **`pr-breakdown`**, and **`new-plan`** run **inline** on **`planner`** or **`phase-planner`** (table above). Each skill may document **`## Completion (spawned)`** for **protocol-branch** dispatch or another mission that opens a dedicated child lane — that path is **secondary** and **not** the normative shape on **`plan and deliver`** Squad Leader §§3–7. **`pr-plan`** stays **inline-only** under **`new-plan`** on this mission unless a mission `plan.mdc` says otherwise (see each **`SKILL.md`** *Standalone* note).
 
 **Common mistake:** Spawning **`planner`** from **`new-plan`** or running **`pr-plan`** on a standalone child lane without **`new-plan-agent`** — wrong unless the mission protocol explicitly says otherwise.
 
@@ -86,7 +89,7 @@ Planning composition skills that surface review gaps before approval use the sam
 | **`phase-planner`** | §4f echo / §5c route modal; Step **5f** after **`prPlanHandoffSkipped`** | §5b inline decompose / Step **5f** **`coding-session`** spawn |
 | **`new-plan`** | stub + parent link + populator gate | populator spawn |
 
-**Ship and ops skills:** **`coding-session`** (worktree-open, center **`worktree-setup.sh`** bootstrap hints, implementation continuation gate, **pre-PR ship gate** — no push/create-PR modals until **`pre-pr-review`** **`go`** except executive override, **auto** pre-PR spawn after cut-point + Local test, **auto** inline **create-pr** on clean **go**, Staging test **deploy-walk** after PR open — inline GitHub or **outsider handoff** on tapcart product repos, inline **`pr-review`**, **post-pr-review merge approval gate** or **agent-delegated approve + merge** (with **pre-merge authorization gate**) when authorized, **auto** post-merge cleanup when merged, inline **deploy-walk**, inline **plan-reconcile**), **`worktree-bootstrap`** (**deprecated** — exception-only inline retry; normative bootstrap is center setup on **`coding-session`**), **`pre-pr-review`** — structured choice for gates that still require a developer pick (cut-point, review feedback, post-create-PR, post-outsider-handoff, post-pr-review merge, remainder); recap for status, diff, or dry-run report only. **`pr-review`** Step **4** — disposition gate uses **contextual** `options` from triage counts (see § *Build disposition options*). Prefer **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** when recap and modal belong in one message. Gate detail: **`coding-session/SKILL.md`** § *Pre-PR ship gate (push/PR)* and § *Implementation continuation gate*.
+**Ship and ops skills:** **`coding-session`** (worktree-open, center **`worktree-setup.sh`** bootstrap hints, implementation continuation gate, **repo rules reconciliation** — §5 → `.mdc` reconcile + standalone gate before ship cut-point, **pre-PR ship gate** — no push/create-PR modals until **`pre-pr-review`** **`go`** except executive override, **auto** pre-PR spawn after cut-point + Local test, **auto** inline **create-pr** on clean **go**, Staging test **deploy-walk** after PR open — inline GitHub or **outsider handoff** on tapcart product repos, inline **`pr-review`**, **post-pr-review merge approval gate** or **agent-delegated approve + merge** (with **pre-merge authorization gate**) when authorized, **auto** post-merge cleanup when merged, inline **deploy-walk**, inline **plan-reconcile**), **`worktree-bootstrap`** (**deprecated** — exception-only inline retry; normative bootstrap is center setup on **`coding-session`**), **`pre-pr-review`** — structured choice for gates that still require a developer pick (cut-point, repo rules reconcile, review feedback, post-create-PR, post-outsider-handoff, post-pr-review merge, remainder); recap for status, diff, or dry-run report only. **`pr-review`** Step **4** — disposition gate uses **contextual** `options` from triage counts (see § *Build disposition options*). Prefer **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** when recap and modal belong in one message. Gate detail: **`coding-session/SKILL.md`** § *Repo rules reconciliation gate*, § *Pre-PR ship gate (push/PR)*, and § *Implementation continuation gate*.
 
 **Lane pick (no resolved target):** emit *Where we are now in the plan tree* snapshot, then structured choice per **30_planning-target-resolution** § *Sedea input channel* (phased or split — not prose menus).
 
@@ -119,7 +122,7 @@ Field-level `outputs` and `continuationStatus` rules: each skill’s **`## Compl
 
 ### Worktree removal ownership (binding)
 
-**Do not remove worktrees you do not own.** Applies to every ship skill on **`coding-session`** and **`plan-reconcile`** §5.
+**Do not remove worktrees you do not own.** Applies to every ship skill on **`coding-session`**, **`hosting-repo-rules`**, and **`plan-reconcile`** §5.
 
 | Source | Contract |
 |--------|----------|
@@ -136,9 +139,12 @@ These skills run on **detached** or **nested** lanes (often **not** the Squad Le
 
 | Skill | Typical spawner | Outputs section | §8 ship phase hints |
 |-------|-----------------|-----------------|---------------------|
-| `coding-session` | Developer / mission dispatch; **`pr-plan`** spawn (default **spawned-lane** implement) | `## Implementation handoff result` (+ **`## Completion (inline)`** if same-lane) | Layer 2: `developerApprovedImplementation` after worktree-open gate; `shipPhase: implementing` when spawned child codes on lane (not prompt-only stop) |
+| `coding-session` | Developer / mission dispatch; **`pr-plan`** spawn (default **spawned-lane** implement) | `## Implementation handoff result` (+ **`## Completion (inline)`** if same-lane) | Layer 2: `developerApprovedImplementation` after worktree-open gate; `shipPhase: implementing` when spawned child codes on lane (not prompt-only stop); **`worktree`** / bootstrap via this lane's terminal — not a separate child |
+| `hosting-repo-rules` | **`planner`** / **`phase-planner`** fire-and-forget after **`coding-session`** terminal (`repoRulesReconciliationStatus: pending` or uncovered §5 `.mdc` bullets) | `## Completion (spawned)` | `shipPhase: implementing` → `done`; `prShipComplete` on rules PR merge; parent product row **`rulesUpdatesStatus`** — not a separate **`shipRows`** entry |
 | `worktree-bootstrap` | **Deprecated** — do not spawn by default; normative bootstrap is center **`worktree-setup.sh`** on **`coding-session`**. Exception-only **inline** retry when setup failed (see **`coding-session/SKILL.md`** § *Worktree bootstrap (inline mandatory)*) | `## Spawned result contract` (legacy in-flight dispatches only) | `worktree`; `bootstrapStatus` |
-| `pre-pr-review` | `coding-session` | Step 8 — Report and result | `pre-pr-review`; `recommendation: go` |
+| `pre-pr-review` | `coding-session`, **`hosting-repo-rules`** | Step 8 — Report and result | `pre-pr-review`; `recommendation: go` |
+
+**Not §8 host-sync children:** inline **`pr-review`**, **`create-pr`**, **`deploy-walk`**, **`plan-reconcile`**, and deprecated inline **`worktree-bootstrap`** retry — milestones **must** ship §8 fields on the next **`coding-session`** terminal re-emit (see § *§8 terminal contract* below).
 
 The Squad Leader **§8** ship ledger updates via Mission Control **host sync** when ship child lanes emit terminals with required **`outputs`**. See **`../plan.mdc`** §8 *Mission Control host sync* and **development-process.md** § *Leader-lane §8 host sync*.
 
@@ -154,7 +160,7 @@ The Squad Leader **§8** ship ledger updates via Mission Control **host sync** w
 | **D4** | **Zero** open Mission Control dispatches with active **`worktree-bootstrap`** child lanes (in-flight sessions drained) |
 | **D5** | **`verify-lane-warmup-parity.mjs --bootstrap full`** still passes with **`worktree-bootstrap`** role retained until **D4**; remove role from parity manifests only after **D1–D4** |
 
-**Until drain:** Spawners **must not** emit **`AGENT_RUN_REQUEST_V1`** for **`worktree-bootstrap`** except documented break-glass; **`coding-session`** uses center setup hints and **inline** retry only.
+**Until drain:** Spawners **must not** emit **`AGENT_RUN_REQUEST_V1`** for **`worktree-bootstrap`** except documented break-glass; **`coding-session`** uses center setup hints and **inline** retry only. **`worktree-bootstrap`** is **not** a §8 host-sync child — bootstrap / `worktree` phase updates report via **`coding-session`** terminal re-emit only.
 
 ### §8 terminal contract (ship skills)
 
@@ -164,12 +170,25 @@ When a ship skill finishes a milestone on a **detached** lane, the terminal **`A
 
 | Skill | Invoker | Result section | §8 ship ledger |
 |-------|---------|------------------|----------------|
-| `pr-review` | Active **`coding-session`** agent on its lane | `## Inline result for coding-session` | **`coding-session`** re-emit with `shipPhase: pr-review` — host sync |
-| `create-pr` | Active **`coding-session`** agent on its lane | `## Completion (inline)` | `pr-open` or outsider handoff (`implementing`) via **`coding-session`** terminal re-emit — no separate child terminal |
+| `pr-review` | Active **`coding-session`** or **`hosting-repo-rules`** agent on its lane | `## Inline result for coding-session` (coding) or invoker prose (rules) | Invoker re-emit with `shipPhase: pr-review` — host sync when §8 fields present |
+| `create-pr` | Active **`coding-session`** or **`hosting-repo-rules`** agent on its lane | `## Completion (inline)` | `pr-open` or outsider handoff (`implementing`) via invoker terminal re-emit — no separate child terminal |
 | `deploy-walk` | Active **`coding-session`** agent on its lane (Local test after commit, Staging test after PR open, After deploy after merge, or deploy phrases) | `## Completion (inline)` | `deploy-walk` via **`coding-session`** terminal re-emit — no separate child terminal |
 | `plan-reconcile` | Active **`coding-session`** agent on its lane (after deploy, stale worktree pick, or *plan reconcile* phrase) | `## Completion (inline)` | `reconcile` / `done` via **`coding-session`** terminal re-emit — no separate child terminal |
 
-**`pr-review`**, **`create-pr`**, **`deploy-walk`**, and **`plan-reconcile`** return through **`coding-session`** on the coding lane. §8 updates on the leader dispatch via **`coding-session`** terminal re-emit and host sync only (**`../plan.mdc`** §8).
+**`pr-review`**, **`create-pr`**, **`deploy-walk`**, and **`plan-reconcile`** return through the **active ship invoker** (**`coding-session`** or **`hosting-repo-rules`**). §8 updates on the leader dispatch via invoker terminal re-emit and host sync when documented (**`../plan.mdc`** §8).
+
+### Parallel **`hosting-repo-rules`** fork (fire-and-forget)
+
+When **`coding-session`** terminal outputs satisfy the spawn contract in **`hosting-repo-rules/SKILL.md`** § *Spawn trigger*, parent **`planner`** / **`phase-planner`**:
+
+| Behavior | Rule |
+|----------|------|
+| Spawn | **`AGENT_RUN_REQUEST_V1`** for **`hosting-repo-rules`** with handoff fields (`sourceCodingSessionCorrelationId`, `pendingRepoRulesPaths`, `repoRulesReconciliationStatus`) |
+| Wait | **Do not** wait on rules PR merge before next PR row / phase expand |
+| Ledger | Set product row **`rulesUpdatesStatus`** (`spawned` → `complete` \| `failed`); optional `hostingRepoRulesCorrelationId`, `rulesPrUrl` |
+| Forbidden | Separate **`shipRows`** sub-row; adding rules child to **`pendingByParent`** |
+| Scope escape | Center/mission gaps → **Alignment Drift Brief** (rule **5**) — not **`hosting-repo-rules`** |
+| Mutual exclusion | Inline **`coding-session`** reconcile remains authoritative when satisfiable on product lane; parallel lane handles **`pending`** / deferred §5 after product terminal |
 
 **Inline `pr-review` ship-chain note (binding):** After fix push when Steps **1–4** ran in-session, **`pr-review`** Step **5 (GitHub reconciliation)** is **not optional** — same assistant turn as push per rule **20** § *Commit and push cadence* step 3 and **`pr-review/SKILL.md`** § *Step 5 turn invariant*. Set **`outputs.githubReconciliationStatus: complete`** before **`mergeDelegationReady: true`**. Distinguish **`reconcile-github-only`** (Step 5 only) from **`rerun-pr-review`** (full triage) at **`coding-session`** post-create-pr and pre-merge gates.
 
@@ -273,11 +292,16 @@ Normative minimum **`laneRules`** paths per lane role — merged into **`effecti
 | Lane role | Definitive `laneRules` (in addition to bootstrap) |
 |-----------|---------------------------------------------------|
 | **Squad Leader** | `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`, `.sedea/centers/sedea/rules/4_mission.mdc`, `.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`, `.sedea/centers/research-and-development/docs/development-process.md` |
-| **`author-prd` child** | `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`, `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/author-prd/SKILL.md`, `.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc` (§§1–3), `.sedea/centers/research-and-development/rules/31_operations-user-id.mdc` |
+| **`author-prd` child** | `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`, `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/author-prd/SKILL.md`, `.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc` (§§1–3) |
+| **`ad-hoc-prd` child** | `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`, `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/ad-hoc-prd/SKILL.md`, `.sedea/centers/research-and-development/rules/31_operations-user-id.mdc`, `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` |
 | **`planner` child** | `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`, `.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`, `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/planner/SKILL.md`, `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` |
+| **`quick-fix-plan` child** | `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`, `.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`, `.sedea/centers/research-and-development/missions/quick-fix/skills/quick-fix-plan/SKILL.md`, `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` |
 | **`coding-session` child** | `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`, `.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`, `.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`, `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md` |
+| **`phase-planner` child** | `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`, `.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`, `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/phase-planner/SKILL.md`, `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` |
+| **`pre-pr-review` child** | `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`, `.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`, `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pre-pr-review/SKILL.md`, `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` |
+| **`worktree-bootstrap` child** (deprecated — drain gate **D4**) | `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`, `.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`, `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md`, `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` |
 
-**Squad Leader:** Mission protocol or host config supplies the leader row — not only child spawn requests (see **`plan.mdc`** § *Squad Leader laneRules*). **Spawned children:** Include **`laneRules`** on the run-request when they differ from the skill frontmatter default, or rely on skill frontmatter when it matches this table exactly.
+**Squad Leader:** Mission protocol or host config supplies the leader row — not only child spawn requests (see **`plan.mdc`** § *Squad Leader laneRules*). **Spawned children:** Include **`laneRules`** on the run-request when they differ from the skill frontmatter default, or rely on skill frontmatter when it matches this table exactly. **`ad-hoc-prd` spawn `warmUpRules` (binding):** merge skill frontmatter **`warmUpRules`** but **replace** any `plan-and-deliver/plan.mdc` entry with the **invoking mission `plan.mdc`** — **`single-phase/plan.mdc`** (§§1–3) or **`debug-and-fix/plan.mdc`** (post-fix step **5c**) — so the child loads the correct protocol, not full plan-and-deliver. **`ad-hoc-prd` → `planner` handoff (binding):** this skill does **not** spawn **`planner`**; **`single-phase`** Squad Leader auto-chains §4 seed → §5 **`planner`** after terminal PRD approval — see **`ad-hoc-prd/SKILL.md`** § *Downstream `planner` (invoker-owned)*. **`quick-fix-plan` spawn `warmUpRules` (binding):** use **`quick-fix/plan.mdc`**, not `plan-and-deliver/plan.mdc`.
 
 **Parity (§5.3 gate):** **`effectiveWarmUp`** must cover at minimum today's `(alwaysApply scan ∪ skill warmUpRules)` per role — enforced by **`verify-lane-warmup-parity.mjs`**:
 
@@ -286,7 +310,7 @@ node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/v
 node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/verify-lane-warmup-parity.mjs --bootstrap slim
 ```
 
-**Roles covered (7):** **`squad-leader`**, **`author-prd`**, **`planner`**, **`coding-session`**, **`phase-planner`**, **`pre-pr-review`**, **`worktree-bootstrap`** (deprecated — retained for parity until [drain gate](#worktree-bootstrap-skill-drain-gate) **D4**). Each role's manifest uses skill frontmatter **`laneRules`** + **`warmUpRules`** merged per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea/docs/lane-manifest-contract.md). Sign-off record: same doc § *Parity sign-off record*.
+**Roles covered (9 plan-and-deliver + 2 cross-mission):** **`squad-leader`**, **`author-prd`**, **`planner`**, **`coding-session`**, **`phase-planner`**, **`pre-pr-review`**, **`worktree-bootstrap`** (deprecated — retained for parity until [drain gate](#worktree-bootstrap-skill-drain-gate) **D4**), plus cross-mission spawn targets **`ad-hoc-prd`** and **`quick-fix-plan`** (invoker mission `plan.mdc` in **`warmUpRules`**). Each role's manifest uses skill frontmatter **`laneRules`** + **`warmUpRules`** merged per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea/docs/lane-manifest-contract.md). Sign-off record: same doc § *Parity sign-off record*.
 
 **`--bootstrap full`** — today's host scan (must pass on manifest table changes). **`--bootstrap slim`** — §5.3 merge gate before **`alwaysApply` frontmatter flip** (expected fail until phase 5 bootstrap + flip).
 
@@ -355,9 +379,9 @@ Every **spawned** plan-and-deliver skill lists the paths below in frontmatter **
 **Ship skills** also include:
 
 - `.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`
-- `.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc` — **`pre-pr-review`** spawn only; **`coding-session`** omits rule **30** from frontmatter (256 KiB warm-up cap); use `inputs.targetPlanPath` and explicit `Read` of rule **30** when resolving ambiguous `.sedea` paths
+- `.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc` — **`pre-pr-review`** spawn only; **`coding-session`** omits rule **30** from frontmatter (384 KiB warm-up cap); use `inputs.targetPlanPath` and explicit `Read` of rule **30** when resolving ambiguous `.sedea` paths
 
-**Warm-up cap exceptions (256 KiB host budget):**
+**Warm-up cap exceptions (384 KiB host budget):**
 
 Each spawned ship skill documents its manifest in **`SKILL.md`** § *Warm-up manifest (spawned)* or § *Warm-up manifest (inline)*. Frontmatter must match the documented table — **`verify-skill-manifest.mjs`** enforces table ↔ frontmatter parity and spawn preflight row **11** for definitive **`laneRules`** roles (see § *Universal spawn preflight* row 11).
 
@@ -407,9 +431,9 @@ When you add, rename, or remove a protocol branch under `missions/plan-and-deliv
 
 3. **plan-and-deliver only** — if the skill is **spawned**, ensure **`warmUpRules`** includes `missions/plan-and-deliver/plan.mdc`, this README, and the usual rules per § *Default warm-up* above; add **`## Completion (spawned)`** + host protocol line when applicable.
 
-### Scripts (`plan-state.mjs`, `pr-review.py`)
+### Scripts (`plan-state.mjs`, `pr-review.mjs`)
 
-- **Location:** `missions/plan-and-deliver/scripts/` (paths in skills and rule **20** are workspace-root relative from the hosting repo that contains **`.sedea/`** — see that repo’s **`.cursor/rules/`** for hosting-repo specifics).
-- **Runtime:** **Node / Python bundled with Sedea / VS Code** — see [`.sedea/centers/research-and-development/rules/31_operations-user-id.mdc`](../../../rules/31_operations-user-id.mdc) § *Hosting repo cwd (scripts)* and the hosting repo **`.cursor/rules/`**.
+- **Location:** `missions/plan-and-deliver/scripts/` for **`plan-state.mjs`** and **`plan-ws-completeness.mjs`**; canonical **`pr-review.mjs`** at **`.sedea/centers/sedea/scripts/pr-review.mjs`** (paths in skills and rule **20** are workspace-root relative from the hosting repo that contains **`.sedea/`** — see that repo’s **`.cursor/rules/`** for hosting-repo specifics).
+- **Runtime:** **Node** (bundled with Sedea / VS Code) — see [`.sedea/centers/research-and-development/rules/31_operations-user-id.mdc`](../../../rules/31_operations-user-id.mdc) § *Hosting repo cwd (scripts)* and the hosting repo **`.cursor/rules/`**.
 - **Vendor trees:** do not treat `scripts/**/node_modules/` or other installed dependencies as protocol documentation (center governance ends at `SKILL.md`, rules, and mission plans).
 - **`verify-skill-manifest.mjs`** — compares **`center.yaml`** `skillEntries` to on-disk `SKILL.md` files; validates frontmatter YAML; lints **`warmUpRules`** / **`laneRules`** table ↔ frontmatter parity on spawned plan-and-deliver skills; enforces spawn preflight row **11** definitive **`laneRules`** for **`author-prd`**, **`planner`**, and **`coding-session`**; lints **`AGENT_RUN_REQUEST_V1`** spawn examples on planner skills (R&D + Sedea maintenance copies) so string-typed **`inputs.parent`** never uses JSON **`null`** — wire encoding must be **`"parent":"null"`** (exit 0 = match + parity + spawn wire lint).

@@ -5,6 +5,9 @@ description: >-
  prompt from a reviewed implementation branch. Evaluates repo class and authorization
  (inline gh vs outsider handoff vs prompt fallback). Executed by the active
  coding-session agent only — not spawned, no warmUpRules.
+designation:
+  allowed: Create GitHub PR from reviewed branch; PR description per ship rules
+  forbidden: Implementation edits; merge without authorization; dispatch resolution
 inputs:
   targetPlanPath:
     type: string
@@ -76,7 +79,7 @@ If Mission Control opened a session whose only intent is **`create-pr`** / *open
 
 **Required upstream context:** `prePrReviewRecommendation: "go"`; `worktreePath`, `worktreeName`, `baseRef`; optional `targetPlanPath` / `targetPlanSlug`; `diffSummary` and pre-PR flags when available. If context is missing, recover on **`coding-session`** before running this procedure.
 
-**Post-PR lifecycle:** merge checks, After-deploy **`deploy-walk`**, and inline **`plan-reconcile`** are owned by **`coding-session`** ([Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate), [After deploy deploy-walk handoff](../coding-session/SKILL.md#after-deploy-deploy-walk-handoff), [Plan-reconcile handoff (inline)](../coding-session/SKILL.md#plan-reconcile-handoff-inline)) — not this skill. **`gh pr create`** is the only `gh` operation this skill owns; after the PR exists, generic **`gh`** PR inspection is **not** a substitute for inline **`pr-review`** and **`pr-review.py`** Step 1 on **`coding-session`**.
+**Post-PR lifecycle:** merge checks, After-deploy **`deploy-walk`**, and inline **`plan-reconcile`** are owned by **`coding-session`** ([Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate), [After deploy deploy-walk handoff](../coding-session/SKILL.md#after-deploy-deploy-walk-handoff), [Plan-reconcile handoff (inline)](../coding-session/SKILL.md#plan-reconcile-handoff-inline)) — not this skill. **`gh pr create`** is the only `gh` operation this skill owns; after the PR exists, generic **`gh`** PR inspection is **not** a substitute for inline **`pr-review`** and **`pr-review.mjs`** Step 1 on **`coding-session`**.
 
 **Worktree removal ownership (binding).** **Do not remove worktrees you do not own.** Opening a PR does **not** grant cleanup on other worktrees. **`git worktree remove`**, **`git worktree prune`**, and **`sedea_remove_worktree_folder`** apply **only** to **this pass’s** **`WORKTREE_ROOT`** when rule **0** § *Worktree ownership* and rule **20** § *Worktree removal ownership (binding)* preconditions hold. **`git worktree list` is read-only** when ownership is unclear — **stop; do not remove**.
 
@@ -279,4 +282,4 @@ Required fields (prose to invoker / merged into **`coding-session`** `outputs`):
 - **Outsider-handoff route (`blockedReason: remote-branch-missing`)** — open push-branch modal per [Remote branch gate](#remote-branch-gate-binding); **do not** open Post-outsider-handoff gate.
 - **Prompt-fallback route** — recap only; re-open ship cut-point or defer per developer message unless they return with PR URL.
 
-Do **not** auto-start inline **`pr-review`**, inline **`deploy-walk`**, or **`plan-reconcile`** from this skill. When the developer later picks **`start-pr-review`**, **`coding-session`** must load **`pr-review/SKILL.md`** and run **`pr-review.py`** Step 1 before generic review/wait/merge options.
+Do **not** auto-start inline **`pr-review`**, inline **`deploy-walk`**, or **`plan-reconcile`** from this skill. When the developer later picks **`start-pr-review`**, **`coding-session`** must load **`pr-review/SKILL.md`** and run **`pr-review.mjs`** Step 1 before generic review/wait/merge options.

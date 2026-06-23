@@ -1,7 +1,7 @@
 ---
 description: >-
   Single phase — simplified plan-and-deliver for small features: ad-hoc PRD,
-  Master Plan with PR breakdown only (max 3 PRs), complexity score ≤ 12,
+  Master Plan with PR breakdown only (1–6 PRs), complexity score ≤ 20,
   standard coding-session ship chain. Reuses plan-and-deliver skills.
 alwaysApply: false
 ---
@@ -15,11 +15,11 @@ This mission is a **simplified** variant of [`.sedea/centers/research-and-develo
 | Constraint | Rule |
 |------------|------|
 | **PRD skill** | Always **`ad-hoc-prd`** — never **`author-prd`**. |
-| **Complexity ceiling** | Master Plan **`### Complexity score`** overall score must be **≤ 12**. At **> 12** (≥ 13), stop and direct the developer to **`plan and deliver`** on **`plan-and-deliver`**. |
+| **Complexity ceiling** | Master Plan **`### Complexity score`** overall score must be **≤ 20**. At **> 20** (≥ 21), stop and direct the developer to **`plan and deliver`** on **`plan-and-deliver`**. **20 is in band.** |
 | **Phase model** | **One phase only** — no multi-phase delivery tree. |
 | **§6 decomposition** | Master Plan **always** uses **`PR breakdown`** — never **`Delivery phases`**. |
 | **Forbidden skills** | **`delivery-phases`**, **`phase-planner`** — do not spawn or run inline on any lane. |
-| **PR count cap** | **`pr-breakdown`** lists **at most 3** PR rows. More scope → use **`plan and deliver`**. |
+| **PR count cap** | **`pr-breakdown`** lists **1–6** PR rows. **> 6** PRs or multi-initiative scope → use **`plan and deliver`**. |
 | **Implementation / ship** | **`coding-session`** and detached ship chain unchanged — same skills and gates as plan-and-deliver. |
 | **Command phrase** | **`plan and deliver a single phase`** only (see **`mission.yaml`**). |
 
@@ -35,15 +35,21 @@ Same as plan-and-deliver — [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.
 
 ### Post-PR review inheritance (binding)
 
-Detached **`coding-session`** ship chains reuse plan-and-deliver mechanics — this wrapper does **not** own PR review-cycle steps. After **`create-pr`**, the inline **`pr-review`** / **`pr-review.py`** boundary from [plan-and-deliver/plan.mdc § Post-PR handoff](.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc) applies unchanged. Do **not** restate the review procedure here; when the developer picks **`start-pr-review`**, load [plan-and-deliver `pr-review/SKILL.md`](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-review/SKILL.md) via [Post-create-pr handoff gate](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md#post-create-pr-handoff-gate).
+Detached **`coding-session`** ship chains reuse plan-and-deliver mechanics — this wrapper does **not** own PR review-cycle steps. After **`create-pr`**, the inline **`pr-review`** / **`pr-review.mjs`** boundary from [plan-and-deliver/plan.mdc § Post-PR handoff](.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc) applies unchanged. Do **not** restate the review procedure here; when the developer picks **`start-pr-review`**, load [plan-and-deliver `pr-review/SKILL.md`](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-review/SKILL.md) via [Post-create-pr handoff gate](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md#post-create-pr-handoff-gate).
+
+### Repo rules ship inheritance (binding)
+
+Detached **`coding-session`** lanes execute canonical plan-and-deliver repo-rules behavior — this wrapper does **not** duplicate reconcile or post-review rule-update steps. **Pre-PR:** [plan-and-deliver `coding-session/SKILL.md` § *Repo rules reconciliation (binding)*](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md#repo-rules-reconciliation-binding) and [Repo rules reconciliation gate](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md#repo-rules-reconciliation-gate) — plan §5 → **`.cursor/rules/*.mdc`** before ship cut-point. **Post-review:** when inline **`pr-review`** classifies **Rule-update required**, follow [Post-review repo rules handoff](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md#post-review-repo-rules-handoff) after the disposition gate — see [plan-and-deliver `pr-review/SKILL.md`](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-review/SKILL.md).
+
+**Parallel `hosting-repo-rules` fork (cross-ref only):** When product **`coding-session`** terminals carry **`repoRulesReconciliationStatus: pending`**, parent **`planner`** / **`phase-planner`** may fire-and-forget spawn **`hosting-repo-rules`** per canonical [plan-and-deliver `coding-session/SKILL.md` § *Spawner spawn-detection outputs*](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md#spawner-spawn-detection-outputs) and [plan-and-deliver/plan.mdc §8 detached branches](.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc). This wrapper inherits that contract — **no duplicate spawn prose here**.
 
 ## Objectives
 
 1. **Ad-hoc PRD intake** — From a short change request, produce a developer-approved Ad-Hoc PRD under `.sedea/operations/<operationsUserId>/docs/` via **`ad-hoc-prd`** (not full **`author-prd`**).
 
-2. **Bounded Master Plan** — Scaffold and draft a Master Plan with **`planner`**, compute complexity score; **reject** dispatches when overall score **> 12** (≥ 13) and recommend **`plan and deliver`**.
+2. **Bounded Master Plan** — Scaffold and draft a Master Plan with **`planner`**, compute complexity score; **reject** dispatches when overall score **> 20** (≥ 21) and recommend **`plan and deliver`**.
 
-3. **PR breakdown only** — On the Master Plan lane, run **`pr-breakdown`** inline only (no **`delivery-phases`** / **`phase-planner`**); cap the PR list at **3** PRs; expand PR plans with **`new-plan`** + **`pr-plan`** inline.
+3. **PR breakdown only** — On the Master Plan lane, run **`pr-breakdown`** inline only (no **`delivery-phases`** / **`phase-planner`**); allow **1–6** PR rows; expand PR plans with **`new-plan`** + **`pr-plan`** inline.
 
 4. **Standard implementation and ship** — After inline **`pr-plan`** §5c **Start coding session**, the **Master Plan child lane** emits §5d **`AGENT_RUN_REQUEST_V1`** for **`coding-session`** (same contract as plan-and-deliver). Ship chain runs on the spawned **`coding-session`** lane: cut-point, deploy-walk, pre-pr-review, create-pr, pr-review, post-merge cleanup, optional plan-reconcile. **Forbidden:** redirecting §5d spawn to the Squad Leader because the leader does not spawn ship skills from §§1–7.
 
@@ -86,6 +92,8 @@ flowchart TB
 
 **Child spawns:** Reuse **`plan-and-deliver`** skill **`SKILL.md`** files; follow **`missions/plan-and-deliver/skills/README.md`** § *Definitive `laneRules`* per role **except** §3 uses **`ad-hoc-prd`** (not **`author-prd`**) and spawn **`warmUpRules`** must reference **`single-phase/plan.mdc`** instead of **`plan-and-deliver/plan.mdc`** where the skill default lists the latter.
 
+**Dispatch display refresh (Squad Leader).** When dispatch scope is readable (opening command phrase or scope remainder from the opening message), call MCP **`mission_control_update_dispatch_display`** with non-empty **`dispatchTitle`** (≤64 chars) and optional **`dispatchDescription`** / **`dispatchHoverDescription`** (≤512 chars). **Skip** when current dispatch chrome already matches. **Forbidden:** **`mission_control_update_lane_display`** to relabel **child** slots from the leader lane; hand-editing **`dispatch-tab.v1.json`**. See [`.sedea/centers/sedea/rules/9_display-metadata-authority.mdc`](.sedea/centers/sedea/rules/9_display-metadata-authority.mdc).
+
 ## Protocol
 
 ### 1. Infer intent from the opening command phrase
@@ -99,8 +107,9 @@ flowchart TB
 **Procedure**
 
 1. Match **`plan and deliver a single phase`** case-insensitively (only command phrase for this mission).
-2. Strip the phrase; pass remainder as optional scope hint to §2.
-3. Continue to §2.
+2. When dispatch scope is readable from the opening message (command remainder), run **Dispatch display refresh** (above) — **skip** when current dispatch chrome already matches.
+3. Strip the phrase; pass remainder as optional scope hint to §2.
+4. Continue to §2.
 
 ### 2. Collect ad-hoc scope intake
 
@@ -115,7 +124,8 @@ flowchart TB
 1. Collect **change-request description** (`details`) — required; do not infer from title alone.
 2. Collect optional **title**, **supporting paths/URLs**, or explicit **no sources yet**.
 3. Present intake summary; structured choice to proceed to Ad-Hoc PRD, revise, or pause.
-4. **Forbidden:** spawn before `details` confirmed.
+4. When intake confirms a **title** that improves the dispatch title, re-run **Dispatch display refresh** (§ above) — **skip** when current dispatch chrome already matches.
+5. **Forbidden:** spawn before `details` confirmed.
 
 ### 3. Ad-Hoc PRD via agent
 
@@ -160,25 +170,25 @@ Parent: null
 
 **Spawn preflight (binding):** Before **`AGENT_RUN_REQUEST_V1`**, read **`planner/SKILL.md`** frontmatter and **`plan-and-deliver/skills/README.md`** § *Universal spawn preflight* (row **1b**). **`Parent: null`** in the §4 seed is semantic; spawn wire uses **`"parent": "null"`**. Paste-ready example: **`planner/SKILL.md`** § *Spawn contract*.
 - **Next-step resolution:**
-  - **`complexityScore` > 12** (≥ 13) → leader stops; structured choice: open **`plan and deliver`** dispatch (detached) or abandon — **do not** continue §6 on this dispatch.
-  - **`complexityScore` ≤ 12** and continuation active on Master Plan lane → §6 ack on leader; Master Plan agent owns §6–§7 inline.
+  - **`complexityScore` > 20** (≥ 21) → leader stops; structured choice: open **`plan and deliver`** dispatch (detached) or abandon — **do not** continue §6 on this dispatch.
+  - **`complexityScore` ≤ 20** and continuation active on Master Plan lane → §6 ack on leader; Master Plan agent owns §6–§7 inline.
 
-**Complexity gate (binding):** Parse **`### Complexity score`** overall score from child outputs. Values **> 12** (≥ 13) fail this mission's eligibility; **12 is in band**.
+**Complexity gate (binding):** Parse **`### Complexity score`** overall score from child outputs. Values **> 20** (≥ 21) fail this mission's eligibility; **20 is in band**.
 
 ### 6. PR breakdown only (Master Plan lane)
 
 - **Type:** Branching logic + simple skill execution (Master Plan agent lane — not Squad Leader)
-- **Intent:** Decompose Master Plan with **`pr-breakdown`** only; enforce **≤ 3** PR rows.
+- **Intent:** Decompose Master Plan with **`pr-breakdown`** only; enforce **1–6** PR rows.
 - **execution:** inline on Master Plan child lane
-- **Inputs:** `outputs.masterPlanPath`, complexity score ≤ 12.
-- **Expected output:** Master Plan §6 titled **`PR breakdown`** (not Delivery phases); PR list with 1–3 rows; `spawnedPlans` / ledger updates.
-- **Next-step resolution:** PR list approved → §7 per PR row. More than 3 PRs needed → stop; recommend **`plan and deliver`**.
+- **Inputs:** `outputs.masterPlanPath`, complexity score ≤ 20.
+- **Expected output:** Master Plan §6 titled **`PR breakdown`** (not Delivery phases); PR list with 1–6 rows; `spawnedPlans` / ledger updates.
+- **Next-step resolution:** PR list approved → §7 per PR row. More than 6 PRs needed → stop; recommend **`plan and deliver`**.
 
 **Procedure (Master Plan agent)**
 
 1. **Forbidden:** **`delivery-phases`**, **`phase-planner`**, or AskQuestion menu offering Delivery phases.
 2. Load **`pr-breakdown`** inline with `routeLock: pr-breakdown` when skill supports it; otherwise skip route AskQuestion and proceed directly to **`pr-breakdown`**.
-3. After **`pr-breakdown`**, verify PR count **≤ 3**; if skill draft exceeds 3, revise down or stop with scope message.
+3. After **`pr-breakdown`**, verify PR count **≤ 6**; if skill draft exceeds 6, revise down or stop with scope message recommending **`plan and deliver`**.
 4. Run **`new-plan`** + **`pr-plan`** inline for each PR row (same as plan-and-deliver Master Plan lane when **`pr-breakdown`** path chosen).
 5. When **`pr-plan`** reports **`readyForImplementation: true`**, **re-enter** inline **`pr-plan`** §5c on **this Master Plan lane** — emit §5d **`coding-session`** spawn when the developer selects **Start coding session**; **do not** close the planner lane with prose redirect to Squad Leader.
 6. Report planning handoff readiness per **`30_planning-target-resolution`** § *Planning readiness vs ship*.
@@ -193,7 +203,7 @@ Parent: null
 - **Expected output:** Planning ledger closed; PR plans `readyForImplementation` when applicable.
 - **Next-step resolution:** All planning entries terminal → §8. Open planning work → wait and ack.
 
-Same ledger rules as plan-and-deliver §7, except **no phase-planner rows** and **max 3 PR plan** entries.
+Same ledger rules as plan-and-deliver §7, except **no phase-planner rows** and **max 6 PR plan** entries.
 
 ### 8. Ship cadence ledger and dispatch resolution
 

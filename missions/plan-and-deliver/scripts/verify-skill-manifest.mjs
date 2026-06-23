@@ -30,7 +30,7 @@ const PLAN_AND_DELIVER_PREFIX = 'missions/plan-and-deliver/skills/';
 const SKILL_WARMUP_HEADING = '### `skillWarmUp` — frontmatter `warmUpRules`';
 const LANE_RULES_HEADING = '### `laneRules` — frontmatter `laneRules`';
 /** Host spawn cap — `.sedea/centers/sedea/rules/4_mission.mdc` § Spawned execution */
-const WARM_UP_BYTE_CAP = 256 * 1024;
+const WARM_UP_BYTE_CAP = 384 * 1024;
 
 /** Definitive laneRules rows from skills/README.md § Definitive laneRules (spawn preflight row 11). */
 const DEFINITIVE_LANE_RULES_BY_SKILL = {
@@ -38,7 +38,6 @@ const DEFINITIVE_LANE_RULES_BY_SKILL = {
     '.sedea/centers/sedea/rules/2_ask-question-instructions.mdc',
     '.sedea/centers/research-and-development/missions/plan-and-deliver/skills/author-prd/SKILL.md',
     '.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc',
-    '.sedea/centers/research-and-development/rules/31_operations-user-id.mdc',
   ],
   planner: [
     '.sedea/centers/sedea/rules/2_ask-question-instructions.mdc',

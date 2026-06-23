@@ -41,7 +41,7 @@ effectiveWarmUp = dedupe( sedeaBootstrapRules → rdBootstrapRules → laneRules
 | **Sedea `bootstrapRules`** | Host | **`.sedea/centers/sedea/rules/bootstrap.mdc`** (≤ ~15 KB) |
 | **R&D `bootstrapRules`** | Host when `centerSlug === research-and-development` | **This file** — `.sedea/centers/research-and-development/rules/bootstrap.mdc` (≤ ~10 KB) |
 | **`laneRules`** | Mission protocol / spawn request / lane record | Role-specific governance beyond both bootstrap layers |
-| **`skillWarmUp`** | Skill frontmatter + run-request **`warmUpRules`** | Subject to **256 KiB** combined warm-up cap |
+| **`skillWarmUp`** | Skill frontmatter + run-request **`warmUpRules`** | Subject to **384 KiB** combined warm-up cap |
 
 Definitive per-role **`laneRules`** minimums: [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md`](../missions/plan-and-deliver/skills/README.md) § *Definitive `laneRules`*. Skill **`SKILL.md`** § *Warm-up manifest* tables document **`skillWarmUp`** and **`laneRules`**; **`bootstrapRules`** rows document the R&D bootstrap path for host parity lint.
 
@@ -69,6 +69,14 @@ Load these **explicitly** when **`laneRules`**, **`skillWarmUp`**, spawn handove
 | **50** Display metadata | [`.sedea/centers/research-and-development/rules/50_mission-control-display-metadata-discipline.mdc`](50_mission-control-display-metadata-discipline.mdc) | Child lane display refresh, Squad Leader dispatch scope |
 
 Mission **`plan.mdc`**, **`development-process.md`**, and skill **`SKILL.md`** procedures load per **`laneRules`** and **`skillWarmUp`** — not duplicated here.
+
+---
+
+## Skill helper interfaces
+
+When an active skill names a **`scripts/*.mjs`** helper for a GitHub, API, or repository operation, that helper is the binding interface for the operation it covers. Do not substitute familiar CLI commands, raw REST, or GraphQL calls unless the skill explicitly allowlists that exact use.
+
+Cross-ref: [`.sedea/centers/sedea/rules/1_agent-code-of-conduct.mdc`](.sedea/centers/sedea/rules/1_agent-code-of-conduct.mdc) § *Skill helper interfaces* (Sedea platform rule **1** — same contract; R&D center is Node-only under **`.sedea/centers/`**).
 
 ---
 

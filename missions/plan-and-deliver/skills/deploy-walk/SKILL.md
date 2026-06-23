@@ -7,6 +7,9 @@ description: >-
  numbered step-by-step testing instructions for the developer. Three-state lifecycle
  in `**Status:**`; capstone todo when done.
  Does not auto-run plan-reconcile.
+designation:
+  allowed: Walk deploy test plan; run agent-executable verification; flip steps with evidence
+  forbidden: Application implementation; unchecked manual steps without evidence; dispatch resolution
 inputs:
   targetPlanPath:
     type: string
@@ -233,7 +236,8 @@ Run **without** an **AskQuestion** approval gate **before each agent-executable 
 
 | Examples | Notes |
 |----------|--------|
-| Unit / integration tests (`npm test`, `pytest`, `go test`, `cargo test`, …) | Run in the worktree; exit 0 = pass |
+| Unit / integration tests (`npm test`, `node --test`, `go test`, `cargo test`, …) | Run in the worktree; exit 0 = pass |
+| Center governance scripts (`node .sedea/centers/sedea/scripts/*.mjs`, `node …/plan-and-deliver/scripts/*.mjs`) | From **`HOSTING_ROOT`** per rule **20** § *Hosting repo cwd* |
 | Repo scripts (`./scripts/verify-*.sh`, `make test`, documented package scripts) | Read script first when non-obvious |
 | `curl` / `wget` / HTTP checks to **localhost**, staging URLs, or endpoints documented in the step when credentials/env are already available in the session | Do **not** invent secrets; if env vars are missing, treat as manual or **block** |
 | File / config assertions (`test -f`, grep, read expected artifact) | |
@@ -263,7 +267,7 @@ Run **without** an **AskQuestion** approval gate **before each agent-executable 
 
 | Category | Agent runs (use tools — do not ask the developer) |
 |----------|---------------------------------------------------|
-| **Shell** | `npm test`, `npm run <script>`, `pytest`, `go test`, `cargo test`, `make`, repo `./scripts/*.sh`, `curl` / `wget`, `jq`, `python -c`, read-only `git` (`status`, `diff`, `log`, `rev-parse`, `branch`) |
+| **Shell** | `npm test`, `npm run <script>`, `node --test`, `go test`, `cargo test`, `make`, repo `./scripts/*.sh`, `node .sedea/centers/sedea/scripts/*.mjs`, `curl` / `wget`, `jq`, `node -e`, read-only `git` (`status`, `diff`, `log`, `rev-parse`, `branch`) |
 | **Logs and text** | `grep`, `rg`, `tail`, `head`, `cat`, `awk`, `sed` on log files and stdout; search for phrases, error codes, stack traces, HTTP status lines |
 | **Filesystem read** | `Read`, `Grep`, `Glob` on repo paths; `test -f`, `test -d`, diff expected vs actual config or artifacts in **`worktreePath`** |
 | **Plan file edits** | `StrReplace` on deploy checklist boxes, `**Status:**`, capstone todo; read-only `plan-state.mjs resolve` / `show` from **`HOSTING_ROOT`** |

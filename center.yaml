@@ -39,6 +39,7 @@ missions:
       - missions/plan-and-deliver/skills/create-pr/SKILL.md
       - missions/plan-and-deliver/skills/delivery-phases/SKILL.md
       - missions/plan-and-deliver/skills/deploy-walk/SKILL.md
+      - missions/plan-and-deliver/skills/hosting-repo-rules/SKILL.md
       - missions/plan-and-deliver/skills/planner/SKILL.md
       - missions/plan-and-deliver/skills/new-plan/SKILL.md
       - missions/plan-and-deliver/skills/phase-planner/SKILL.md
@@ -55,12 +56,20 @@ missions:
       - debug and fix
     skillEntries:
       - missions/debug-and-fix/skills/debug-and-fix/SKILL.md
-  # No local SKILL.md files — reuses plan-and-deliver skills via paths in plan.mdc.
+  # Reuses plan-and-deliver SKILL.md paths (no mission-local copies except spawn targets).
   - slug: single-phase
     plan: missions/single-phase/plan.mdc
     skills: missions/single-phase/skills/
     commands:
       - plan and deliver a single phase
+    skillEntries:
+      - missions/plan-and-deliver/skills/ad-hoc-prd/SKILL.md
+      - missions/plan-and-deliver/skills/coding-session/SKILL.md
+      - missions/plan-and-deliver/skills/new-plan/SKILL.md
+      - missions/plan-and-deliver/skills/planner/SKILL.md
+      - missions/plan-and-deliver/skills/pr-breakdown/SKILL.md
+      - missions/plan-and-deliver/skills/pr-plan/SKILL.md
+      - missions/plan-and-deliver/skills/pre-pr-review/SKILL.md
   - slug: quick-fix
     plan: missions/quick-fix/plan.mdc
     skills: missions/quick-fix/skills/
@@ -68,6 +77,12 @@ missions:
       - missions/quick-fix/skills/quick-fix-plan-agent/SKILL.md
     commands:
       - quick fix
+    skillEntries:
+      - missions/quick-fix/skills/quick-fix-plan/SKILL.md
+      - missions/plan-and-deliver/skills/coding-session/SKILL.md
+      - missions/plan-and-deliver/skills/new-plan/SKILL.md
+      - missions/plan-and-deliver/skills/pr-plan/SKILL.md
+      - missions/plan-and-deliver/skills/pre-pr-review/SKILL.md
 
 centerSkills:
   readme: missions/plan-and-deliver/skills/README.md
@@ -90,9 +105,10 @@ governance:
   hostSync:
     mission: plan-and-deliver
     summary: >-
-      Section 8 ship ledger is automation-only: host sync from ship child terminals
-      (including coding-session re-emits for inline milestones). No manual Ship recap
-      paste path. Missing outputs are mission gaps — see plan.mdc §8 automation completeness.
+      Section 8 ship ledger is automation-only: host sync from spawned ship child
+      terminals (coding-session, pre-pr-review) and coding-session re-emits for inline
+      milestones. No manual Ship recap paste path. Missing outputs are mission gaps —
+      see plan.mdc §8 automation completeness.
     agentDocs:
       - missions/plan-and-deliver/plan.mdc
       - docs/development-process.md
@@ -106,8 +122,4 @@ governance:
       - rowStatus
     shipSkills:
       - coding-session
-      - worktree-bootstrap
       - pre-pr-review
-      - create-pr
-      - deploy-walk
-      - plan-reconcile
