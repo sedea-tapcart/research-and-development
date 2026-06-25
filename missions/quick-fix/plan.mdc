@@ -81,7 +81,7 @@ flowchart TB
 
 | Path | Role |
 |------|------|
-| `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc` | Structured choice on every turn |
+| `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc` | Structured choice at USER_CHECKPOINT gates and external-wait surfaces (Checkpoint precedence) |
 | `.sedea/centers/sedea/rules/4_mission.mdc` | Mission protocol, spawn/reload |
 | `.sedea/centers/research-and-development/missions/quick-fix/plan.mdc` | **This** mission plan |
 | `.sedea/centers/research-and-development/docs/development-process.md` | Cadence and protocol branches |
@@ -98,7 +98,9 @@ flowchart TB
 - **Intent:** Match **`quick fix`** and prepare intake.
 - **Inputs:** Opening message; **`mission.yaml`** command inventory.
 - **Expected output:** Intent **`quick-fix`**; optional scope remainder for §2.
-- **Next-step resolution:** Phrase matches → §2. No match → structured choice to confirm intent or abort.
+- **Next-step resolution:** Phrase matches → §2 (auto-advance). No match → USER_CHECKPOINT gate below.
+
+USER_CHECKPOINT — confirm mission intent when the opening command phrase does not match.
 
 **Procedure**
 
@@ -113,11 +115,13 @@ flowchart TB
 - **Intent:** Gather confirmed quick-fix scope on the Squad Leader lane before §3 spawn — via bullet list or free-form fix description.
 - **Inputs:** Opening remainder; `operationsUserId`; `intakeMode` (`provide-list` | `description-of-fix`).
 - **Expected output:** `intakeMode`, `changeList` (non-empty confirmed bullet list), optional `changeDescription` (when prose path used), `complexityConfirmed: true` (each item ≤6), `scopeConfirmed: true`, optional `title`.
-- **Next-step resolution:** List confirmed in scope and complexity → §3. Out-of-scope or complexity **>6** → structured choice: narrow list, redirect to **`plan and deliver a single phase`** (**1–6** PRs, complexity **≤ 20**) or **`plan and deliver`** (detached), or abandon.
+- **Next-step resolution:** List confirmed in scope and complexity → §3 (auto-advance). Out-of-scope or complexity **>6** → USER_CHECKPOINT gate below.
+
+USER_CHECKPOINT — pick quick-fix intake mode and confirm scope before spawn.
 
 **Procedure**
 
-1. **Intake mode (required first):** Structured choice on the Squad Leader lane:
+1. **Intake mode (required first):** Open structured choice on the Squad Leader lane:
    - **`provide-list`** — I'll paste my bullet list next — proceed to collect it
    - **`description-of-fix`** — free-form prose with all details of what to change and do (collect on follow-up turn, or same turn when opening remainder already contains the description)
    - **`redirect-scope`** — out of scope or complexity **>6** → **`plan and deliver a single phase`** or **`plan and deliver`** (detached)
@@ -128,7 +132,7 @@ flowchart TB
 4. **Scope gate:** Confirm each item is a small fix — cosmetic UI/styling/copy **or** a **simple functional change** within this mission's line-count expectations. Reject items that need Master Plan decomposition, multiple PRs, or broad refactors.
 5. **Complexity gate:** Confirm developer attests each item is complexity **6 or under**. When any item likely exceeds **6**, stop and offer redirect (see **Mission constraints**).
 6. Collect optional **title** for the plan tree (default from first bullet, prose summary, or user phrase).
-7. Present summary (title, final bullet list, complexity attestation, intake mode used); structured choice to proceed to Quick Fix Plan agent, **revise intake** (return to step 1 per step 3), redirect scope, or pause.
+7. Present summary (title, final bullet list, complexity attestation, intake mode used); open structured choice to proceed to Quick Fix Plan agent, **revise intake** (return to step 1 per step 3), redirect scope, or pause.
 8. When intake confirms a **title** that improves the dispatch title, re-run **Dispatch display refresh** (§ above) — **skip** when current dispatch chrome already matches.
 9. **Forbidden:** spawn before list is confirmed in scope and complexity (both paths).
 
@@ -143,7 +147,9 @@ flowchart TB
 - **Required rule context:** Sedea baseline, **this `plan.mdc`**, **`development-process.md`**, [`.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`](.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc), plan-and-deliver **`skills/README.md`**.
 - **Inputs:** `intakeMode` (`provide-list` | `description-of-fix`), `changeList`, optional `changeDescription` (required when `intakeMode` is `description-of-fix`), `title`, `operationsUserId`, `centerSlug: research-and-development`, `complexityConfirmed: true`.
 - **Expected output:** Child terminal with `outputs.parentPlanPath`, `outputs.targetPlanPath`, `outputs.readyForImplementation`, `outputs.prPlanHandoffReady` (or equivalent per **`pr-plan`** **`## Completion (spawned)`** when spawn path used), ledger fields.
-- **Next-step resolution:** Terminal success with PR plan path → §6 ack on leader. Failure/partial → structured choice retry or abandon.
+- **Next-step resolution:** Terminal success with PR plan path → §6 ack on leader (auto-advance). Failure/partial → USER_CHECKPOINT gate below.
+
+USER_CHECKPOINT — pick next step when Quick Fix Plan child reports failure or partial.
 
 **Spawn preflight**
 
@@ -152,7 +158,7 @@ flowchart TB
 - **`initiatingPrompt`:** one narrative prompt string weaving the confirmed bullet list, scope/complexity confirmation, and full `changeDescription` when the prose intake path was used — not separate structured sub-fields.
 - **`warmUpRules`:** include **`quick-fix/plan.mdc`** instead of **`plan-and-deliver/plan.mdc`**.
 
-**Agent session closure:** Child **`AGENT_RESULT_RESPONSE_V1`**; leader waits for host delivery before §6.
+**Agent session closure:** Child **`AGENT_RESULT_RESPONSE_V1`**; leader waits for host delivery before §6 (**#external-wait**).
 
 ### 4. Minimal parent and PR plan (Quick Fix Plan agent lane)
 
@@ -205,9 +211,11 @@ The Squad Leader **does not** spawn **`coding-session`** from §§1–3. The **Q
 
 Same automation contract as plan-and-deliver §8 (*Mission Control host sync*) when the host registers mission slug **`quick-fix`**. **Forbidden:** manual Ship recap paste on the leader lane.
 
-**Pre-resolution checklist:** Before **`MC_DISPATCH_RESOLVED_V1`**, re-scan ship rows — do not propose **`resolved`** while `open`/`blocked` rows lack host-sync this session unless developer chose planning-only close via structured choice.
+**Pre-resolution checklist:** Before **`MC_DISPATCH_RESOLVED_V1`**, re-scan ship rows — do not propose **`resolved`** while `open`/`blocked` rows lack host-sync this session unless developer chose planning-only close via USER_CHECKPOINT gate.
 
 ### 8. Dispatch resolution (Squad Leader)
+
+USER_CHECKPOINT — approve dispatch resolution when planning and ship gates allow.
 
 - **Type:** Finish/stop logic
 - **Intent:** Close dispatch when objectives met or user signals wrap-up.
