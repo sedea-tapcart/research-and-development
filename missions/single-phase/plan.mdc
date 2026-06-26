@@ -83,7 +83,7 @@ flowchart TB
 
 | Path | Role |
 |------|------|
-| `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc` | Structured choice on every turn |
+| `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc` | Structured choice at USER_CHECKPOINT gates and external-wait surfaces (Checkpoint precedence) |
 | `.sedea/centers/sedea/rules/4_mission.mdc` | Mission protocol, spawn/reload manifest |
 | `.sedea/centers/research-and-development/missions/single-phase/plan.mdc` | **This** mission plan (§§1–8) — not `plan-and-deliver/plan.mdc` |
 | `.sedea/centers/research-and-development/docs/development-process.md` | Cadence and protocol branches |
@@ -102,7 +102,9 @@ flowchart TB
 - **Intent:** Match **`plan and deliver a single phase`** and prepare intake.
 - **Inputs:** Opening message; **`mission.yaml`** command inventory.
 - **Expected output:** Intent **`single-phase-deliver`**; optional scope remainder for §2.
-- **Next-step resolution:** Phrase matches → §2. No match → structured choice to confirm intent or abort.
+- **Next-step resolution:** Phrase matches → §2 (auto-advance). No match → USER_CHECKPOINT gate below.
+
+USER_CHECKPOINT — confirm mission intent when the opening command phrase does not match.
 
 **Procedure**
 
@@ -117,13 +119,15 @@ flowchart TB
 - **Intent:** Gather **`ad-hoc-prd`** inputs on the Squad Leader lane before §3 spawn.
 - **Inputs:** Opening remainder; `operationsUserId`.
 - **Expected output:** `title` (optional), `details` (required), optional `sourceSummary`, optional `roadmapHints`.
-- **Next-step resolution:** `details` non-empty and user confirms summary → §3. Defer → pause.
+- **Next-step resolution:** `details` non-empty and user confirms summary → §3 (auto-advance). Defer → pause.
+
+USER_CHECKPOINT — confirm ad-hoc scope intake before spawning Ad-Hoc PRD.
 
 **Procedure**
 
 1. Collect **change-request description** (`details`) — required; do not infer from title alone.
 2. Collect optional **title**, **supporting paths/URLs**, or explicit **no sources yet**.
-3. Present intake summary; structured choice to proceed to Ad-Hoc PRD, revise, or pause.
+3. Present intake summary; open structured choice to proceed to Ad-Hoc PRD, revise, or pause.
 4. When intake confirms a **title** that improves the dispatch title, re-run **Dispatch display refresh** (§ above) — **skip** when current dispatch chrome already matches.
 5. **Forbidden:** spawn before `details` confirmed.
 
@@ -138,9 +142,11 @@ flowchart TB
 - **Spawn `warmUpRules` (binding):** On **`AGENT_RUN_REQUEST_V1`**, merge skill frontmatter **`warmUpRules`** but **replace** `plan-and-deliver/plan.mdc` with **`single-phase/plan.mdc`** so the child loads this mission's protocol, not full plan-and-deliver.
 - **Inputs:** `createIntent: true`, `title`, `details`, `operationsUserId`, optional `sourceSummary`, optional `roadmapHints`.
 - **Expected output:** Child terminal with `outputs.adHocPrdPath`, `outputs.developerApprovedPrd`, `outputs.continuationStatus: terminal` when PRD approved.
-- **Next-step resolution:** Terminal approved PRD → auto-chain §4 → §5 on leader (no re-approval gate). Failure/partial → structured choice retry or abandon.
+- **Next-step resolution:** Terminal approved PRD → auto-chain §4 → §5 on leader (no re-approval gate). Failure/partial → USER_CHECKPOINT gate below.
 
-**Agent session closure:** Child **`AGENT_RESULT_RESPONSE_V1`**; leader waits for host delivery.
+USER_CHECKPOINT — pick next step when Ad-Hoc PRD child reports failure or partial.
+
+**Agent session closure:** Child **`AGENT_RESULT_RESPONSE_V1`**; leader waits for host delivery (**#external-wait**).
 
 ### 4. Collect planning seed
 
@@ -170,8 +176,10 @@ Parent: null
 
 **Spawn preflight (binding):** Before **`AGENT_RUN_REQUEST_V1`**, read **`planner/SKILL.md`** frontmatter and **`plan-and-deliver/skills/README.md`** § *Universal spawn preflight* (row **1b**). **`Parent: null`** in the §4 seed is semantic; spawn wire uses **`"parent": "null"`**. Paste-ready example: **`planner/SKILL.md`** § *Spawn contract*.
 - **Next-step resolution:**
-  - **`complexityScore` > 20** (≥ 21) → leader stops; structured choice: open **`plan and deliver`** dispatch (detached) or abandon — **do not** continue §6 on this dispatch.
-  - **`complexityScore` ≤ 20** and continuation active on Master Plan lane → §6 ack on leader; Master Plan agent owns §6–§7 inline.
+  - **`complexityScore` > 20** (≥ 21) → USER_CHECKPOINT gate below — **do not** continue §6 on this dispatch.
+  - **`complexityScore` ≤ 20** and continuation active on Master Plan lane → §6 ack on leader (auto-advance); Master Plan agent owns §6–§7 inline.
+
+USER_CHECKPOINT — pick next step when Master Plan complexity exceeds this mission ceiling (score > 20).
 
 **Complexity gate (binding):** Parse **`### Complexity score`** overall score from child outputs. Values **> 20** (≥ 21) fail this mission's eligibility; **20 is in band**.
 
@@ -214,6 +222,8 @@ Same ledger rules as plan-and-deliver §7, except **no phase-planner rows** and 
 **Detached branches** — identical skill order to plan-and-deliver §8 detached table: **`coding-session`** → before deploy **`deploy-walk`** → **`pre-pr-review`** spawn → **`create-pr`** → **`pr-review`** → post-merge cleanup → after deploy **`deploy-walk`** → explicit **`plan-reconcile`**. **Detached** means off the **Squad Leader** §§1–7 protocol — **`coding-session`** is still spawned from the **Master Plan child lane** via inline **`pr-plan`** §5d per **`planner/SKILL.md`** Step **7c** and *Resume / PR-expand handoff*.
 
 **§8 automation:** Same host-sync contract as plan-and-deliver §8 (*Mission Control host sync*) when the Mission Control host registers this mission slug; until then treat missing sync as a **mission gap** — do not manual-paste Ship recap.
+
+USER_CHECKPOINT — approve dispatch resolution when planning and ship gates allow.
 
 **Dispatch resolution:** Squad Leader proposes **`MC_DISPATCH_RESOLVED_V1`** when planning complete and ship rows closed (or planning-only close per plan-and-deliver §8 gates).
 

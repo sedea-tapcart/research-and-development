@@ -249,7 +249,7 @@ flowchart TD
 
 This subsection is the **Squad Leader** contract for §§3, 5, 6, and 7. Sedea host behavior is defined in **`.sedea/centers/sedea/rules/4_mission.mdc`** (spawn invocation, agent session closure). **Planning** child lanes use each skill’s **`## Completion (spawned)`**; **ship** lanes use the same terminal line with field lists in domain sections (see **`missions/plan-and-deliver/skills/README.md`** § Planning spawn, § Ship spawn, § Inline-only).
 
-**Host vs “wait.”** Mission Control does **not** block the parent turn while a child runs. **Wait** means: emit **`AGENT_RUN_REQUEST_V1`**, announce that you are waiting for a child result, then **stop** further protocol work on the leader lane until Mission Control delivers a silent UserSend that begins with **`Mission Control: agent-result-response delivered.`** When that stop ends the assistant turn, **close with structured choice** per [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](.sedea/centers/sedea/rules/2_ask-question-instructions.mdc) § **Turn completion invariant** and [`.sedea/centers/sedea/skills/README.md`](../../sedea/skills/README.md) § *Concurrency contract* — do not prose-only announce wait. Follow the response-protocol footer in the delivered message before §6, §7, or another spawn.
+**Host vs “wait.”** Mission Control does **not** block the parent turn while a child runs. **Wait** means: emit **`AGENT_RUN_REQUEST_V1`**, announce that you are waiting for a child result, then **stop** further protocol work on the leader lane until Mission Control delivers a silent UserSend that begins with **`Mission Control: agent-result-response delivered.`** When that stop ends the assistant turn, open a **next-step resume** structured choice (**#external-wait**) naming resume paths before ending the turn per [`.sedea/centers/sedea/skills/README.md`](../../sedea/skills/README.md) § *Concurrency contract* — do not prose-only announce wait. Follow the response-protocol footer in the delivered message before §6, §7, or another spawn.
 
 **§3 resume (Author PRD agent).** After each `AGENT_RESULT_RESPONSE_V1` for §3:
 
@@ -257,8 +257,8 @@ This subsection is the **Squad Leader** contract for §§3, 5, 6, and 7. Sedea h
 |-------|--------|
 | `outputs.continuationOwner: author-prd-agent` and `outputs.continuationStatus: active` | **Acknowledge only** on the leader lane — PRD approval / revision runs on the **Author PRD** child lane (see **`author-prd`** steps 10–11). Do **not** duplicate approval **AskQuestion** here. |
 | `outputs.continuationStatus: terminal` and `outputs.developerApprovedPrd: true` with `prdRef` | **Auto-chain §4 → §5 on the same leader turn:** compile seed from approved outputs (`prdRef`, `prdTitle`, …), run §5 spawn preflight, emit **`AGENT_RUN_REQUEST_V1`** for **`planner`**. **Forbidden:** leader-lane **AskQuestion** to re-approve PRD, seed review gate, or “confirm spawn planner” before emit. |
-| `outputs.continuationStatus: terminal` without `developerApprovedPrd: true` | Close with **AskQuestion** on the leader lane: retry §3, continue on child lane, or abandon branch — do not prose-only stop |
-| `status: partial` / missing `prdRef` / missing required inputs | Close with **AskQuestion** to collect missing fields or retry per **`author-prd`** **`## Completion (spawned)`** — appropriate lane owns collection |
+| `outputs.continuationStatus: terminal` without `developerApprovedPrd: true` | USER_CHECKPOINT — pick next step when Author PRD child terminates without approved PRD |
+| `status: partial` / missing `prdRef` / missing required inputs | USER_CHECKPOINT — collect missing fields or retry per **`author-prd`** **`## Completion (spawned)`** |
 
 **§5 resume (Master Plan agent).** Before §6, validate the child result against **`planner`** **`## Completion (spawned)`**:
 
@@ -295,7 +295,7 @@ This subsection is the **Squad Leader** contract for §§3, 5, 6, and 7. Sedea h
 
 | Path | Role |
 |------|------|
-| `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc` | Structured choice on every turn |
+| `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc` | Structured choice at USER_CHECKPOINT gates and external-wait surfaces (Checkpoint precedence) |
 | `.sedea/centers/sedea/rules/4_mission.mdc` | Mission protocol, spawn/reload manifest |
 | `.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc` | This mission plan (§§1–8) |
 | `.sedea/centers/research-and-development/docs/development-process.md` | Cadence and protocol branches |
@@ -328,9 +328,11 @@ Child spawns must satisfy the same README table for the target skill role (skill
 - **Inputs:** Opening seeds from §1; `operationsUserId` from Mission Control context.
 - **Expected output:** Intake bundle: `prdTitle`, `prdDescription`, `operation` (`create` | `manage`), optional `targetPath`, `sourceMaterials[]`, optional `sectionPolicy`.
 - **Next-step resolution:**
-  - Intake complete and user confirms summary → §3 spawn **`author-prd`**.
+  - Intake complete and user confirms summary → §3 spawn **`author-prd`** (auto-advance).
   - User defers → pause.
   - User revises a field → re-ask that field only.
+
+USER_CHECKPOINT — confirm PRD intake summary before spawning Author PRD.
 
 **Procedure**
 
@@ -340,7 +342,7 @@ Child spawns must satisfy the same README table for the target skill role (skill
    - **Description / problem statement** (required) — multi-line; **do not infer** from title alone
    - **Supporting materials** (paths, URLs, pasted notes) — or explicit **no sources yet**
 3. For **`manage`**, read the existing PRD at `targetPath` when readable; if fetch fails, use **AskQuestion** (§ *Unreadable PRD source* below).
-4. Present intake summary (title, description excerpt, source list) and **AskQuestion** in **one turn**: proceed to Author PRD, revise intake, or **More details for option _**.
+4. Present intake summary (title, description excerpt, source list) and open structured choice in **one turn**: proceed to Author PRD, revise intake, or **More details for option _**.
 5. **Forbidden:** emit **`AGENT_RUN_REQUEST_V1`** while `prdDescription` is missing or intake is unconfirmed.
 
 **Suggested intake fields**
@@ -384,7 +386,7 @@ Do **not** invent PRD content from a URL alone.
 2. Set **`initiatingPrompt`** with the user's description and numbered source list; instruct the child to extend the source ledger and **not** invent scope from title alone.
 3. Run **`skills/README.md`** § *Universal spawn preflight* (including display metadata). Set **`name`** / **`description`** from **`prdTitle`** — not generic child placeholders.
 4. Emit exactly one **`AGENT_RUN_REQUEST_V1`** for **`author-prd`** with a new `correlationId`, dispatch-unique `slug`, and preflight **`inputs`**.
-5. Announce that the **Squad Leader** is waiting for the child lane; close the turn with structured choice per rule **2** § **Turn completion invariant**.
+5. Announce that the **Squad Leader** is waiting for the child lane; open a **next-step resume** structured choice (**#external-wait**) before ending the turn.
 6. Stop until Mission Control delivers **`AGENT_RESULT_RESPONSE_V1`** for the same `correlationId`.
 7. Apply **§3 resume**. The **Author PRD agent** owns recap, approval, and revision (skill steps 10–11) — **do not** duplicate approval on the leader lane.
 8. Continue to §4 only when `continuationStatus: terminal`, `developerApprovedPrd: true`, and `prdRef` is readable. When those hold, **do not end the leader turn** until §5 **`planner`** spawn is emitted or a §4 data-gap **AskQuestion** blocks spawn preflight.
@@ -449,7 +451,7 @@ When an explicit developer override applies, replace the **`Parent:`** line with
   - Child result `success` with Master Plan path and low/medium complexity plus active continuation ownership → continue to status acknowledgement and ledger tracking; the **planner** lane owns downstream route prompts and inline decomposition.
   - Child result `success` with high complexity → acknowledge **Route §6 → Delivery phases** recommendation on the **Master Plan agent** lane (high band triggers phase decomposition via **`delivery-phases`** / **`phase-planner`**, not a §6 withhold); keep the **Master Plan agent** lane open; do not foreground decomposition from the **Squad Leader** lane.
   - Child result `partial` with usable Master Plan path → surface gaps and continue only if they do not block routing.
-  - Child result `failure`, `aborted`, `abandoned`, or no plan path → close with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`**: retry, revise seed, or abandon.
+  - Child result `failure`, `aborted`, `abandoned`, or no plan path → USER_CHECKPOINT — retry, revise seed, or abandon.
 
 **Procedure**
 
@@ -471,7 +473,7 @@ When an explicit developer override applies, replace the **`Parent:`** line with
    Set **`name`** from **`featurePlanningTitle`** (or PRD title) and **`description`** to a one-line Master Plan drafting summary — not generic "Planner" / "Child agent" placeholders alone (README § *Universal spawn preflight* display-metadata rows).
 
 3. Emit exactly one `AGENT_RUN_REQUEST_V1` request for the **Master Plan agent** using the `planner` skill path, a **new** `correlationId`, dispatch-unique `slug`, topic-specific **`name`** / **`description`**, and the preflight **`inputs`** from step 2. See **`planner/SKILL.md`** § *Spawn contract* for a valid example line and failure modes.
-4. Emit **`AGENT_RUN_REQUEST_V1`**, announce that the **Squad Leader** is waiting because later protocol steps need the produced plan path and complexity result, and close the turn with structured choice per [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](.sedea/centers/sedea/rules/2_ask-question-instructions.mdc) § **Turn completion invariant**.
+4. Emit **`AGENT_RUN_REQUEST_V1`**, announce that the **Squad Leader** is waiting because later protocol steps need the produced plan path and complexity result, and open a **next-step resume** structured choice (**#external-wait**) before ending the turn.
 5. Stop protocol execution until Mission Control delivers `AGENT_RESULT_RESPONSE_V1` for the same `correlationId`.
 6. Validate that returned outputs include a readable Master Plan path, complexity band, continuation owner/status, and ledger-shaped arrays (`activeLanes`, `openLedgerEntries`, `spawnedPlans`, `remainingTasks`) before continuing.
 
@@ -484,7 +486,7 @@ When an explicit developer override applies, replace the **`Parent:`** line with
 - **Next-step resolution:**
   - Master Plan agent reports active continuation ownership → acknowledge status and enter a resumable wait state.
   - Master Plan agent reports terminal success and no remaining **planning** tasks → continue **§7** then **§8**; do **not** propose **`resolved`** dispatch from §6 alone (planning complete ≠ ship complete).
-  - Master Plan agent reports failure or no usable plan path → close with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`**: retry, revise seed, switch PRD source, or abandon.
+  - Master Plan agent reports failure or no usable plan path → USER_CHECKPOINT — retry, revise seed, switch PRD source, or abandon.
   - Downstream agent result arrives → resume only when the result requires mission-level action.
 
 **Procedure**
@@ -504,7 +506,7 @@ When an explicit developer override applies, replace the **`Parent:`** line with
   - New phase or PR plan is spawned → add it to the closure ledger as open.
   - Downstream child result reports active continuation → acknowledge status and keep that lane open.
   - Downstream child result reports terminal completion for a registered phase or PR plan → mark that ledger entry closed.
-  - Any child result reports failure, aborted, or abandoned → mark the ledger blocked and close with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`**: retry, revise scope, accept partial resolution, or abandon.
+  - Any child result reports failure, aborted, or abandoned → mark the ledger blocked and USER_CHECKPOINT — retry, revise scope, accept partial resolution, or abandon.
   - Planning ledger has no open or blocked entries and every planning lane is terminal → continue **§8** (do **not** propose **`resolved`** here if ship work remains).
 
 **Planning ledger rules**
@@ -533,10 +535,12 @@ When an explicit developer override applies, replace the **`Parent:`** line with
 - **Inputs:** Planning ledger state from §7; developer messages on the leader lane; **`coding-session`** child `outputs` (especially `developerApprovedImplementation`, `targetPlanPath` after the worktree-open gate); explicit developer status when ship runs on other lanes.
 - **Expected output:** Updated **ship ledger** per PR plan; status acknowledgement; **`MC_DISPATCH_RESOLVED_V1`** only when gates below allow.
 - **Next-step resolution:**
-  - No ship row yet, planning complete → **AskQuestion** once: close dispatch **planning-only** (`partial` / `resolved` with summary) vs ship continues on detached lanes (keep dispatch **active**).
-  - Ship row open → keep dispatch **active**; acknowledge phase updates; do **not** propose **`resolved`**.
+  - No ship row yet, planning complete → USER_CHECKPOINT — close dispatch planning-only vs keep ship active on detached lanes.
+  - Ship row open → keep dispatch **active** (auto-advance ack); acknowledge phase updates; do **not** propose **`resolved`**.
   - All ship rows **closed** (or explicitly deferred/abandoned per row) → propose dispatch resolution per **`.sedea/centers/sedea/rules/4_mission.mdc`**.
   - Developer requests wrap-up with open ship → propose **`partial`** or **`abandoned`** with explicit remaining work in the JSON `summary`.
+
+USER_CHECKPOINT — approve dispatch resolution when planning and ship gates allow.
 
 **Detached branches (execution stays off the leader lane)**
 
@@ -738,9 +742,9 @@ Do **not** treat silence on detached lanes as ship complete.
 Before emitting **`MC_DISPATCH_RESOLVED_V1`** when the developer signals dispatch done (*done*, *wrap up*, *close*, or equivalent per **`.sedea/centers/sedea/rules/4_mission.mdc`** § *User-initiated dispatch closure signals*):
 
 1. **Re-scan §8 ship rows** — list every row with `rowStatus: open` or `blocked`, or with `phase` not paired with `rowStatus: closed` and `phase: done`.
-2. **If any such row exists** and this session has **not** received a **host-sync** update (`Mission Control: ship-ledger sync (section 8).`) for that row **and** the developer has **not** already chosen **planning-only** closure via **AskQuestion** in this dispatch:
+2. **If any such row exists** and this session has **not** received a **host-sync** update (`Mission Control: ship-ledger sync (section 8).`) for that row **and** the developer has **not** already chosen **planning-only** closure via USER_CHECKPOINT in this dispatch:
    - **Do not** emit **`MC_DISPATCH_RESOLVED_V1`** with **`resolved`** in that turn.
-   - Use **AskQuestion** once:
+   - Open structured choice once (**#external-wait**):
      - **Wait for ship sync** (child lane must re-emit terminal with §8 `outputs`)
      - **Planning-only close** (no ship tracking; close dispatch without ship rows)
      - **Ship still on detached lane** (propose **`partial`**, not **`resolved`**)
@@ -753,19 +757,19 @@ Before emitting **`MC_DISPATCH_RESOLVED_V1`** when the developer signals dispatc
 
 | Propose | When |
 |---------|------|
-| **`resolved`** | Planning ledger complete per §7 **and** every ship row is `closed` with `phase: done` (or legitimately empty ship ledger **and** developer chose planning-only close in AskQuestion). |
+| **`resolved`** | Planning ledger complete per §7 **and** every ship row is `closed` with `phase: done` (or legitimately empty ship ledger **and** developer chose planning-only close via USER_CHECKPOINT). |
 | **`partial`** | Useful planning or ship work landed, but identifiable follow-up remains (open PR, deploy, reconcile, or planning debt). |
 | **`abandoned`** / **`aborted`** | Developer stops or execution cannot continue; say so in `summary`. |
 
 **Never** propose **`resolved`** when:
 
 - Any ship row is `open` or `blocked` and the developer has not explicitly chosen **planning-only** dispatch closure.
-- The developer signals done or wrap-up but **no** host-sync update was parsed on the leader dispatch this session for rows that are still `open` or `blocked` (use *Pre-resolution checklist* **AskQuestion** first).
-- Only the **planning** ledger is empty — objectives 4–7 in this mission plan still imply ship unless the developer opted out via §8 AskQuestion.
+- The developer signals done or wrap-up but **no** host-sync update was parsed on the leader dispatch this session for rows that are still `open` or `blocked` (use *Pre-resolution checklist* USER_CHECKPOINT first).
+- Only the **planning** ledger is empty — objectives 4–7 in this mission plan still imply ship unless the developer opted out via §8 USER_CHECKPOINT.
 
 **Procedure**
 
-1. After §7 reports planning complete, scan for PR plans with implementation handoff signals; open a ship row for each via host sync (or confirm none — then run AskQuestion for planning-only vs active ship).
+1. After §7 reports planning complete, scan for PR plans with implementation handoff signals; open a ship row for each via host sync (or confirm none — then USER_CHECKPOINT for planning-only vs active ship).
 2. On each leader-lane turn that touches ship, update rows from **host-sync** messages and **`ship-ledger.v1.json`** before other protocol work.
 3. When host sync is missing for an `open` row, run *Pre-resolution checklist* **AskQuestion** before proposing dispatch resolution.
 4. When the developer signals done on **this dispatch**, run *Pre-resolution checklist* then re-check all rows against the gates table; choose `resolved` / `partial` / `abandoned` accordingly.
