@@ -801,7 +801,7 @@ Runs **inline** on the active **`coding-session`** lane after a PR exists (not a
 | 1 | **`create-pr`** opens the PR; post-create-pr gate opens same turn |
 | 2 | GitHub reviewers comment (external) |
 | 3 | Developer picks **`start-pr-review`** → **`coding-session`** runs **`pr-review`** inline (Steps 1–5) |
-| 4 | **No Must/Should/follow-up:** **`skip-reject`** → Step 5 GitHub reconciliation → developer **merges on GitHub** (no skill **Merge PR** modal) → **`check-pr-status`** or **`spawn-after-deploy-walk`** |
+| 4 | **No Must/Should/follow-up:** **`skip-reject`** → Step 5 GitHub reconciliation → **`coding-session`** merge gate ([Pre-merge authorization gate](missions/plan-and-deliver/skills/coding-session/SKILL.md#pre-merge-authorization-gate) + [Agent-delegated PR approve and merge](missions/plan-and-deliver/skills/coding-session/SKILL.md#agent-delegated-pr-approve-and-merge) on outsider repos or when delegated; [Post-pr-review merge approval gate](missions/plan-and-deliver/skills/coding-session/SKILL.md#post-pr-review-merge-approval-gate) **`approve-merge`** on non-outsider repos without delegation) → **`check-pr-status`** or **`spawn-after-deploy-walk`** |
 | 5 | **Must/Should present:** disposition gate → fixes → commit/push → Step 5 reconcile (re-request automated reviewer when **CHANGES_REQUESTED**) |
 | 6 | Post-create-pr gate re-opens; pick **`start-pr-review`** again when new comments arrive |
 
