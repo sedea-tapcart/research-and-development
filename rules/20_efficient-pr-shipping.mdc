@@ -196,6 +196,8 @@ Start **`plan-reconcile`** separately: developer phrase on active **`coding-sess
 | **`coding-session`** running **`create-pr` inline** | **Yes** (`tapcart-push`, `tapcart-merchant-dashboard`) | **No** | Outsider-handoff prompt only; [Post-outsider-handoff gate](../missions/plan-and-deliver/skills/coding-session/SKILL.md#post-outsider-handoff-gate) |
 | **`coding-session`** running **`create-pr` inline** | **No** (other repos) | **Yes** when inline route + gates pass | `gh pr create` when authorized |
 
+**Outsider create vs merge:** **Outsider** applies to **`gh pr create`** on tapcart product submodules (handoff above). **Approve and merge** after clean **`pr-review`** uses the agent-delegated path in § *PR merge* — not manual developer merge on GitHub.
+
 | Lane | May call `gh pr create`? | Handoff |
 |------|--------------------------|---------|
 | **`coding-session`** running **`create-pr` inline** (non-outsider repo) | **Yes** — sole supported opener | Load **`create-pr/SKILL.md`** on this lane after clean **`go`** auto path or exceptional Create-PR gate |
@@ -210,9 +212,14 @@ When the user or task says "open a PR", "push and open a PR", or "create a pull 
 
 ## PR merge — inline **`coding-session`** after clean **`pr-review`**
 
-**Rule.** The **only** path that may call `gh pr merge` (or equivalent GitHub merge API) is the active **`coding-session`** agent on the **non-outsider** repo route after inline **`pr-review`** is clean and the developer selects **`approve-merge`** at [Post-pr-review merge approval gate](../missions/plan-and-deliver/skills/coding-session/SKILL.md#post-pr-review-merge-approval-gate).
+**Rule.** The **only** path that may call `gh pr merge` or `gh pr review --approve` (or equivalent GitHub merge/approve API) is the active **`coding-session`** agent after inline **`pr-review`** is clean and merge preconditions hold:
 
-**Outsider repos** (`tapcart-push`, `tapcart-merchant-dashboard`) — after reviewers give **go** and a **skip-only** **`pr-review`** pass, the developer **approves and merges on GitHub** themselves. The agent opens the outsider merge gate (*Coding session — outsider PR ready to merge*), may recap `prUrl`, and continues only after **`merged-manually`** (or equivalent) when `gh pr view` shows **`MERGED`**. **Forbidden:** `gh pr merge`, `gh pr review --approve`, or agent-initiated merge on outsider repos from any lane.
+| Repo class | Merge path |
+|------------|------------|
+| **Non-outsider** (hosting root, own-center repos) | Developer selects **`approve-merge`** at [Post-pr-review merge approval gate](../missions/plan-and-deliver/skills/coding-session/SKILL.md#post-pr-review-merge-approval-gate) → [Act after merge approval](../missions/plan-and-deliver/skills/coding-session/SKILL.md#act-after-merge-approval) |
+| **Outsider repos** (`tapcart-push`, `tapcart-merchant-dashboard`) | Developer picks **`start-pr-review-delegate-merge`** at [Post-create-pr handoff gate](../missions/plan-and-deliver/skills/coding-session/SKILL.md#post-create-pr-handoff-gate) (or same-message delegation); when **`mergeDelegationReady`**, [Pre-merge authorization gate](../missions/plan-and-deliver/skills/coding-session/SKILL.md#pre-merge-authorization-gate) → **`delegate-merge-confirm`** → [Agent-delegated PR approve and merge](../missions/plan-and-deliver/skills/coding-session/SKILL.md#agent-delegated-pr-approve-and-merge) |
+
+**Forbidden:** `gh pr merge` or `gh pr review --approve` without structured choice at the applicable merge gate (`approve-merge`, **`delegate-merge-confirm`**, or equivalent); prose handoffs that require the developer to click merge on GitHub when delegation was authorized and preconditions pass; **`gh pr create`** on outsider repos from any lane.
 
 See [`pr-review/SKILL.md`](../missions/plan-and-deliver/skills/pr-review/SKILL.md) § *PR review cycle (normative)* and [`coding-session/SKILL.md`](../missions/plan-and-deliver/skills/coding-session/SKILL.md) § *PR review cycle (after PR open)*.
 

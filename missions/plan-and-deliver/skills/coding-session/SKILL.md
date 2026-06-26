@@ -819,7 +819,7 @@ Pre-ship setup on this lane (not shown): implement → [Repo rules reconciliatio
 | 5 | [Staging test deploy-walk handoff](#staging-test-deploy-walk-handoff) | inline | **No** — after PR open; flip `**Status:**` to `pr-open` | **No** (manual §7 step only) |
 | 6 | [Post-create-pr handoff gate](#post-create-pr-handoff-gate) — **`pr-review`** cycle hub | gate | **No** | **Yes** — before/during/after fix+push re-review loop |
 | 7 | Inline **`pr-review`** (see skill path in **`plan.mdc`** §8) | inline | **No** — after PR exists | **No** — triage on coding lane |
-| 8 | [Post-pr-review merge approval gate](#post-pr-review-merge-approval-gate) or [Agent-delegated PR approve and merge](#agent-delegated-pr-approve-and-merge) | gate / procedure | **No** — after clean **`pr-review`** | **Yes** at merge gate (outsider/manual); **Yes** — [Pre-merge authorization gate](#pre-merge-authorization-gate) before **`gh`** when delegation authorized |
+| 8 | [Post-pr-review merge approval gate](#post-pr-review-merge-approval-gate) or [Agent-delegated PR approve and merge](#agent-delegated-pr-approve-and-merge) | gate / procedure | **No** — after clean **`pr-review`** | **Yes** — [Pre-merge authorization gate](#pre-merge-authorization-gate) before **`gh`** when delegation authorized; non-delegated non-outsider **`approve-merge`** only |
 | 9 | [Post-merge workspace cleanup](#post-merge-workspace-cleanup) | procedure | **No** — after **`prState: merged`**, before After deploy | **No** — auto **`--apply`** when authorized; modal on failure/unclear ownership only |
 | 10 | [After deploy deploy-walk handoff](#after-deploy-deploy-walk-handoff) | inline | **No** — post-merge cleanup done or skipped | **No** (manual §7 step only) |
 | 11 | [Plan-reconcile handoff (inline)](#plan-reconcile-handoff-inline) | inline | **No** — explicit start; not auto from deploy-walk | **Yes** when reconcile inventory requires picks; [Post–After deploy remainder authorization](#post-after-deploy-remainder-authorization) may batch tail work first |
@@ -831,7 +831,7 @@ Normative loop — see also [`pr-review/SKILL.md`](pr-review/SKILL.md) § *PR re
 1. **PR created** — inline **`create-pr`** or outsider handoff with PR URL.
 2. **Reviewers review** on GitHub (external).
 3. **`start-pr-review`** → inline **`pr-review`** triage.
-4. **Skip-only** → [Post-pr-review merge approval gate](#post-pr-review-merge-approval-gate) (outsider: you approve + merge on GitHub; hosting inline: **`approve-merge`**).
+4. **Skip-only** → when **`outputs.mergeDelegationAuthorized: true`**, open [Pre-merge authorization gate](#pre-merge-authorization-gate); when false on **non-outsider** repos, [Post-pr-review merge approval gate](#post-pr-review-merge-approval-gate) (**`approve-merge`**); when false on **outsider repos** (`tapcart-push`, `tapcart-merchant-dashboard`), re-open [Post-create-pr handoff gate](#post-create-pr-handoff-gate) recommending **`start-pr-review-delegate-merge`** — **not** manual GitHub merge.
 5. **Must/Should fixes** → commit/push → GitHub reconciliation.
 6. **Back to 2** — re-open [Post-create-pr handoff gate](#post-create-pr-handoff-gate); pick **`start-pr-review`** again when reviewers have re-reviewed.
 
@@ -1248,8 +1248,8 @@ When inline **`create-pr`** completes with a PR URL/number (or the developer ret
 
 | Option id | Label (brief) | Agent action |
 |-----------|---------------|--------------|
-| `start-pr-review-delegate-merge` | Start PR review — agent approve + merge when clean | Set `outputs.mergeDelegationAuthorized: true`; run [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) on **next** turn; when **`mergeDelegationReady`**, open [Pre-merge authorization gate](#pre-merge-authorization-gate) |
-| `start-pr-review` | Start inline PR review only | Run [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) on **next** turn — **you** merge on GitHub when ready |
+| `start-pr-review-delegate-merge` | Start PR review — agent approve + merge when clean (**recommended** for outsider repos) | Set `outputs.mergeDelegationAuthorized: true`; run [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) on **next** turn; when **`mergeDelegationReady`**, open [Pre-merge authorization gate](#pre-merge-authorization-gate) |
+| `start-pr-review` | Start inline PR review only (non-outsider, or explicit opt-out of agent merge) | Run [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) on **next** turn — merge via **`approve-merge`** on non-outsider repos only when delegation not authorized |
 | `reconcile-github-only` | Reconcile GitHub only (Step 5) | Run **`pr-review`** Step 5 only — when triage already ran and push landed without reconciliation |
 | `submit-manual-review` | Submit manual review on GitHub | [Manual review submission (external-wait)](#manual-review-submission-external-wait) — open structured choice; developer submits Approve / Comment / Request changes on GitHub |
 | `capture-team-feedback` | Capture team-member feedback (offline) | [Team member feedback (external-wait)](#team-member-feedback-external-wait) — teammates review outside GitHub; developer pastes bullets on resume |
@@ -1260,7 +1260,8 @@ When inline **`create-pr`** completes with a PR URL/number (or the developer ret
 | `more-details` | More details for option _ | Elaborate; ask again |
 
 3. Do **not** run inline **`pr-review`**, inline **`deploy-walk`**, or **`plan-reconcile`** in the same assistant turn as this modal.
-4. Re-open this gate after **`check-pr-status`** unless the developer picks a forward path on that response turn.
+4. **Outsider repos (`tapcart-push`, `tapcart-merchant-dashboard`):** **`start-pr-review-delegate-merge`** is the **default** ship path after the PR URL is known — manual GitHub merge is **not** offered on this lane.
+5. Re-open this gate after **`check-pr-status`** unless the developer picks a forward path on that response turn.
 
 ### Spawned lane — post-create-pr sentinel (binding)
 
@@ -1268,7 +1269,7 @@ When inline **`create-pr`** completes with a PR URL/number (or the developer ret
 
 ```
 MC_PHASED_RESPONSE_V1
-{"version":1,"display":{"markdown":"<recap>"},"askQuestion":{"modalTitle":"Coding session — PR opened, next step","questions":[{"id":"post-create-pr","prompt":"What should we do next with this PR?","allowMultiple":false,"options":[{"id":"start-pr-review-delegate-merge","label":"Start PR review — agent approve + merge when clean"},{"id":"start-pr-review","label":"Start inline PR review only (I merge on GitHub)"},{"id":"reconcile-github-only","label":"Reconcile GitHub only (Step 5 — triage already done)"},{"id":"submit-manual-review","label":"Submit manual review on GitHub"},{"id":"capture-team-feedback","label":"Capture team-member feedback (offline — push or dashboard PR)"},{"id":"check-pr-status","label":"Check PR merge status"},{"id":"rebase-onto-main","label":"Rebase onto origin/main"},{"id":"spawn-after-deploy-walk","label":"PR merged — start After deploy deploy-walk"},{"id":"defer-ship","label":"Defer next ship step"},{"id":"more-details","label":"More details for option _"}]}]}}
+{"version":1,"display":{"markdown":"<recap>"},"askQuestion":{"modalTitle":"Coding session — PR opened, next step","questions":[{"id":"post-create-pr","prompt":"What should we do next with this PR?","allowMultiple":false,"options":[{"id":"start-pr-review-delegate-merge","label":"Start PR review — agent approve + merge when clean"},{"id":"start-pr-review","label":"Start inline PR review only (non-outsider or opt-out of agent merge)"},{"id":"reconcile-github-only","label":"Reconcile GitHub only (Step 5 — triage already done)"},{"id":"submit-manual-review","label":"Submit manual review on GitHub"},{"id":"capture-team-feedback","label":"Capture team-member feedback (offline — push or dashboard PR)"},{"id":"check-pr-status","label":"Check PR merge status"},{"id":"rebase-onto-main","label":"Rebase onto origin/main"},{"id":"spawn-after-deploy-walk","label":"PR merged — start After deploy deploy-walk"},{"id":"defer-ship","label":"Defer next ship step"},{"id":"more-details","label":"More details for option _"}]}]}}
 ```
 
 ### Act after post-create-pr pick
@@ -1326,7 +1327,7 @@ Run when the developer picks **`capture-team-feedback`** at [Post-create-pr hand
 
 **Purpose:** Capture feedback from teammates who review the PR **outside GitHub** (Slack, design review, screenshots, pairing) — especially **visual/UX** on **`tapcart-merchant-dashboard`** and code feedback on **`tapcart-push`** or **`tapcart-merchant-dashboard`** outsider PRs. Distinct from **`submit-manual-review`** (the **developer** submits their own GitHub Approve / Comment / Request changes).
 
-**Outsider repos (`tapcart-push`, `tapcart-merchant-dashboard`):** Recap **`repoPath`** / submodule name and `prUrl` when known. **Forbidden:** `gh pr merge`, `gh pr review --approve`, or agent-initiated merge on outsider repos — unchanged from [Post-pr-review merge approval gate](#post-pr-review-merge-approval-gate) § *Outsider repos*.
+**Outsider repos (`tapcart-push`, `tapcart-merchant-dashboard`):** Recap **`repoPath`** / submodule name and `prUrl` when known. Agent approve + merge runs only via [Agent-delegated PR approve and merge](#agent-delegated-pr-approve-and-merge) after **`mergeDelegationAuthorized`** and **`delegate-merge-confirm`** — not during offline feedback capture.
 
 1. Recap: `prUrl`, `prNumber`, active **`WORKTREE_ROOT`** repo (`tapcart-push` vs `tapcart-merchant-dashboard` vs hosting root), and that teammates may review offline while the modal stays open.
 2. Emit **`MC_PHASED_RESPONSE_V1`** (`modalTitle`: *Coding session — team member feedback*) with **`display.markdown`** stating teammates may review the PR diff, staging, or screenshots outside chat. **Next-step modal only** — no code edits, disposition, or merge on this turn.
@@ -1347,7 +1348,7 @@ Run when the developer picks **`capture-team-feedback`** at [Post-create-pr hand
 3. Emit **`MC_PHASED_RESPONSE_V1`** disposition gate with the **contextual** option set from **`pr-review/SKILL.md`** Step 3b § *Build disposition options* (include **`capture-team-feedback`** again when the developer may gather another offline round).
 4. On **`apply-must`** / **`apply-must-should`** / **`follow-ups-only`** picks: apply edits under session **`WORKTREE_ROOT`**; use rule **6** commit/push gate before push; when GitHub threads also exist, optional **`start-pr-review`** afterward for `pr-review.mjs` collection — offline and GitHub triage may run in sequence, not merged silently.
 
-**Forbidden:** prose *ask teammates and tell me when*; treating pasted Slack bullets as GitHub review nodes for Step 5 minimize without developer approval; agent merge on outsider repos.
+**Forbidden:** prose *ask teammates and tell me when*; treating pasted Slack bullets as GitHub review nodes for Step 5 minimize without developer approval; **`gh pr merge`** or **`gh pr review --approve`** on this turn without **`delegate-merge-confirm`** at [Pre-merge authorization gate](#pre-merge-authorization-gate).
 
 ### Rebase onto origin/main after PR creation
 
@@ -1704,10 +1705,14 @@ All must hold before opening this gate:
 
 If any precondition fails, loop back to [Inline PR review after PR creation](#inline-pr-review-after-pr-creation) or [Post-create-pr handoff gate](#post-create-pr-handoff-gate) — **do not** offer merge.
 
+**Outsider repos without delegation (binding):** When the active worktree targets **`tapcart-push`** or **`tapcart-merchant-dashboard`** and **`outputs.mergeDelegationAuthorized`** is **false**, **do not** open this gate — re-open [Post-create-pr handoff gate](#post-create-pr-handoff-gate) recommending **`start-pr-review-delegate-merge`**. Manual GitHub merge is **not** offered on this lane.
+
+**Outsider repos with delegation:** When **`outputs.mergeDelegationAuthorized: true`** and **`mergeDelegationReady`**, open [Pre-merge authorization gate](#pre-merge-authorization-gate) — **not** this gate.
+
 #### Gate (binding)
 
-1. Recap in **`display.markdown`**: `prUrl`, open comment count (zero), reconciliation status, any non-actionable flags, outsider-repo class when applicable.
-2. Use **one** **`MC_PHASED_RESPONSE_V1`** (`modalTitle`: *Coding session — approve and merge PR*). Required **`options`**:
+1. Recap in **`display.markdown`**: `prUrl`, open comment count (zero), reconciliation status, any non-actionable flags.
+2. Use **one** **`MC_PHASED_RESPONSE_V1`** (`modalTitle`: *Coding session — approve and merge PR*). Required **`options`** (non-outsider repos without delegation, or non-outsider repos using direct **`approve-merge`** path):
 
 | Option id | Label (brief) | Agent action |
 |-----------|---------------|--------------|
@@ -1716,19 +1721,7 @@ If any precondition fails, loop back to [Inline PR review after PR creation](#in
 | `check-pr-status` | Refresh PR / review status first | Query `gh pr view`; update `outputs`; re-open this gate or post-create-pr gate |
 | `more-details` | More details for option _ | Elaborate; ask again |
 
-3. **Outsider repos** (`tapcart-push`, `tapcart-merchant-dashboard` per [`create-pr` § Outsider repos](../create-pr/SKILL.md#outsider-repos-mandatory-handoff)): **omit** `approve-merge`. Reviewers have approved and **`pr-review`** is clean — **you** approve and merge on GitHub (Sedea agents do **not** call `gh pr merge` or `gh pr review --approve` on outsider repos). Use **one** **`MC_PHASED_RESPONSE_V1`** (`modalTitle`: *Coding session — outsider PR ready to merge*). Required **`options`**:
-
-| Option id | Label (brief) | Agent action |
-|-----------|---------------|--------------|
-| `ready-merge-on-github` | I will approve and merge on GitHub now | Recap: open `prUrl`; no git mutations — park until you return |
-| `merged-manually` | I merged the PR on GitHub | On **next** turn: verify `gh pr view` **`MERGED`**; run [Post-merge workspace cleanup](#post-merge-workspace-cleanup) auto-apply |
-| `defer-merge` | Defer — wait for more review | Re-open [Post-create-pr handoff gate](#post-create-pr-handoff-gate); `continuationStatus: active` |
-| `check-pr-status` | Refresh PR / review status first | Query `gh pr view`; update `outputs`; re-open this gate or post-create-pr gate |
-| `more-details` | More details for option _ | Elaborate; ask again |
-
-Legacy option id **`merged-manually`** remains valid when the developer skips **`ready-merge-on-github`** and returns after merging.
-
-4. **Forbidden:** `gh pr merge` or `gh pr review --approve` on outsider repos from this lane; prose “merge when ready on GitHub” **without** structured choice; opening this gate while Must/Should blockers remain.
+3. **Forbidden:** opening this gate for outsider repos (use delegation routing above); prose “merge when ready on GitHub” **without** structured choice; opening this gate while Must/Should blockers remain; **`gh pr merge`** or **`gh pr review --approve`** without **`approve-merge`** or **`delegate-merge-confirm`** at the applicable gate.
 
 #### Spawned lane — merge approval sentinel (binding)
 
@@ -1737,11 +1730,11 @@ MC_PHASED_RESPONSE_V1
 {"version":1,"display":{"markdown":"<recap>"},"askQuestion":{"modalTitle":"Coding session — approve and merge PR","questions":[{"id":"merge-approval","prompt":"PR review is clean. Approve and merge this PR?","allowMultiple":false,"options":[{"id":"approve-merge","label":"Approve and merge PR now"},{"id":"defer-merge","label":"Defer merge"},{"id":"check-pr-status","label":"Refresh PR / review status first"},{"id":"more-details","label":"More details for option _"}]}]}}
 ```
 
-Omit **`approve-merge`** on outsider repos; use the outsider table above (`ready-merge-on-github`, **`merged-manually`**, …).
+**Outsider repos:** do **not** use this sentinel — route to [Pre-merge authorization gate](#pre-merge-authorization-gate) or [Post-create-pr handoff gate](#post-create-pr-handoff-gate) per delegation rules above.
 
 #### Act after merge approval
 
-Run on the **developer's response turn** after **`approve-merge`** or **`merged-manually`** — **not** in the same turn as the modal.
+Run on the **developer's response turn** after **`approve-merge`** — **not** in the same turn as the modal. Applies to **non-outsider** repos when **`mergeDelegationAuthorized`** is false (direct **`approve-merge`** path). Outsider repos and delegated merges use [Agent-delegated PR approve and merge](#agent-delegated-pr-approve-and-merge) § *Merge procedure* instead.
 
 **`approve-merge` (non-outsider repos only):**
 
@@ -1750,17 +1743,9 @@ Run on the **developer's response turn** after **`approve-merge`** or **`merged-
 3. Set `outputs.prState: merged`, `outputs.mergeSha`, `outputs.mergedAt`, `outputs.shipPhase: merged`, `outputs.rowStatus: closed`.
 4. **Auto-continue** on the **next** turn (no separate merge-wait modal): [Post-merge workspace cleanup](#post-merge-workspace-cleanup) **auto-apply** when ownership preconditions hold, then [After deploy deploy-walk handoff](#after-deploy-deploy-walk-handoff) when §7 **`### After deploy`** applies.
 
-**`merged-manually` (outsider repos):**
-
-1. Verify `gh pr view` shows **`MERGED`**.
-2. Same `outputs` updates as step 3 above.
-3. Same auto-continue as step 4.
-
-**`ready-merge-on-github` (outsider repos):** Recap `prUrl` in one line; keep `continuationStatus: active`. Re-open this gate or [Post-create-pr handoff gate](#post-create-pr-handoff-gate) on the developer's return — no git mutations on this turn.
-
 **`defer-merge` / `check-pr-status`:** per gate table — re-open appropriate gate on the response turn.
 
-**Forbidden:** `gh pr merge` without **`approve-merge`** selection; skipping post-merge cleanup after confirmed merge unless developer **`defer-merge`**.
+**Forbidden:** `gh pr merge` without **`approve-merge`** selection; skipping post-merge cleanup after confirmed merge unless developer **`defer-merge`**; manual GitHub merge handoffs for outsider repos.
 
 ### Post-review repo rules handoff
 
@@ -1784,6 +1769,8 @@ Run when inline **`pr-review`** classifies one or more comments as **Rule-update
 ### Agent-delegated PR approve and merge
 
 Run on the **spawned coding-session lane** after inline **`pr-review`** completes and delegation was authorized — **not** while **`pr-review`** gates or fix loops remain open.
+
+**Applies to all repo classes** — including outsider repos (`tapcart-push`, `tapcart-merchant-dashboard`) per rule **20** § *PR merge*. Outsider classification affects **`gh pr create`** only (handoff); approve and merge use this section when delegation preconditions pass.
 
 **Purpose:** Approve and merge the open PR via **`gh`** on the developer's delegated authority so they do not need to visit GitHub — **after** explicit consent at [Pre-merge authorization gate](#pre-merge-authorization-gate).
 
@@ -1842,7 +1829,7 @@ When approve or merge fails (auth, branch protection, failing checks, merge conf
 
 **Forbidden:** *Review on GitHub and merge when ready*, *tell me when merged*, or any handoff that requires the developer to click merge on GitHub when preconditions pass, [Pre-merge authorization gate](#pre-merge-authorization-gate) **`delegate-merge-confirm`** was picked, and **`gh`** succeeds.
 
-**Manual merge path:** When the developer chose **`start-pr-review`** only (no delegation) or **`mergeDelegationAuthorized`** is false, do **not** run this section — use [Post-pr-review merge approval gate](#post-pr-review-merge-approval-gate) (non-outsider **`approve-merge`**) or outsider merge options, then **`spawn-after-deploy-walk`** or **`check-pr-status`** at [Post-create-pr handoff gate](#post-create-pr-handoff-gate).
+**Manual merge path:** When the developer chose **`start-pr-review`** only (no delegation) or **`mergeDelegationAuthorized`** is false, do **not** run this section — use [Post-pr-review merge approval gate](#post-pr-review-merge-approval-gate) (**`approve-merge`** on non-outsider repos only) or re-open [Post-create-pr handoff gate](#post-create-pr-handoff-gate) recommending **`start-pr-review-delegate-merge`** on outsider repos.
 
 ## Implementation handoff result
 
