@@ -81,3 +81,45 @@ When Mission Control supplies a plan anchor, pass that plan's absolute path to c
 ## Spawned skill outputs
 
 If a spawned skill requires dispatch scope fields that Mission Control did not inject, return **`partial`** with `outputs.missingFields` naming the missing binding (for example `dispatchId`, `bundleDirectory`) — do not invent ids or read sibling dispatch folders to recover scope.
+
+---
+
+## On-disk layout (host-internal, Phase 0)
+
+During the filesystem era, Sedea binds operations storage to one **workspace-bound scope segment** under `.sedea/operations/` (host-internal constant shared with Mission Control and Sedea Hub). Agents must **not** construct or document user-id path segments — use **`dispatchId`**, **bundle directory**, and explicit plan paths from spawn **`inputs`**.
+
+| Subtree | Purpose |
+|---------|---------|
+| `dispatch/<epochMs>/` | One Mission Control dispatch bundle (stable id = `dispatchId` in `dispatch.yaml`) |
+| `plans/` | Flat plan union for this workspace scope |
+| `docs/` | Optional scope-level docs |
+
+Legacy installs may still have `user`, `joint`, or per-user UUID scope folders — migrate with the customer script below.
+
+---
+
+## Customer migration (legacy scope → workspace-bound layout)
+
+**Prerequisite — worktree quiescence (binding):** Before running the migration script, reach **zero active git worktrees** on the hosting repo (close or merge in-flight PR worktrees, remove stale worktree directories). Active worktrees hold plan sidecars and absolute paths tied to the pre-migration layout.
+
+From **`HOSTING_ROOT`**:
+
+```bash
+# 1. Dry-run first (recommended)
+node .sedea/centers/sedea/scripts/migrate-operations-bundle-layout.mjs --dry-run
+
+# 2. Execute when dry-run summary looks correct
+node .sedea/centers/sedea/scripts/migrate-operations-bundle-layout.mjs
+```
+
+| Flag | Effect |
+|------|--------|
+| `--dry-run` | Report moves/rewrites without filesystem changes |
+| `--force` | Override worktree preflight (discouraged) |
+| `--hosting-root PATH` | Hosting repo root (default: walk up from `$PWD`) |
+
+The script: preflights `git worktree list`, merges legacy scope trees (`user`, `joint`, other UUID segments) into the workspace-bound scope, rewrites in-file path strings under `.sedea/operations/`, and prints a JSON summary. Re-run is idempotent.
+
+**After migration:** commit `.sedea/operations/` in the operations git repo if applicable; reopen dispatches via Mission Control using **`dispatchId`** + bundle directory binding (not path segment construction).
+
+---

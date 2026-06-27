@@ -96,6 +96,7 @@ function spawnGitOutput(cwd, args) {
 
 async function listOperationsScopeSegments(repoRoot) {
   const ops = path.join(repoRoot, '.sedea', 'operations');
+  const targetScope = '8f4a2c1e-6b3d-4a9f-8e1c-2d5f7a9b0c4d';
   let entries;
   try {
     entries = await fs.readdir(ops, { withFileTypes: true });
@@ -103,9 +104,12 @@ async function listOperationsScopeSegments(repoRoot) {
     return [];
   }
   const scopes = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
-  const nonJoint = scopes.filter((scope) => scope !== 'joint').sort((a, b) => a.localeCompare(b));
+  const preferred = scopes.includes(targetScope) ? [targetScope] : [];
+  const remainder = scopes
+    .filter((scope) => scope !== targetScope && scope !== 'joint')
+    .sort((a, b) => a.localeCompare(b));
   const joint = scopes.includes('joint') ? ['joint'] : [];
-  return [...nonJoint, ...joint];
+  return [...preferred, ...remainder, ...joint];
 }
 
 async function buildPlanDirs(repoRoot) {
