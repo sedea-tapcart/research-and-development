@@ -274,13 +274,13 @@ BASE_REF="origin/main"
 
 When center setup is unavailable or a documented retry invokes **`worktree-bootstrap`**, read [`.cursor/rules/dot-sedea.mdc`](.cursor/rules/dot-sedea.mdc) § *Worktree bootstrap mode* and **`./scripts/bootstrap-worktree-dev.sh --help`** on **`HOSTING_ROOT`**. **`full`** bootstrap escalation on the center setup path is **forbidden** (exit **11** warm-primary, exit **12** overlay missing).
 
-**Detach merged worktrees from the workbench.** After a PR merges, on the **`coding-session`** lane run [Post-merge workspace cleanup](../missions/plan-and-deliver/skills/coding-session/SKILL.md#post-merge-workspace-cleanup) **before** After deploy `deploy-walk` — **only** for **this pass’s** **`WORKTREE_ROOT`** when § *Worktree removal ownership (binding)* preconditions all pass. Invoke **`sedea_remove_worktree_folder`** first, then center **`worktree-cleanup.sh`** with ownership attestation — **forbidden:** inline **`git worktree remove`** + **`git pull origin main`** on the default path when the center script applies.
+**Detach merged worktrees from the workbench.** After a PR merges, on the **`coding-session`** lane run [Post-merge workspace cleanup](../missions/plan-and-deliver/skills/coding-session/SKILL.md#post-merge-workspace-cleanup) **before** After deploy `deploy-walk` — **only** for **this pass’s** **`WORKTREE_ROOT`** when § *Worktree removal ownership (binding)* preconditions all pass. Invoke **`sedea_remove_worktree_folder`** first, then hosting **`"$HOSTING_ROOT/scripts/compose-worktree-teardown.sh" --worktree-path "$WORKTREE_ROOT"`** (parse stdout JSON; **warn the developer** when **`composeTeardownStatus`** is **`failed-open`** per **`.cursor/rules/dot-sedea.mdc`** § *Post-merge compose teardown*), then center **`worktree-cleanup.sh`** with ownership attestation — **forbidden:** inline **`git worktree remove`** + **`git pull origin main`** on the default path when the center script applies.
 
 Use **`origin/main`** as **`--base-ref`**, **not** local **`main`** — local **`main`** checked out elsewhere breaks naive worktree creation.
 
 - For each **independent** PR, emit the **`worktree-setup.sh`** block above (or one command per worktree). These can be created and worked on immediately.
 - For each **dependent** PR, emit the command but comment that it should be created only after the predecessor merges.
-- Include cleanup for after PRs merge: for **this session’s** retired **`WORKTREE_ROOT` only** (§ *Worktree removal ownership (binding)*), **`sedea_remove_worktree_folder`** with that worktree's **absolute** path (Mission Control first), then **`worktree-cleanup.sh`** for **that path only** — **never** repo-wide **`git worktree prune`** or removal of other agents’ worktrees.
+- Include cleanup for after PRs merge: for **this session’s** retired **`WORKTREE_ROOT` only** (§ *Worktree removal ownership (binding)*), **`sedea_remove_worktree_folder`** with that worktree's **absolute** path (Mission Control first), hosting **`compose-worktree-teardown.sh`** (fail-open; warn on **`failed-open`**), then **`worktree-cleanup.sh`** for **that path only** — **never** repo-wide **`git worktree prune`** or removal of other agents’ worktrees.
 - In the **Worktree setup** narrative, after setup succeeds, tell the agent to invoke **`sedea_add_worktree_folder`** with that worktree's **absolute** path when **`nextAction: attach-required`**.
 
 ### Dirty hosting repo before center setup
@@ -424,8 +424,9 @@ BASE_REF="origin/main"
 # repeat worktree-setup.sh for feat/03-session-refresh
 
 Cleanup after merge (this pass's WORKTREE_ROOT only — § Worktree removal ownership):
-# sedea_remove_worktree_folder (absolute path), then worktree-cleanup.sh for that path only
-# Never repo-wide git worktree prune or paths you do not own
+# sedea_remove_worktree_folder (absolute path)
+# "$HOSTING_ROOT/scripts/compose-worktree-teardown.sh" --worktree-path "$WORKTREE_ROOT"  # warn on failed-open JSON
+# worktree-cleanup.sh for that path only — never repo-wide git worktree prune or paths you do not own
 ```
 
 Example B — **hosting repo** (e.g. `user-auth`; no two-digit stack index unless that repo's rules require it):

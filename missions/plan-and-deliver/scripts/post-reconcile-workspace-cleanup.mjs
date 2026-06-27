@@ -193,6 +193,79 @@ function spawnGh(args) {
   });
 }
 
+/**
+ * Fail-open compose teardown before git worktree remove — hosting
+ * scripts/compose-worktree-teardown.sh (PR1 on sedea-push main).
+ */
+async function runComposeWorktreeTeardown(hostingRoot, worktreePath) {
+  const action = {
+    action: 'compose-worktree-teardown',
+    hostingRoot,
+    worktreePath,
+  };
+  const scriptPath = path.join(hostingRoot, 'scripts', 'compose-worktree-teardown.sh');
+  try {
+    await fs.access(scriptPath, fsSync.constants.X_OK);
+  } catch {
+    return {
+      ok: true,
+      skipped: true,
+      action: { ...action, status: 'skipped_script_missing' },
+    };
+  }
+  try {
+    await fs.access(worktreePath);
+  } catch {
+    return {
+      ok: true,
+      skipped: true,
+      action: { ...action, status: 'skipped_no_worktree_path' },
+    };
+  }
+  const child = spawn(scriptPath, ['--worktree-path', worktreePath], {
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  return new Promise((resolve) => {
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', (d) => { stdout += d.toString(); });
+    child.stderr.on('data', (d) => { stderr += d.toString(); });
+    child.on('error', (err) => {
+      resolve({
+        ok: true,
+        action: {
+          ...action,
+          status: 'spawn_error',
+          error: err.message,
+        },
+      });
+    });
+    child.on('close', (code) => {
+      let parsed = null;
+      const line = stdout.trim().split('\n').filter(Boolean).pop();
+      if (line) {
+        try {
+          parsed = JSON.parse(line);
+        } catch {
+          parsed = null;
+        }
+      }
+      resolve({
+        ok: code === 0,
+        action: {
+          ...action,
+          exitCode: code ?? 1,
+          stdout: stdout.trim(),
+          stderr: stderr.trim(),
+          composeTeardownStatus: parsed?.composeTeardownStatus ?? null,
+          composeProjectName: parsed?.composeProjectName ?? null,
+          failedOpen: parsed?.composeTeardownStatus === 'failed-open',
+        },
+      });
+    });
+  });
+}
+
 async function ghPrStateOnHosting(mainRepoRoot, prNumber) {
   const remote = await hostingOrgRepo(mainRepoRoot);
   if (!remote.ok) return { ok: false, state: null, error: remote.error };
@@ -474,7 +547,27 @@ async function main() {
       slug: c.slug,
     };
     report.actions.push(removeAction);
+    if (dryRun) {
+      report.actions.push({
+        action: 'compose-worktree-teardown',
+        worktreePath: c.worktreePath,
+        dryRun: true,
+        note: 'runs before git worktree remove --force on --apply',
+      });
+    }
     if (!dryRun) {
+      const compose = await runComposeWorktreeTeardown(hostingRoot, c.worktreePath);
+      report.actions.push(compose.action);
+      if (compose.action?.failedOpen) {
+        report.composeTeardownWarnings = report.composeTeardownWarnings || [];
+        report.composeTeardownWarnings.push({
+          slug: c.slug,
+          worktreePath: c.worktreePath,
+          composeProjectName: compose.action.composeProjectName,
+          message:
+            'composeTeardownStatus failed-open — manual: cd WORKTREE_ROOT/tapcart-push && COMPOSE_PROJECT_NAME=… docker compose down',
+        });
+      }
       const rm = await spawnGit(main.mainRepoRoot, ['worktree', 'remove', c.worktreePath, '--force']);
       if (!rm.ok) {
         report.errors.push({
