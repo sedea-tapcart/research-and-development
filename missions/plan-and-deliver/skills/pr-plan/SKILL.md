@@ -136,6 +136,28 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 
 The **developer** picks the next move per **30_planning-target-resolution** § *Sedea input channel*.
 
+## Checkpoint turn UX (skill-local)
+
+Under Checkpoint trust (`trustLevel: checkpoint`), auto-advance scripted happy-path steps; emit structured choice only at **USER_CHECKPOINT** markers in this section, implicit external-wait surfaces, or exception paths. **No cross-skill inheritance** — gate defaults here apply only to **`pr-plan`**; other planning skills document their own markers.
+
+**Real-dispatch test loop (binding):** After merge, run one full **`pr-plan`** spawn on a Checkpoint dispatch through §5c and collect a developer verdict before the parent phase advances the next **`pr-plan`** step PR — per **Planning protocol skills UX** § *Single-concern strategy*.
+
+Marker syntax: [`.sedea/centers/sedea/docs/user-checkpoint-marker-syntax.md`](.sedea/centers/sedea/docs/user-checkpoint-marker-syntax.md).
+
+| Step | Checkpoint behavior | Gate |
+|------|---------------------|------|
+| **1** — Identify target / verify stub | Auto-advance on spawned handoff with locked `inputs` | exception: wrong template / missing target |
+| **1a–1b** — Template + parent topology | Auto-advance on happy path | exception: blocked parent link |
+| **2** — Load development-process | Auto-advance | — |
+| **3** — Read parent / match PR row | Auto-advance when row match succeeds | exception: ambiguous row / no match |
+| **4** — Draft §§1–4 | Auto-advance through write and **4f** echo | open items per Step 5-open-items when multiple gaps |
+| **5a–5b** — Readiness + planning completeness | Auto-advance when checks pass | — |
+| **§5c** — Implementation handoff | **Gate** when §§1–4 drafted and §5a passes — **first developer-pick gate in this calibration PR** | Start coding session (below) |
+| **§5d** — Spawn **`coding-session`** | Act-after-select; external-wait on child lane | — |
+| **§5e** — Child summary | Auto-advance / external-wait | — |
+
+**Skip §5c (binding):** When **`skipPrPlanHandoffModal: true`** (inline **`pr-breakdown`** **`approve-list`** auto-chain), after §5a passes run **`## Completion (inline)`** with **`prPlanHandoffSkipped: true`** — **do not** open §5c on **this** inline turn. **Not** a regression for this calibration.
+
 ## Step 1 — Identify the target plan and verify it's a PR plan stub
 
 The skill operates on a **target** `.plan.md` resolved before this skill runs, per [`30_planning-target-resolution.mdc`](../../../../rules/30_planning-target-resolution.mdc) § *Resolution order*. Acknowledge the target slug in one line when this skill starts. Resolve targets from session, snapshot, or explicit path — **planning-target-resolution** is normative. Do **not** infer the target from the IDE’s focused-file list alone.
@@ -406,6 +428,8 @@ When inline under **`phase-planner`**, include **`invokerRole: phase-planner-age
 
 Set **`implementationHandoffStatus: "offered"`** when §5c modal is emitted; **`deferred`** when the developer picks **`defer`**; **`spawned-coding-session`** after §5d.
 
+- **Next-step resolution:** Auto-advance to §5c structured choice after §5a readiness passes and §5b completeness note — no `USER_CHECKPOINT` on substeps **5a–5b** or step **4** draft writes.
+
 ### Step 5-open-items — Open-item modal contract
 
 Apply the shared planning open-item contract from `../README.md` § *Planning open-item modal contract* to every **pr-plan** gate that can surface multiple unresolved items before implementation handoff: §5a readiness blockers, blocked or untrusted parent `Plan:` links, unmapped parent change bullets, thin **Considered & rejected**, ambiguous row match, optional §5–8 pre-fill sketch choices, and non-blocking follow-up flags from step **4f**.
@@ -448,6 +472,8 @@ Do **not** echo the full §§ 1–4 body in chat unless the developer asked for 
 
 Invoke **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** (`modalTitle`: *PR plan — next move*) per **Step 5-open-items**. When using without a phased envelope, sentinel + JSON only — no prose before the sentinel. When open items exist, item-scoped questions precede the terminal handoff options below as the **last** `questions[]` entry:
 
+USER_CHECKPOINT — approve implementation handoff and start coding session (fill §§5–8 on child lane).
+
 Required options (brief `label`; put detail in `prompt` when needed):
 
 | Option id | Label |
@@ -459,6 +485,9 @@ Required options (brief `label`; put detail in `prompt` when needed):
 | `defer` | Defer |
 | `more-details` | More details for option _ |
 
+- When §5a readiness passes and **`skipPrPlanHandoffModal`** is not set → open this gate via **`MC_PHASED_RESPONSE_V1`** (spawned lanes) or **AskQuestion** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`**. Apply **Step 5-open-items** when open items exist — this handoff question stays last in `questions[]`.
+- When §5a fails → explain blockers in `remainingTasks`; do **not** open this gate until readiness passes or the developer picks revise/defer paths.
+- **`defaultOptionId: start-coding-session`** when §5a passes and no blocking open items remain.
 - **`start-coding-session`** — Run §5d when §5a passes; if not ready, explain blockers in `remainingTasks` and do **not** spawn.
 - **`revise-section`** — Developer names § *N* and feedback; one focused `StrReplace`; echo; re-offer §5c.
 - **`prefill-sections`** — Same as former option 2 (speculative § 5–8 sketch); re-offer §5c.
