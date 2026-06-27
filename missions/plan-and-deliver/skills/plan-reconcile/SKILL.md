@@ -302,7 +302,7 @@ Only **`cleanup-apply`** authorizes **`--apply`**.
 
 **Worktree removal ownership (binding).** Before step 1, confirm **all** preconditions in [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § *Worktree ownership* and rule **20** § *Worktree removal ownership (binding)* for **each** candidate **`worktreePath`**. **Forbidden:** **`--apply`** on paths not returned by **`detect-stale-workspaces`** for **this reconcile pass**; repo-wide cleanup from **`git worktree list`**; removing worktrees another session owns. If unsure, stop — **`git worktree list` is read-only**.
 
-1. For **each** candidate **`worktreePath`**, invoke MCP **`sedea_remove_worktree_folder`** with `{ "path": "<absolute-worktree-root>" }` **before** git removal (rule **20** § *Detach merged worktrees*).
+1. For **each** candidate **`worktreePath`**, invoke MCP **`sedea_remove_worktree_folder`** with `{ "path": "<absolute-worktree-root>" }` **before** compose teardown and git removal (rule **20** § *Detach merged worktrees*).
 2. Run:
 
 ```bash
@@ -310,7 +310,7 @@ node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/p
  --operations-user-id "$OPS_ID" --apply [--slug <slug>]
 ```
 
-The script runs **`git worktree remove`**, drops local worktree name refs when PR merged **and** remote head is gone (not merge-base heuristics), **`git pull origin <defaultIntegrationLine>`** on **`HOSTING_ROOT`**, optional **post-merge host rebuild** when **`.cursor/rules/dot-sedea.mdc`** documents **`postMergeHostRebuildScript`** on the active hosting repo (so the developer can reload the Sedea workbench), and **`plan-state.mjs prune-sessions --all`**.
+The script invokes hosting **`$HOSTING_ROOT/scripts/compose-worktree-teardown.sh --worktree-path <worktreePath>`** (idempotent; fail-open; agent warns on **`failed-open`** JSON) **before** **`git worktree remove --force`** when the worktree path exists, then drops local worktree name refs when PR merged **and** remote head is gone (not merge-base heuristics), **`git pull origin <defaultIntegrationLine>`** on **`HOSTING_ROOT`**, optional **post-merge host rebuild** when **`.cursor/rules/dot-sedea.mdc`** documents **`postMergeHostRebuildScript`** on the active hosting repo (so the developer can reload the Sedea workbench), and **`plan-state.mjs prune-sessions --all`**.
 
 3. Summarise **`cleanedWorktrees`**, **`deletedWorktreeNames`**, **`skippedWorktreeNames`**, **`mainPullStatus`**, and any **`errors`** from the script JSON.
 

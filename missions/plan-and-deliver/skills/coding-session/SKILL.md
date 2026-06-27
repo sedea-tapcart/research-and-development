@@ -1434,9 +1434,20 @@ Only **`cleanup-apply`** authorizes **`--apply`** when this exceptional modal op
 
 Confirm **all** ownership preconditions (§ *Worktree removal ownership (binding)* above) for **each** candidate before step 1. **Forbidden:** cleanup on paths not from **`detect-stale-workspaces`** for **this session**; repo-wide cleanup.
 
-1. For **each** candidate **`worktreePath`**, invoke MCP **`sedea_remove_worktree_folder`** with `{ "path": "<absolute-worktree-root>" }` **before** center cleanup (rule **20** § *Detach merged worktrees*).
+1. For **each** candidate **`worktreePath`**, invoke MCP **`sedea_remove_worktree_folder`** with `{ "path": "<absolute-worktree-root>" }` **before** compose teardown and center cleanup (rule **20** § *Detach merged worktrees*).
 
-2. For **each** candidate, run center cleanup from **`HOSTING_ROOT`** (parse stdout JSON per [Parse setup/cleanup JSON hints (binding)](#parse-setupcleanup-json-hints-binding)):
+2. For **each** candidate, run hosting compose teardown from **`HOSTING_ROOT`** when **`scripts/compose-worktree-teardown.sh`** exists (idempotent; fail-open):
+
+```bash
+HOSTING_ROOT="<absolute-hosting-root>"
+WORKTREE_ROOT="<absolute-worktree-root>"
+
+json="$("$HOSTING_ROOT/scripts/compose-worktree-teardown.sh" --worktree-path "$WORKTREE_ROOT")"
+# Parse stdout JSON — when composeTeardownStatus is failed-open, warn the developer in recap
+# with composeProjectName and manual steps per .cursor/rules/dot-sedea.mdc § Post-merge compose teardown
+```
+
+3. For **each** candidate, run center cleanup from **`HOSTING_ROOT`** (parse stdout JSON per [Parse setup/cleanup JSON hints (binding)](#parse-setupcleanup-json-hints-binding)):
 
 ```bash
 HOSTING_ROOT="<absolute-hosting-root>"
@@ -1457,7 +1468,7 @@ WORKTREE_NAME="<worktree-name>"
 
 Use **`--ownership-path b`** and **`--dispatch-worktree-context`** instead of **`--created-this-pass`** when Path B (persisted **`worktreeContext`**) authorizes removal after reload.
 
-3. When cleanup exits **0**, prune sidecar worktree entries and run post-merge host rebuild:
+4. When cleanup exits **0**, prune sidecar worktree entries and run post-merge host rebuild:
 
 ```bash
 cd "$HOSTING_ROOT"
@@ -1469,11 +1480,11 @@ node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/p
 
 Then run the **post-merge host rebuild script** when **`.cursor/rules/dot-sedea.mdc`** documents **`postMergeHostRebuildScript`** (same resolution as **`post-reconcile-workspace-cleanup.mjs`** on **`--apply`**).
 
-4. Merge cleanup JSON and sidecar/rebuild results into `outputs` (`cleanedWorktrees`, `deletedWorktreeNames`, `skippedWorktreeNames`, `mainPullStatus`, `postMergeHostRebuildStatus`, `postMergeCleanupStatus: success` \| `partial`).
+5. Merge cleanup JSON and sidecar/rebuild results into `outputs` (`cleanedWorktrees`, `deletedWorktreeNames`, `skippedWorktreeNames`, `mainPullStatus`, `postMergeHostRebuildStatus`, `postMergeCleanupStatus: success` \| `partial`).
 
-5. When **`postMergeHostRebuildStatus`** is **`success`**, tell the developer in one line: post-merge host rebuild completed on **`HOSTING_ROOT`** — use **Developer: Reload Window** before After deploy verification. When rebuild **`failed`**, report stderr and keep `postMergeCleanupStatus: partial`; offer retry or **`cleanup-skip`** before After deploy.
+6. When **`postMergeHostRebuildStatus`** is **`success`**, tell the developer in one line: post-merge host rebuild completed on **`HOSTING_ROOT`** — use **Developer: Reload Window** before After deploy verification. When rebuild **`failed`**, report stderr and keep `postMergeCleanupStatus: partial`; offer retry or **`cleanup-skip`** before After deploy.
 
-6. On **next** turn, continue to [After deploy deploy-walk handoff](#after-deploy-deploy-walk-handoff). Do **not** run inline **`deploy-walk`** (After deploy) in the same assistant turn as cleanup **apply**.
+7. On **next** turn, continue to [After deploy deploy-walk handoff](#after-deploy-deploy-walk-handoff). Do **not** run inline **`deploy-walk`** (After deploy) in the same assistant turn as cleanup **apply**.
 
 **`post-reconcile-workspace-cleanup.mjs --apply`:** **Detect/dry-run only** on this lane when center cleanup succeeded — **forbidden** duplicate **`git worktree remove`** in the same pass. **`plan-reconcile`** §5 may still invoke **`--apply`** as idempotent fallback when post-merge cleanup was skipped.
 
