@@ -825,12 +825,14 @@ Include **`executive-override-push`** in a cut-point modal **only** when the dev
 
 When **`outputs.shipPhase`** is **`implementing`** (or **`worktree`** after bootstrap) and **no** ship gate in § *Every developer-await turn* is open, close the turn with **`MC_PHASED_RESPONSE_V1`** using **`modalTitle`**: *Coding session — continue implementation*.
 
+**Option order (binding):** When this gate is shown, **`ready-for-review`** MUST be the **first** actionable option — the recommended default path to [Ship cut-point gate](#ship-cut-point-gate-approve-commit-before-deploy). List **`continue-implement`** second.
+
 **Required `options`** (in order):
 
 | Option id | Label (brief) |
 |-----------|---------------|
-| `continue-implement` | Continue implementation on this lane |
 | `ready-for-review` | Ready for developer review — open ship cut-point |
+| `continue-implement` | Continue implementation on this lane |
 | `defer` | Defer — pause this lane |
 | `more-details` | More details for option _ |
 
