@@ -11,7 +11,7 @@ Sedea's workflow for shipping multi-PR plans fast.
 
 ## Git governance (worktree-only)
 
-User-facing git execution for implementation and ship uses **worktrees** only — not **`git checkout -b`** on the primary hosting clone. Each PR maps to one worktree; the **worktree name** is the `--worktree-name` on center **`worktree-setup.sh`** (see [`.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc`](.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc)). **Attach order:** center **`worktree-setup.sh`** → **`sedea_add_worktree_folder`** → tracked edits; **`sedea_remove_worktree_folder`** → center **`worktree-cleanup.sh`** per [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) and rule **6**.
+User-facing git execution for implementation and ship uses **worktrees** only — not **`git checkout -b`** on the primary hosting clone. Each PR maps to one worktree; the **worktree name** is the `--worktree-name` on center **`worktree-setup.sh`** (see [`.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc`](.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc)). **Attach order:** center **`worktree-setup.sh`** → **`sedea_add_worktree_folder`** → tracked edits; post-merge on operational hosting repos (for example **sedea-push**): **`sedea_remove_worktree_folder`** → hosting **`scripts/compose-worktree-teardown.sh`** (fail-open; agent warns on **`failed-open`** per **`.cursor/rules/dot-sedea.mdc`**) → center **`worktree-cleanup.sh`** per [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) and rule **6**.
 
 ## Worktree removal ownership (binding)
 

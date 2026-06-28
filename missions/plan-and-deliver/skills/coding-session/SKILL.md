@@ -5,7 +5,9 @@ description: >-
  (never **`sedea_add_worktree_folder`** for creation), parse setup JSON hints, record worktrees
  and session focus in the plan sidecar via plan-state.mjs, **attach** the worktree with MCP
  **`sedea_add_worktree_folder` only** (never editor Add Folder to Workspace), then implement.
- Post-merge cleanup uses center **`worktree-cleanup.sh`** after MCP **`sedea_remove_worktree_folder`**.
+ Post-merge cleanup: MCP **`sedea_remove_worktree_folder`**, then hosting
+ **`compose-worktree-teardown.sh`** (fail-open; warn on **`failed-open`**), then center
+ **`worktree-cleanup.sh`**.
  On a **spawned child lane** with layer-2 approval (or **pr-plan** spawn auto-authorize),
  **implement the anchored PR plan on this lane** in that worktree; on **prompt-only**
  entry, emit a copy/paste-safe two-phase session prompt for a separate coding chat.
