@@ -284,7 +284,7 @@ _TBD — numbered GFM task list (`1. [ ]` / `2. [ ]` / `3. [ ]`), not dashes, no
 
 ### Staging test
 
-_TBD — numbered GFM task list (`1. [ ]` / `2. [ ]` / `3. [ ]`), not dashes, not bare numbers without checkboxes._
+_TBD — numbered GFM task list (`1. [ ]` / `2. [ ]` / `3. [ ]`). Steps assume **merged code + staging deploy** (post-merge walk per Model A — see hosting `.cursor/rules/push-monorepo-submodules.mdc` § *Post-merge Staging window*)._
 
 ### After deploy
 

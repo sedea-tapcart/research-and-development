@@ -44,14 +44,14 @@ flowchart TB
     CUT["Ship cut-point<br/>review · approve · commit"]:::gate
     LTW["Local test<br/>deploy-walk inline"]:::inline
     CPR["create-pr"]:::inline
-    STW["Staging test<br/>deploy-walk inline"]:::inline
     PRV["pr-review"]:::inline
     WAIT["Wait merge<br/>post-create-pr gate"]:::gate
     PMC["Cleanup<br/>pull · detach worktree"]:::proc
+    STW["Staging test<br/>deploy-walk inline<br/>post-merge"]:::inline
     ADW["After deploy<br/>deploy-walk inline"]:::inline
     REC["plan-reconcile<br/>explicit start"]:::inline
     CUT --> LTW --> CPR
-    CPR --> STW --> PRV --> WAIT --> PMC --> ADW --> REC
+    CPR --> PRV --> WAIT --> PMC --> STW --> ADW --> REC
   end
 
   subgraph CHILD["spawned child lane"]
@@ -550,12 +550,13 @@ USER_CHECKPOINT — approve dispatch resolution when planning and ship gates all
 | 2 | `deploy-walk` (Local test) | **coding-session** (inline) after implementation approval + commit | `skills/deploy-walk/SKILL.md` — `deployWalkScope: local-test-only` |
 | 3 | `pre-pr-review` | **coding-session** (spawn) after Local test walk or skip | `skills/pre-pr-review/SKILL.md` |
 | 4 | `create-pr` | **coding-session** (inline) after pre-PR **go** | `skills/create-pr/SKILL.md` |
-| 5 | `deploy-walk` (Staging test) | **coding-session** (inline) after PR open | `skills/deploy-walk/SKILL.md` — `deployWalkScope: staging-test-only` |
-| 6 | `pr-review` | **coding-session** (inline) after PR exists; agent merge when delegated | `skills/pr-review/SKILL.md` |
-| 7 | Merge approval | **coding-session** (inline) after clean **`pr-review`** | [Post-pr-review merge approval gate](skills/coding-session/SKILL.md#post-pr-review-merge-approval-gate) (outsider repos + manual path) or [Agent-delegated PR approve and merge](skills/coding-session/SKILL.md#agent-delegated-pr-approve-and-merge) when `mergeDelegationAuthorized` |
-| 8 | `deploy-walk` (After deploy) | **coding-session** (inline) after merge and post-merge cleanup | `skills/deploy-walk/SKILL.md` — **development-process.md** § *deploy-walk entry points* |
-| 9 | `plan-reconcile` | **`coding-session`** (inline) after deploy done or developer choice (not auto from deploy-walk) | `skills/plan-reconcile/SKILL.md` |
-| 10 | `hosting-repo-rules` (parallel fork) | **`planner`** Step **7c** or **`phase-planner`** Step **5e** — fire-and-forget after **`coding-session`** terminal when spawn trigger matches | `skills/hosting-repo-rules/SKILL.md` — **not** a Squad Leader spawn; runs detached; parent does **not** wait on rules PR merge |
+| 5 | `pr-review` | **coding-session** (inline) after PR exists; agent merge when delegated | `skills/pr-review/SKILL.md` |
+| 6 | Merge approval | **coding-session** (inline) after clean **`pr-review`** | [Post-pr-review merge approval gate](skills/coding-session/SKILL.md#post-pr-review-merge-approval-gate) (outsider repos + manual path) or [Agent-delegated PR approve and merge](skills/coding-session/SKILL.md#agent-delegated-pr-approve-and-merge) when `mergeDelegationAuthorized` |
+| 7 | Post-merge cleanup | **coding-session** (procedure) after **`prState: merged`** | [Post-merge workspace cleanup](skills/coding-session/SKILL.md#post-merge-workspace-cleanup) |
+| 8 | `deploy-walk` (Staging test) | **coding-session** (inline) post-merge before After deploy | `skills/deploy-walk/SKILL.md` — `deployWalkScope: staging-test-only` |
+| 9 | `deploy-walk` (After deploy) | **coding-session** (inline) after Staging complete/skipped | `skills/deploy-walk/SKILL.md` — **development-process.md** § *deploy-walk entry points* |
+| 10 | `plan-reconcile` | **`coding-session`** (inline) after deploy done or developer choice (not auto from deploy-walk) | `skills/plan-reconcile/SKILL.md` |
+| 11 | `hosting-repo-rules` (parallel fork) | **`planner`** Step **7c** or **`phase-planner`** Step **5e** — fire-and-forget after **`coding-session`** terminal when spawn trigger matches | `skills/hosting-repo-rules/SKILL.md` — **not** a Squad Leader spawn; runs detached; parent does **not** wait on rules PR merge |
 
 **`hosting-repo-rules` parallel fork (binding):** Emitted from planning child lanes when **`coding-session`** terminal outputs satisfy the three-condition trigger documented in **`coding-session/SKILL.md`** § *Spawner spawn-detection outputs* and **`planner`** / **`phase-planner`** spawn tables. Tracks **`rulesUpdatesStatus`** on the product PR row — **forbidden:** separate **`shipRows`** entry or **`pendingByParent`** wait on the rules lane.
 
@@ -563,9 +564,9 @@ USER_CHECKPOINT — approve dispatch resolution when planning and ship gates all
 
 - **Local test** (`deployWalkScope: local-test-only`) runs **before the PR is created** — inline on **`coding-session`** after implementation approval + commit, **before** `pre-pr-review` and **`create-pr`** (detached branches table order 2). Plan §7 **`### Local test`** items must be checks runnable **without a GitHub PR** (scripts, manifest parity, read-only verification). Steps that require merge (e.g. *merged to `main`*, pin promotion) belong under **`### After deploy`**, not Local test.
 
-- **Staging test** (`deployWalkScope: staging-test-only`) runs **after the PR is open** and **before merge** — inline on **`coding-session`** after **`create-pr`** (detached branches table order 5). Plan §7 **`### Staging test`** items require a PR but not necessarily merge.
+- **Staging test** (`deployWalkScope: staging-test-only`) runs **after PR merge and post-merge cleanup** — inline on **`coding-session`** before After deploy (detached branches table order 8). Plan §7 **`### Staging test`** items assume **merged code + staging deploy** (Model A — see hosting `.cursor/rules/push-monorepo-submodules.mdc`).
 
-- **After deploy** runs **after the PR has merged** — inline on **`coding-session`** after post-merge cleanup (detached branches table order 8), per [Agent-delegated PR approve and merge](skills/coding-session/SKILL.md#agent-delegated-pr-approve-and-merge) (outsider repos and non-outsider when delegation authorized), [Post-pr-review merge approval gate](skills/coding-session/SKILL.md#post-pr-review-merge-approval-gate) (**`approve-merge`** on non-outsider repos without delegation), or **`check-pr-status`** / **`spawn-after-deploy-walk`** at [Post-create-pr handoff gate](skills/coding-session/SKILL.md#post-create-pr-handoff-gate).
+- **After deploy** runs **after Staging test complete/skipped/empty** — inline on **`coding-session`** (detached branches table order 9), per [Post-merge deploy routing](skills/coding-session/SKILL.md#post-merge-deploy-routing), [Agent-delegated PR approve and merge](skills/coding-session/SKILL.md#agent-delegated-pr-approve-and-merge), or **`spawn-staging-test-walk`** / **`spawn-after-deploy-walk`** at [Post-create-pr handoff gate](skills/coding-session/SKILL.md#post-create-pr-handoff-gate).
 
 Detached **`deploy-walk`** dispatch redirects to **`coding-session`**. **`plan-reconcile`** runs **inline** on **`coding-session`** when the developer explicitly chooses reconcile — see [Plan-reconcile handoff (inline)](skills/coding-session/SKILL.md#plan-reconcile-handoff-inline). Finishing deploy-walk does **not** auto-run **`plan-reconcile`**.
 

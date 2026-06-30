@@ -49,7 +49,7 @@ inputs:
     required: false
   upstreamSkill:
     type: string
-    description: Skill that invokes deploy verification inline — `coding-session` (Local test pre-merge, Staging test post–create-pr, or After deploy post-merge).
+    description: Skill that invokes deploy verification inline — `coding-session` (Local test pre-merge, Staging test post-merge before After deploy, or After deploy post-merge).
     required: false
   worktreePath:
     type: string
@@ -60,9 +60,10 @@ inputs:
     description: >-
       `local-test-only` when inline from coding-session pre-merge — walk only
       `### Local test` while Status stays `drafted`; do not flip to `pr-open` or run
-      Staging / After deploy. `staging-test-only` when inline after PR open — walk only
-      `### Staging test` while Status is `pr-open`. Omit for full post-merge walk
-      (typical After-deploy inline). Legacy alias: `before-deploy-only` → `local-test-only`.
+      Staging / After deploy. `staging-test-only` when inline post-merge — walk only
+      `### Staging test` while Status is `deployed` (after merge + staging deploy).
+      Omit for full post-merge walk (typical After-deploy inline). Legacy alias:
+      `before-deploy-only` → `local-test-only`.
     required: false
 ---
 
@@ -87,7 +88,7 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 If Mission Control opened a session whose only intent is **`deploy-walk`** / deploy verification with **no** active **`coding-session`** context (`worktreePath`, `targetPlanPath` when plan-anchored):
 
 1. **Stop** — do not walk checklists or edit the plan.
-2. Tell the developer **`deploy-walk`** is **inline-only** on the **`coding-session`** lane (Local test after commit, Staging test after PR open, After deploy after merge, or deploy phrases on that lane).
+2. Tell the developer **`deploy-walk`** is **inline-only** on the **`coding-session`** lane (Local test after commit, Staging test post-merge before After deploy, or After deploy after Staging complete).
 3. Direct them to open or return to **`coding-session`** with the PR plan and worktree — see [`coding-session/SKILL.md`](../coding-session/SKILL.md) § *Local test deploy-walk handoff*, § *Staging test deploy-walk handoff*, and § *After deploy deploy-walk handoff*.
 
 **Execution owner:** the active **coding-session agent** runs this skill inline. Do **not** spawn a separate deploy-walk child lane.
@@ -107,7 +108,7 @@ See [Agent-executable vs manual steps](#agent-executable-vs-manual-steps).
 
 Target picks, deploy-with-gaps, and closure gates use **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* — recap + modal in **one turn** when practical; rule **2** priority **3** split only when a long recap was already sent. **Act** (checkbox flips, status lines) follows developer selection or explicit deploy-walk commands.
 
-When run **inline** on **`coding-session`** (pre-merge **Local test**, post–create-pr **Staging test**, or post-merge **After deploy**), this procedure owns deploy verification status and reports it via **`## Completion (inline)`** to the coding-session agent; it does not run implementation, PR review, or plan reconciliation.
+When run **inline** on **`coding-session`** (pre-merge **Local test**, post-merge **Staging test**, or post-merge **After deploy**), this procedure owns deploy verification status and reports it via **`## Completion (inline)`** to the coding-session agent; it does not run implementation, PR review, or plan reconciliation.
 
 ## Not chained to `plan-reconcile`
 
@@ -128,11 +129,11 @@ Canonical table: **`.sedea/centers/research-and-development/docs/development-pro
 |---------------|------|
 | Developer phrase (`deploy-walk present <N>`, status, done/skip/block) on active **`coding-session`** | Inline on **`coding-session`** |
 | **`coding-session`** after implementation approval + commit — Local test only | Inline (`upstreamSkill: coding-session`, `deployWalkScope: local-test-only`) |
-| **`coding-session`** after PR open — Staging test only | Inline (`upstreamSkill: coding-session`, `deployWalkScope: staging-test-only`) |
-| **`coding-session`** After deploy — developer chooses **PR merged — start After deploy deploy-walk** at post-create-pr gate | Inline (`upstreamSkill: coding-session`) — full §7 walk |
+| **`coding-session`** post-merge — Staging test only | Inline (`upstreamSkill: coding-session`, `deployWalkScope: staging-test-only`) |
+| **`coding-session`** After deploy — after Staging complete/skipped | Inline (`upstreamSkill: coding-session`) — full §7 After-deploy walk |
 | Detached phrase / direct skill dispatch without **`coding-session`** | **Stop** — redirect to **`coding-session`** (see *Standalone dispatch*) |
 
-**Pre-merge vs post-merge:** **`coding-session`** runs **Local test** while `**Status:**` is `drafted` (pre-PR). After **`create-pr`**, flip to `pr-open` and run **Staging test** before merge. **`coding-session`** (post-merge gate) owns **After deploy** and the `deployed → done` lifecycle. Completing any walk does **not** start **`plan-reconcile`** — reconcile is a separate developer or **`coding-session`** follow-on when merge/archive triage is needed.
+**Pre-merge vs post-merge:** **`coding-session`** runs **Local test** while `**Status:**` is `drafted` (pre-PR). After **`create-pr`**, flip to `pr-open` for PR review — **do not** run Staging test pre-merge. After merge, run **`deploy-walk deployed`**, then **Staging test** while `**Status:**` is `deployed` and Staging `[ ]` remain, then **After deploy** and the `deployed → done` lifecycle. Completing any walk does **not** start **`plan-reconcile`** — reconcile is a separate developer or **`coding-session`** follow-on when merge/archive triage is needed.
 
 ## Inline on coding-session (`local-test-only`)
 
@@ -153,12 +154,12 @@ When `upstreamSkill` is **`coding-session`** and `deployWalkScope` is **`staging
 
 | Rule | Behavior |
 |------|----------|
-| **Scope** | Only **`### Staging test`** numbered steps while `**Status:**` is `pr-open` |
-| **Forbidden** | `deploy-walk deployed` (no `pr-open → deployed` flip until merge) |
+| **Scope** | Only **`### Staging test`** numbered steps while `**Status:**` is `deployed` (post-merge; merged code + staging deploy) |
+| **Forbidden** | Running this scope while `**Status:**` is `pr-open` (pre-merge) unless developer uses explicit `deploy-walk present staging <N>` override |
 | **Forbidden** | Walking **`### Local test`** or **`### After deploy`** in this scope |
-| **Terminal** | `stagingTestStatus: complete`; `deployStatus: pr-open` (unchanged) — hand back to **`coding-session`** for pr-review or post-create-pr gate |
+| **Terminal** | `stagingTestStatus: complete`; `deployStatus: deployed` (unchanged) — hand back to **`coding-session`** for [After deploy deploy-walk handoff](../coding-session/SKILL.md#after-deploy-deploy-walk-handoff) |
 | **Blocked** | Any Staging-test step remains `[ ]` without skip/block resolution → report `blockedStep` in inline outputs |
-| **Handback** | Parent **`coding-session`** continues ship chain (typically [Inline PR review](../coding-session/SKILL.md#inline-pr-review-after-pr-creation) or post-create-pr gate) |
+| **Handback** | Parent **`coding-session`** continues to [After deploy deploy-walk handoff](../coding-session/SKILL.md#after-deploy-deploy-walk-handoff) when §7 After deploy applies |
 
 Use `worktreePath` / `worktreeName` from inline context for command context in step presentations. PR fields (`prUrl`, `prNumber`, …) are usually present for staging scope.
 
@@ -385,9 +386,9 @@ Sub-section heading inference, when not pinned by the command:
 
 | Status | Active sub-section |
 |---|---|
-| `drafted` | `### Local test` (advance to Staging only via `deploy-walk pr-open` after PR creation, or `deploy-walk present staging <N>` explicit override). |
-| `pr-open` | `### Staging test`. |
-| `deployed` | `### After deploy`. |
+| `drafted` | `### Local test` (flip to `pr-open` via `deploy-walk pr-open` after PR creation). |
+| `pr-open` | No default walk sub-section — PR review phase; Staging runs post-merge at `deployed`. Use `deploy-walk present staging <N>` for explicit out-of-order override only. |
+| `deployed` | `### Staging test` when any `[ ]` remain; else `### After deploy`. |
 | `done` | All-checked. `deploy-walk present <N>` returns the summary, no edit. |
 
 If the **Status:** line is missing (legacy plan or not yet swept to the new convention), fall back to the heuristic: any `[ ]` in `### Local test` or legacy `### Before deploy` → Local test; else any `[ ]` in `### Staging test` → Staging; else After. Surface this as a flag in the agent's reply: *"Plan lacks the `**Status:**` lifecycle marker. Falling back to checkbox heuristic. Add `**Status:** drafted *(YYYY-MM-DD: PR plan drafted.)*` above `### Local test` to enable status-aware routing — this is what the **`pr-plan`** protocol branch template emits for new plans."*
