@@ -102,7 +102,7 @@ This skill prepares a fresh **`WORKTREE_ROOT`** after Mission Control attach. **
 
 Full compile, linked primary-clone build artifacts, and add-on sync per dot-sedea apply **only** on **`full`** / linked-build overlay profiles — not on every script repo.
 
-**Normative invocation (superseded):** **`coding-session`** maps **`bootstrapStatus`** from center **`worktree-setup.sh`** on the default path — **do not** invoke this skill after successful setup. **Exception-only:** **`coding-session`** may read this skill **inline** when setup failed and the developer attests retry (see [`coding-session/SKILL.md`](../coding-session/SKILL.md) § *Worktree bootstrap (inline mandatory)*). **Forbidden:** spawn (`AGENT_RUN_REQUEST_V1`) for this skill on the default path.
+**Normative invocation:** **`coding-session`** completes Generic flow step **4** (direct script or this skill **inline**) when center setup returns **`skipped-noop`** and dot-sedea **`worktreeBootstrap.mode: none`** — **mandatory** post-attach post-setup, not setup-failure retry only. **Do not** skip step **4** because setup exited **0** with **`skipped-noop`**. **Exception-only:** **`coding-session`** may read this skill **inline** when setup or step **4** failed and the developer attests retry (see [`coding-session/SKILL.md`](../coding-session/SKILL.md) § *Worktree bootstrap (inline mandatory)*). **Forbidden:** spawn (`AGENT_RUN_REQUEST_V1`) for this skill on the default path.
 
 Running bootstrap is **not** developer approval for worktrees — layer 2 **`developerApprovedImplementation`** stays on the parent **`coding-session`** lane.
 
@@ -113,7 +113,7 @@ This skill **does not** create worktrees or attach them to Sedea. The parent lan
 1. **Center setup** — parent ran **`.sedea/centers/sedea/scripts/worktree-setup.sh`** from **`HOSTING_ROOT`**; worktree exists at **`worktreePath`**. **Forbidden on parent before retry:** **`sedea_add_worktree_folder`** before setup exits **0**, or inline **`git worktree add`** on the default path when the center script exists.
 2. **`sedea_add_worktree_folder` only** — worktree is a workspace root in Mission Control when setup JSON **`nextAction`** is **`attach-required`**. **Forbidden:** editor **Add Folder to Workspace** or skipping MCP attach.
 
-Then invoke **`worktree-bootstrap`** **inline** only when center setup failed and the developer attests retry — with **`worktreePath`** and **`hostingRoot`**. If **`worktreePath`** is missing or MCP attach failed, stop — do **not** substitute setup steps on this lane (see **Forbidden** in step 2 below).
+Then invoke **`worktree-bootstrap`** **inline** when Generic flow step **4** applies (post-**`skipped-noop`** script-bootstrap) or when center setup / step **4** failed and the developer attests retry — with **`worktreePath`** and **`hostingRoot`**. If **`worktreePath`** is missing or MCP attach failed, stop — do **not** substitute setup steps on this lane (see **Forbidden** in step 2 below).
 
 ## Structured choice (Mission Control)
 

@@ -259,9 +259,18 @@ BASE_REF="origin/main"
 
 **Attach the worktree in Sedea.** In Mission Control chat, invoke MCP **`sedea_add_worktree_folder` only** with JSON `{ "path": "<absolute-worktree-root>" }` (optional `"name"` for the explorer label). Use an **absolute** `path`. **Forbidden:** editor **Add Folder to Workspace**, hand-edited **`.code-workspace`** attach, or calling **`sedea_add_worktree_folder`** **before** **`worktree-setup.sh`** exits **0**.
 
-**Lane ownership:** On a spawned **`coding-session`** implementation lane, [Generic flow](../missions/plan-and-deliver/skills/coding-session/SKILL.md) steps 1–3 are normative. Map **`outputs.bootstrapStatus`** from setup JSON hints — **do not** run inline **`worktree-bootstrap`** after successful setup. Retry only per **`coding-session/SKILL.md`** § *Worktree bootstrap (inline mandatory)* when setup failed.
+**Lane ownership:** On a spawned **`coding-session`** implementation lane, [Generic flow](../missions/plan-and-deliver/skills/coding-session/SKILL.md) steps 1–4 are normative. Set **`outputs.bootstrapStatus: success`** only after step **1** (**`success`** / **`skipped-idempotent`**) or mandatory step **4** post-setup script when hint is **`skipped-noop`** on **`mode: none`** hosts. **Do not** run inline **`worktree-bootstrap`** after the default path completes. Retry only per **`coding-session/SKILL.md`** § *Worktree bootstrap (inline mandatory)* when setup or step **4** failed.
 
-**Bootstrap inside setup (default).** Center **`worktree-setup.sh`** runs fast bootstrap per **`.cursor/rules/dot-sedea.mdc`** § *Worktree bootstrap mode* (`extensions-only-link`, `none`, or hosting overlay). **`coding-session`** sets **`outputs.bootstrapStatus: success`** from setup hints before implementation. On setup failure, ship phase stays at `worktree` until retry succeeds.
+**Two-phase bootstrap (sedea-push and `mode: none` script-bootstrap hosts).**
+
+| Phase | Mechanism | Dev-ready? |
+|-------|-----------|------------|
+| **1 — Center setup** | **`.sedea/centers/sedea/scripts/worktree-setup.sh`** on **`HOSTING_ROOT`** | Creates worktree; may return **`bootstrapStatus: skipped-noop`** |
+| **2 — Hosting script** | **`./scripts/bootstrap-worktree-dev.sh "$WORKTREE_ROOT"`** from primary **`HOSTING_ROOT`** after MCP attach | **Required** before implementation when phase 1 hint is **`skipped-noop`** and dot-sedea **`worktreeBootstrap.mode: none`** |
+
+**`skipped-noop` ≠ dev-ready** on script-bootstrap hosts. Center setup JSON hint alone must not set **`outputs.bootstrapStatus: success`** without phase **2** when phase **1** returned **`skipped-noop`**.
+
+**Bootstrap inside setup (default).** Center **`worktree-setup.sh`** runs overlay bootstrap per **`.cursor/rules/dot-sedea.mdc`** § *Worktree bootstrap mode* (`extensions-only-link`, `none`, or hosting overlay). **`coding-session`** sets **`outputs.bootstrapStatus: success`** from setup hints when **`success`** or **`skipped-idempotent`**, or after Generic flow step **4** when **`skipped-noop`**. On setup failure, ship phase stays at `worktree` until retry succeeds.
 
 | Profile | When | Action |
 |---------|------|--------|
