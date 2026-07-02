@@ -50,7 +50,10 @@ flowchart TD
   D -->|yes| E{Post-fix exit}
   E -->|Code promotion| G[Spawn new-plan + pr-plan]
   G --> H[Spawn coding-session with targetPlanPath]
-  H --> I[Dispatch resolution]
+  H --> H2{Sentry-sourced?}
+  H2 -->|yes| S[Offer Sentry resolve step 5d]
+  H2 -->|no| I[Dispatch resolution]
+  S --> I
   E -->|Ad-Hoc PRD only| J[Spawn ad-hoc-prd]
   J --> I
   E -->|Findings report only| F
@@ -80,13 +83,13 @@ USER_CHECKPOINT — confirm mission intent when the opening command phrase does 
 - `type`: Branching logic.
 - `intent`: Gather symptom, scope, and reproduction hints before spawning the debug agent.
 - `inputs`: Opening user message remainder after `debug and fix`, current Sedea user context (`operationsUserId`).
-- `expected output`: Structured handover: `issueSummary`, optional `reproductionSteps`, optional `logHints`, optional `repoPath`.
+- `expected output`: Structured handover: `issueSummary`, optional `reproductionSteps`, optional `logHints`, optional `repoPath`, optional `sentryIssueUrl` or Sentry issue id when the issue is Sentry-sourced.
 - `next-step resolution`: Continue to step 3 when `issueSummary` is non-empty (auto-advance).
 - `ordered actions`:
   1. Remove the matched command prefix from the opening message.
   2. Treat remaining text as initial `issueSummary` when present.
   3. Collect missing **`issueSummary`** via structured choice when empty.
-  4. Optionally collect **`reproductionSteps`**, **`logHints`**, and **`repoPath`** (default hosting repo root when omitted).
+  4. Optionally collect **`reproductionSteps`**, **`logHints`**, **`repoPath`** (default hosting repo root when omitted), and **`sentryIssueUrl`** or Sentry issue id when the issue is Sentry-sourced.
   5. When **`issueSummary`** improves the dispatch title, re-run **Dispatch display refresh** (§ above) — **skip** when current dispatch chrome already matches.
 - `valid early-exit conditions`: Stop without spawn if the user declines to provide an issue summary.
 
@@ -156,8 +159,29 @@ USER_CHECKPOINT — revise planning anchor, retry, or switch exits when PR plan 
 - `inputs`: `repoPath` / `outputs.hostingRoot`, existing `outputs.worktreePath` and `outputs.worktreeName` from debug child (worktree already created and modified), `developerApprovedImplementation: true`, `upstreamSkill: debug-and-fix`, required `targetPlanPath` and `targetPlanSlug` from step 5, plus `planningHandoffMode: "sections-1-4-complete"` and `planningHandoffApproved: true` when supplied by the **`pr-plan`** handoff.
 - `spawn run-request fields`: `inputs`, `laneRules` / `warmUpRules` per **`coding-session`** frontmatter, and `initiatingPrompt` — state that implementation is complete on the debug worktree and ship chain starts at cut-point / commit per **`coding-session`** authority.
 - `expected output`: Child terminal after ship chain milestones per **`coding-session`** **`## Completion (spawned)`** / inline ship skills.
-- `next-step resolution`: Continue to step 7 after child terminal or when developer selects an external-wait resume option per skill gates.
-- **Note:** Ship steps (commit, deploy-walk, pre-pr-review, create-pr, pr-review, post-merge cleanup, plan-reconcile) are **owned by `coding-session`** — do not duplicate procedure here.
+- `next-step resolution`: When code-promotion path and issue context is Sentry-sourced (`sentryIssueUrl`, Sentry issue id in step 2, or Sentry named in **`issueSummary`**), continue to step **5d** after child terminal indicates **After deploy** `deploy-walk` complete (or deploy verification **`done`**). Otherwise continue to step **7** after child terminal or when developer selects an external-wait resume option per skill gates.
+- **Note:** Ship steps (commit, Local test deploy-walk, pre-pr-review, create-pr, pr-review, merge, post-merge cleanup, Staging test deploy-walk, After deploy deploy-walk, plan-reconcile) are **owned by `coding-session`** — do not duplicate procedure here. Squad Leader step **5d** runs **after** **`coding-session`** completes After deploy — do not duplicate After deploy procedure here. For **tapcart-push** and **tapcart-merchant-dashboard**, **`create-pr`** uses **outsider handoff** (no Sedea `gh pr create`) per **`create-pr/SKILL.md`** § *Outsider repos*.
+
+### 5d. Offer Sentry issue resolution (post–After deploy — code-promotion path)
+
+- `type`: Branching logic.
+- `intent`: After code-promotion **`coding-session`** completes **After deploy** `deploy-walk`, offer the developer to resolve the originating Sentry issue in the Sentry UI.
+- `inputs`: Step 2 `issueSummary`, optional `sentryIssueUrl` or Sentry issue id; step 5b child terminal outputs indicating After deploy complete or deploy verification **`done`**.
+- `expected output`: Developer acknowledgment: `sentry-resolved`, `sentry-defer`, or `sentry-not-applicable`.
+- `next-step resolution`: Continue to step **7** after structured choice selection.
+- `branch predicates`:
+  - Run only on **code-promotion** path when issue context is Sentry-sourced (URL, issue id, or Sentry named in step 2).
+  - Skip to step **7** when not Sentry-sourced or when paths **5c** / **6** applied.
+- `default/fallback behavior`: External-wait modal before ending the turn — developer resolves in Sentry UI; agent does not call Sentry API without explicit user consent.
+
+USER_CHECKPOINT — offer Sentry issue resolution after After deploy completes.
+
+- `ordered actions`:
+  1. Confirm step 5b child terminal shows After deploy `deploy-walk` complete or deploy verification **`done`**.
+  2. Present **`sentryIssueUrl`** or issue id from step 2 when available.
+  3. Open external-wait structured choice: *"After deploy verification is complete. Resolve the Sentry issue in Sentry when ready."*
+  4. **`options`**: **`sentry-resolved`** (resolved on Sentry) · **`sentry-defer`** (defer) · **`sentry-not-applicable`** · **More details for option _**
+  5. Record selection in dispatch recap; continue to step **7**.
 
 ### 5c. Create Ad-Hoc PRD (spawned skill — Ad-Hoc PRD path only)
 
@@ -186,8 +210,8 @@ USER_CHECKPOINT — revise planning anchor, retry, or switch exits when PR plan 
 USER_CHECKPOINT — approve dispatch resolution after findings report or code-promotion chain completes.
 
 - `type`: Finish/stop logic.
-- `intent`: Propose dispatch closure after findings report or code-promotion chain completes.
-- `inputs`: All child terminal outputs, selected exit path, findings report from step 6 when applicable, any external-wait resume selection state.
+- `intent`: Propose dispatch closure after findings report, code-promotion chain (including step **5d** when applicable), or other exit paths complete.
+- `inputs`: All child terminal outputs, selected exit path, findings report from step 6 when applicable, step **5d** Sentry resolution selection when applicable, any external-wait resume selection state.
 - `expected output`: Squad Leader recap and **`MC_DISPATCH_RESOLVED_V1`** when user signals done.
 - `next-step resolution`: Terminal when user accepts resolution or continues from resolution card per [`.sedea/centers/sedea/rules/4_mission.mdc`](.sedea/centers/sedea/rules/4_mission.mdc) § *Dispatch resolution*.
 - `terminal vs resumable`: **`resolved`** when code-promotion chain completed or findings report delivered; **`partial`** when fix verified but ship pending external action; **`aborted`** / **`abandoned`** on user stop or unrecoverable block.
