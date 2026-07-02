@@ -136,8 +136,9 @@ Three **sequential** agent steps on the **`coding-session`** lane after the [Wor
 | 1 | **`coding-session`** | Setup worktree + fast bootstrap | **`.sedea/centers/sedea/scripts/worktree-setup.sh`** ([Generic flow](#generic-flow-single-repo) step 1) |
 | 2 | **`coding-session`** | Record sidecar `worktrees` / `session` | `plan-state.mjs` (step 2) |
 | 3 | **`coding-session`** | Mount worktree in Sedea workbench | MCP **`sedea_add_worktree_folder`** when setup hint **`nextAction: attach-required`** (step 3) |
+| 4 | **`coding-session`** | Script-bootstrap post-setup when required | `./scripts/bootstrap-worktree-dev.sh` from **`HOSTING_ROOT`** when setup hint is **`skipped-noop`** and dot-sedea **`mode: none`** ([Generic flow](#generic-flow-single-repo) step 4) |
 
-**Bootstrap:** Default path — map **`bootstrapStatus`** / **`bootstrapMode`** from setup stdout JSON to **`outputs`**; **do not** run inline **`worktree-bootstrap`** when setup succeeded. Retry / exception only — [Worktree bootstrap (inline mandatory)](#worktree-bootstrap-inline-mandatory).
+**Bootstrap:** Default path — center setup step **1**, MCP attach step **3**, then step **4** script-bootstrap post-setup when **`skipped-noop`** on **`mode: none`** hosts. Set **`outputs.bootstrapStatus: success`** only after step **4** completes (or when step **1** hint is **`success`** / **`skipped-idempotent`** without step **4**). Retry / exception only — [Worktree bootstrap (inline mandatory)](#worktree-bootstrap-inline-mandatory).
 
 **Not a conflict:** center setup creates the directory and runs overlay bootstrap; **`sedea_add_worktree_folder`** adds that path to the Mission Control / editor workspace.
 
@@ -176,10 +177,10 @@ Each script prints **one JSON line on stdout** (human progress on stderr). On **
 | **`exitCode`** | Shell exit (**0** = success) | Same |
 | **`nextAction`** | **`attach-required`** → MCP attach (step 3) | **`none`** on success; **`detach-required`** → run MCP detach before retry |
 | **`worktreeRoot`**, **`worktreeName`** | Set **`WORKTREE_ROOT`** / sidecar + cleanup attestation | Same |
-| **`bootstrapMode`**, **`bootstrapStatus`** | Map to **`outputs`** — **`success`**, **`skipped-noop`**, **`skipped-idempotent`** allow implementation | N/A |
+| **`bootstrapMode`**, **`bootstrapStatus`** | Map to **`outputs`** from step **1** hint — **`success`** / **`skipped-idempotent`** allow implementation after step **1**; **`skipped-noop`** requires [Generic flow](#generic-flow-single-repo) step **4** before implementation | N/A |
 | **`cleanupStatus`** | N/A | **`success`** → **`outputs.postMergeCleanupStatus: success`** |
 
-**Forbidden on default setup path:** raw **`git worktree add`**, inline **`bootstrap-worktree-dev.sh`**, or **`full`** bootstrap escalation when center setup fails (exit **11** warm-primary → structured retry; exit **12** overlay → fix dot-sedea). **Forbidden on default cleanup path:** inline **`git worktree remove`** + hosting **`git pull`** when **`worktree-cleanup.sh`** applies for an owned path after MCP detach.
+**Forbidden on default setup path:** raw **`git worktree add`**, running **`bootstrap-worktree-dev.sh`** **instead of** center setup step **1**, or **`full`** bootstrap escalation when center setup fails (exit **11** warm-primary → structured retry; exit **12** overlay → fix dot-sedea). **Allowed on default path:** **`bootstrap-worktree-dev.sh`** as **mandatory** Generic flow step **4** after MCP attach when step **1** hint is **`skipped-noop`** and dot-sedea **`worktreeBootstrap.mode: none`**. **Forbidden on default cleanup path:** inline **`git worktree remove`** + hosting **`git pull`** when **`worktree-cleanup.sh`** applies for an owned path after MCP detach.
 
 ## Structured choice (Mission Control)
 
@@ -409,8 +410,8 @@ Otherwise:
 1. Set `outputs.developerApprovedImplementation: true` and `outputs.planCompleteness` from validation.
 2. State one informational line (no modal): *Planning handoff approved on **pr-plan** lane. §§1–4 ready — implementing; §§5–8 fill on this lane as code lands.* When `planCompleteness: complete`, use: *PR plan complete — implementing.*
 3. Proceed immediately to [Generic flow](#generic-flow) (center setup, sidecar, attach) — then [Spawned implementation lane](#spawned-implementation-lane).
-   - **Bootstrap gate (binding):** Step **1** **`worktree-setup.sh`** must exit **0** and hint **`bootstrapStatus`** must allow implementation (**`success`**, **`skipped-noop`**, or **`skipped-idempotent`**).
-   - Set **`outputs.bootstrapStatus`** from the setup hint before product edits.
+   - **Bootstrap gate (binding):** Step **1** **`worktree-setup.sh`** must exit **0**. When hint is **`success`** or **`skipped-idempotent`**, set **`outputs.bootstrapStatus: success`** after step **1**. When hint is **`skipped-noop`** on a **`mode: none`** script-bootstrap host, complete Generic flow step **4** before product edits — **`skipped-noop` alone is not dev-ready**.
+   - Set **`outputs.bootstrapStatus: success`** only when step **1** or step **4** (post-setup script) completes successfully.
    - **If setup fails or bootstrap hint is not success-class:** STOP — no product edits, no §§5–8, no ship chain. Follow **Failure** under [Worktree bootstrap (mandatory)](#worktree-bootstrap-mandatory).
    - **Forbidden substitute:** extension-level `npm ci`, `tsc`, or vitest passing does **not** set `bootstrapStatus: success` when setup exited non-zero.
 4. Do **not** emit **`MC_PHASED_RESPONSE_V1`** for worktree-open on this path.
@@ -641,7 +642,7 @@ Run only **after** [Pre-worktree validation](#pre-worktree-validation-plan-compl
 
  - **Forbidden (step 1):** **`sedea_add_worktree_folder`** — MCP attach is step **3** only. **Forbidden:** inline **`git worktree add`** / dirty-primary **`git status`** gate on the default path when this script exists on **`HOSTING_ROOT`**.
  - Worktree naming: **`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`** § *Worktree naming* (primary **hosting repo** → Sedea **`.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc`**).
- - **Exit 0:** parse the stdout JSON line; set **`WORKTREE_ROOT`**, **`outputs.bootstrapMode`**, **`outputs.bootstrapStatus`** from hint (**`success`**, **`skipped-noop`**, **`skipped-idempotent`** → implementation allowed).
+ - **Exit 0:** parse the stdout JSON line; set **`WORKTREE_ROOT`**, **`outputs.bootstrapMode`**, and provisional **`outputs.bootstrapStatus`** from hint. **`success`** / **`skipped-idempotent`** → set **`outputs.bootstrapStatus: success`** after step **1**. **`skipped-noop`** → continue to step **4** (do **not** treat as dev-ready on **`mode: none`** script-bootstrap hosts).
  - **Non-zero:** parse failure JSON when present; set **`outputs.bootstrapStatus: failed`**, **`outputs.bootstrapFailureReason`** from **`message`**; stop with structured retry — exit **10** dirty primary (on sedea-push run **`.cursor/rules/dot-sedea.mdc`** § *Housekeeping pass (dirty hosting tree before bootstrap)* before retry); exit **11** warm-primary (**no `full` fallback** on center path); exit **12** overlay missing / mode not allowed.
  - If `baseRef` input is supplied, it must be a remote integration ref such as `origin/main`; do not accept a local-only ref for worktree creation.
 
@@ -662,24 +663,36 @@ Run only **after** [Pre-worktree validation](#pre-worktree-validation-plan-compl
 
  This MCP attach is mandatory before post-setup work. If the MCP call fails, stop with `partial`; report the worktree path and the attach error, and keep `continuationStatus: "active"` so the Squad Leader does not close the implementation lane.
 
-4. **Bootstrap complete (default path)** — When step **1** hint **`bootstrapStatus`** is **`success`**, **`skipped-noop`**, or **`skipped-idempotent`**, set **`outputs.bootstrapStatus: success`** (and **`outputs.bootstrapMode`** from hint). Set **`outputs.shipPhase: worktree`** on the first terminal line that reports setup complete. **Do not** run inline **`worktree-bootstrap`** on the default path. **Exception:** retry only per [Worktree bootstrap (inline mandatory)](#worktree-bootstrap-inline-mandatory) when setup failed or developer attests **`--skip-*`** on a follow-up turn.
+4. **Script-bootstrap post-setup (when required)** — After step **3** attach succeeds, read **`.cursor/rules/dot-sedea.mdc`** § *Worktree bootstrap mode* on **`HOSTING_ROOT`**.
 
-5. **Branch** per [Execution mode after worktree attach](#execution-mode-after-worktree-attach):
+ | Condition | Action |
+ |-----------|--------|
+ | Step **1** hint **`bootstrapStatus`** is **`success`** or **`skipped-idempotent`** | **`outputs.bootstrapStatus: success`** already set — skip this step |
+ | Step **1** hint **`bootstrapStatus`** is **`skipped-noop`** **and** overlay **`worktreeBootstrap.mode: none`** **and** **`$HOSTING_ROOT/scripts/bootstrap-worktree-dev.sh`** exists | **Mandatory before implementation:** `cd "$HOSTING_ROOT" && ./scripts/bootstrap-worktree-dev.sh "$WORKTREE_ROOT"` (honor attested **`--skip-*`** only when the developer attests in the same message). Set **`outputs.bootstrapMode: script-bootstrap`**. Set **`outputs.bootstrapStatus: success`** only on exit **0** |
+ | **`skipped-noop`** but hosting script missing | **`outputs.bootstrapStatus: failed`** — stop per [Worktree bootstrap (mandatory)](#worktree-bootstrap-mandatory) |
+
+ **Forbidden:** treat **`skipped-noop`** alone as dev-ready on **`mode: none`** script-bootstrap hosts.
+
+ Alternatively invoke [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md`](../worktree-bootstrap/SKILL.md) **inline** with the same **`worktreePath`** / **`hostingRoot`** when step **4** conditions apply — same success contract.
+
+5. **Bootstrap complete (default path)** — When **`outputs.bootstrapStatus: success`**, set **`outputs.shipPhase: worktree`** on the first terminal line that reports setup complete. **Do not** run inline **`worktree-bootstrap`** on the default path when step **4** completed successfully. **Exception:** retry only per [Worktree bootstrap (inline mandatory)](#worktree-bootstrap-inline-mandatory) when setup or step **4** failed or developer attests **`--skip-*`** on a follow-up turn.
+
+6. **Branch** per [Execution mode after worktree attach](#execution-mode-after-worktree-attach):
  - **Spawned implementation lane** → continue with [Spawned implementation lane](#spawned-implementation-lane) (steps 1–7 there).
  - **Prompt-only handoff** → [Prompt-only handoff](#prompt-only-handoff).
 
 ## Worktree bootstrap (mandatory)
 
-After Generic flow step **3** (`sedea_add_worktree_folder`) succeeds, **`outputs.bootstrapStatus: success`** must be set from center setup hints (step **1**) before **implementation**, **commit**, **Before deploy** **`deploy-walk`**, and the rest of the [ship chain](#ship-chain-after-implementation-coding-session-lane).
+After Generic flow steps **3–4** succeed, **`outputs.bootstrapStatus: success`** must be set before **implementation**, **commit**, **Before deploy** **`deploy-walk`**, and the rest of the [ship chain](#ship-chain-after-implementation-coding-session-lane). On **`mode: none`** script-bootstrap hosts, step **4** post-setup script is **mandatory** when step **1** returned **`skipped-noop`** — center setup hint alone is **not** sufficient.
 
 **Resolve paths**
 
 - **`HOSTING_ROOT`** — hosting repo that contains `.sedea/centers/sedea/` (see **20_efficient-pr-shipping.mdc** § *Hosting repo cwd for scripts*). Use spawn `inputs.repoPath` when it points at that root.
 - **`WORKTREE_ROOT`** — absolute path from setup hint **`worktreeRoot`** / step **1** `--worktree-path`.
 
-**Normative path:** center **`worktree-setup.sh`** in Generic flow step **1** — bootstrap runs inside the shell; map hint **`bootstrapStatus`** to **`outputs`**.
+**Normative path:** center **`worktree-setup.sh`** in Generic flow step **1**, then Generic flow step **4** script-bootstrap post-setup when hint is **`skipped-noop`** on **`mode: none`** hosts. Map final **`outputs.bootstrapStatus`** to **`outputs`** only after step **1** or step **4** succeeds.
 
-**Retry / exception path:** [Worktree bootstrap (inline mandatory)](#worktree-bootstrap-inline-mandatory) — inline **`worktree-bootstrap`** only when setup failed and the developer attests retry. **Not** the default after successful setup.
+**Retry / exception path:** [Worktree bootstrap (inline mandatory)](#worktree-bootstrap-inline-mandatory) — inline **`worktree-bootstrap`** when setup or step **4** failed and the developer attests retry. **Not** a substitute for step **4** on the happy path after **`skipped-noop`**.
 
 **`--skip-*` flags** — Use only when the developer attests partial setup. Record flags in chat and in `outputs.bootstrapSkipFlags`.
 
@@ -700,7 +713,7 @@ The partial terminal in step 2 may accompany the modal but does **not** replace 
 
 ## Worktree bootstrap (inline mandatory — retry / exception only)
 
-**Default path:** center **`worktree-setup.sh`** (Generic flow step **1**) — **do not** run this section when setup exited **0** with success-class **`bootstrapStatus`**.
+**Default path:** center **`worktree-setup.sh`** (Generic flow step **1**) plus Generic flow step **4** when required — **do not** run this section when **`outputs.bootstrapStatus: success`** is already set from the default path.
 
 Use **only** when setup failed and the developer chooses retry with attested **`--skip-*`**, when **`worktree-setup.sh`** is unavailable on **`HOSTING_ROOT`**, or when a protocol step explicitly requires inline bootstrap instead of center setup.
 

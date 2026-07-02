@@ -23,7 +23,7 @@ alwaysApply: false
 | **PR count** | **Exactly one** PR plan per dispatch (single indexed child) |
 | **Skipped** | Full **`author-prd`**, **`planner`** Master Plan, **`pr-breakdown`**, **`delivery-phases`**, **`phase-planner`** |
 | **Out of scope redirect** | Complexity **>6**, multi-PR decomposition, or work needing Master Plan → **`plan and deliver a single phase`** (**1–6** PRs, complexity **≤ 20**) or **`plan and deliver`** (detached dispatch) |
-| **Ship chain** | Same detached **`coding-session`** order as plan-and-deliver §8 |
+| **Ship chain** | Same detached **`coding-session`** order as plan-and-deliver §8. Two-phase bootstrap on **`mode: none`** script-bootstrap hosts — see [plan-and-deliver `coding-session/SKILL.md` § *Generic flow*](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md). |
 
 ### Operations filesystem invariant (binding)
 

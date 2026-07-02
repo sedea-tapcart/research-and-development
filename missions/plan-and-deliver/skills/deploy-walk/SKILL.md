@@ -309,10 +309,22 @@ Run **without** an **AskQuestion** approval gate **before each agent-executable 
 
 When **manual** is required, **Testing steps** must be **numbered**, **3–7** sub-steps minimum when the plan implies multiple actions, with **Commands / context** fully expanded — not a one-line “please verify.”
 
+### Dashboard dev-files preflight (Local test — binding)
+
+Before presenting **manual** steps referencing `yarn dev`, `npm start`, or Vite on **`tapcart-merchant-dashboard`** (Local test scope):
+
+1. Resolve **`WORKTREE_ROOT`** from inline context / sidecar.
+2. Verify **`$WORKTREE_ROOT/tapcart-merchant-dashboard/.env`** exists (and **`.npmrc`** when the primary hosting clone has it).
+3. If missing — **block** Local test presentation. Close with structured choice: retry bootstrap (`cd "$HOSTING_ROOT" && ./scripts/bootstrap-worktree-dev.sh "$WORKTREE_ROOT" --skip-submodules --skip-deps --skip-tests`) · defer Local test · **More details for option _**.
+4. **Forbidden:** present dashboard dev-server manual steps while env files are missing unless the developer attested a documented skip in the same message.
+
+See [`coding-session/SKILL.md`](../coding-session/SKILL.md) § *Generic flow* step **4** (script-bootstrap post-setup).
+
 ### Inline walk bootstrap
 
 When run **inline** on **`coding-session`** (first turn after inline context validates):
 
+0. When scope is Local test and steps reference **`tapcart-merchant-dashboard`** dev servers, run [Dashboard dev-files preflight](#dashboard-dev-files-preflight-local-test--binding) first.
 1. Resolve plan (Step 1) and read § N (Step 2).
 2. Run [Autonomous agent-executable pass](#autonomous-agent-executable-pass) from the first unchecked step in the active sub-section.
 3. Stop on the first **manual** step with full presentation, on **block**, or when the inline scope is satisfied (`local-test-only` / `staging-test-only` sub-section complete, or full walk terminal rules).
