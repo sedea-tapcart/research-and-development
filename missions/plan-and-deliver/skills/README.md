@@ -267,13 +267,20 @@ Each parent **must** handle **`agent-result-response delivered`** with **`parent
 
 ## Required terminal line (all spawned children)
 
-Every **spawned** child (planning and ship) ends with exactly one line on its lane:
+Every **spawned** child ends with **one parent notification** on its lane:
 
-`AGENT_RESULT_RESPONSE_V1` — same `correlationId` as the originating **`AGENT_RUN_REQUEST_V1`**; JSON fields `version`, `status` (`success` | `partial` | `failure` | `aborted` | `abandoned`), `summary` (1–3 sentences), `outputs` (per the skill’s completion section), optional `errors`. Re-emit an **updated** line after user-requested follow-up on that lane (same `correlationId`).
+| Path | Mechanism |
+|------|-----------|
+| **MCP (opt-in skills, flag on)** | **`mission_control_send_agent_result`** — **`status`**, **`summary`**, optional **`outputs`** / **`errors`**; **no** **`correlationId`** in tool args |
+| **Sentinel (default + fallback)** | **`AGENT_RESULT_RESPONSE_V1`** — same **`correlationId`** as the originating **`AGENT_RUN_REQUEST_V1`**; JSON fields `version`, `status`, `summary`, `outputs`, `errors` |
 
-Populate `outputs` from the skill’s **`## Completion (spawned)`** and any referenced domain section above.
+Re-emit an **updated** notification after user-requested follow-up on that lane (MCP: same spawn session; sentinel: same **`correlationId`**).
 
-**Host protocol:** emit **exactly one** line — sentinel and **valid JSON on the same line** (no fence, no text after the JSON). Required keys: `version` (1), `correlationId` (spawn UUID), `status`, `summary`, `outputs`, `errors` (`[]` when none). Full format: **`.sedea/centers/sedea/skills/README.md`** § *Spawned terminal line* and **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Agent session closure*.
+Populate **`outputs`** from the skill’s **`## Completion (spawned)`** and any referenced domain section above.
+
+**Host protocol (sentinel):** emit **exactly one** line — sentinel and **valid JSON on the same line** (no fence, no text after the JSON). Required keys: `version` (1), `correlationId` (spawn UUID), `status`, `summary`, `outputs`, `errors` (`[]` when none). Full format: **`.sedea/centers/sedea/skills/README.md`** § *Spawned terminal line* and **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Agent-to-agent spawn protocol*.
+
+**Host protocol (MCP):** see rule **4** § *MCP result protocol* — tool descriptor on workspace server; forbidden identity keys in § *Host-resolved identity* above.
 
 ## Definitive `bootstrapRules` (R&D layer — plan and deliver)
 
@@ -317,7 +324,50 @@ node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/v
 
 ## Universal spawn preflight (all plan-and-deliver spawners)
 
-Run this checklist **before** every `AGENT_RUN_REQUEST_V1` emit on any lane (Squad Leader §§3/§5, **master-planner** Step 7, **pr-plan** §5d, ship-chain spawns). Host behavior is in **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Agent-to-agent spawn protocol*; this section is the **plan-and-deliver** operator checklist.
+Run the checklist **before every child spawn** on any lane (Squad Leader §§3/§5, **master-planner** Step 7, **pr-plan** §5d, ship-chain spawns). Host behavior is in **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Agent-to-agent spawn protocol* (MCP + sentinel dual-stack, host-resolved identity); this section is the **plan-and-deliver** operator checklist.
+
+### MCP vs sentinel (which path)
+
+| Situation | Use |
+|-----------|-----|
+| Target skill **does not** document MCP spawn/result yet | **Sentinel only** — § *Sentinel spawn preflight* below |
+| Target skill documents **MCP primary** and **`agent-messaging-mcp`** flag is **on** (or explicit `sedea.features.agent-messaging-mcp: true`) | **`mission_control_spawn_agent`**; child uses **`mission_control_send_agent_result`** at terminal |
+| MCP spawn/result **validation failed** in that turn | Fix args; retry MCP **or** fall back to matching sentinel line if skill documents dual-stack fallback |
+| Flag **off** (default develop/packaged) | **Sentinel only** — MCP mirror skipped by host |
+
+**Do not** emit MCP spawn **and** **`AGENT_RUN_REQUEST_V1`** for the same child when MCP spawn already succeeded (host dedupes; agents must not double-emit intentionally). Same rule for child terminal MCP vs **`AGENT_RESULT_RESPONSE_V1`**.
+
+### Host-resolved identity (MCP — binding)
+
+When using MCP tools, agents supply **skill contract fields only**. **Never** pass these keys in MCP tool arguments (host rejects):
+
+`correlationId`, `dispatchId`, `slotId`, `laneKey`, `agentId`, `parentAgentId`, `childAgentId`
+
+| Role | Identity rule |
+|------|----------------|
+| **Parent spawn (MCP)** | Host mints **`correlationId`**; injects into child bootstrap and registry |
+| **Child terminal (MCP)** | Host reads **`correlationId`** from child lane spawn context — omit from **`mission_control_send_agent_result`** args |
+| **Parent spawn (sentinel)** | Parent authors new **`correlationId`** UUID in run-request JSON |
+| **Child terminal (sentinel)** | Repeat spawn **`correlationId`** in **`AGENT_RESULT_RESPONSE_V1`** JSON |
+
+Full table: rule **4** § *Host-resolved identity*.
+
+### MCP spawn preflight (`mission_control_spawn_agent`)
+
+| Step | Check |
+|------|--------|
+| M1 | Read target **`SKILL.md`** — confirm it documents MCP as primary (or dual-stack with MCP first) before switching off sentinel-only |
+| M2 | Every **`required: true`** input in skill frontmatter appears in MCP **`inputs`** with a valid value (same as sentinel row 1) |
+| M3 | Required MCP args present: **`skillPath`**, **`slug`**, **`name`**, **`description`**, **`inputs`** — camelCase keys match skill frontmatter |
+| M4 | **Forbidden args absent** — no host-resolved identity keys (§ *Host-resolved identity* above) |
+| M5 | Optional only when needed: **`warmUpRules`**, **`initiatingPrompt`** (≤ 32 KiB) |
+| M6 | **`skillPath`** resolves under the correct center (R&D skills under **`.sedea/centers/research-and-development/`**) |
+| M7 | On tool validation failure: stop, fix the failing row, retry spawn — new successful spawn mints a **new** host **`correlationId`** |
+| M8 | **`name`** / **`description`** — same display discipline as sentinel rows 8–9; refresh stale child tab via **`mission_control_update_lane_display`** |
+
+Child terminal: use § *MCP result preflight* in the spawned skill’s **`## Completion (spawned)`** — call **`mission_control_send_agent_result`**, not **`AGENT_RESULT_RESPONSE_V1`**, when MCP path is active and flag is on.
+
+### Sentinel spawn preflight (`AGENT_RUN_REQUEST_V1`)
 
 | Step | Check |
 |------|--------|
