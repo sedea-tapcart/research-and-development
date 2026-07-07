@@ -79,7 +79,7 @@ If Mission Control opened a session whose only intent is **`create-pr`** / *open
 
 **Required upstream context:** `prePrReviewRecommendation: "go"`; `worktreePath`, `worktreeName`, `baseRef`; optional `targetPlanPath` / `targetPlanSlug`; `diffSummary` and pre-PR flags when available. If context is missing, recover on **`coding-session`** before running this procedure.
 
-**Post-PR lifecycle:** merge checks, After-deploy **`deploy-walk`**, and inline **`plan-reconcile`** are owned by **`coding-session`** ([Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate), [After deploy deploy-walk handoff](../coding-session/SKILL.md#after-deploy-deploy-walk-handoff), [Plan-reconcile handoff (inline)](../coding-session/SKILL.md#plan-reconcile-handoff-inline)) — not this skill. **`gh pr create`** is the only `gh` operation this skill owns; after the PR exists, generic **`gh`** PR inspection is **not** a substitute for inline **`pr-review`** and **`pr-review.mjs`** Step 1 on **`coding-session`**.
+**Post-PR lifecycle:** merge checks, Production **`deploy-walk`**, and inline **`plan-reconcile`** are owned by **`coding-session`** ([Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate), [Production deploy-walk handoff](../coding-session/SKILL.md#production-deploy-walk-handoff), [Plan-reconcile handoff (inline)](../coding-session/SKILL.md#plan-reconcile-handoff-inline)) — not this skill. **`gh pr create`** is the only `gh` operation this skill owns; after the PR exists, generic **`gh`** PR inspection is **not** a substitute for inline **`pr-review`** and **`pr-review.mjs`** Step 1 on **`coding-session`**.
 
 **Worktree removal ownership (binding).** **Do not remove worktrees you do not own.** Opening a PR does **not** grant cleanup on other worktrees. **`git worktree remove`**, **`git worktree prune`**, and **`sedea_remove_worktree_folder`** apply **only** to **this pass’s** **`WORKTREE_ROOT`** when rule **0** § *Worktree ownership* and rule **20** § *Worktree removal ownership (binding)* preconditions hold. **`git worktree list` is read-only** when ownership is unclear — **stop; do not remove**.
 
@@ -211,7 +211,7 @@ PR description — verify against the diff; use bullets proportional to PR size 
 - Intentional non-changes (if any)
 - How to verify (tests or observable behaviour)
 
-After opening the PR, return the PR URL to the developer so they can continue the Sedea ship chain (pr-review, merge, After deploy).
+After opening the PR, return the PR URL to the developer so they can continue the Sedea ship chain (pr-review, merge, Production).
 ```
 
 State in one recap line that the developer should paste this prompt to their **outsider** agent and resume **`coding-session`** when the PR URL is known.

@@ -172,8 +172,8 @@ When a ship skill finishes a milestone on a **detached** lane, the terminal **`A
 |-------|---------|------------------|----------------|
 | `pr-review` | Active **`coding-session`** or **`hosting-repo-rules`** agent on its lane | `## Inline result for coding-session` (coding) or invoker prose (rules) | Invoker re-emit with `shipPhase: pr-review` — host sync when §8 fields present |
 | `create-pr` | Active **`coding-session`** or **`hosting-repo-rules`** agent on its lane | `## Completion (inline)` | `pr-open` or outsider handoff (`implementing`) via invoker terminal re-emit — no separate child terminal |
-| `deploy-walk` | Active **`coding-session`** agent on its lane (Local test after commit, Staging test after PR open, After deploy after merge, or deploy phrases) | `## Completion (inline)` | `deploy-walk` via **`coding-session`** terminal re-emit — no separate child terminal |
-| `plan-reconcile` | Active **`coding-session`** agent on its lane (after deploy, stale worktree pick, or *plan reconcile* phrase) | `## Completion (inline)` | `reconcile` / `done` via **`coding-session`** terminal re-emit — no separate child terminal |
+| `deploy-walk` | Active **`coding-session`** agent on its lane (Local test after commit, Staging test after PR open, Production after merge, or deploy phrases) | `## Completion (inline)` | `deploy-walk` via **`coding-session`** terminal re-emit — no separate child terminal |
+| `plan-reconcile` | Active **`coding-session`** agent on its lane (after production walk, stale worktree pick, or *plan reconcile* phrase) | `## Completion (inline)` | `reconcile` / `done` via **`coding-session`** terminal re-emit — no separate child terminal |
 
 **`pr-review`**, **`create-pr`**, **`deploy-walk`**, and **`plan-reconcile`** return through the **active ship invoker** (**`coding-session`** or **`hosting-repo-rules`**). §8 updates on the leader dispatch via invoker terminal re-emit and host sync when documented (**`../plan.mdc`** §8).
 

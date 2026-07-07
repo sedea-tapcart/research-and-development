@@ -286,7 +286,7 @@ _TBD — numbered GFM task list (`1. [ ]` / `2. [ ]` / `3. [ ]`), not dashes, no
 
 _TBD — numbered GFM task list (`1. [ ]` / `2. [ ]` / `3. [ ]`). Steps assume **merged code + staging deploy** (post-merge walk per Model A — see hosting `.cursor/rules/push-monorepo-submodules.mdc` § *Post-merge Staging window*)._
 
-### After deploy
+### Production
 
 _TBD — numbered GFM task list (`1. [ ]` / `2. [ ]` / `3. [ ]`), not dashes, not bare numbers without checkboxes._
 
@@ -336,7 +336,7 @@ Otherwise append this list item **immediately before** `isProject:` (indentation
 ```yaml
  - id: deploy-test-plan-verified
  content: >-
- Mark done only when every Before-deploy and After-deploy step is checked
+ Mark done only when every Local test and Production step is checked
  (`[x]`) and the deploy section `**Status:**` reads `done` (walk via `deploy-walk`,
  or edit manually). Independent of PR merge; run `plan-reconcile` protocol branch when you want
  reconcile/archive after merges.
@@ -436,7 +436,6 @@ Invoke **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** per **Step 5-open-items** 
 - `display.markdown` — link + one-line readiness summary (below)
 - `askQuestion` — modal (`modalTitle`: *PR plan — next move*; options from the table)
 
-**Legacy split (obsolete on Mission Control lanes):** Prefer **`MC_PHASED_RESPONSE_V1`** (recap in `display.markdown` + `askQuestion` same turn). If the tool is unavailable, still **must** close with structured choice — do not end with recap-only prose.
 
 #### Recap (same turn as structured choice)
 

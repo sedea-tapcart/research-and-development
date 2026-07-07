@@ -188,11 +188,9 @@ Sedea **`.plan.md`** files are **delivery anchors** for Mission Control ship (Ma
 | --- | --- | --- | --- |
 | **Manual `plan and deliver`** in Mission Control | **`null`** (root delivery plan) | **No** — compile seed with **`Parent: null`** unless the developer explicitly names a **`Parent`** slug, `@path`, or plan path in the same message (see **`plan.mdc`** §4) | Optional **`Related:`** lines for external PM or doc links when the developer supplies them — separate from **`Parent`** |
 | **Centers** mission launch from Hub (no Hub plan parent) | **`null`** | **No** — same default; explicit **`Parent`** override only when named in the same message | **`Related:`** optional per **`plan.mdc`** §4 *External PM scope* |
-| **Legacy — Start New Plan** from Sedea Hub `top_level_topic` row *(sunset; see Master Plan phase 2–3)* | Hub **`missionInputs.parentSlug`** until host strip lands | **Skipped** when opening message still includes **`### Parent (Sedea Hub)`** (see **`plan.mdc`** §4 *Legacy Hub parent*) | Do **not** treat Hub topic rows as the long-term parent model |
-
+| 
 **Normative contract (agents):** New **`plan and deliver`** dispatches default **`Parent: null`** in the §4 seed. Do **not** prompt for a roadmap topic, **`top_level_topic`**, or plan-tree parent unless the developer explicitly overrides **`Parent`** in the same message. Prefer **`Related:`** for external PM or doc links.
 
-**Legacy Hub `missionInputs`:** **`plan-and-deliver/plan.mdc`** still declares a trimmed **`## Hub missionInputs`** block until Mission Control host strip (Master Plan **phase 2**) and Hub UI removal (**phase 3**). See that section for sunset keys — do not extend Hub parent intake in new governance text.
 
 **Implementation phases (Master Plan *Remove Sedea Hub plans box*):** This table is the **governance narrative** (phase 1). Host code and Hub UI follow in later phases — docs lead code; agents must not reintroduce topic-parent defaults while implementing those slices.
 
@@ -283,7 +281,7 @@ Labels reuse numbers and § symbols across documents. **Read the owning doc** be
 | `new-plan` | `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/new-plan/SKILL.md` | Scaffold a new `.plan.md` + sidecar; parent linkage. **Primary (`plan and deliver`):** **`delivery-phases`** / **`pr-breakdown`** run this skill **inline** under **`planner`** or **`phase-planner`**. **Secondary:** protocol-branch or mission dispatch (e.g. **`quick-fix-plan`**) may use spawned mode per that mission's `plan.mdc`. Runs **`pr-plan`** **inline**; spawns **`phase-planner`** when the child is a phase plan. |
 | `coding-session` | `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md` | **Separate** lane from **`pr-plan`**: center **`worktree-setup.sh`**, sidecar, attach, map setup **`bootstrapStatus`** before implementation, then **implements** §§ 5–8 on that lane (default after **`pr-plan`** spawn; **auto-authorize** when §§1–4 drafted) or **prompt-only** external handoff. Ship chain (**`pre-pr-review`**, inline **`create-pr`**, inline **`pr-review`**, inline **`deploy-walk`**, inline **`plan-reconcile`**). |
 | `worktree-bootstrap` | `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md` | **Deprecated (read-only).** Normative bootstrap is center **`worktree-setup.sh`** on **`coding-session`**. Exception-only **inline** retry when setup failed — not spawn-by-default. See **`skills/README.md`** § *Worktree-bootstrap skill drain gate*. |
-| `pre-pr-review` | `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pre-pr-review/SKILL.md` | Fresh spawned pre-PR reviewer lane. Reviews committed implementation diff against a PR plan or free-form scope, checks per-PR template + repo rules + quality (§7 **Local test** only for deploy checklist — **Staging test** and **After deploy** are post–create-pr / post-merge). Returns **proposed** non-blocker items in `outputs.proposedFollowUps` when anchored to **`plan`** (does **not** edit the plan file). The active **`coding-session`** agent presents proposals to the developer; approved bullets are appended to `## Follow-ups` before **`create-pr`** when the developer chooses that path. Reports go/no-go. |
+| `pre-pr-review` | `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pre-pr-review/SKILL.md` | Fresh spawned pre-PR reviewer lane. Reviews committed implementation diff against a PR plan or free-form scope, checks per-PR template + repo rules + quality (§7 **Local test** only for deploy checklist — **Staging test** and **Production** are post–create-pr / post-merge). Returns **proposed** non-blocker items in `outputs.proposedFollowUps` when anchored to **`plan`** (does **not** edit the plan file). The active **`coding-session`** agent presents proposals to the developer; approved bullets are appended to `## Follow-ups` before **`create-pr`** when the developer chooses that path. Reports go/no-go. |
 | `create-pr` | `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/create-pr/SKILL.md` | **Inline** on the active **`coding-session`** lane after **`pre-pr-review`** returns `go` and Create-PR gate approval. Evaluates repo class: **inline GitHub** (`gh pr create` when authorized) or **outsider handoff** (tapcart product submodules — fenced prompt for external agent, no `gh pr create`). Post-merge **`deploy-walk`** and **`plan-reconcile`** are owned by **`coding-session`**. |
 | `pr-review` | `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-review/SKILL.md` | Triage PR review comments; feeds **Code review follow-ups** on the PR plan. |
 | `deploy-walk` | `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/deploy-walk/SKILL.md` | **Inline** on the active **`coding-session`** lane. Walk a PR plan's `## N. Deploy test plan` section step by step. **Agent-executable** steps run **without approval**; **manual** steps present for the developer. Detached dispatch redirects to **`coding-session`**. Does **not** auto-run **`plan-reconcile`**. |
@@ -420,7 +418,7 @@ The breakdown answers five core questions split across two scopes:
 | --- | --- |
 | 1. How is single-concern enforced across the whole set? | 3. What is the change scope of this PR? |
 | 2. Which PRs are chained vs parallel? | 4. What tests need to be written? |
-| | 5. What is the test plan before and after deployment? |
+| | 5. What is the test plan local, staging, and production? |
 
 …plus the supporting Background + Reasoning sections per PR so **a PR-creating agent** can draft a description **a reviewer agent** can act on — and so **a coding agent** can run a **fresh pre-PR reviewer agent session** from the same artifact.
 
@@ -491,22 +489,21 @@ Each PR's standalone plan file has these sections only — sections 1–7 are re
  1. [ ] First staging step.
  2. [ ] Second staging step.
 
- ### After deploy
+ ### Production
 
  1. [ ] First post-deploy check.
  2. [ ] Second post-deploy check.
  ```
 
- The **`**Status:**`** line tracks the section's lifecycle: `drafted` (PR plan written; **Local test** active) → `pr-open` (PR exists on the integration line; **Staging test** active) → `deployed` (PR merged; **After deploy** unlocked) → `done` (all checks complete). Each transition appends a dated `*(YYYY-MM-DD: <note>)*` entry; history is **append-only** and serves as the audit trail for what was verified when. The **`deploy-walk`** protocol branch drives this lifecycle: it **auto-runs** agent-executable steps (tests, scripts, automatable checks) and flips boxes on pass; **manual** steps are presented for the developer with agent assistance. Plans authored without the lifecycle marker still validate (legacy form), but `deploy-walk` will surface the missing-marker case as a flag and recommend adding it.
+ The **`**Status:**`** line tracks the section's lifecycle: `drafted` (PR plan written; **Local test** active) → `pr-open` (PR exists on the integration line; **Staging test** active) → `deployed` (PR merged; **Production** unlocked) → `done` (all checks complete). Each transition appends a dated `*(YYYY-MM-DD: <note>)*` entry; history is **append-only** and serves as the audit trail for what was verified when. The **`deploy-walk`** protocol branch drives this lifecycle: it **auto-runs** agent-executable steps (tests, scripts, automatable checks) and flips boxes on pass; **manual** steps are presented for the developer with agent assistance. Plans authored without the lifecycle marker still validate (legacy form), but `deploy-walk` will surface the missing-marker case as a flag and recommend adding it.
 
  **Sub-sections:**
  - **Local test** — what to verify locally before the PR is opened (worktree, localhost, unit/integration checks beyond standing pre-review commands).
  - **Staging test** — what to verify on staging (or preview env) **after the PR is up and before merge**.
- - **After deploy** — what to verify in production after the PR ships (smoke checks, monitors / alerts to watch, rollback trigger conditions).
+ - **Production** — what to verify in production after the PR ships (smoke checks, monitors / alerts to watch, rollback trigger conditions).
 
- **Legacy:** Plans with **`### Before deploy`** only (no Local / Staging split) are read as **`### Local test`** during migration; authors should split staging steps into **`### Staging test`** on the next plan edit.
-
- The bullet-length rule does **not** apply here: items can be full sentences, since each step needs to be unambiguous for **a coding agent** or the on-call. Numbering is required so reviewers and a **fresh pre-PR reviewer agent session** can reference each step by index (e.g. *"flag § 7 After-deploy 3"*) without counting; the same convention applies to § 8 Caveats. The `[ ]` / `[x]` checkbox is the contract the **`deploy-walk`** protocol branch uses — *no* checkbox means the step won't be picked up by `deploy-walk <N> done` and the step has to be tracked manually. Prefer **agent-executable** wording for automatable checks (named test command, script path, curl with URL) and reserve **manual** phrasing for UI, production dashboards, and judgment calls — see **`deploy-walk/SKILL.md`** § *Agent-executable vs manual steps*.
+ 
+ The bullet-length rule does **not** apply here: items can be full sentences, since each step needs to be unambiguous for **a coding agent** or the on-call. Numbering is required so reviewers and a **fresh pre-PR reviewer agent session** can reference each step by index (e.g. *"flag § 7 Production 3"*) without counting; the same convention applies to § 8 Caveats. The `[ ]` / `[x]` checkbox is the contract the **`deploy-walk`** protocol branch uses — *no* checkbox means the step won't be picked up by `deploy-walk <N> done` and the step has to be tracked manually. Prefer **agent-executable** wording for automatable checks (named test command, script path, curl with URL) and reserve **manual** phrasing for UI, production dashboards, and judgment calls — see **`deploy-walk/SKILL.md`** § *Agent-executable vs manual steps*.
 
  **What NOT to include.** § 7 is the **PR-specific delta** on top of the baseline development process — anything covered by always-on rules, standing alerts, or the hosting repo’s **standing** pre-review commands (README, CONTRIBUTING, CI defaults, etc.) does not belong here. Center docs do **not** name hosting-repo rule paths; discover that repo’s baseline from its own docs when implementing. Specifically:
 
@@ -521,7 +518,7 @@ Each PR's standalone plan file has these sections only — sections 1–7 are re
  todos:
  - id: deploy-test-plan-verified
  content: >-
- Mark done only when every Local-test, Staging-test, and After-deploy step is checked
+ Mark done only when every Local test, Staging test, and Production step is checked
  (`[x]`) and the deploy section `**Status:**` reads `done` (walk via `deploy-walk`,
  or edit manually). Independent of PR merge; run `plan-reconcile` protocol branch when you want
  reconcile/archive after merges.
@@ -531,7 +528,7 @@ Each PR's standalone plan file has these sections only — sections 1–7 are re
  In real files **`todos:` already exists** — append only the **new** list item (same indentation as sibling todos: two spaces before `-`, four before `content` / `status`, six before each `>-` continuation line) after the last implementation todo, before `isProject:`.
 
  - **Purpose** — Plan Board and developers see a single row that stays `pending` until the deploy checklist is fully verified, even when every § 7 box is already `[x]` on disk (e.g. if someone edited Markdown without running **`deploy-walk`**). The todo is the **capstone**: mark `done` only in sync with `**Status:**` `done`.
- - **Who flips it** — The **`deploy-walk`** protocol branch flips this todo from `pending` → `done` in the **same turn** as the `StrReplace` that sets `**Status:**` `deployed` → `done` after the last After-deploy checkbox (see that protocol branch's *Frontmatter capstone* subsection). If you close the walk manually (edit the plan file without `deploy-walk`), flip the todo yourself.
+ - **Who flips it** — The **`deploy-walk`** protocol branch flips this todo from `pending` → `done` in the **same turn** as the `StrReplace` that sets `**Status:**` `deployed` → `done` after the last Production checkbox (see that protocol branch's *Frontmatter capstone* subsection). If you close the walk manually (edit the plan file without `deploy-walk`), flip the todo yourself.
  - **`plan-reconcile` is not auto-triggered.** Finishing the deploy walk (or this todo) does **not** run `plan-reconcile` protocol branch. **`plan-reconcile`** reconciles **merged** PRs, archive candidates, and follow-ups triage — a different cadence. Run `plan-reconcile` yourself when linked PRs have merged and you want reconcile/archive. See the **`plan-reconcile`** protocol branch *When to trigger* guardrail.
 8. **Caveats.** *Optional — omit if there are none.* Free-form bullets for exceptions, risks, or agent-relevant warnings (e.g. feature-flag dependencies, schema-migration timing, rollback caveats). The short-bullet rule does **not** apply here: bullets may be full sentences, since this section faces **a coding agent** (implementation + **fresh pre-PR reviewer agent session**) and **a reviewer agent** — **a coding agent** carries Caveats into the PR description's "Notes for the reviewer" field (GitHub UI label), and **a reviewer agent** needs the concern spelled out unambiguously. (This is the divergence from mode #1 / mode #2 Caveats, which are developer-only and do follow the short-bullet rule.)
 
@@ -612,7 +609,7 @@ flowchart TB
  PRV["pr-review"]:::inline
  WAIT["Wait merge<br/>post-create-pr gate"]:::gate
  PMC["Cleanup<br/>MCP detach · center cleanup"]:::proc
- ADW["After deploy<br/>deploy-walk inline"]:::inline
+ ADW["Production<br/>deploy-walk inline"]:::inline
  REC["plan-reconcile<br/>explicit start"]:::inline
  CUT --> LTW --> CPR
  CPR --> STW --> PRV --> WAIT --> PMC --> ADW --> REC
@@ -767,8 +764,8 @@ After **`pr-plan`** handoff and **`coding-session`** implementation, the happy p
 | 4 | **`create-pr`** | **Inline** on **`coding-session`** — **only** path that may run **`gh pr create`** (rule **20**) |
 | 5 | **`coding-session`** (staging) | Inline Staging test **`deploy-walk`** after PR is open — before merge |
 | 6 | **`pr-review`** | Triage open PR comments (often **inline** in **`coding-session`**) |
-| 7 | **`deploy-walk`** (After deploy) | Post-merge §7 **After deploy** + lifecycle to `done` — **inline** on **`coding-session`** (see **Entry points** below) |
-| 8 | **`plan-reconcile`** | Merge-driven archive + follow-ups triage — **inline** on **`coding-session`** (separate explicit start after deploy) |
+| 7 | **`deploy-walk`** (Production) | Post-merge §7 **Production** + lifecycle to `done` — **inline** on **`coding-session`** (see **Entry points** below) |
+| 8 | **`plan-reconcile`** | Merge-driven archive + follow-ups triage — **inline** on **`coding-session`** (separate explicit start after production walk) |
 
 **`deploy-walk` entry points (canonical)**
 
@@ -777,18 +774,18 @@ After **`pr-plan`** handoff and **`coding-session`** implementation, the happy p
 | **`coding-session` chain** — inline after commit with `deployWalkScope: local-test-only` | Inline on **`coding-session`** | Pre-merge; §7 **`### Local test`** has unchecked items |
 | **`coding-session` chain** — inline after PR open with `deployWalkScope: staging-test-only` | Inline on **`coding-session`** | PR open; §7 **`### Staging test`** has unchecked items |
 | **Developer phrase** — `deploy-walk present <N>`, `deploy-walk status`, step done/skip/block | Active **`coding-session`** lane (detached dispatch redirects) | Plan §7 exists; worktree + plan context on coding lane |
-| **`coding-session` chain** — **AskQuestion** **PR merged — start After deploy deploy-walk** at post-create-pr gate | Inline on **`coding-session`** | PR `merged`; full §7 walk including After deploy (**`coding-session/SKILL.md`** § *After deploy deploy-walk handoff*) |
+| **`coding-session` chain** — **AskQuestion** **PR merged — start Production deploy-walk** at post-create-pr gate | Inline on **`coding-session`** | PR `merged`; full §7 walk including Production (**`coding-session/SKILL.md`** § *Production deploy-walk handoff*) |
 | **Mission / skill dispatch** — invoke **`deploy-walk/SKILL.md`** without **`coding-session`** | **Stop** — redirect to **`coding-session`** | Same procedure once coding lane is active |
 
-**Ordering:** **Local test** runs from **`coding-session`** after implementation approval and commit (pre-PR). **Staging test** runs after **`create-pr`** while the PR is open and before merge. **After deploy** runs after merge (typically **`coding-session`** post-create-pr gate). Finishing deploy-walk (or capstone todo **done**) does **not** run **`plan-reconcile`** — start **`plan-reconcile`** separately when linked PRs are merged and you want archive/follow-up triage (**`plan-reconcile/SKILL.md`** § *When to trigger*).
+**Ordering:** **Local test** runs from **`coding-session`** after implementation approval and commit (pre-PR). **Staging test** runs after **`create-pr`** while the PR is open and before merge. **Production** runs after merge (typically **`coding-session`** post-create-pr gate). Finishing deploy-walk (or capstone todo **done**) does **not** run **`plan-reconcile`** — start **`plan-reconcile`** separately when linked PRs are merged and you want archive/follow-up triage (**`plan-reconcile/SKILL.md`** § *When to trigger*).
 
 ##### pre-pr-review
 
-Spawned from **`coding-session`** after developer implementation approval, **commit**, and inline **Local test** **`deploy-walk`** (or documented skip). Reviews the **committed** diff + PR plan + repo rules; returns **`recommendation: go`** or blockers. Non-blockers are **`outputs.proposedFollowUps`** — **`coding-session`** presents them; plan **`## Follow-ups`** edits only after developer approval. **Pre-merge scope only:** score §7 **`### Local test`** against what was walked or skipped; **`### Staging test`** and **`### After deploy`** are post–create-pr / post-merge — omit them entirely from the pre-PR report (not blockers, flags, **Defer**, or summary). See **`pre-pr-review/SKILL.md`** § *Pre-PR phase boundary*.
+Spawned from **`coding-session`** after developer implementation approval, **commit**, and inline **Local test** **`deploy-walk`** (or documented skip). Reviews the **committed** diff + PR plan + repo rules; returns **`recommendation: go`** or blockers. Non-blockers are **`outputs.proposedFollowUps`** — **`coding-session`** presents them; plan **`## Follow-ups`** edits only after developer approval. **Pre-merge scope only:** score §7 **`### Local test`** against what was walked or skipped; **`### Staging test`** and **`### Production`** are post–create-pr / post-merge — omit them entirely from the pre-PR report (not blockers, flags, **Defer**, or summary). See **`pre-pr-review/SKILL.md`** § *Pre-PR phase boundary*.
 
 ##### create-pr
 
-**Inline** on the active **`coding-session`** lane when pre-PR review is clean **go** (auto path) or exceptional Create-PR gate approves. **`create-pr`** evaluates route: **inline GitHub** opens PR via `gh pr create` when authorized; **outsider repos** (`tapcart-push`, `tapcart-merchant-dashboard`) emit an outsider handoff prompt only. Planning and other lanes must **not** run **`gh pr create`**. Post-PR lifecycle (merge checks, auto post-merge cleanup, After-deploy **`deploy-walk`**, **`plan-reconcile`**) is owned by **`coding-session`**. See **`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/create-pr/SKILL.md`**.
+**Inline** on the active **`coding-session`** lane when pre-PR review is clean **go** (auto path) or exceptional Create-PR gate approves. **`create-pr`** evaluates route: **inline GitHub** opens PR via `gh pr create` when authorized; **outsider repos** (`tapcart-push`, `tapcart-merchant-dashboard`) emit an outsider handoff prompt only. Planning and other lanes must **not** run **`gh pr create`**. Post-PR lifecycle (merge checks, auto post-merge cleanup, Production **`deploy-walk`**, **`plan-reconcile`**) is owned by **`coding-session`**. See **`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/create-pr/SKILL.md`**.
 
 ##### pr-review
 
@@ -801,7 +798,7 @@ Runs **inline** on the active **`coding-session`** lane after a PR exists (not a
 | 1 | **`create-pr`** opens the PR; post-create-pr gate opens same turn |
 | 2 | GitHub reviewers comment (external) |
 | 3 | Developer picks **`start-pr-review`** → **`coding-session`** runs **`pr-review`** inline (Steps 1–5) |
-| 4 | **No Must/Should/follow-up:** **`skip-reject`** → Step 5 GitHub reconciliation → **`coding-session`** merge gate ([Pre-merge authorization gate](missions/plan-and-deliver/skills/coding-session/SKILL.md#pre-merge-authorization-gate) + [Agent-delegated PR approve and merge](missions/plan-and-deliver/skills/coding-session/SKILL.md#agent-delegated-pr-approve-and-merge) on outsider repos or when delegated; [Post-pr-review merge approval gate](missions/plan-and-deliver/skills/coding-session/SKILL.md#post-pr-review-merge-approval-gate) **`approve-merge`** on non-outsider repos without delegation) → **`check-pr-status`** or **`spawn-after-deploy-walk`** |
+| 4 | **No Must/Should/follow-up:** **`skip-reject`** → Step 5 GitHub reconciliation → **`coding-session`** merge gate ([Pre-merge authorization gate](missions/plan-and-deliver/skills/coding-session/SKILL.md#pre-merge-authorization-gate) + [Agent-delegated PR approve and merge](missions/plan-and-deliver/skills/coding-session/SKILL.md#agent-delegated-pr-approve-and-merge) on outsider repos or when delegated; [Post-pr-review merge approval gate](missions/plan-and-deliver/skills/coding-session/SKILL.md#post-pr-review-merge-approval-gate) **`approve-merge`** on non-outsider repos without delegation) → **`check-pr-status`** or **`spawn-production-walk`** |
 | 5 | **Must/Should present:** disposition gate → fixes → commit/push → Step 5 reconcile (re-request automated reviewer when **CHANGES_REQUESTED**) |
 | 6 | Post-create-pr gate re-opens; pick **`start-pr-review`** again when new comments arrive |
 
@@ -885,7 +882,7 @@ The diagram above describes the per-feature shape and deliberately does not draw
 | Event | Starts **`plan-reconcile`?** |
 |-------|---------------------------|
 | **`deploy-walk`** completes (deploy checklist + capstone todo **done**) | **No** — use **AskQuestion** if the user wants reconcile next |
-| **`coding-session`** after deploy; developer chooses reconcile | **Yes** (inline **`plan-reconcile`**; requires `deployStatus` / `deployTodoStatus` **done** when plan-anchored on ship chain) |
+| **`coding-session`** after production walk; developer chooses reconcile | **Yes** (inline **`plan-reconcile`**; requires `deployStatus` / `deployTodoStatus` **done** when plan-anchored on ship chain) |
 | Developer says **plan reconcile** on active **`coding-session`** | **Yes** (inline) |
 | Detached **`plan-reconcile`** dispatch | **Stop** — redirect to **`coding-session`** |
 
