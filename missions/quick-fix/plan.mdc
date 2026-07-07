@@ -49,7 +49,7 @@ Detached **`coding-session`** lanes execute canonical plan-and-deliver repo-rule
 
 2. **Single PR plan** — Produce one PR plan under `.sedea/operations/` via minimal parent scaffold, **`new-plan`** (indexed child), and **`pr-plan`** inline (§§1–4 populated).
 
-3. **Standard ship** — Hand off to **`coding-session`** for implementation and the full plan-and-deliver ship chain (worktree, cut-point, deploy-walk Local test, pre-pr-review, create-pr, pr-review, merge, post-merge cleanup, Staging test deploy-walk, After deploy, optional plan-reconcile).
+3. **Standard ship** — Hand off to **`coding-session`** for implementation and the full plan-and-deliver ship chain (worktree, cut-point, deploy-walk Local test, pre-pr-review, create-pr, pr-review, merge, post-merge cleanup, Staging test deploy-walk, Production, optional plan-reconcile).
 
 4. **Squad Leader oversight** — Track planning completion and detached ship progress; gate **`MC_DISPATCH_RESOLVED_V1`**.
 
@@ -191,7 +191,7 @@ USER_CHECKPOINT — pick next step when Quick Fix Plan child reports failure or 
 - **Expected output:** Ship milestones via **`coding-session`** terminal re-emits per plan-and-deliver §8.
 - **Next-step resolution:** Leader §7 tracks host-sync ship rows; §8 when gates allow.
 
-**Detached branches** — identical order to [`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`](.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc) §8 detached table: **`coding-session`** → Local test **`deploy-walk`** → **`pre-pr-review`** spawn → **`create-pr`** → **`pr-review`** → merge → post-merge cleanup → Staging test **`deploy-walk`** → After deploy **`deploy-walk`** → explicit **`plan-reconcile`**.
+**Detached branches** — identical order to [`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`](.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc) §8 detached table: **`coding-session`** → Local test **`deploy-walk`** → **`pre-pr-review`** spawn → **`create-pr`** → **`pr-review`** → merge → post-merge cleanup → Staging test **`deploy-walk`** → Production **`deploy-walk`** → explicit **`plan-reconcile`**.
 
 The Squad Leader **does not** spawn **`coding-session`** from §§1–3. The **Quick Fix Plan agent** child lane spawns **`coding-session`** via inline **`pr-plan`** §5d — same ownership contract as **`planner`** on plan-and-deliver (see **`../plan-and-deliver/skills/README.md`** § *Common mistake — Squad Leader redirect*).
 

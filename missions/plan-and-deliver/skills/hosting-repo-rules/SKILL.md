@@ -215,7 +215,7 @@ Run [worktree-setup](.sedea/centers/sedea/skills/worktree-setup/SKILL.md) with *
 
 ### 4. Pre-PR review (spawned)
 
-Spawn **`pre-pr-review`** after commit + Before deploy walk (or documented skip) per **`coding-session`** ship family. Wait for **`recommendation: go`** before push/create-pr unless executive override documented in rule **20**.
+Spawn **`pre-pr-review`** after commit + Local test walk (or documented skip) per **`coding-session`** ship family. Wait for **`recommendation: go`** before push/create-pr unless executive override documented in rule **20**.
 
 ### 5. Ship cut-point and create-pr
 
