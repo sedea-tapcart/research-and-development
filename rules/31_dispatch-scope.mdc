@@ -43,6 +43,7 @@ Operations persistence is migrating from filesystem bundles to workspace-bound R
 |-------|----------------|
 | **Phase 0 — governance** | Filesystem bundles; scope = **`dispatchId`** + **bundle directory** + explicit plan paths from spawn **`inputs`** |
 | **Hybrid** | DB-first for covered dispatch entities; filesystem fallback when entity not in workspace DB (host logs fallback — agents do not open raw DB URLs) |
+| **FsReadOnly** | DB-only writes for covered entities; filesystem bundle read-only hydrate for legacy dispatches — agents must not write bundle files |
 | **DB-only** | Dispatch CRUD via workspace DB; no epoch-folder discovery |
 
 During **Phase 0** and **hybrid**, the host may still resolve internal filesystem paths. That resolution is **host-internal** — agents must not document or rely on **user-id** path segments.
