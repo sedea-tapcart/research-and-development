@@ -250,7 +250,6 @@ Do **not** mirror the full **`Delivery phases`** body in chat. Count **K** from 
 
 **Preferred:** **AskQuestion tool** (brief recap allowed in the same message) or **`MC_PHASED_RESPONSE_V1`** with recap in `display.markdown` and options in `askQuestion` — one assistant message.
 
-**Legacy split (when the tool and phased envelope are unavailable):** send the step **5d** recap, then a **separate** message with `MC_PHASED_RESPONSE_V1`** (sentinel-first; no recap prose before the sentinel).
 
 Collect the developer’s choice via **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** only in the structured-choice message — not in the same message as spawns or **`AGENT_RESULT_RESPONSE_V1`**.
 

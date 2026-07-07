@@ -42,12 +42,12 @@ flowchart TB
   subgraph CS["coding-session lane"]
     direction LR
     CUT["Ship cut-point<br/>review · approve · commit"]:::gate
-    BDW["Before deploy<br/>deploy-walk inline"]:::inline
+    BDW["Local test<br/>deploy-walk inline"]:::inline
     CPR["create-pr"]:::inline
     PRV["pr-review"]:::inline
     WAIT["Wait merge<br/>post-create-pr gate"]:::gate
     PMC["Cleanup<br/>pull · detach worktree"]:::proc
-    ADW["After deploy<br/>deploy-walk inline"]:::inline
+    ADW["Production<br/>deploy-walk inline"]:::inline
     REC["plan-reconcile<br/>explicit start"]:::inline
     CUT --> BDW --> CPR
     CPR --> PRV --> WAIT --> PMC --> ADW --> REC
@@ -546,22 +546,22 @@ USER_CHECKPOINT — approve dispatch resolution when planning and ship gates all
 | Order | Protocol branch | Typical invoker | Skill |
 |------:|-----------------|-----------------|-------|
 | 1 | `coding-session` | Developer phrase, snapshot, or post–**pr-plan** handoff | `skills/coding-session/SKILL.md` |
-| 2 | `deploy-walk` (Before deploy) | **coding-session** (inline) after implementation approval + commit | `skills/deploy-walk/SKILL.md` — `deployWalkScope: before-deploy-only` |
-| 3 | `pre-pr-review` | **coding-session** (spawn) after Before deploy walk or skip | `skills/pre-pr-review/SKILL.md` |
+| 2 | `deploy-walk` (Local test) | **coding-session** (inline) after implementation approval + commit | `skills/deploy-walk/SKILL.md` — `deployWalkScope: local-test-only` |
+| 3 | `pre-pr-review` | **coding-session** (spawn) after Local test walk or skip | `skills/pre-pr-review/SKILL.md` |
 | 4 | `create-pr` | **coding-session** (inline) after pre-PR **go** | `skills/create-pr/SKILL.md` |
 | 5 | `pr-review` | **coding-session** (inline) after PR exists; agent merge when delegated | `skills/pr-review/SKILL.md` |
 | 6 | Agent-delegated approve + merge | **coding-session** (inline) after clean **`pr-review`** when `mergeDelegationAuthorized` | `skills/coding-session/SKILL.md` § *Agent-delegated PR approve and merge* |
-| 7 | `deploy-walk` (After deploy) | **coding-session** (inline) after merge and post-merge cleanup | `skills/deploy-walk/SKILL.md` — **development-process.md** § *deploy-walk entry points* |
-| 8 | `plan-reconcile` | **`coding-session`** (inline) after deploy done or developer choice (not auto from deploy-walk) | `skills/plan-reconcile/SKILL.md` |
+| 7 | `deploy-walk` (Production) | **coding-session** (inline) after merge and post-merge cleanup | `skills/deploy-walk/SKILL.md` — **development-process.md** § *deploy-walk entry points* |
+| 8 | `plan-reconcile` | **`coding-session`** (inline) after production walk complete or developer choice (not auto from deploy-walk) | `skills/plan-reconcile/SKILL.md` |
 | 9 | `hosting-repo-rules` (parallel fork) | **`planner`** Step **7c** or **`phase-planner`** Step **5e** — fire-and-forget after **`coding-session`** terminal when spawn trigger matches | `skills/hosting-repo-rules/SKILL.md` — **not** a Squad Leader spawn; runs detached; parent does **not** wait on rules PR merge |
 
 **`hosting-repo-rules` parallel fork (binding):** Emitted from planning child lanes when **`coding-session`** terminal outputs satisfy the three-condition trigger documented in **`coding-session/SKILL.md`** § *Spawner spawn-detection outputs* and **`planner`** / **`phase-planner`** spawn tables. Tracks **`rulesUpdatesStatus`** on the product PR row — **forbidden:** separate **`shipRows`** entry or **`pendingByParent`** wait on the rules lane.
 
 **`deploy-walk` entry points (binding timing):**
 
-- **Before deploy** (`deployWalkScope: before-deploy-only`) runs **before the PR is created** — inline on **`coding-session`** after implementation approval + commit, **before** `pre-pr-review` and **`create-pr`** (detached branches table order 2). Plan §7 **`### Before deploy`** items must be checks runnable **without a GitHub PR** (scripts, manifest parity, read-only verification). Steps that require merge (e.g. *merged to `main`*, pin promotion) belong under **`### After deploy`**, not Before deploy.
+- **Local test** (`deployWalkScope: local-test-only`) runs **before the PR is created** — inline on **`coding-session`** after implementation approval + commit, **before** `pre-pr-review` and **`create-pr`** (detached branches table order 2). Plan §7 **`### Local test`** items must be checks runnable **without a GitHub PR** (scripts, manifest parity, read-only verification). Steps that require merge (e.g. *merged to `main`*, pin promotion) belong under **`### Production`**, not Local test.
 
-- **After deploy** runs **after the PR has merged** — inline on **`coding-session`** after post-merge cleanup (detached branches table order 7), per [Agent-delegated PR approve and merge](skills/coding-session/SKILL.md#agent-delegated-pr-approve-and-merge) (when delegation authorized) or after the developer confirms merge via **`check-pr-status`** / **`spawn-after-deploy-walk`** at [Post-create-pr handoff gate](skills/coding-session/SKILL.md#post-create-pr-handoff-gate).
+- **Production** runs **after the PR has merged** — inline on **`coding-session`** after post-merge cleanup (detached branches table order 7), per [Agent-delegated PR approve and merge](skills/coding-session/SKILL.md#agent-delegated-pr-approve-and-merge) (when delegation authorized) or after the developer confirms merge via **`check-pr-status`** / **`spawn-production-walk`** at [Post-create-pr handoff gate](skills/coding-session/SKILL.md#post-create-pr-handoff-gate).
 
 Detached **`deploy-walk`** dispatch redirects to **`coding-session`**. **`plan-reconcile`** runs **inline** on **`coding-session`** when the developer explicitly chooses reconcile — see [Plan-reconcile handoff (inline)](skills/coding-session/SKILL.md#plan-reconcile-handoff-inline). Finishing deploy-walk does **not** auto-run **`plan-reconcile`**.
 
@@ -596,7 +596,7 @@ flowchart TB
 | **1 — PR created** | **`coding-session`** (inline **`create-pr`**) | [Post-create-pr handoff gate](skills/coding-session/SKILL.md#post-create-pr-handoff-gate) opens same turn |
 | **2 — Reviewers review** | Developer + GitHub reviewers (automated reviewers such as CodeRabbit, humans) | External — not a Sedea spawn |
 | **3 — Run `pr-review`** | **`coding-session`** (inline) | Developer picks **`start-pr-review`** at post-create-pr gate, or explicit *triage PR comments* on the lane |
-| **4 — No actionable comments** | Developer | **`pr-review`** skip-only path: **`skip-reject`** → Step 5 GitHub reconciliation. **Merge is on GitHub** — there is no **Merge PR** modal in `pr-review` or `coding-session`. After merge, pick **`check-pr-status`** or **`spawn-after-deploy-walk`** at post-create-pr gate |
+| **4 — No actionable comments** | Developer | **`pr-review`** skip-only path: **`skip-reject`** → Step 5 GitHub reconciliation. **Merge is on GitHub** — there is no **Merge PR** modal in `pr-review` or `coding-session`. After merge, pick **`check-pr-status`** or **`spawn-production-walk`** at post-create-pr gate |
 | **5 — Push fixes** | **`coding-session`** + inline **`pr-review`** | Disposition gate → approved edits → commit/push gate (rule **6**) → **`pr-review`** Step 5 (reply, resolve, minimize, re-request automated reviewer when **CHANGES_REQUESTED**) |
 | **6 — Loop to step 2** | Developer + reviewers | After Step 5, **`coding-session`** re-opens [Post-create-pr handoff gate](skills/coding-session/SKILL.md#post-create-pr-handoff-gate). When new comments land, pick **`start-pr-review`** again. **`continuationStatus: active`** until comments are resolved, skipped, follow-up-captured, or deferred |
 
@@ -610,7 +610,7 @@ flowchart TB
 
 **Start `coding-session`:** Runs on a **ship lane** (spawned child or detached session) — **not** a Squad Leader spawn from §§1–7. **Detached** means off the **leader** protocol §§1–7, **not** “only the Squad Leader may start it.” Planning child lanes (**`planner`**, **`phase-planner`**, Quick Fix Plan agent) emit §5d **`AGENT_RUN_REQUEST_V1`** from inline **`pr-plan`** on **their own lane** after §5c. Entry paths, required inputs, and anti-patterns: **`.sedea/centers/research-and-development/docs/development-process.md`** § *Start implementation (`coding-session` entry)*.
 
-**Pre-review verification:** Before developer review on **`coding-session`**, run hosting-repo **pre-review verification** per applicable **`.cursor/rules/`** (curated **Project rules** / plan **§5** — commands stay in hosting rules only). See [Ship cut-point gate](skills/coding-session/SKILL.md#ship-cut-point-gate-approve-commit-before-deploy) and rule **20** § *Review before commit*.
+**Pre-review verification:** Before developer review on **`coding-session`**, run hosting-repo **pre-review verification** per applicable **`.cursor/rules/`** (curated **Project rules** / plan **§5** — commands stay in hosting rules only). See [Ship cut-point gate](skills/coding-session/SKILL.md#ship-cut-point-gate-approve-commit-local-test) and rule **20** § *Review before commit*.
 
 Procedures, gates, and spawn contracts live in those skills and in **`.sedea/centers/research-and-development/docs/development-process.md`** (**Protocol branches** table and § *Ship chain*). The Squad Leader **does not** emit `AGENT_RUN_REQUEST_V1` for this table unless a future protocol step explicitly adds it.
 

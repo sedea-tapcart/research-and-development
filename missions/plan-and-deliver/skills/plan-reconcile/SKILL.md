@@ -262,7 +262,7 @@ On non-zero exit, stop and surface the error.
 
 **Worktree removal ownership (binding).** This §5 fallback runs **only** when [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § *Worktree ownership* and rule **20** § *Worktree removal ownership (binding)* preconditions pass for **each** candidate path. **Do not remove worktrees you do not own.** **`detect-stale-workspaces`** + **`--apply`** are not permission to remove arbitrary entries from **`git worktree list`**. When ownership is unclear, stop and use structured choice.
 
-**Primary owner:** [coding-session post-merge workspace cleanup](../coding-session/SKILL.md#post-merge-workspace-cleanup) on the ship chain **after PR merge and before After deploy** `deploy-walk`. Run this subsection when archive/reconcile work for this pass is done, when the developer explicitly requests workspace cleanup on a reconcile lane, or as an **idempotent fallback** when post-merge cleanup was skipped or deferred on **`coding-session`**.
+**Primary owner:** [coding-session post-merge workspace cleanup](../coding-session/SKILL.md#post-merge-workspace-cleanup) on the ship chain **after PR merge and before Production** `deploy-walk`. Run this subsection when archive/reconcile work for this pass is done, when the developer explicitly requests workspace cleanup on a reconcile lane, or as an **idempotent fallback** when post-merge cleanup was skipped or deferred on **`coding-session`**.
 
 **Idempotent fallback:** When **`detect-stale-workspaces`** returns no candidates (worktree already removed, **`mainPullStatus`** already **`success`** on this plan), report one line and skip **`--apply`** — do not treat as error.
 
@@ -314,7 +314,7 @@ The script runs **`git worktree remove`**, drops local worktree name refs when P
 
 3. Summarise **`cleanedWorktrees`**, **`deletedWorktreeNames`**, **`skippedWorktreeNames`**, **`mainPullStatus`**, and any **`errors`** from the script JSON.
 
-**Primary path:** **`coding-session`** [Post-merge workspace cleanup](../coding-session/SKILL.md#post-merge-workspace-cleanup) runs **`--apply`** after PR merge and before After deploy walk. This §5 subsection is the **idempotent fallback** when that pass was skipped or deferred.
+**Primary path:** **`coding-session`** [Post-merge workspace cleanup](../coding-session/SKILL.md#post-merge-workspace-cleanup) runs **`--apply`** after PR merge and before Production walk. This §5 subsection is the **idempotent fallback** when that pass was skipped or deferred.
 
 ### 6. End state — no plans-repo shortcut
 
@@ -380,7 +380,7 @@ Stop when the target plan is archived or explicitly not archive-eligible with no
 
 Report the fields from **## Inline result contract** in prose to the invoker on the **same lane**. Do **not** emit `AGENT_RUN_REQUEST_V1`, `AGENT_RESULT_RESPONSE_V1`, or `MC_DISPATCH_RESOLVED_V1`. Do **not** add a **Host protocol line** (see **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Inline completion* and **`.sedea/centers/sedea/skills/README.md`** § *Completion (inline)*).
 
-Normally invoked inline from **`coding-session`** after deploy verification or when the developer chooses reconcile on that lane. **`plan reconcile`** phrases on the active coding-session lane use the same procedure body.
+Normally invoked inline from **`coding-session`** after production verification or when the developer chooses reconcile on that lane. **`plan reconcile`** phrases on the active coding-session lane use the same procedure body.
 
 ## Extensions
 

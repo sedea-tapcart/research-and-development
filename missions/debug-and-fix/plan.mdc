@@ -159,14 +159,14 @@ USER_CHECKPOINT — revise planning anchor, retry, or switch exits when PR plan 
 - `inputs`: `repoPath` / `outputs.hostingRoot`, existing `outputs.worktreePath` and `outputs.worktreeName` from debug child (worktree already created and modified), `developerApprovedImplementation: true`, `upstreamSkill: debug-and-fix`, required `targetPlanPath` and `targetPlanSlug` from step 5, plus `planningHandoffMode: "sections-1-4-complete"` and `planningHandoffApproved: true` when supplied by the **`pr-plan`** handoff.
 - `spawn run-request fields`: `inputs`, `laneRules` / `warmUpRules` per **`coding-session`** frontmatter, and `initiatingPrompt` — state that implementation is complete on the debug worktree and ship chain starts at cut-point / commit per **`coding-session`** authority.
 - `expected output`: Child terminal after ship chain milestones per **`coding-session`** **`## Completion (spawned)`** / inline ship skills.
-- `next-step resolution`: When code-promotion path and issue context is Sentry-sourced (`sentryIssueUrl`, Sentry issue id in step 2, or Sentry named in **`issueSummary`**), continue to step **5d** after child terminal indicates **After deploy** `deploy-walk` complete (or deploy verification **`done`**). Otherwise continue to step **7** after child terminal or when developer selects an external-wait resume option per skill gates.
-- **Note:** Ship steps (commit, Local test deploy-walk, pre-pr-review, create-pr, pr-review, merge, post-merge cleanup, Staging test deploy-walk, After deploy deploy-walk, plan-reconcile) are **owned by `coding-session`** — do not duplicate procedure here. Squad Leader step **5d** runs **after** **`coding-session`** completes After deploy — do not duplicate After deploy procedure here. For **tapcart-push** and **tapcart-merchant-dashboard**, **`create-pr`** uses **outsider handoff** (no Sedea `gh pr create`) per **`create-pr/SKILL.md`** § *Outsider repos*.
+- `next-step resolution`: When code-promotion path and issue context is Sentry-sourced (`sentryIssueUrl`, Sentry issue id in step 2, or Sentry named in **`issueSummary`**), continue to step **5d** after child terminal indicates **Production** `deploy-walk` complete (or deploy verification **`done`**). Otherwise continue to step **7** after child terminal or when developer selects an external-wait resume option per skill gates.
+- **Note:** Ship steps (commit, Local test deploy-walk, pre-pr-review, create-pr, pr-review, merge, post-merge cleanup, Staging test deploy-walk, Production deploy-walk, plan-reconcile) are **owned by `coding-session`** — do not duplicate procedure here. Squad Leader step **5d** runs **after** **`coding-session`** completes Production — do not duplicate Production procedure here. For **tapcart-push** and **tapcart-merchant-dashboard**, **`create-pr`** uses **outsider handoff** (no Sedea `gh pr create`) per **`create-pr/SKILL.md`** § *Outsider repos*.
 
-### 5d. Offer Sentry issue resolution (post–After deploy — code-promotion path)
+### 5d. Offer Sentry issue resolution (post–Production — code-promotion path)
 
 - `type`: Branching logic.
-- `intent`: After code-promotion **`coding-session`** completes **After deploy** `deploy-walk`, offer the developer to resolve the originating Sentry issue in the Sentry UI.
-- `inputs`: Step 2 `issueSummary`, optional `sentryIssueUrl` or Sentry issue id; step 5b child terminal outputs indicating After deploy complete or deploy verification **`done`**.
+- `intent`: After code-promotion **`coding-session`** completes **Production** `deploy-walk`, offer the developer to resolve the originating Sentry issue in the Sentry UI.
+- `inputs`: Step 2 `issueSummary`, optional `sentryIssueUrl` or Sentry issue id; step 5b child terminal outputs indicating Production complete or deploy verification **`done`**.
 - `expected output`: Developer acknowledgment: `sentry-resolved`, `sentry-defer`, or `sentry-not-applicable`.
 - `next-step resolution`: Continue to step **7** after structured choice selection.
 - `branch predicates`:
@@ -174,12 +174,12 @@ USER_CHECKPOINT — revise planning anchor, retry, or switch exits when PR plan 
   - Skip to step **7** when not Sentry-sourced or when paths **5c** / **6** applied.
 - `default/fallback behavior`: External-wait modal before ending the turn — developer resolves in Sentry UI; agent does not call Sentry API without explicit user consent.
 
-USER_CHECKPOINT — offer Sentry issue resolution after After deploy completes.
+USER_CHECKPOINT — offer Sentry issue resolution after Production completes.
 
 - `ordered actions`:
-  1. Confirm step 5b child terminal shows After deploy `deploy-walk` complete or deploy verification **`done`**.
+  1. Confirm step 5b child terminal shows Production `deploy-walk` complete or deploy verification **`done`**.
   2. Present **`sentryIssueUrl`** or issue id from step 2 when available.
-  3. Open external-wait structured choice: *"After deploy verification is complete. Resolve the Sentry issue in Sentry when ready."*
+  3. Open external-wait structured choice: *"Production verification is complete. Resolve the Sentry issue in Sentry when ready."*
   4. **`options`**: **`sentry-resolved`** (resolved on Sentry) · **`sentry-defer`** (defer) · **`sentry-not-applicable`** · **More details for option _**
   5. Record selection in dispatch recap; continue to step **7**.
 

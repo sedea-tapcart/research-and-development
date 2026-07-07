@@ -191,7 +191,7 @@ USER_CHECKPOINT — pick next step when Quick Fix Plan child reports failure or 
 - **Expected output:** Ship milestones via **`coding-session`** terminal re-emits per plan-and-deliver §8.
 - **Next-step resolution:** Leader §7 tracks host-sync ship rows; §8 when gates allow.
 
-**Detached branches** — identical order to [`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`](.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc) §8 detached table: **`coding-session`** → before deploy **`deploy-walk`** → **`pre-pr-review`** spawn → **`create-pr`** → **`pr-review`** → post-merge cleanup → after deploy **`deploy-walk`** → explicit **`plan-reconcile`**.
+**Detached branches** — identical order to [`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`](.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc) §8 detached table: **`coding-session`** → Local test **`deploy-walk`** → **`pre-pr-review`** spawn → **`create-pr`** → **`pr-review`** → post-merge cleanup → Staging test **`deploy-walk`** → Production **`deploy-walk`** → explicit **`plan-reconcile`**.
 
 The Squad Leader **does not** spawn **`coding-session`** from §§1–3. The **Quick Fix Plan agent** child lane spawns **`coding-session`** via inline **`pr-plan`** §5d — same ownership contract as **`planner`** on plan-and-deliver (see **`../plan-and-deliver/skills/README.md`** § *Common mistake — Squad Leader redirect*).
 
