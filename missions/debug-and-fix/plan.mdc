@@ -105,7 +105,7 @@ USER_CHECKPOINT — pick intake mode or provide issue summary before spawning th
 - `trigger`: Developer selects **`brainstorm-first`** at §2 step 0.
 - `assigned skill`: [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/brainstorm-research/SKILL.md`](../plan-and-deliver/skills/brainstorm-research/SKILL.md).
 - `inputs`: `invokerMissionSlug: debug-and-fix`, `operationsDocsDirectory` from lane identity, optional seeds from §1.
-- `next-step resolution`: Terminal **`developerApprovedReport: true`** → merge `outputs.downstreamHandoffSummary` into `issueSummary` (append or replace per developer choice in **`initiatingPrompt`**), add report path to handover → **auto-chain §3**. **`abandonMission: true`** → **`MC_DISPATCH_RESOLVED_V1`** **`abandoned`**.
+- `next-step resolution`: Terminal **`developerApprovedReport: true`** → merge `outputs.downstreamHandoffSummary` into `issueSummary` (append or replace per developer choice in **`initiatingPrompt`**), add report path to handover → **auto-chain §3**. **`abandonMission: true`** → call MCP **`mission_control_propose_dispatch_resolution`** with status **`abandoned`**.
 
 **Procedure:** Emit spawn with **`warmUpRules`** including **`debug-and-fix/plan.mdc`**; **#external-wait**; on approve continue §3 without repeat §2 USER_CHECKPOINT.
 
@@ -127,7 +127,7 @@ USER_CHECKPOINT — pick intake mode or provide issue summary before spawning th
 - **Agent session closure**: Child emits one parseable **`mission_control_send_agent_result`** line per skill **`## Completion (spawned)`**. Squad Leader waits for host delivery before continuing (**#external-wait**).
 
 USER_CHECKPOINT — pick next step when debug child reports partial status.
-- **Dispatch resolution**: Remains Squad Leader responsibility — child does not emit **`MC_DISPATCH_RESOLVED_V1`**.
+- **Dispatch resolution**: Remains Squad Leader responsibility — child does not call MCP **`mission_control_propose_dispatch_resolution`**.
 
 ### 4. Post-fix exit selection
 
@@ -205,6 +205,6 @@ USER_CHECKPOINT — approve dispatch resolution after findings report or code-pr
 - `type`: Finish/stop logic.
 - `intent`: Propose dispatch closure after findings report or code-promotion chain completes.
 - `inputs`: All child terminal outputs, selected exit path, findings report from step 6 when applicable, any external-wait resume selection state.
-- `expected output`: Squad Leader recap and **`MC_DISPATCH_RESOLVED_V1`** when user signals done.
+- `expected output`: Squad Leader recap and **`mission_control_propose_dispatch_resolution`** when user signals done.
 - `next-step resolution`: Terminal when user accepts resolution or continues from resolution card per [`.sedea/centers/sedea/rules/4_mission.mdc`](.sedea/centers/sedea/rules/4_mission.mdc) § *Dispatch resolution*.
 - `terminal vs resumable`: **`resolved`** when code-promotion chain completed or findings report delivered; **`partial`** when fix verified but ship pending external action; **`aborted`** / **`abandoned`** on user stop or unrecoverable block.

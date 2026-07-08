@@ -261,7 +261,7 @@ Set `continuationStatus`:
 
 ## Completion (inline)
 
-Report on the **same `coding-session` lane**. Do **not** emit `mission_control_spawn_agent`, `mission_control_send_agent_result`, or `MC_DISPATCH_RESOLVED_V1` from this procedure alone.
+Report on the **same `coding-session` lane**. Do **not** emit `mission_control_spawn_agent`, `mission_control_send_agent_result`, or `mission_control_propose_dispatch_resolution` from this procedure alone.
 
 Required fields (prose to invoker / merged into **`coding-session`** `outputs`):
 

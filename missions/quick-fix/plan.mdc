@@ -51,7 +51,7 @@ Detached **`coding-session`** lanes execute canonical plan-and-deliver repo-rule
 
 3. **Standard ship** — Hand off to **`coding-session`** for implementation and the full plan-and-deliver ship chain (worktree, cut-point, deploy-walk, pre-pr-review, create-pr, pr-review, post-merge cleanup, optional plan-reconcile).
 
-4. **Squad Leader oversight** — Track planning completion and detached ship progress; gate **`MC_DISPATCH_RESOLVED_V1`**.
+4. **Squad Leader oversight** — Track planning completion and detached ship progress; gate **`mission_control_propose_dispatch_resolution`**.
 
 ## Squad operations
 
@@ -68,7 +68,7 @@ flowchart TB
   NP --> CS["§5 pr-plan spawns coding-session"]:::detached
   CS --> SHIP["Detached ship chain"]:::detached
   INT --> LED["§6–§7 Leader ledger"]:::leader
-  LED --> RES["§8 MC_DISPATCH_RESOLVED_V1"]:::leader
+  LED --> RES["§8 mission_control_propose_dispatch_resolution"]:::leader
 ```
 
 | Role | Lane | Runs |
@@ -146,7 +146,7 @@ USER_CHECKPOINT — pick quick-fix intake mode and confirm scope before spawn.
 - **Trigger:** Developer selects **`brainstorm-first`** at §2 step 1.
 - **Assigned skill:** [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/brainstorm-research/SKILL.md`](../plan-and-deliver/skills/brainstorm-research/SKILL.md)
 - **Inputs:** `invokerMissionSlug: quick-fix`, `operationsDocsDirectory` from lane identity, optional seeds from §1.
-- **Next-step resolution:** Terminal **`developerApprovedReport: true`** → derive `changeList` bullets from report §5 Handoff summary, set `intakeMode: provide-list`, `complexityConfirmed` / `scopeConfirmed` after developer attestation in §3 spawn **`initiatingPrompt`** → **auto-chain §3**. **`abandonMission: true`** → **`MC_DISPATCH_RESOLVED_V1`** **`abandoned`**.
+- **Next-step resolution:** Terminal **`developerApprovedReport: true`** → derive `changeList` bullets from report §5 Handoff summary, set `intakeMode: provide-list`, `complexityConfirmed` / `scopeConfirmed` after developer attestation in §3 spawn **`initiatingPrompt`** → **auto-chain §3**. **`abandonMission: true`** → call MCP **`mission_control_propose_dispatch_resolution`** with status **`abandoned`**.
 
 **Procedure:** Emit spawn with **`warmUpRules`** including **`quick-fix/plan.mdc`**; **#external-wait**; on approve spawn §3 without repeat §2 gates.
 
@@ -195,7 +195,7 @@ USER_CHECKPOINT — pick next step when Quick Fix Plan child reports failure or 
 5. At **`pr-plan`** §5c/§5d — spawn **`coding-session`** with planning handoff `inputs` (`readyForImplementation`, `targetPlanPath`, `upstreamSkill: pr-plan`, etc.) per **`pr-plan/SKILL.md`**.
 6. Emit child terminal **`mission_control_send_agent_result`** with plan paths and handoff status.
 
-**Forbidden on this lane:** **`master-planner`**, **`pr-breakdown`**, **`delivery-phases`**, **`phase-planner`**, second PR row, Squad Leader **`MC_DISPATCH_RESOLVED_V1`**.
+**Forbidden on this lane:** **`master-planner`**, **`pr-breakdown`**, **`delivery-phases`**, **`phase-planner`**, second PR row, Squad Leader **`mission_control_propose_dispatch_resolution`**.
 
 ### 5. Coding session (detached)
 
@@ -225,7 +225,7 @@ The Squad Leader **does not** spawn **`coding-session`** from §§1–3. The **Q
 
 Same automation contract as plan-and-deliver §8 (*Mission Control host sync*) when the host registers mission slug **`quick-fix`**. **Forbidden:** manual Ship recap paste on the leader lane.
 
-**Pre-resolution checklist:** Before **`MC_DISPATCH_RESOLVED_V1`**, re-scan ship rows — do not propose **`resolved`** while `open`/`blocked` rows lack host-sync this session unless developer chose planning-only close via USER_CHECKPOINT gate.
+**Pre-resolution checklist:** Before **`mission_control_propose_dispatch_resolution`**, re-scan ship rows — do not propose **`resolved`** while `open`/`blocked` rows lack host-sync this session unless developer chose planning-only close via USER_CHECKPOINT gate.
 
 ### 8. Dispatch resolution (Squad Leader)
 
@@ -233,7 +233,7 @@ USER_CHECKPOINT — approve dispatch resolution when planning and ship gates all
 
 - **Type:** Finish/stop logic
 - **Intent:** Close dispatch when objectives met or user signals wrap-up.
-- **Expected output:** `MC_DISPATCH_RESOLVED_V1` with `status` and `summary`.
+- **Expected output:** `mission_control_propose_dispatch_resolution` with `status` and `summary`.
 
 Per [`.sedea/centers/sedea/rules/4_mission.mdc`](.sedea/centers/sedea/rules/4_mission.mdc) § **Dispatch resolution**. Use **`resolved`** when planning and ship complete; **`partial`** when PR open or follow-up remains.
 

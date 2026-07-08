@@ -695,6 +695,6 @@ Stop after the MCP result call. Do not emit another child spawn for **`delivery-
 
 ## Completion (inline)
 
-Report the fields below in prose to the invoker on the **same lane**. Do **not** emit terminal **`mission_control_send_agent_result`** or call **`mission_control_send_agent_result`** for **`phase-planner`** inline completion. Do **not** emit `MC_DISPATCH_RESOLVED_V1`. Do **not** add a **MCP result** under this section (see **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Inline completion* and **`.sedea/centers/sedea/skills/README.md`** § *Completion (inline)*). **Exception:** nested **`phase-planner`** or **`coding-session`** spawns from inline decomposition on this lane use [Agent messaging (MCP)](#agent-messaging-mcp).
+Report the fields below in prose to the invoker on the **same lane**. Do **not** emit terminal **`mission_control_send_agent_result`** or call **`mission_control_send_agent_result`** for **`phase-planner`** inline completion. Do **not** emit `mission_control_propose_dispatch_resolution`. Do **not** add a **MCP result** under this section (see **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Inline completion* and **`.sedea/centers/sedea/skills/README.md`** § *Completion (inline)*). **Exception:** nested **`phase-planner`** or **`coding-session`** spawns from inline decomposition on this lane use [Agent messaging (MCP)](#agent-messaging-mcp).
 
 **Primary path:** **`new-plan`** spawns this skill on a child lane. If another invoker runs inline, use the same `outputs` semantics as **`## Completion (spawned)`** in prose only.

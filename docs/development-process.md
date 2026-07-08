@@ -190,7 +190,7 @@ Every R&D delivery mission (**`plan-and-deliver`**, **`single-phase`**, **`quick
 | Developer choice | Squad Leader action |
 | --- | --- |
 | **Approve report** | Map `outputs.downstreamHandoffSummary` (+ report `@path`) into downstream spawn **`inputs`**; **auto-chain** next agent without repeat intake USER_CHECKPOINT |
-| **Abandon dispatch** | Propose **`MC_DISPATCH_RESOLVED_V1`** **`abandoned`** — direction not viable |
+| **Abandon dispatch** | Propose **`mission_control_propose_dispatch_resolution`** **`abandoned`** — direction not viable |
 
 **Downstream auto-chain by invoker**
 
@@ -575,7 +575,7 @@ Sections 1, 2, 3, 4, 6, 7, and 8 (when present) flow into the PR description tha
 |----------|------------|
 | Protocol branch names, templates, and the **hosting repo development loop** | This document — **Development tools** § *Protocol branches* and **Cadence** below |
 | Happy-path **skill order** (planning → ship) | **Cadence reference** diagram (matches **`plan-and-deliver/plan.mdc`** *Cadence reference*) |
-| **Mission Control `plan and deliver` dispatch** — who spawns whom, §§1–8 protocol, §8 ship ledger, `MC_DISPATCH_RESOLVED_V1` gates | **`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`** — *Squad operations* and §8 (not duplicated here) |
+| **Mission Control `plan and deliver` dispatch** — who spawns whom, §§1–8 protocol, §8 ship ledger, `mission_control_propose_dispatch_resolution` gates | **`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`** — *Squad operations* and §8 (not duplicated here) |
 
 The large loop diagram below includes planning, **ship chain**, feedback, and plan updates. It is **not** the Squad Leader spawn map. Detached ship lanes, Mission Control §8 host sync, and leader-lane recap: **`plan.mdc`** §8 (*Mission Control host sync*, *Leader-lane ship recap*) and **Loop stages** § *Leader-lane ship recap* below.
 
@@ -840,7 +840,7 @@ Full checklist and *Pre-resolution checklist* live in **`.sedea/centers/research
 
 **Host sync scope:** ship skills per the **hosting repo** ship-ledger contract documented in **`.cursor/rules/dot-sedea.mdc`** (or equivalent host overlay) and **`center.yaml`** `governance.hostSync`. Inline milestones on **`coding-session`** use **`coding-session`** re-emits. Implementation lives in the **hosting repo Mission Control host integration** — not in this center submodule.
 
-- **Dispatch closure gate:** On the **plan and deliver** leader lane, do **not** propose **`MC_DISPATCH_RESOLVED_V1`** with **`resolved`** while any §8 ship row is **`open`** or **`blocked`** unless a **host-sync** update for that row was parsed this session, or the developer explicitly chose **planning-only** dispatch closure via **AskQuestion** (see **`plan.mdc`** §8 *Pre-resolution checklist*).
+- **Dispatch closure gate:** On the **plan and deliver** leader lane, do **not** call MCP **`mission_control_propose_dispatch_resolution`** with **`resolved`** while any §8 ship row is **`open`** or **`blocked`** unless a **host-sync** update for that row was parsed this session, or the developer explicitly chose **planning-only** dispatch closure via **AskQuestion** (see **`plan.mdc`** §8 *Pre-resolution checklist*).
 
 #### Feedback Collection
 

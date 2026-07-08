@@ -13,7 +13,7 @@ description: >-
  plan-board prompt, or says "master-planner" / "draft a master plan".
 designation:
   allowed: Master Plan authoring; inline pr-breakdown, new-plan, pr-plan on planning lane
-  forbidden: Application implementation; worktree ship; MC_DISPATCH_RESOLVED_V1 on child
+  forbidden: Application implementation; worktree ship; mission_control_propose_dispatch_resolution on child
 inputs:
   seedBlock:
     type: string
@@ -754,7 +754,7 @@ Draft **`## 7. Caveats (optional)`** inline from PRD + §§1–5 (+ §6 when alr
 **Forbidden on the master-master-planner lane (binding):**
 
 - **Same turn:** §7 approval modal **and** **`mission_control_send_agent_result`** with **`continuationStatus: terminal`**.
-- **Same turn:** §7 approval modal **and** **`MC_DISPATCH_RESOLVED_V1`** — only the **Squad Leader** closes the dispatch.
+- **Same turn:** §7 approval modal **and** **`mission_control_propose_dispatch_resolution`** — only the **Squad Leader** closes the dispatch.
 - **`continuationStatus: terminal`** while **`caveatsApprovalStatus: pending`**.
 - **`remainingTasks: []`** while **`caveatsApprovalStatus: pending`**.
 
@@ -850,6 +850,6 @@ Stop after the MCP result call. Do not emit another `mission_control_spawn_agent
 
 ## Completion (inline)
 
-Report the fields below in prose to the invoker on the **same lane**. Do **not** emit `mission_control_spawn_agent`, `mission_control_send_agent_result`, or `MC_DISPATCH_RESOLVED_V1`. Do **not** add a **MCP result** under this section (see **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Inline completion* and **`.sedea/centers/sedea/skills/README.md`** § *Completion (inline)*).
+Report the fields below in prose to the invoker on the **same lane**. Do **not** emit `mission_control_spawn_agent`, `mission_control_send_agent_result`, or `mission_control_propose_dispatch_resolution`. Do **not** add a **MCP result** under this section (see **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Inline completion* and **`.sedea/centers/sedea/skills/README.md`** § *Completion (inline)*).
 
 **plan and deliver** runs this skill **spawned only** (Squad Leader §5). If another invoker runs inline, use the same `outputs` semantics as **`## Completion (spawned)`** in prose only.

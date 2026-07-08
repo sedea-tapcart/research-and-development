@@ -385,7 +385,7 @@ Truncate semantic title only when the full string exceeds rule **9** max **`titl
 After emitting **`mission_control_send_agent_result`**, **stop on that lane** for the current skill turn:
 
 1. Do **not** emit another **`mission_control_spawn_agent`** unless a later user message on the same lane explicitly continues the skill (then call **`mission_control_send_agent_result`** again with updated **`outputs`** for the same spawn session).
-2. Do **not** emit **`MC_DISPATCH_RESOLVED_V1`** — only the **plan and deliver** Squad Leader closes the dispatch.
+2. Do **not** call MCP **`mission_control_propose_dispatch_resolution`** — only the **plan and deliver** Squad Leader closes the dispatch.
 3. Do **not** run the next protocol step in the same turn after **`mission_control_send_agent_result`** (including “wait for child” announcements — the stop applies **after** the MCP result is sent).
 
 **Canonical closing sentence** (optional in skill prose; meaning is required either way):

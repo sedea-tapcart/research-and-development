@@ -246,7 +246,7 @@ Stop after each **`mission_control_send_agent_result`** for the current turn (se
 
 ## Completion (inline)
 
-Report the fields below in prose to the invoker on the **same lane**. Do **not** emit `mission_control_spawn_agent`, `mission_control_send_agent_result`, or `MC_DISPATCH_RESOLVED_V1`. Do **not** add a **MCP result** under this section (see **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Inline completion* and **`.sedea/centers/sedea/skills/README.md`** § *Completion (inline)*).
+Report the fields below in prose to the invoker on the **same lane**. Do **not** emit `mission_control_spawn_agent`, `mission_control_send_agent_result`, or `mission_control_propose_dispatch_resolution`. Do **not** add a **MCP result** under this section (see **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Inline completion* and **`.sedea/centers/sedea/skills/README.md`** § *Completion (inline)*).
 
 **Normative invokers:** **`single-phase`** §3 and **`debug-and-fix`** §5c run this skill **spawned only**. **`plan and deliver`** uses **`author-prd`** §3 instead — not this skill. If another invoker runs inline, use the same `outputs` semantics as **`## Completion (spawned)`** in prose only.
 

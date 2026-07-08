@@ -114,7 +114,7 @@ Run **`../plan-and-deliver/skills/README.md`** § *Universal spawn preflight* be
 2. Execute **`quick-fix/plan.mdc`** §4 procedure (minimal parent → inline **`new-plan`** → inline **`pr-plan`** → **`coding-session`** §5d spawn).
 3. Emit child terminal **`mission_control_send_agent_result`** per **`## Completion (spawned)`** below.
 
-**Forbidden:** second PR row; **`master-planner`** / **`pr-breakdown`** / **`delivery-phases`** / **`phase-planner`**; Squad Leader **`MC_DISPATCH_RESOLVED_V1`** on this lane.
+**Forbidden:** second PR row; **`master-planner`** / **`pr-breakdown`** / **`delivery-phases`** / **`phase-planner`**; Squad Leader **`mission_control_propose_dispatch_resolution`** on this lane.
 
 ## Completion (spawned)
 

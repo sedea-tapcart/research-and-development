@@ -144,7 +144,7 @@ USER_CHECKPOINT — pick intake mode or confirm ad-hoc scope intake before spawn
 - **Trigger:** Developer selects **`brainstorm-first`** at §2 step 0.
 - **Assigned skill:** [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/brainstorm-research/SKILL.md`](../plan-and-deliver/skills/brainstorm-research/SKILL.md)
 - **Inputs:** `invokerMissionSlug: single-phase`, `operationsDocsDirectory` from lane identity, optional seeds from §1.
-- **Next-step resolution:** Terminal **`developerApprovedReport: true`** → set `details` from `outputs.downstreamHandoffSummary`, optional `title` from `outputs.reportTitle`, `sourceSummary` referencing report path → **auto-chain §3**. **`abandonMission: true`** → **`MC_DISPATCH_RESOLVED_V1`** **`abandoned`**.
+- **Next-step resolution:** Terminal **`developerApprovedReport: true`** → set `details` from `outputs.downstreamHandoffSummary`, optional `title` from `outputs.reportTitle`, `sourceSummary` referencing report path → **auto-chain §3**. **`abandonMission: true`** → call MCP **`mission_control_propose_dispatch_resolution`** with status **`abandoned`**.
 
 **Procedure:** Emit spawn, **#external-wait**, on approve compile §3 **`ad-hoc-prd`** **`inputs`** and spawn without repeat §2 USER_CHECKPOINT.
 
@@ -233,7 +233,7 @@ Same ledger rules as plan-and-deliver §7, except **no phase-planner rows** and 
 ### 8. Ship cadence ledger and dispatch resolution
 
 - **Type:** Finish/stop logic
-- **Intent:** Track detached **`coding-session`** ship progress; gate **`MC_DISPATCH_RESOLVED_V1`**.
+- **Intent:** Track detached **`coding-session`** ship progress; gate **`mission_control_propose_dispatch_resolution`**.
 - **Inputs:** Host-sync ship ledger messages; planning handoff signals.
 
 **Detached branches** — identical skill order to plan-and-deliver §8 detached table: **`coding-session`** → before deploy **`deploy-walk`** → **`pre-pr-review`** spawn → **`create-pr`** → **`pr-review`** → post-merge cleanup → after deploy **`deploy-walk`** → explicit **`plan-reconcile`**. **Detached** means off the **Squad Leader** §§1–7 protocol — **`coding-session`** is still spawned from the **Master Plan child lane** via inline **`pr-plan`** §5d per **`planner/SKILL.md`** Step **7c** and *Resume / PR-expand handoff*.
@@ -242,7 +242,7 @@ Same ledger rules as plan-and-deliver §7, except **no phase-planner rows** and 
 
 USER_CHECKPOINT — approve dispatch resolution when planning and ship gates allow.
 
-**Dispatch resolution:** Squad Leader proposes **`MC_DISPATCH_RESOLVED_V1`** when planning complete and ship rows closed (or planning-only close per plan-and-deliver §8 gates).
+**Dispatch resolution:** Squad Leader proposes **`mission_control_propose_dispatch_resolution`** when planning complete and ship rows closed (or planning-only close per plan-and-deliver §8 gates).
 
 ## Related assets
 

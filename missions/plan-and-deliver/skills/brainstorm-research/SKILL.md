@@ -196,4 +196,4 @@ Stop after the MCP result call (see **`../README.md`** § *Terminal stop (normat
 ## Out of scope
 
 - Does **not** create PRDs, plans, or PR plan sidecars — downstream skills own those artifacts.
-- Does **not** emit **`MC_DISPATCH_RESOLVED_V1`** — Squad Leader proposes **`abandoned`** when `abandonMission: true`.
+- Does **not** call MCP **`mission_control_propose_dispatch_resolution`** — Squad Leader proposes **`abandoned`** when `abandonMission: true`.

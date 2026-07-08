@@ -105,8 +105,8 @@ This diagram is the **dispatch ownership map**. It answers: which agent on this 
 |------|------|--------|----------|
 | **Squad Leader** | Mission dispatch leader | `author-prd` (§3), `master-planner` (§5) | PRD approval on **Author PRD** child lane; route menu for §6 decomposition on **master-planner** child only; `delivery-phases`, `coding-session`, etc. |
 | **Master Plan agent** | Child lane after §5 | **`delivery-phases`**, **`pr-breakdown`** inline via **AskQuestion** + skill load on the **master plan**; drafts §7 inline; ack-only while a **phase-planner** child owns a phase row | Replace Squad Leader ledger; resolve dispatch; phase-scoped decomposition on this lane while **phase-planner** is active |
-| **Phase plan agent** | Child lane after inline **`new-plan`** | Owns **phase delivery** on its lane: route approval, inline **`delivery-phases`** / **`pr-breakdown`**, **`pr-plan`**, nested **`phase-planner`**, **`coding-session`** until **`phaseShipComplete`** or explicit defer/abandon | **`MC_DISPATCH_RESOLVED_V1`**; Master Plan §6 menus for the same phase while this lane is active |
-| **Downstream skill agents** | Further child lanes | **`phase-planner`** spawn from inline **`new-plan`** on planner; nested **`phase-planner`** from phase inline tree; **`coding-session`** → `pre-pr-review` | `MC_DISPATCH_RESOLVED_V1` |
+| **Phase plan agent** | Child lane after inline **`new-plan`** | Owns **phase delivery** on its lane: route approval, inline **`delivery-phases`** / **`pr-breakdown`**, **`pr-plan`**, nested **`phase-planner`**, **`coding-session`** until **`phaseShipComplete`** or explicit defer/abandon | **`mission_control_propose_dispatch_resolution`**; Master Plan §6 menus for the same phase while this lane is active |
+| **Downstream skill agents** | Further child lanes | **`phase-planner`** spawn from inline **`new-plan`** on planner; nested **`phase-planner`** from phase inline tree; **`coding-session`** → `pre-pr-review` | `mission_control_propose_dispatch_resolution` |
 | **Detached branches** | Often separate session / phrase | Invoked via `development-process.md` protocol branch names | Automatic Squad Leader spawn from §§1–5 |
 
 **Host rules:** each `mission_control_spawn_agent` opens a child lane; parent waits for `mission_control_send_agent_result` when the skill says so. Squad Leader **§7** tracks planning `activeLanes`, `openLedgerEntries`, `spawnedPlans`, `remainingTasks`; **§8** tracks ship rows per PR plan — it does not re-run detached child skills from the leader lane.
@@ -133,7 +133,7 @@ flowchart TB
     S5W --> S6["§6 Acknowledge — no route menu"]:::leader
     S6 --> S7["§7 Closure ledger"]:::leader
     S7 --> S8["§8 Ship ledger + resolution gates"]:::leader
-    S8 --> RES["MC_DISPATCH_RESOLVED_V1"]:::leader
+    S8 --> RES["mission_control_propose_dispatch_resolution"]:::leader
   end
 
   subgraph mpLane["Child lane — planner (Master Plan agent)"]
@@ -386,7 +386,7 @@ Do **not** invent PRD content from a URL alone.
 - **Expected output:** Child terminal with `outputs.brainstormReportPath`, `outputs.developerApprovedReport`, `outputs.downstreamHandoffSummary`, or `outputs.abandonMission: true`.
 - **Next-step resolution:**
   - `developerApprovedReport: true` + `continuationStatus: terminal` → set `operation: create`, `prdTitle` from `outputs.reportTitle`, `prdDescription` from `outputs.downstreamHandoffSummary`, `sourceMaterials: [{ path: outputs.brainstormReportRef }]`, then **auto-chain §3** on the same leader turn (no repeat §2 USER_CHECKPOINT).
-  - `abandonMission: true` → propose **`MC_DISPATCH_RESOLVED_V1`** with status **`abandoned`**.
+  - `abandonMission: true` → call MCP **`mission_control_propose_dispatch_resolution`** with status **`abandoned`**.
   - Otherwise → USER_CHECKPOINT gate below.
 
 USER_CHECKPOINT — pick next step when brainstorm child reports failure or partial.
@@ -560,9 +560,9 @@ When an explicit developer override applies, replace the **`Parent:`** line with
 ### 8. Ship cadence ledger and dispatch resolution gates
 
 - **Type:** Finish/stop logic
-- **Intent:** Close the gap between **objectives** (implementation → PR → deploy → reconcile) and **Squad Leader** protocol. The Squad Leader **tracks** detached ship work and **gates** `MC_DISPATCH_RESOLVED_V1`; it does **not** spawn ship skills from this section.
+- **Intent:** Close the gap between **objectives** (implementation → PR → deploy → reconcile) and **Squad Leader** protocol. The Squad Leader **tracks** detached ship work and **gates** `mission_control_propose_dispatch_resolution`; it does **not** spawn ship skills from this section.
 - **Inputs:** Planning ledger state from §7; developer messages on the leader lane; **`coding-session`** child `outputs` (especially `developerApprovedImplementation`, `targetPlanPath` after the worktree-open gate); explicit developer status when ship runs on other lanes.
-- **Expected output:** Updated **ship ledger** per PR plan; status acknowledgement; **`MC_DISPATCH_RESOLVED_V1`** only when gates below allow.
+- **Expected output:** Updated **ship ledger** per PR plan; status acknowledgement; **`mission_control_propose_dispatch_resolution`** only when gates below allow.
 - **Next-step resolution:**
   - No ship row yet, planning complete → USER_CHECKPOINT — close dispatch planning-only vs keep ship active on detached lanes.
   - Ship row open → keep dispatch **active** (auto-advance ack); acknowledge phase updates; do **not** propose **`resolved`**.
@@ -704,7 +704,7 @@ When Mission Control hosts a **`plan and deliver`** dispatch, the extension **mu
 
 **Limits**
 
-- Host sync **does not** replace child **`mission_control_send_agent_result`** delivery to parent lanes, domain **`continuationStatus`** fields, or *Pre-resolution checklist* / **`MC_DISPATCH_RESOLVED_V1`** gates.
+- Host sync **does not** replace child **`mission_control_send_agent_result`** delivery to parent lanes, domain **`continuationStatus`** fields, or *Pre-resolution checklist* / **`mission_control_propose_dispatch_resolution`** gates.
 - If **`outputs.targetPlanPath`** or derivable **`shipPhase`** is missing, the host **skips** ledger sync for that result — treat as a **skill contract failure**.
 - **`pr-review`** is **not** a separate child terminal — **`coding-session`** **must** re-emit with `shipPhase: pr-review` after inline triage. See [`.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`](../../rules/30_planning-target-resolution.mdc) § *§8 ship ledger and inline `pr-review`*.
 - Leader-tab UI may lag **`ship-ledger.v1.json`** briefly; prefer the host-sync message and dispatch-bundle file over UI-only state.
@@ -765,11 +765,11 @@ Do **not** treat silence on detached lanes as ship complete.
 
 **Pre-resolution checklist (mandatory on leader lane)**
 
-Before emitting **`MC_DISPATCH_RESOLVED_V1`** when the developer signals dispatch done (*done*, *wrap up*, *close*, or equivalent per **`.sedea/centers/sedea/rules/4_mission.mdc`** § *User-initiated dispatch closure signals*):
+Before calling MCP **`mission_control_propose_dispatch_resolution`** when the developer signals dispatch done (*done*, *wrap up*, *close*, or equivalent per **`.sedea/centers/sedea/rules/4_mission.mdc`** § *User-initiated dispatch closure signals*):
 
 1. **Re-scan §8 ship rows** — list every row with `rowStatus: open` or `blocked`, or with `phase` not paired with `rowStatus: closed` and `phase: done`.
 2. **If any such row exists** and this session has **not** received a **host-sync** update (`Mission Control: ship-ledger sync (section 8).`) for that row **and** the developer has **not** already chosen **planning-only** closure via USER_CHECKPOINT in this dispatch:
-   - **Do not** emit **`MC_DISPATCH_RESOLVED_V1`** with **`resolved`** in that turn.
+   - **Do not** call MCP **`mission_control_propose_dispatch_resolution`** with **`resolved`** in that turn.
    - Open structured choice once (**#external-wait**):
      - **Wait for ship sync** (child lane must re-emit terminal with §8 `outputs`)
      - **Planning-only close** (no ship tracking; close dispatch without ship rows)
@@ -799,4 +799,4 @@ Before emitting **`MC_DISPATCH_RESOLVED_V1`** when the developer signals dispatc
 2. On each leader-lane turn that touches ship, update rows from **host-sync** messages and **`ship-ledger.v1.json`** before other protocol work.
 3. When host sync is missing for an `open` row, run *Pre-resolution checklist* **AskQuestion** before proposing dispatch resolution.
 4. When the developer signals done on **this dispatch**, run *Pre-resolution checklist* then re-check all rows against the gates table; choose `resolved` / `partial` / `abandoned` accordingly.
-5. Put the recap in `MC_DISPATCH_RESOLVED_V1` **`summary`**; list open PR plans or deferred ship work when status is **`partial`**.
+5. Put the recap in the MCP **`summary`** argument; list open PR plans or deferred ship work when status is **`partial`**.
