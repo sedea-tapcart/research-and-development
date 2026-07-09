@@ -364,6 +364,30 @@ Full table: rule **4** § *Host-resolved identity*.
 
 Child terminal: use § *MCP result preflight* in the spawned skill’s **`## Completion (spawned)`** — call **`mission_control_send_agent_result`** at terminal (host resolves **`correlationId`**; omit host-resolved identity keys from MCP args).
 
+### MCP notify preflight (`mission_control_notify_child_lanes`)
+
+Parent planner skills (**`master-planner`**, **`phase-planner`**, **`pr-breakdown`**) call **`mission_control_notify_child_lanes`** after **material** plan edits that affect named **non-terminal** open children. Normative protocol: **`.sedea/centers/sedea/rules/4_mission.mdc`** § *MCP notify protocol*. Per-skill **emit-when** tables live in each skill § *Plan-change notify — emit-when*.
+
+| Step | Check |
+|------|--------|
+| N1 | Caller authority — this skill may notify descendant slugs only (rule **4** § *MCP notify protocol* caller table); **`coding-session`** and leaf skills **forbidden** |
+| N2 | Required args present: **`summary`**, **`changeType`**, **`affectedPlanPaths`** (non-empty), **`targetSlugs`** (exactly one slug) |
+| N3 | **Forbidden args absent** — no host-resolved identity keys (§ *Host-resolved identity* above), no **`notifyAllDescendants`** |
+| N4 | **`targetSlugs`** contains exactly **one** dispatch-unique **non-terminal** child slug per MCP call (v1) |
+| N5 | **`affectedPlanPaths`** lists every operations plan path that grounds the change |
+| N6 | Multiple children → **separate MCP calls** — one slug per call; **forbidden** empty or speculative **`targetSlugs`** |
+| N7 | Enumerate only **non-terminal** children whose ongoing work is affected — omit terminal lanes before calling |
+| N8 | New work → **`mission_control_spawn_agent`** — never use notify **`changeType`** as a spawn workaround |
+
+**Spawn vs notify (binding):**
+
+| Mechanism | When | Tool |
+|-----------|------|------|
+| **Spawn** | New child lane / new skill session / first-time row expansion | **`mission_control_spawn_agent`** |
+| **Notify** | Material plan edit affects **existing** named non-terminal child; handoff + re-read context only | **`mission_control_notify_child_lanes`** |
+
+Notify does **not** replace child terminal **`mission_control_send_agent_result`** merge on parent lanes (see **`phase-planner`** Step **5e**, **`pr-breakdown`** Step **6b**). Feature flag **`sedea.features.plan-change-notification`** must be on for host delivery (default off until dogfood PR 4).
+
 ### Lane title prefix (spawn `name`)
 
 Before MCP row **M8**, set spawn **`name`** (and child lane **`title`** on refresh) to **`{prefix}-{semantic title}`** per [`.sedea/centers/research-and-development/rules/50_mission-control-display-metadata-discipline.mdc`](../../../../rules/50_mission-control-display-metadata-discipline.mdc) § *Lane title prefix conventions*:

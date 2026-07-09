@@ -93,18 +93,44 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 
 ## Agent messaging (MCP)
 
-**MCP spawn/result skill.** Parent→child spawn and child terminal result use MCP tools per **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Agent-to-agent spawn protocol*.
+**MCP spawn/result/notify skill.** Parent→child spawn, plan-change notify, and child terminal result use MCP tools per **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Agent-to-agent spawn protocol*.
 
 | Action | MCP tool |
 |--------|----------|
 | Parent spawn (when this skill emits a child lane) | **`mission_control_spawn_agent`** |
+| Parent plan-change notify (named non-terminal children) | **`mission_control_notify_child_lanes`** |
 | **This** spawned lane terminal (and terminal re-emits) | **`mission_control_send_agent_result`** |
 
 **Binding:**
 
 - Run **`../README.md`** § *MCP spawn preflight* (rows M1–M8) before every MCP spawn; **forbidden** host-resolved identity keys in MCP args (`correlationId`, `dispatchId`, `slotId`, … — see README § *Host-resolved identity*).
+- Run **`../README.md`** § *MCP notify preflight* (rows N1–N8) before every **`mission_control_notify_child_lanes`** call — cross-ref **`.sedea/centers/sedea/rules/4_mission.mdc`** § *MCP notify protocol*.
 - Inline skills on this mission stay **inline-only** — no spawn wire change unless the protocol step explicitly spawns a child lane.
 
+### Plan-change notify — emit-when (`mission_control_notify_child_lanes`)
+
+After a **material** Master Plan edit that affects **ongoing work** on named **non-terminal** child lanes, notify each affected child with a **separate** MCP call (one slug per call, v1). Normative protocol: **`.sedea/centers/sedea/rules/4_mission.mdc`** § *MCP notify protocol*.
+
+| Emit when | Target child slugs (examples) | Do not notify |
+|-----------|------------------------------|---------------|
+| Material edit to §§1–7, **`### Delivery phases`** rows, or §6 decomposition scope changes **`affectedPlanPaths`** for open children | **`phase-planner`** children on active Delivery phases rows; nested **`pr-breakdown`** / **`new-plan`** / **`coding-session`** lanes listed in **`activeLanes`** with non-terminal **`continuationStatus`** | Terminal lanes (`continuationStatus: terminal`, completed without active continuation); empty or speculative **`targetSlugs`**; broadcast fan-out |
+
+**Material edit** includes: scope/sequencing changes on **`Delivery phases`** or PR breakdown blocks, §4–§5 architectural or Changes bullets that alter child plan paths, and ledger updates that change what a named open child should implement — not typo-only or §7 Caveats-only edits with no child impact.
+
+**Forbidden:** empty or speculative **`targetSlugs`**; notify terminal children; implicit fan-out or **`notifyAllDescendants`**; using notify instead of **`mission_control_spawn_agent`** for new work.
+
+### MCP notify preflight (`mission_control_notify_child_lanes`)
+
+| Step | Check |
+|------|--------|
+| N1 | Caller authority — **`master-planner`** may notify descendant slugs only (rule **4** § *MCP notify protocol* caller table) |
+| N2 | Required args present: **`summary`**, **`changeType`**, **`affectedPlanPaths`** (non-empty), **`targetSlugs`** (exactly one slug) |
+| N3 | **Forbidden args absent** — no host-resolved identity keys, no **`notifyAllDescendants`** |
+| N4 | **`targetSlugs`** contains exactly **one** dispatch-unique **non-terminal** child slug per call |
+| N5 | **`affectedPlanPaths`** lists every operations plan path that grounds the change (Master Plan + affected child plans when applicable) |
+| N6 | Multiple children → **separate MCP calls** (one slug per call, v1) |
+| N7 | Enumerate targets from **`activeLanes`** / registry — omit terminal lanes before calling |
+| N8 | New lanes or new work → **`mission_control_spawn_agent`** — never notify as a spawn workaround |
 
 ## Refresh lane display (when stale)
 

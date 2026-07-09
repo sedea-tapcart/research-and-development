@@ -98,18 +98,42 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 
 ## Agent messaging (MCP)
 
-**MCP spawn/result skill.** Parent→child spawn and child terminal result use MCP tools per **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Agent-to-agent spawn protocol*.
+**MCP spawn/result/notify skill.** Parent→child spawn, plan-change notify, and child terminal result use MCP tools per **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Agent-to-agent spawn protocol*.
 
 | Action | MCP tool |
 |--------|----------|
 | Parent spawn (when this skill emits a child lane) | **`mission_control_spawn_agent`** |
+| Parent plan-change notify (named non-terminal PR row owners) | **`mission_control_notify_child_lanes`** |
 | **This** spawned lane terminal (and terminal re-emits) | **`mission_control_send_agent_result`** |
 
 **Binding:**
 
 - Run **`../README.md`** § *MCP spawn preflight* (rows M1–M8) before every MCP spawn; **forbidden** host-resolved identity keys in MCP args (`correlationId`, `dispatchId`, `slotId`, … — see README § *Host-resolved identity*).
+- Run **`../README.md`** § *MCP notify preflight* (rows N1–N8) before every **`mission_control_notify_child_lanes`** call — cross-ref **`.sedea/centers/sedea/rules/4_mission.mdc`** § *MCP notify protocol*.
 - Inline skills on this mission stay **inline-only** — no spawn wire change unless the protocol step explicitly spawns a child lane.
 
+### Plan-change notify — emit-when (`mission_control_notify_child_lanes`)
+
+After a **material** decomposition or **`### PR list`** change on the target plan that affects **ongoing work** on named **non-terminal** child row owners, notify each affected owner with a **separate** MCP call (one slug per call, v1). Apply in **depth-first expand** context — notify open row owners when the list, sequencing, or per-row scope changes. Normative protocol: **`.sedea/centers/sedea/rules/4_mission.mdc`** § *MCP notify protocol*.
+
+| Emit when | Target child slugs (examples) | Do not notify |
+|-----------|------------------------------|---------------|
+| PR list edit, **`### Sequencing`** change, or per-row scope change affects open row owners | **`new-plan`** / **`coding-session`** child lanes for affected **`### PR list`** indices in **`activeLanes`** / **`childRows`** with non-terminal status | Terminal rows; indices not yet expanded; empty or speculative **`targetSlugs`** |
+
+**Forbidden:** empty or speculative **`targetSlugs`**; notify terminal children; broadcast fan-out; using notify instead of **`mission_control_spawn_agent`** for first-time row expansion.
+
+### MCP notify preflight (`mission_control_notify_child_lanes`)
+
+| Step | Check |
+|------|--------|
+| N1 | Caller authority — **`pr-breakdown`** may notify descendant slugs for affected PR row owners only |
+| N2 | Required args present: **`summary`**, **`changeType`**, **`affectedPlanPaths`** (non-empty), **`targetSlugs`** (exactly one slug) |
+| N3 | **Forbidden args absent** — no host-resolved identity keys, no **`notifyAllDescendants`** |
+| N4 | **`targetSlugs`** contains exactly **one** dispatch-unique **non-terminal** child slug per call |
+| N5 | **`affectedPlanPaths`** includes the parent plan and affected child PR plans for the row |
+| N6 | Multiple row owners → **separate MCP calls** (one slug per call, v1) |
+| N7 | Omit terminal / ship-complete rows from **`targetSlugs`** before calling |
+| N8 | New PR row expansion → **`mission_control_spawn_agent`** (inline **`new-plan`** or spawn) — never notify as a spawn workaround |
 
 ## Trigger
 

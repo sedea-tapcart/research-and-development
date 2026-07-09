@@ -97,18 +97,45 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 
 ## Agent messaging (MCP)
 
-**MCP spawn/result skill.** Parent→child spawn and child terminal result use MCP tools per **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Agent-to-agent spawn protocol*; operator checklists: **`../README.md`** § *MCP spawn preflight*.
+**MCP spawn/result/notify skill.** Parent→child spawn, plan-change notify, and child terminal result use MCP tools per **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Agent-to-agent spawn protocol*; operator checklists: **`../README.md`** § *MCP spawn preflight* and § *MCP notify preflight*.
 
 | Action | MCP tool |
 |--------|----------|
 | Spawn **`coding-session`**, nested **`phase-planner`**, or fire-and-forget **`hosting-repo-rules`** | **`mission_control_spawn_agent`** |
+| Parent plan-change notify (named non-terminal children on this phase subtree) | **`mission_control_notify_child_lanes`** |
 | **This** spawned lane terminal (and terminal re-emits) | **`mission_control_send_agent_result`** |
 
 **Binding:**
 
 - Run **`../README.md`** § *MCP spawn preflight* (rows M1–M8) before every MCP spawn; **forbidden** host-resolved identity keys in MCP args (`correlationId`, `dispatchId`, `slotId`, … — see README § *Host-resolved identity*).
+- Run **`../README.md`** § *MCP notify preflight* (rows N1–N8) before every **`mission_control_notify_child_lanes`** call — cross-ref **`.sedea/centers/sedea/rules/4_mission.mdc`** § *MCP notify protocol*.
 - **`laneRules`:** rely on this skill's frontmatter **`laneRules`**; MCP spawn schema omits **`laneRules`** on the wire (Phase 1 stub).
 - Inline skills (**`delivery-phases`**, **`pr-breakdown`**, inline **`pr-plan`**, inline **`new-plan`**) stay **inline-only** — no spawn wire change.
+
+### Plan-change notify — emit-when (`mission_control_notify_child_lanes`)
+
+After a **material** phase plan edit on **this phase subtree** that affects **ongoing work** on named **non-terminal** child lanes, notify each affected child with a **separate** MCP call (one slug per call, v1). Normative protocol: **`.sedea/centers/sedea/rules/4_mission.mdc`** § *MCP notify protocol*.
+
+| Emit when | Target child slugs (examples) | Step **5e** alignment |
+|-----------|------------------------------|------------------------|
+| Material edit to phase plan §§1–4, **`### PR list`**, or decomposition scope on this file changes work for open children | Open **`coding-session`** spawns from this phase; nested **`phase-planner`** children on this subtree; inline **`new-plan`** / **`pr-plan`** row owners when **`activeLanes`** shows non-terminal work | Notify **does not replace** Step **5e** child terminal merge — still aggregate **`mission_control_send_agent_result`** deliveries; notify is handoff only |
+
+**Material edit** includes: PR list row scope/sequencing changes, §3 Changes bullets that alter a child PR plan path, and assessment/route updates that change what a named open child should implement.
+
+**Forbidden:** empty or speculative **`targetSlugs`**; notify terminal children; implicit fan-out; using notify instead of spawn for new PR rows or new lanes.
+
+### MCP notify preflight (`mission_control_notify_child_lanes`)
+
+| Step | Check |
+|------|--------|
+| N1 | Caller authority — **`phase-planner`** may notify descendant slugs on this phase subtree only |
+| N2 | Required args present: **`summary`**, **`changeType`**, **`affectedPlanPaths`** (non-empty), **`targetSlugs`** (exactly one slug) |
+| N3 | **Forbidden args absent** — no host-resolved identity keys, no **`notifyAllDescendants`** |
+| N4 | **`targetSlugs`** contains exactly **one** dispatch-unique **non-terminal** child slug per call |
+| N5 | **`affectedPlanPaths`** includes this phase plan and affected child PR plans when applicable |
+| N6 | Multiple children → **separate MCP calls** (one slug per call, v1) |
+| N7 | Omit terminal lanes from **`targetSlugs`** before calling |
+| N8 | New work → **`mission_control_spawn_agent`** — never notify as a spawn workaround |
 
 ## Trigger
 
