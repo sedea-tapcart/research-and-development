@@ -630,7 +630,8 @@ When the developer picks **`start-coding-session`** (or explicit implement autho
 2. Set **`planningHandoffApproved: true`** when **`readyForImplementation: true`**; pass **`planningHandoffMode: sections-1-4-complete`**.
 3. Set **`upstreamSkill: "phase-planner"`** (not **`pr-plan`**) in spawn **`inputs`**.
 4. Cross-check **`../README.md`** § *Universal spawn preflight* and § *MCP spawn preflight* (rows M1–M8) when flag is on; **`skillPath`**: **`coding-session/SKILL.md`** under this mission.
-5. Call MCP **`mission_control_spawn_agent`** with **`skillPath`**, dispatch-unique **`slug`**, **`name`** (`PH{parentIndex}-{semantic title}` per rule **50** § *Lane title prefix conventions*), **`description`**, **`inputs`**, optional **`warmUpRules`** / **`initiatingPrompt`** — **no** host-resolved identity keys. Record host-minted **`correlationId`** from tool result in **`outputs.spawnCorrelationId`** when returned.
+5. **`initiatingPrompt`** must include the same Checkpoint handoff bullets as **`pr-plan/SKILL.md`** §5d step **2** (including § *Checkpoint turn UX* cross-ref when dispatch is Checkpoint trust).
+6. Call MCP **`mission_control_spawn_agent`** with **`skillPath`**, dispatch-unique **`slug`**, **`name`** (`PH{parentIndex}-{semantic title}` per rule **50** § *Lane title prefix conventions*), **`description`**, **`inputs`**, optional **`warmUpRules`** / **`initiatingPrompt`** — **no** host-resolved identity keys. Record host-minted **`correlationId`** from tool result in **`outputs.spawnCorrelationId`** when returned.
 7. Announce spawn; keep **`continuationStatus: active`**; aggregate child results per Step **5e**.
 
 **Do not** re-run inline **`pr-plan`** §5c on the same turn unless the developer picked **`reenter-pr-plan-5c`**.

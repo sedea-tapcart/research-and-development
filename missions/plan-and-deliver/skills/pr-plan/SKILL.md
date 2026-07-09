@@ -529,6 +529,7 @@ Run only when the developer chose **`start-coding-session`** and §5a readiness 
  - `sections5to8Status: TBD-by-design — child owns substantive fill; do not treat as pr-plan failure`
  - `expectedPlanCompleteness: incomplete-until-coding-session-fills-5-8 — auto-authorize worktree when EXPECTED_SECTIONS_5_8_TBD; no second approval modal`
  - `planningHandoffApproved: true` when `readyForImplementation: true` (layer 1 consent from §5c **Start coding session**)
+ - Checkpoint trust: child lane follows **`coding-session/SKILL.md`** § *Checkpoint turn UX* — auto-advance happy path; **`USER_CHECKPOINT`** at worktree-open (when not auto-authorized), ship cut-point (exception), post-create-pr, pre-PR feedback, and pre-merge gates
 3. **Emit exactly one** child-spawn line (valid JSON on the same line; new UUID per spawn):
 
  - Cross-check **`../README.md`** § *Universal spawn preflight* (including display-metadata rows **8–10**).
