@@ -290,7 +290,19 @@ This subsection is the **Squad Leader** contract for §§3, 5, 6, and 7. Sedea h
 
 **Dispatch display refresh (Squad Leader).** When dispatch scope is readable (opening command or confirmed feature title from §4), call MCP **`mission_control_update_dispatch_display`** with non-empty **`dispatchTitle`** (≤64 chars) and optional **`dispatchDescription`** / **`dispatchHoverDescription`** (≤512 chars). **Skip** when current dispatch chrome already matches. **Forbidden:** **`mission_control_update_lane_display`** to relabel **child** slots from the leader lane; hand-editing **`dispatch-tab.v1.json`**. See [`.sedea/centers/sedea/rules/9_display-metadata-authority.mdc`](.sedea/centers/sedea/rules/9_display-metadata-authority.mdc).
 
-**Squad Leader `laneRules` (binding).** Mission protocol or host config supplies minimum governance for the **leader lane** beyond bootstrap — see **`missions/plan-and-deliver/skills/README.md`** § *Definitive `laneRules`*. Definitive paths for **`plan and deliver`** Squad Leader:
+## Lane warm-up manifest (Squad Leader)
+
+Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea/docs/lane-manifest-contract.md) and **`missions/plan-and-deliver/skills/README.md`** § *Default warm-up*. Host merge: `effectiveWarmUp = dedupe(sedeaBootstrapRules → rdBootstrapRules → laneRules)`. Numbered Sedea rules load **on demand** via **`laneRules`** / child **`warmUpRules`** — not full Sedea 0–9 scan on every dispatch. **No `alwaysApply` frontmatter flip.**
+
+**Checkpoint trust (binding):** Auto-advance scripted protocol substeps; structured choice only at **USER_CHECKPOINT** markers in protocol steps below and **#external-wait** spawn-and-wait surfaces — not on every turn.
+
+### `bootstrapRules` — host-resolved (R&D layer)
+
+| Path | Purpose |
+|------|---------|
+| `.sedea/centers/research-and-development/rules/bootstrap.mdc` | Sole R&D `alwaysApply: true` bootstrap (≤10 KB); host merges when `centerSlug === research-and-development` |
+
+### `laneRules` — mission protocol (Squad Leader)
 
 | Path | Role |
 |------|------|
@@ -299,7 +311,33 @@ This subsection is the **Squad Leader** contract for §§3, 5, 6, and 7. Sedea h
 | `.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc` | This mission plan (§§1–8) |
 | `.sedea/centers/research-and-development/docs/development-process.md` | Cadence and protocol branches |
 
+### `skillWarmUp` — child spawn overrides (binding)
+
+| Spawn step | Override |
+|------------|----------|
+| §3 **`author-prd`** | Skill frontmatter defaults — includes **this** `plan.mdc` |
+| §5 **`master-planner`** | Skill frontmatter defaults — includes **this** `plan.mdc` + **`development-process.md`** |
+| Planning / ship children | Skill frontmatter **`warmUpRules`** per **`skills/README.md`** spawn table |
+
 Child spawns must satisfy the same README table for the target skill role (skill frontmatter **`laneRules`** or run-request **`laneRules`**).
+
+## Checkpoint turn UX (mission protocol)
+
+Under Checkpoint trust (`trustLevel: checkpoint`), auto-advance scripted happy-path steps on the **Squad Leader** lane; emit structured choice only at **USER_CHECKPOINT** markers in protocol steps below, **#external-wait** spawn-and-wait surfaces, or exception paths. **No cross-skill inheritance** — gate defaults here apply only to this mission **`plan.mdc`**; child skills document their own markers.
+
+Marker syntax: [`.sedea/centers/sedea/docs/user-checkpoint-marker-syntax.md`](.sedea/centers/sedea/docs/user-checkpoint-marker-syntax.md).
+
+| Protocol § | Checkpoint behavior | Gate |
+|------------|---------------------|------|
+| **§1** Open dispatch | Auto-advance when phrase matches | — |
+| **§2** Collect PRD intake | **Gate** — first developer-pick on leader | USER_CHECKPOINT — pick intake mode or confirm PRD intake summary |
+| **§2.5** Brainstorm (optional) | **Waiting** after spawn; auto-chain §3 on approved report | **#external-wait** before turn end; USER_CHECKPOINT on failure/partial |
+| **§3** Author PRD spawn | **Waiting** — child owns PRD approval | **#external-wait** after spawn; §3 resume table for terminal failures |
+| **§4** Collect planning seed | Auto-advance when seed complete; approved §3 auto-chains | USER_CHECKPOINT — collect feature title when missing |
+| **§5** Master Plan spawn | **Waiting** — child owns planning lane | **#external-wait** after spawn; USER_CHECKPOINT on spawn failure |
+| **§6** Acknowledge Master Plan | Auto-advance status ack only | USER_CHECKPOINT on Master Plan failure |
+| **§7** Planning ledger | Auto-advance ledger merges and acks | USER_CHECKPOINT on child failure / abandon |
+| **§8** Ship ledger + resolution | Auto-advance ack while ship rows stay open | USER_CHECKPOINT — planning-only vs active ship; dispatch resolution |
 
 ### 1. Open dispatch
 
@@ -307,7 +345,7 @@ Child spawns must satisfy the same README table for the target skill role (skill
 - **Intent:** Match the dispatch phrase and prepare for PRD intake on every **`plan and deliver`** run (see **development-process.md** § *PRD routing (canonical)*).
 - **Inputs:** Opening message matching `plan and deliver` (case-insensitive); optional remainder may seed title, `@path`, or description for §2.
 - **Expected output:** Dispatch acknowledged; optional opening seeds captured for §2.
-- **Next-step resolution:** Always continue to §2 **Collect PRD intake** — do not skip to **`master-planner`** without §3 **`author-prd`** approval.
+- **Next-step resolution:** Always continue to §2 **Collect PRD intake** — auto-advance; do not skip to **`master-planner`** without §3 **`author-prd`** approval.
 
 **Procedure**
 
@@ -407,7 +445,7 @@ USER_CHECKPOINT — pick next step when brainstorm child reports failure or part
 - **Assigned skill:** `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/author-prd/SKILL.md`
 - **Required rule context:** Sedea center always-apply rules, this mission plan, `development-process.md`, and the `author-prd` skill.
 - **Expected output:** Child agent result per **`author-prd`** **`## Completion (spawned)`** — including `outputs.prdPath`, `outputs.prdRef`, `outputs.prdTitle`, `outputs.developerApprovedPrd`, `outputs.continuationOwner`, `outputs.continuationStatus`, and planning-readiness fields.
-- **Next-step resolution:** See **§3 resume** above.
+- **Next-step resolution:** Emit spawn → **#external-wait** before turn end; on child terminal apply **§3 resume** (auto-chain §4→§5 when `developerApprovedPrd: true`).
 
 **Procedure**
 
@@ -427,12 +465,14 @@ USER_CHECKPOINT — pick next step when brainstorm child reports failure or part
 - **Inputs:** Approved PRD from §3 terminal result; optional title and **`Related`** hints from the opening message or prior developer answers.
 - **Expected output:** A complete **`master-planner`** seed containing `Feature planning`, `PRD`, **`Parent: null`** (default), and optional **`Related`** entries for external PM / doc traceability.
 - **Next-step resolution:**
-  - Required seed fields complete → continue to §5 to engage **`master-planner`**.
-  - Title missing → ask the developer for the feature title, then resume this step.
+  - Required seed fields complete → auto-advance §5 **`master-planner`** spawn.
+  - Title missing → USER_CHECKPOINT gate below.
   - **Default:** set **`Parent: null`** — **do not** run a parent **AskQuestion** for net-new delivery plans.
   - Developer explicitly names a non-null **`Parent`** slug or `@path` in the same message → use that value (exception only).
   - **`Related`** absent → record none and continue; optional external PM / doc links only when the developer supplies them.
   - **§3 Author PRD** with terminal approved result: optional one-line seed summary; **do not** wait for developer confirmation before §5.
+
+USER_CHECKPOINT — collect feature title when planning seed is incomplete.
 
 #### External PM scope (`Related`)
 
@@ -480,7 +520,9 @@ When an explicit developer override applies, replace the **`Parent:`** line with
   - Child result `success` with Master Plan path and low/medium complexity plus active continuation ownership → continue to status acknowledgement and ledger tracking; the **master-planner** lane owns downstream route prompts and inline decomposition.
   - Child result `success` with high complexity → acknowledge **Route §6 → Delivery phases** recommendation on the **Master Plan agent** lane (high band triggers phase decomposition via **`delivery-phases`** / **`phase-planner`**, not a §6 withhold); keep the **Master Plan agent** lane open; do not foreground decomposition from the **Squad Leader** lane.
   - Child result `partial` with usable Master Plan path → surface gaps and continue only if they do not block routing.
-  - Child result `failure`, `aborted`, `abandoned`, or no plan path → USER_CHECKPOINT — retry, revise seed, or abandon.
+  - Child result `failure`, `aborted`, `abandoned`, or no plan path → USER_CHECKPOINT gate below.
+
+USER_CHECKPOINT — retry master-planner spawn, revise seed, or abandon when spawn fails.
 
 **Procedure**
 
@@ -506,6 +548,8 @@ When an explicit developer override applies, replace the **`Parent:`** line with
 5. Stop protocol execution until Mission Control delivers `mission_control_send_agent_result` for the same `correlationId`.
 6. Validate that returned outputs include a readable Master Plan path, complexity band, continuation owner/status, and ledger-shaped arrays (`activeLanes`, `openLedgerEntries`, `spawnedPlans`, `remainingTasks`) before continuing.
 
+- **Next-step resolution:** After spawn emit → **#external-wait** before turn end; on child terminal auto-advance §6 ack when result is usable, else USER_CHECKPOINT gate above.
+
 ### 6. Acknowledge Master Plan status
 
 - **Type:** Finish/stop logic
@@ -513,10 +557,12 @@ When an explicit developer override applies, replace the **`Parent:`** line with
 - **Inputs:** Master Plan agent result: plan path, slug, complexity band, complexity score, child status, continuation owner/status, and any downstream notification requirement.
 - **Expected output:** One status acknowledgement from the **Squad Leader**; no route menu.
 - **Next-step resolution:**
-  - Master Plan agent reports active continuation ownership → acknowledge status and enter a resumable wait state.
-  - Master Plan agent reports terminal success and no remaining **planning** tasks → continue **§7** then **§8**; do **not** propose **`resolved`** dispatch from §6 alone (planning complete ≠ ship complete).
-  - Master Plan agent reports failure or no usable plan path → USER_CHECKPOINT — retry, revise seed, switch PRD source, or abandon.
+  - Master Plan agent reports active continuation ownership → auto-advance status ack; enter resumable wait on leader lane.
+  - Master Plan agent reports terminal success and no remaining **planning** tasks → auto-advance **§7** then **§8**; do **not** propose **`resolved`** dispatch from §6 alone (planning complete ≠ ship complete).
+  - Master Plan agent reports failure or no usable plan path → USER_CHECKPOINT gate below.
   - Downstream agent result arrives → resume only when the result requires mission-level action.
+
+USER_CHECKPOINT — retry, revise seed, switch PRD source, or abandon when Master Plan child fails.
 
 **Procedure**
 
@@ -532,11 +578,13 @@ When an explicit developer override applies, replace the **`Parent:`** line with
 - **Inputs:** Master Plan agent result; every later downstream child result; plan path and child plan paths reported by downstream agents; continuation status; active lane identifiers; remaining task lists.
 - **Expected output:** Updated closure ledger, status acknowledgement, continued wait, or dispatch resolution proposal.
 - **Next-step resolution:**
-  - New phase or PR plan is spawned → add it to the closure ledger as open.
-  - Downstream child result reports active continuation → acknowledge status and keep that lane open.
-  - Downstream child result reports terminal completion for a registered phase or PR plan → mark that ledger entry closed.
-  - Any child result reports failure, aborted, or abandoned → mark the ledger blocked and USER_CHECKPOINT — retry, revise scope, accept partial resolution, or abandon.
-  - Planning ledger has no open or blocked entries and every planning lane is terminal → continue **§8** (do **not** propose **`resolved`** here if ship work remains).
+  - New phase or PR plan is spawned → auto-advance ledger registration as open.
+  - Downstream child result reports active continuation → auto-advance status ack; keep that lane open.
+  - Downstream child result reports terminal completion for a registered phase or PR plan → auto-advance ledger close for that entry.
+  - Any child result reports failure, aborted, or abandoned → mark the ledger blocked; USER_CHECKPOINT gate below.
+  - Planning ledger has no open or blocked entries and every planning lane is terminal → auto-advance **§8** (do **not** propose **`resolved`** here if ship work remains).
+
+USER_CHECKPOINT — retry, revise scope, accept partial resolution, or abandon when a planning child fails.
 
 **Planning ledger rules**
 
@@ -564,10 +612,12 @@ When an explicit developer override applies, replace the **`Parent:`** line with
 - **Inputs:** Planning ledger state from §7; developer messages on the leader lane; **`coding-session`** child `outputs` (especially `developerApprovedImplementation`, `targetPlanPath` after the worktree-open gate); explicit developer status when ship runs on other lanes.
 - **Expected output:** Updated **ship ledger** per PR plan; status acknowledgement; **`mission_control_propose_dispatch_resolution`** only when gates below allow.
 - **Next-step resolution:**
-  - No ship row yet, planning complete → USER_CHECKPOINT — close dispatch planning-only vs keep ship active on detached lanes.
+  - No ship row yet, planning complete → USER_CHECKPOINT gate below.
   - Ship row open → keep dispatch **active** (auto-advance ack); acknowledge phase updates; do **not** propose **`resolved`**.
-  - All ship rows **closed** (or explicitly deferred/abandoned per row) → propose dispatch resolution per **`.sedea/centers/sedea/rules/4_mission.mdc`**.
+  - All ship rows **closed** (or explicitly deferred/abandoned per row) → auto-advance to dispatch resolution gate below.
   - Developer requests wrap-up with open ship → propose **`partial`** or **`abandoned`** with explicit remaining work in the JSON `summary`.
+
+USER_CHECKPOINT — close dispatch planning-only vs keep ship active when no ship row exists yet.
 
 USER_CHECKPOINT — approve dispatch resolution when planning and ship gates allow.
 
