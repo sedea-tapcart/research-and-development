@@ -144,6 +144,9 @@ USER_CHECKPOINT — pick next step when debug child reports partial status.
   - Developer selects Ad-Hoc PRD only → step 5c.
   - Developer selects findings report only → step 6.
 - `default/fallback behavior`: Present **`exitRecommendation`** as the suggested default in modal labels; require explicit pick — one path mandatory.
+- `ordered actions` (before post-fix exit modal):
+  1. Include **`### Worktree (copy-paste)`** in **`displayMarkdown`** using child **`outputs.worktreePath`**, **`outputs.worktreeName`**, and **`outputs.hostingRoot`** — same fenced shape as **`debug-and-fix/SKILL.md`** step **8** (absolute path on its own line inside a fenced code block).
+  2. **Forbidden:** post-fix exit modal when child outputs include **`worktreePath`** but the copy-paste block is missing from **`displayMarkdown`**.
 
 USER_CHECKPOINT — pick exactly one post-fix exit path after a verified fix.
 
@@ -194,7 +197,7 @@ USER_CHECKPOINT — revise planning anchor, retry, or switch exits when PR plan 
 - `type`: Finish/stop logic.
 - `intent`: Summarize debug session outcomes when fix is **not** verified, **blocked**, or the developer chose **findings report only** at step 4.
 - `inputs`: All child terminal outputs from step 3 (`fixSummary`, `testEvidence`, `fixStatus`, worktree paths), and any user decisions from step 4 when applicable.
-- `expected output`: Structured findings recap in **`display.markdown`** — symptom, diagnosis, fix attempts, test evidence, worktree state, and recommended follow-up. No downstream spawn.
+- `expected output`: Structured findings recap in **`displayMarkdown`** — symptom, diagnosis, fix attempts, test evidence, **`### Worktree (copy-paste)`** with absolute **`worktreePath`** in a fenced code block (same shape as **`debug-and-fix/SKILL.md`** step **8**), and recommended follow-up. No downstream spawn.
 - `next-step resolution`: Continue to step 7.
 - `terminal vs resumable`: Resumable — dispatch remains active until step 7.
 
