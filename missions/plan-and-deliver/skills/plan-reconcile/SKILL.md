@@ -78,25 +78,127 @@ Script-backed flow: **`plan-state.mjs`** owns YAML and file moves; the agent dec
 
 Dry-run reports, archive candidates, and follow-up triage use **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act* — recap + modal in **one turn** when practical. **Act** (`plan-state.mjs archive`, file moves) is after the developer selects.
 
+## Session orientation table (binding)
+
+Give developers a **consistent state snapshot** during inline reconcile so they can re-orient after reload or parallel work.
+
+**When required:** At every **Mandatory gate** below — render as the **first block** in `display.markdown` (before dry-run report, candidate list, or cleanup JSON). **Forbidden:** omitting the table and substituting scattered one-liners on modal gates.
+
+**Table shape (markdown):**
+
+| Field | Value |
+|-------|-------|
+| Plan | `<slug>` @ `<path>` or — |
+| Worktree | `<worktreePath>` from inline context or — |
+| Branch | `<worktreeName>` from inline context or — |
+| PR | `<url>` (#N) or — |
+| Ship phase | parent `shipPhase` when inline on **`coding-session`**, or `reconcile` |
+| Deploy scope | — (reconcile does not own deploy walk) |
+| Review | — (reconcile does not own PR triage) |
+
+**Population rules:** Same as [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`](../coding-session/SKILL.md) § *Session orientation table (binding)* — use inline context; never invent paths or PR numbers.
+
+**Mandatory gates (this skill):** [Approve PR-tracked reconcile mutations gate](#approve-pr-tracked-reconcile-mutations-gate-binding); [Archive candidates gate](#archive-candidates-gate-binding); [Follow-ups triage gate](#follow-ups-triage-gate-binding); [Post-ship workspace cleanup gate](#post-ship-workspace-cleanup-gate-binding); [Inline closure gate](#inline-closure-gate-binding).
+
 ## Checkpoint turn UX (skill-local)
 
 Under Checkpoint trust (`trustLevel: checkpoint`), auto-advance scripted happy-path steps; emit structured choice only at **USER_CHECKPOINT** markers in this section, implicit external-wait surfaces, or exception paths. **No cross-skill inheritance** — gate defaults here apply only to **`plan-reconcile`**; other ship-chain skills document their own markers.
 
-**Real-dispatch test loop (binding):** After merge, run one full inline **`plan-reconcile`** on a **`coding-session`** Checkpoint dispatch through [Inline closure gate](#inline-closure-gate-binding) and collect a developer verdict before the parent phase advances **`hosting-repo-rules`** PR 7 — per **Ship-chain skills UX** § *Single-concern strategy*.
+**Real-dispatch test loop (binding):** After merge, run one full inline **`plan-reconcile`** on a **`coding-session`** Checkpoint dispatch through [Approve PR-tracked reconcile mutations gate](#approve-pr-tracked-reconcile-mutations-gate-binding), [Archive candidates gate](#archive-candidates-gate-binding), and [Inline closure gate](#inline-closure-gate-binding) — collect a developer verdict before the parent phase advances **`hosting-repo-rules`** PR 7 — per **Ship-chain skills UX** § *Single-concern strategy*.
 
 Marker syntax: [`.sedea/centers/sedea/docs/user-checkpoint-marker-syntax.md`](.sedea/centers/sedea/docs/user-checkpoint-marker-syntax.md).
 
 | Step | Checkpoint behavior | Gate |
 |------|---------------------|------|
 | **1** — Preview reconcile (dry-run) | Auto-advance | exception: script failure → stop with recap |
-| **1b** — Approve PR-tracked reconcile mutations | **Gate** when mutations required | deferred to JIT step PR |
+| **1b** — Approve PR-tracked reconcile mutations | **Gate** when dry-run reports **`archived`** or mutation-worthy entries | [Approve PR-tracked reconcile mutations gate](#approve-pr-tracked-reconcile-mutations-gate-binding) |
 | **2** — Run list-candidates | Auto-advance (read-only JSON) | exception: script failure |
-| **3** — Present candidates + flagged | **Gate** — multi-select archive pick | deferred to JIT step PR |
-| **3.5** — Follow-ups triage | **Gate** per plan with non-empty **`## Follow-ups`** | deferred to JIT step PR |
+| **3** — Present candidates + flagged | **Gate** when merged candidate or flagged lists are non-empty | [Archive candidates gate](#archive-candidates-gate-binding) |
+| **3.5** — Follow-ups triage | **Gate** per plan with non-empty **`## Follow-ups`** | [Follow-ups triage gate](#follow-ups-triage-gate-binding) |
 | **4** — Archive selected plans | Auto-advance after developer selection | exception: non-zero **`archive`** exit |
-| **5** — Post-ship workspace cleanup | **Gate** when stale candidates exist | deferred to JIT step PR |
+| **5** — Post-ship workspace cleanup | **Gate** when **`detect-stale-workspaces`** returns candidates | [Post-ship workspace cleanup gate](#post-ship-workspace-cleanup-gate-binding) |
 | **6** — End state summary | Auto-advance recap prose only | — |
 | **Inline closure** (inline on **`coding-session`**) | **Gate** — mandatory developer pick before **`## Completion (inline)`** handback | [Inline closure gate](#inline-closure-gate-binding) |
+
+### Approve PR-tracked reconcile mutations gate (binding)
+
+When step **1** dry-run reports entries in the **`archived`** bucket (or other mutation-worthy PR-tracked rows), open structured choice **before** non-dry-run **`reconcile`**. **Forbidden:** running **`plan-state.mjs reconcile`** without authorization on the **same turn** as this modal. **Forbidden:** prose-only mutation handoff.
+
+Put the session orientation table and dry-run report summary in **`display.markdown`**.
+
+USER_CHECKPOINT — approve PR-tracked reconcile mutations before running non-dry-run reconcile.
+
+| Option id | Label (brief) | Act |
+|-----------|---------------|-----|
+| `approve-reconcile-mutations` | Approve PR-tracked reconcile mutations | On the **developer's response turn**, run non-dry-run **`reconcile`**; continue to step **2** |
+| `skip-pr-tracked-reconcile` | Skip PR-tracked reconcile this pass | Continue to read-only **`list-candidates`** only — no non-dry-run **`reconcile`** |
+| `review-flagged-first` | Review flagged entries first | Recap **`flagged`** bucket; re-open this gate after review |
+| `abort-reconcile` | Abort reconcile | Stop with `continuationStatus: "active"`; no archive mutations |
+| `more-details` | More details for option _ | Elaborate; re-open this gate |
+
+- **`defaultOptionId: approve-reconcile-mutations`** when dry-run **`archived`** entries are expected and no flagged blockers need review.
+- **Next-step resolution:** Auto-advance through step **1** dry-run on the happy path — no `USER_CHECKPOINT` until this gate when mutations are required.
+
+When dry-run reports **no** mutation-worthy PR-tracked entries, **skip** this gate — continue to step **2**.
+
+### Archive candidates gate (binding)
+
+When step **2** **`list-candidates`** and step **1** **`flagged`** lists merge to a **non-empty** pick set, open structured choice **before** step **4** archive mutations. **Forbidden:** archiving without developer multi-select. **Forbidden:** report-only turn without modal when candidates exist.
+
+Put the session orientation table and merged candidate / flagged list in **`display.markdown`**.
+
+USER_CHECKPOINT — pick plans to archive from reconcile candidates and flagged entries.
+
+| Option id | Label (brief) | Act |
+|-----------|---------------|-----|
+| *(multi-select per plan slug)* | `<slug>` — todos N/N done, signal: … | Record slug in archive batch; proceed to step **3.5** when follow-ups exist, else step **4** |
+| `skip-archive-this-pass` | Skip archive this pass | No **`archive`** invocations; continue to step **5** or end summary when applicable |
+| `more-details` | More details for option _ | Elaborate; re-open this gate |
+
+Prompt text: **`Pick plans to archive. Candidates are safe to archive; flagged plans need judgement (selecting them will archive with signal "flagged: <reason>" — only do this if you intend to close out).`**
+
+- **Next-step resolution:** Auto-advance through steps **1** and **2** on the happy path — no `USER_CHECKPOINT` until merged lists are non-empty.
+
+When both lists are empty, **skip** this gate — continue to step **3.5** only when something in scope has follow-ups; otherwise step **6** summary.
+
+### Follow-ups triage gate (binding)
+
+For each plan in the archive batch with a non-empty **`## Follow-ups`** section, open structured choice **before** step **4** archive for that slug (or before integrate routing when the plan was reconcile-auto-archived in step **1b**). **Forbidden:** archiving a plan with un-triaged follow-ups. **Forbidden:** prose-only *tell me how to route* without modal.
+
+Put the session orientation table, source slug, and follow-up bullet summaries in **`display.markdown`**.
+
+USER_CHECKPOINT — route follow-up bullets before archiving this plan.
+
+| Option id | Label (brief) | Act |
+|-----------|---------------|-----|
+| `drop` | Drop this follow-up | No file change for that bullet |
+| `elaborate-first` | Elaborate first — queue this pass | Queue for wave 2–4 per **development-process** follow-ups triage |
+| `postpone` | Postpone — keep source plan active | Record slug in **`postponed:`** set; step **4** skips archive for that slug *(omit when source was reconcile-auto-archived)* |
+| `integrate-<target-slug>` | Integrate → `<target-slug>` | Append bullet to target **`## Follow-ups`**; one canonical sink |
+| `(other)` | Pick manually after archive | Manual fallback per step **3.5** terminal mapping |
+| `more-details` | More details for option _ | Elaborate; re-open this gate for the same bullet |
+
+- **Next-step resolution:** Auto-advance silently for plans with no **`## Follow-ups`** section — no `USER_CHECKPOINT` until a non-empty section requires routing.
+
+### Post-ship workspace cleanup gate (binding)
+
+When **`detect-stale-workspaces`** returns one or more candidates, present the dry-run **`actions`** list and open structured choice **before** **`--apply`**. **Forbidden:** **`--apply`** in the same assistant turn as this modal. **Forbidden:** report-only turn ending without structured choice when stale candidates exist.
+
+Put the session orientation table and cleanup JSON **`actions`** list in **`display.markdown`**.
+
+USER_CHECKPOINT — authorize post-ship workspace cleanup for stale worktrees.
+
+| Option id | Label (brief) | Act |
+|-----------|---------------|-----|
+| `cleanup-apply` | Run workspace cleanup (worktree + worktree name ref + pull main) | MCP **`sedea_remove_worktree_folder`** per candidate, then **`post-reconcile-workspace-cleanup.mjs --apply`** on response turn |
+| `cleanup-skip` | Skip git cleanup this pass | Report skip; continue to step **6** |
+| `cleanup-dry-run-only` | Dry-run only — no git mutations | No **`--apply`**; continue to step **6** |
+| `more-details` | More details for option _ | Elaborate; re-open this gate |
+
+- **`defaultOptionId: cleanup-apply`** when ownership preconditions pass for all candidates and post-merge cleanup was deferred on **`coding-session`**.
+- **Next-step resolution:** Auto-advance through steps **1–4** and follow-ups triage on the happy path — no `USER_CHECKPOINT` until stale candidates exist.
+
+When **`detect-stale-workspaces`** returns no candidates, **skip** this gate — report one line and continue to step **6**.
 
 ## When this skill runs
 
@@ -108,7 +210,7 @@ Marker syntax: [`.sedea/centers/sedea/docs/user-checkpoint-marker-syntax.md`](.s
 
 Do **not** trigger on the word **`plan`** alone — too generic.
 
-When **`deploy-walk`** just finished and the user expects archive, use **AskQuestion** once: start **`plan-reconcile`** inline now vs defer. Merge + deploy verification are still required for inline reconcile from **`coding-session`** when plan-anchored on the ship chain.
+When **`deploy-walk`** just finished and the user expects archive, open structured choice once per [Plan-reconcile handoff (inline)](../coding-session/SKILL.md#plan-reconcile-handoff-inline): start **`plan-reconcile`** inline now vs defer. Merge + deploy verification are still required for inline reconcile from **`coding-session`** when plan-anchored on the ship chain.
 
 Detail: **`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`** § *deploy-walk vs plan-reconcile (not chained)*; **`.sedea/centers/research-and-development/docs/development-process.md`** § *Plan reconcile triggers*.
 
@@ -151,15 +253,9 @@ Optional flags: **`--prune-worktrees`** is only allowed after the developer appr
 
 ### 1b. Approve PR-tracked reconcile mutations
 
-Present the dry-run report to the developer and use **AskQuestion** before running non-dry-run reconcile. Required options:
+When step **1** dry-run reports mutation-worthy PR-tracked entries, open [Approve PR-tracked reconcile mutations gate](#approve-pr-tracked-reconcile-mutations-gate-binding) before running non-dry-run reconcile.
 
-1. **Approve PR-tracked reconcile mutations**
-2. **Skip PR-tracked reconcile this pass**
-3. **Review flagged entries first**
-4. **Abort reconcile**
-5. **More details for option _**
-
-Only **Approve PR-tracked reconcile mutations** authorizes:
+Only **`approve-reconcile-mutations`** authorizes:
 
 ```bash
 cd "$HOSTING_ROOT"
@@ -206,16 +302,14 @@ Filters already applied (unchanged from upstream script semantics):
 - Roadmap topics (**`kind: roadmap_topic`**) are excluded.
 - Plans with any **blocked descendant** are excluded. An all-done child in **`plans/`** does **not** block its parent — the fully-shipped subtree can surface together.
 
-### 3. Present candidates + flagged plans via AskQuestion
+### 3. Present candidates + flagged plans
 
-Merge reconcile’s **`flagged`** list (step 1) with **`list-candidates`** output (step 2) into one multi-select **`AskQuestion`**. One option per plan. Label format:
+When merged lists are non-empty, open [Archive candidates gate](#archive-candidates-gate-binding). One option per plan. Label format:
 
 - Candidates: `` `<slug>` — todos N/N done, signal: <shipSignal.label>, parent: <parent> ``
 - Flagged: `` `<slug>` — FLAGGED (<reason>), parent: <parent> ``
 
-Prompt text: **`Pick plans to archive. Candidates are safe to archive; flagged plans need judgement (selecting them will archive with signal "flagged: <reason>" — only do this if you intend to close out).`**
-
-If both lists are empty → no question; continue (step 3.5 only if something in scope has follow-ups — usually skip to the end-of-flow summary).
+If both lists are empty → skip the gate; continue (step 3.5 only if something in scope has follow-ups — usually skip to the end-of-flow summary).
 
 ### 3.5 — Follow-ups triage
 
@@ -232,12 +326,7 @@ If a plan in scope has no **`## Follow-ups`** section, or the section is empty, 
 
 **Parse `## Follow-ups`.** Use **`Read`** on the plan file. Locate the top-level **`## Follow-ups`** heading and collect bullets until the next **`## `** heading or EOF. A bullet starts with **`- `** or **`* `** at column 0, including nested indented lines. Strip a trailing **`(target: …)`** suffix from the **first line** when present as a *routing hint* for the question text; the text integrated into the target keeps the rest verbatim.
 
-**Per-plan AskQuestion.** For plan **`<slug>`** with **N** follow-ups, one form with **N** questions. Each prompt: first line (truncated ~140 chars) plus **`(suggested: <hint>)`** when a **`(target: …)`** hint was parsed. Options, in order:
-
-1. **Drop**
-2. **Elaborate first** — queue only this pass; apply terminals in wave 2; elaboration uses waves 3–4 (briefing, then re-ask) per **development-process** follow-ups triage wave order.
-3. **Postpone** — *(omit when the source plan was reconcile-auto-archived in step 1.)* Record the source slug in a **`postponed:`** set; step 4 **skips** archive for that slug entirely.
-4. **Integrate → `<target-slug>` (`<relation>`)** — one option per plan in the tree, **ordered by proximity**: parent → siblings → grandparent → aunt/uncle subtrees → walk up → **Master Plan** last when not already parent. Skip the source slug. Skip slugs already in the archive batch from step 3. **Skip targets that are already archived** for this scope (same slugs as the step-1 **`archived`** list, or any plan **`plan-state`** no longer treats as the active Plan Board surface after re-resolve — integrate only into still-active plans). Cap ~30 options; final escape hatch **`(other) — pick manually after archive`**.
+**Per-plan gate.** For plan **`<slug>`** with **N** follow-ups, open [Follow-ups triage gate](#follow-ups-triage-gate-binding) with **N** questions (one per bullet). Each prompt: first line (truncated ~140 chars) plus **`(suggested: <hint>)`** when a **`(target: …)`** hint was parsed. **`integrate → <target-slug>`** options follow proximity order: parent → siblings → grandparent → aunt/uncle subtrees → walk up → **Master Plan** last when not already parent. Skip the source slug. Skip slugs already in the archive batch from step 3. **Skip targets that are already archived** for this scope. Cap ~30 options; final escape hatch **`(other) — pick manually after archive`**.
 
 **Wave order** (normative): (1) Ask all bullets once. (2) Apply terminals (**Drop**, **Postpone**, **Integrate**, **`(other)`**); queue **Elaborate first**. (3) Brief each queued bullet (chat: what / why now / how routing differs). (4) Re-ask queued bullets only; repeat 3→4→2 until **`elaborate_queue`** is empty. If the user dismisses a form while non-terminal bullets remain, treat like **Postpone** for those source slugs (record in **`postponed:`**, list unresolved bullets in chat).
 
@@ -304,14 +393,7 @@ node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/p
   --dry-run [--slug <slug>]
 ```
 
-Present the JSON **`actions`** list in the **same turn** as the required **AskQuestion** before **`--apply`** — put long reports in **`display.markdown`** (phased) when needed; do not end with a report-only turn.
-
-| Option id (illustrative) | Label (brief) |
-|--------------------------|---------------|
-| `cleanup-apply` | Run workspace cleanup (worktree + worktree name ref + pull main) |
-| `cleanup-skip` | Skip git cleanup this pass |
-| `cleanup-dry-run-only` | Dry-run only — no git mutations |
-| `more-details` | More details for option _ |
+Present the JSON **`actions`** list in the **same turn** as [Post-ship workspace cleanup gate](#post-ship-workspace-cleanup-gate-binding) — put long reports in **`display.markdown`** (phased) when needed; do not end with a report-only turn.
 
 Only **`cleanup-apply`** authorizes **`--apply`**.
 
