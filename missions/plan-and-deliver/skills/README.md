@@ -395,6 +395,7 @@ Notify does **not** replace child terminal **`mission_control_send_agent_result`
 | **`coding-session`** | § *Plan-change notification receive (child lane)* — ship-lane recipient during PR implementation |
 | **`phase-planner`** | § *Plan-change notification receive (child lane)* — mid phase delivery |
 | **`master-planner`** | § *Plan-change notification receive (child lane)* — Master Plan child during decomposition |
+| **`pr-plan`** | § *Plan-change notification receive (child lane)* — standalone spawned populator during §5c/§5e (inline invoker lanes use invoker receive sections) |
 
 **Receive contract (all listed skills):** mandatory **`Read`** of each **`affectedPlanPaths`** entry; USER_CHECKPOINT with acknowledge / re-read-revise / plan-reconcile / escalate / stop-work options; **forbidden** terminal **`mission_control_send_agent_result`** solely due to notify; notify is **developer-input USER_CHECKPOINT**, not external-wait. Extend the table for other spawned plan-and-deliver children when dogfood surfaces gaps. Normative summary: **`.sedea/centers/sedea/rules/4_mission.mdc`** § *MCP notify protocol* § *Child agent duty*.
 

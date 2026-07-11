@@ -55,8 +55,9 @@ Derived index of **Checkpoint trust** turn behavior for **research-and-developme
 |------|---------------------|------|
 | **1–4** — Identify, template, draft §§1–4 | Auto-advance | exception paths per skill |
 | **§5c** — Implementation handoff | **Gate** | USER_CHECKPOINT — start coding session |
-| **§5d** — Spawn coding-session | Act-after-select; external-wait on child | — |
+| **§5d** — Spawn coding-session | Act-after-select; **waiting** on child lane | external-wait — §5e child terminal; structured resume via §5e merge |
 | **Skip §5c** | Auto-advance when `skipPrPlanHandoffModal: true` | inline pr-breakdown auto-chain |
+| **Plan-change notify receive** | **Gate** on standalone spawned lane | USER_CHECKPOINT — plan change notification |
 
 ---
 
