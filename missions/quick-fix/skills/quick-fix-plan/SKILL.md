@@ -108,11 +108,108 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 
 Run **`../plan-and-deliver/skills/README.md`** § *Universal spawn preflight* before emit.
 
+## Checkpoint turn UX (skill-local)
+
+Under Checkpoint trust (`trustLevel: checkpoint`), auto-advance scripted happy-path steps; emit structured choice only at **USER_CHECKPOINT** markers in this section, implicit external-wait surfaces, or exception paths. **No cross-skill inheritance** — gate defaults here apply only to **`quick-fix-plan`**; invoker mission **`quick-fix`** documents Squad Leader gates — see **`quick-fix/plan.mdc`** §§1–3 and §8 for intake, child-failure, and dispatch-resolution markers.
+
+**Real-dispatch test loop (binding):** After merge, run one full **`quick-fix-plan`** spawn on a Checkpoint dispatch through inline **`pr-plan`** §5c and collect a developer verdict before the parent phase advances the next cross-mission skill PR — per **Planning protocol skills UX** § *Single-concern strategy*.
+
+Marker syntax: [`.sedea/centers/sedea/docs/user-checkpoint-marker-syntax.md`](.sedea/centers/sedea/docs/user-checkpoint-marker-syntax.md).
+
+| Step | Checkpoint behavior | Gate |
+|------|---------------------|------|
+| **1** — Validate spawn `inputs` | Auto-advance when Squad Leader §3 handoff supplies complete `inputs` | **Gate** when required fields missing — [Missing inputs gate](#missing-inputs-gate-binding) |
+| **2a** — Resolve `HOSTING_ROOT` | Auto-advance | exception: main-clone invariant failure |
+| **2b** — Minimal parent scaffold | Auto-advance on successful write | exception: write failure → `partial` / `failure` |
+| **2c** — Inline **`new-plan`** (indexed child) | Auto-advance — scope pre-confirmed on **`quick-fix`** §2; skip **`new-plan`** step **3** populator approval | exception: indexed validation / depth-first blockers per **`new-plan/SKILL.md`** |
+| **2d** — Inline **`pr-plan`** steps **1–4** | Auto-advance through §§1–4 draft | open items per **`pr-plan`** Step **5-open-items** when multiple gaps |
+| **§5c** — Implementation handoff (inline **`pr-plan`**) | **Gate** — **first developer-pick gate on this lane** | **`pr-plan`** §5c — start coding session (below) |
+| **§5d** — Spawn **`coding-session`** | Act-after-select; **#external-wait** on detached child | — |
+| **§5e** — Aggregate **`coding-session`** child | **#external-wait**; re-emit terminal when child completes | — |
+| **3** — Terminal **`mission_control_send_agent_result`** | Auto-advance after §5e merge or honest `partial` / `failure` | exception: blocked handoff → report without prose idle |
+
+### Missing inputs gate (binding)
+
+When **`changeList`**, **`complexityConfirmed`**, **`intakeMode`**, or (when `intakeMode` is `description-of-fix`) **`changeDescription`** are missing:
+
+USER_CHECKPOINT — provide missing quick-fix planning inputs on this lane.
+
+| Option id | Label |
+|-----------|--------|
+| `provide-change-list` | Supply change list |
+| `provide-description` | Supply fix description (prose path) |
+| `defer` | Defer — return partial result to Squad Leader |
+| `more-details` | More details for option _ |
+
+- **Next-step resolution:** Auto-advance to step **2** when all required inputs resolve — no `USER_CHECKPOINT` on happy-path spawn handoff with complete `inputs`.
+
+### Inline handoff — **quick-fix-plan** → **`new-plan`**
+
+Run **`new-plan`** **inline on this lane** — **do not** emit **`mission_control_spawn_agent`** for **`new-plan`**. Load [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/new-plan/SKILL.md`](../../plan-and-deliver/skills/new-plan/SKILL.md), construct inline context from the table below, follow that skill's indexed-child steps, and merge stub paths before inline **`pr-plan`**.
+
+| Inline context field | Value |
+|----------------------|--------|
+| `mode` | `indexed-child` |
+| `parentPlanPath` / `parentPlanSlug` | From step **2b** minimal parent |
+| `index` | `1` (single PR row) |
+| `childKind` | `pr-plan` |
+| `requestedPopulatorSkill` | `pr-plan` |
+| `upstreamSkill` | `"quick-fix-plan"` |
+| `ledgerParent` | Parent slug from step **2b** sidecar (`parent: null` → parent slug of minimal parent file) |
+
+**Skip populator approval (binding):** Squad Leader **`quick-fix`** §2 already confirmed scope and complexity; **`requestedPopulatorSkill: pr-plan`** is locked by spawn contract — proceed from stub write to inline **`pr-plan`** without **`new-plan`** step **3** modal.
+
+### Inline handoff — **quick-fix-plan** → **`pr-plan`**
+
+Run **`pr-plan`** **inline on this lane** — **do not** emit **`mission_control_spawn_agent`** for **`pr-plan`**. Load [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-plan/SKILL.md`](../../plan-and-deliver/skills/pr-plan/SKILL.md), construct inline context from the table below, follow that skill's steps through §5e, and merge **`## Completion (inline)`** fields into this skill's terminal **`outputs`**.
+
+| Inline context field | Value |
+|----------------------|--------|
+| `targetPlanPath` / `targetPlanSlug` | Child PR stub from inline **`new-plan`** |
+| `parentPlanPath` / `parentPlanSlug` | Minimal parent from step **2b** |
+| `parentIndex` | `1` |
+| `parentAgentRole` | `"quick-fix-plan-agent"` |
+| `upstreamSkill` | `"quick-fix-plan"` |
+| `parentRowSingleConcern` | Single quick-fix concern synthesized from **`changeList`** / **`changeDescription`** |
+| `ledgerParent` | Parent slug from step **2b** |
+
+Inline **`pr-plan`** may still spawn **`coding-session`** per **`pr-plan`** §5d; this lane aggregates that child result per **`pr-plan`** §5e before step **3** terminal emit.
+
 ## Steps
 
-1. Validate spawn **`inputs`**: non-empty **`changeList`**, **`complexityConfirmed: true`**, **`intakeMode`**; when **`description-of-fix`**, require **`changeDescription`**.
-2. Execute **`quick-fix/plan.mdc`** §4 procedure (minimal parent → inline **`new-plan`** → inline **`pr-plan`** → **`coding-session`** §5d spawn).
-3. Emit child terminal **`mission_control_send_agent_result`** per **`## Completion (spawned)`** below.
+1. **Validate spawn `inputs`** — non-empty **`changeList`**, **`complexityConfirmed: true`**, **`intakeMode`**; when **`description-of-fix`**, require **`changeDescription`**.
+
+   - **Next-step resolution:** Auto-advance to step **2** when validation passes — no `USER_CHECKPOINT` on happy path. When required fields are missing, open [Missing inputs gate](#missing-inputs-gate-binding) or return `partial` with `outputs.missingFields` when this lane cannot collect inputs.
+
+2. **Execute **`quick-fix/plan.mdc`** §4 procedure** on **this** lane:
+
+   **2a. Resolve `HOSTING_ROOT`** — operations writes on main hosting clone only per **`0_hosting-repo.mdc`**.
+
+   - **Next-step resolution:** Auto-advance to **2b** — no `USER_CHECKPOINT` on this substep.
+
+   **2b. Minimal parent plan** — scaffold under `.sedea/operations/.../plans/` with title from **`title`**, **`### PR list`** with exactly one row summarizing **`changeList`**, sidecar **`parent: null`**, **`status: started`**.
+
+   - **Next-step resolution:** Auto-advance to **2c** on successful write — exception: write failure → `partial` / `failure` terminal.
+
+   **2c. Inline **`new-plan`** — per [Inline handoff — quick-fix-plan → new-plan](#inline-handoff--quick-fix-plan--new-plan); indexed child **`index: 1`**, **`childKind: pr-plan`**.
+
+   - **Next-step resolution:** Auto-advance to **2d** after stub + parent `Plan:` link — skip populator approval gate.
+
+   **2d. Inline **`pr-plan`** — populate §§1–4 from **`changeList`** / **`initiatingPrompt`**; §§5–8 remain **`_TBD_`** for **`coding-session`**. Run §5a–5b readiness; open §5c when ready.
+
+USER_CHECKPOINT — approve implementation handoff and start coding session (inline **`pr-plan`** §5c; fill §§5–8 on detached **`coding-session`** lane).
+
+   Required options per **`pr-plan/SKILL.md`** §5c structured choice table (`start-coding-session`, `revise-section`, `prefill-sections`, `commit-reminder`, `defer`, `more-details`). **`defaultOptionId: start-coding-session`** when §5a passes.
+
+   - **Next-step resolution:** **`start-coding-session`** → run **2e** §5d spawn; other picks → re-offer §5c or defer per **`pr-plan`** rules — no prose-only idle.
+
+   **2e. Spawn and aggregate **`coding-session`** — when developer picks **`start-coding-session`**, run **`pr-plan`** §5d **`mission_control_spawn_agent`** then §5e child aggregation. **#external-wait** until child terminal; merge child **`outputs`** before step **3**.
+
+   - **Next-step resolution:** Auto-advance to step **3** after §5e merge or honest blocked handoff. **Forbidden:** prose-only idle at external-wait surfaces — use structured resume options per rule **2** § *External-wait / next-step modal*.
+
+3. **Emit child terminal **`mission_control_send_agent_result`** per **`## Completion (spawned)`** below.
+
+   - **Next-step resolution:** Auto-advance to terminal MCP result — no additional `USER_CHECKPOINT` on happy path after §5e completes.
 
 **Forbidden:** second PR row; **`master-planner`** / **`pr-breakdown`** / **`delivery-phases`** / **`phase-planner`**; Squad Leader **`mission_control_propose_dispatch_resolution`** on this lane.
 
@@ -127,5 +224,16 @@ Run **`../plan-and-deliver/skills/README.md`** § *Universal spawn preflight* be
 | R3 | Populate **`outputs`** from the required field list below |
 | R4 | Re-emit updated MCP result after user-requested follow-up on this lane (same spawn session; host resolves **`correlationId`**) |
 
-Stop after the MCP result call. Do not emit another **`mission_control_spawn_agent`** on this lane (see **`../README.md`** § *Terminal stop (normative)*).
+Required `outputs` fields:
+
+- `outputs.parentPlanPath`, `outputs.parentPlanSlug`
+- `outputs.targetPlanPath`, `outputs.targetPlanSlug`
+- `outputs.readyForImplementation`, `outputs.implementationReadinessReasons`
+- `outputs.implementationHandoffStatus` — `not-offered` | `offered` | `deferred` | `spawned-coding-session` | `coding-session-terminal`
+- `outputs.prPlanHandoffReady` — `true` when §§1–4 drafted and §5a passes (alias for leader ledger ack)
+- `outputs.spawnCorrelationId` — UUID from §5d when `implementationHandoffStatus` is `spawned-coding-session` or until child terminal is merged
+- `outputs.codingSessionStatus` — echo child `status` when §5e applies
+- `outputs.activeLanes`, `outputs.openLedgerEntries`, `outputs.remainingTasks` — bubble from inline **`pr-plan`** / **`coding-session`** when present
+
+Stop after the MCP result call. Do not emit another **`mission_control_spawn_agent`** on this lane except **`coding-session`** per inline **`pr-plan`** §5d (see **`../README.md`** § *Terminal stop (normative)*).
 

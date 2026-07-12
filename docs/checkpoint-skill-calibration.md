@@ -37,6 +37,7 @@ Derived index of **Checkpoint trust** turn behavior for **research-and-developme
 | **phase-planner** | *Pending calibration* | *Pending* | [`phase-planner/SKILL.md`](../missions/plan-and-deliver/skills/phase-planner/SKILL.md) |
 | **delivery-phases** | *Pending calibration* | *Pending* | [`delivery-phases/SKILL.md`](../missions/plan-and-deliver/skills/delivery-phases/SKILL.md) |
 | **author-prd** | *Pending calibration* | *Pending* | [`author-prd/SKILL.md`](../missions/plan-and-deliver/skills/author-prd/SKILL.md) |
+| **quick-fix-plan** | Inline **`pr-plan`** §5c — start coding session | Validate inputs, minimal parent, inline **`new-plan`** / **`pr-plan`** §§1–4 | [`quick-fix-plan/SKILL.md`](../missions/quick-fix/skills/quick-fix-plan/SKILL.md) § Checkpoint turn UX |
 
 ### master-planner — detail
 
@@ -129,6 +130,7 @@ Aligned warm-up tables and protocol **USER_CHECKPOINT** markers. Host merge for 
 | 9 | `missions/plan-and-deliver/skills/plan-reconcile/SKILL.md` | yes |
 | 10 | `missions/plan-and-deliver/skills/hosting-repo-rules/SKILL.md` | yes |
 | 11 | `missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md` | yes |
+| 12 | `missions/quick-fix/skills/quick-fix-plan/SKILL.md` | yes |
 
 ---
 
