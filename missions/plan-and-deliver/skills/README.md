@@ -39,7 +39,7 @@ When a skill runs **inline** on the invoker’s lane (not spawned via **`mission
 
 **plan and deliver** normally spawns planning and ship skills on child lanes; inline sections exist for dual-mode authoring and same-lane ship steps. **`pr-review`**, **`create-pr`**, **`deploy-walk`**, and **`plan-reconcile`** are **inline-only** on **`coding-session`** (no **`## Completion (spawned)`** on those skills). **`pre-pr-review`** is **spawn-only** from **`coding-session`** — **forbidden** inline on the coding-session lane; **auto-spawn** = **`mission_control_spawn_agent`** + wait for child **`mission_control_send_agent_result`**, not self-execute review steps here.
 
-**Inline `deploy-walk` on `coding-session`:** Agents must self-run agent-executable checklist steps (shell, grep/logs, file read/parse) per **`deploy-walk/SKILL.md`** § *Agent capability inventory (binding)* — manual steps require numbered **Testing steps** in § *Step 4 — Step presentation contract*.
+**Inline `deploy-walk` on `coding-session`:** Agents must self-run agent-executable checklist steps (shell, grep/logs, file read/parse) per **`deploy-walk/SKILL.md`** § *Agent capability inventory (binding)* — manual steps require numbered **Testing steps** in § *Step 4 — Step presentation contract* and close with **`USER_CHECKPOINT`** gates (manual step await, deploy status transition, deploy closure approval) per § *Checkpoint turn UX (skill-local)* — not prose-only deploy handoff.
 
 ## Recap, structured choice, act (plan-and-deliver)
 

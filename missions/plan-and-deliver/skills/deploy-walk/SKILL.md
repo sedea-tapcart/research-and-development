@@ -125,13 +125,25 @@ When inline on **`coding-session`** After deploy under [Post-merge Checkpoint ch
 
 | Step | Checkpoint behavior | Gate |
 |------|---------------------|------|
-| **1** — Resolve target plan | Auto-advance when slug/path is unambiguous | exception: multiple candidates → structured pick |
-| **2** — Read § N deploy test plan | Auto-advance | exception: missing section / wrong checklist shape → stop |
-| **Inline walk bootstrap** | Auto-advance through [Autonomous agent-executable pass](#autonomous-agent-executable-pass) | exception: blocked step |
+| **1** — Resolve target plan | Auto-advance when slug/path is unambiguous | exception: multiple candidates → [Target plan pick gate](#target-plan-pick-gate-binding) |
+| **2** — Read § N deploy test plan | Auto-advance | exception: missing section / wrong checklist shape → stop with recap (no modal) |
+| **Inline walk bootstrap** | Auto-advance through [Autonomous agent-executable pass](#autonomous-agent-executable-pass) | exception: blocked step → block note; no auto-flip |
 | **Autonomous agent-executable pass** | Auto-advance while next steps are agent-executable | exception: run failure → block or manual handback |
-| **Manual step await** / **Step 4** presentation | **Gate** — first developer-pick gate in this calibration PR | Manual step await (below) |
-| **`deploy-walk deployed`** / sub-section closure | **Gate** when lifecycle transition needs developer pick | deferred to JIT step PR |
-| **`approve-deploy-closure`** | **Gate** before Status `deployed → done` | deferred to JIT step PR |
+| **Manual step await** / **Step 4** presentation | **Gate** — primary developer-pick surface on inline walk | [Manual step await gate](#manual-step-await-gate-binding) |
+| **Before deploy complete** → **`deploy-walk deployed`** | **Gate** when sub-section completes or developer invokes status transition | [Deploy status transition gate](#deploy-status-transition-gate-binding) |
+| **`approve-deploy-closure`** | **Gate** before Status `deployed → done` and capstone todo flip | [Deploy closure approval gate](#deploy-closure-approval-gate-binding) |
+
+### Host classifier coupling (binding)
+
+Mission Control gate-surface detection for inline **`deploy-walk`** on Checkpoint dispatches consults **`deploy-walk/SKILL.md`** prose in addition to literal **`USER_CHECKPOINT`** lines. When [Step 4 — Step presentation contract](#step-4--step-presentation-contract) or [Manual step await gate](#manual-step-await-gate-binding) presentation ships on a turn, the host **`DEPLOY_WALK_MANUAL_STEP_BODY_PATTERNS`** classifier (see active hosting repo `extensions/mission-control/src/shared/checkpointTurnClassifier.ts`) must treat that body as a **developer-input gate** — including **continue-recovery** turns where policy preamble would otherwise suppress marker detection.
+
+| Presentation contract element | Host pattern family | Agent obligation |
+|--------------------------------|---------------------|------------------|
+| `**Manual step**` blockquote shell | Manual step body patterns | Same turn closes with [Manual step await gate](#manual-step-await-gate-binding) — not prose-only recap |
+| `manual step await gate` heading reference | Manual step body patterns | Recovery turns route to **gate recovery**, not continue recovery |
+| Numbered **Testing steps** under manual presentation | Manual step + testing-steps patterns | Do not end with command hints alone — modal options required |
+
+**Forbidden:** changing Step 4 presentation shape (for example removing `**Manual step**`, shortening **Testing steps** to one line, or dropping the manual-step await cross-ref) without updating the hosting-repo classifier patterns in the same PR chain. **Cross-ref:** PR 4 recovery routing — `.sedea/operations/.../plans/4_checkpoint_recovery_manual_gate_routing_*.plan.md` §8 Follow-ups **[J]**.
 
 ## Not chained to `plan-reconcile`
 
@@ -193,7 +205,7 @@ Give developers a **consistent state snapshot** during deploy verification so th
 
 **Population rules:** Same as [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`](../coding-session/SKILL.md) § *Session orientation table (binding)* — use `—` when unknown; never invent paths or PR numbers.
 
-**Mandatory gates (this skill):** [Inline walk bootstrap](#inline-walk-bootstrap) start; each [Step 4 — Step presentation contract](#step-4--step-presentation-contract) manual presentation; every developer-await **AskQuestion** / **`mission_control_present_structured_choice`** ([Deploy developer-await modal options](#deploy-developer-await-modal-options-binding)).
+**Mandatory gates (this skill):** [Inline walk bootstrap](#inline-walk-bootstrap) start; [Target plan pick gate](#target-plan-pick-gate-binding); each [Step 4 — Step presentation contract](#step-4--step-presentation-contract) manual presentation; [Deploy status transition gate](#deploy-status-transition-gate-binding); [Deploy with gaps gate](#deploy-with-gaps-gate-binding); [Deploy closure approval gate](#deploy-closure-approval-gate-binding); every developer-await **AskQuestion** / **`mission_control_present_structured_choice`** ([Deploy developer-await modal options](#deploy-developer-await-modal-options-binding)).
 
 ## Worktree path visibility (binding)
 
@@ -258,6 +270,74 @@ USER_CHECKPOINT — confirm manual deploy step verification or pick next walk ac
 
 - **`defaultOptionId: deploy-step-n-done`** when the developer is reviewing the currently presented manual step with no blockers surfaced.
 - **Next-step resolution:** Auto-advance through [Inline walk bootstrap](#inline-walk-bootstrap) and [Autonomous agent-executable pass](#autonomous-agent-executable-pass) on the happy path — no `USER_CHECKPOINT` until a **manual** step is presented per [Step 4 — Step presentation contract](#step-4--step-presentation-contract).
+
+### Target plan pick gate (binding)
+
+When [Step 1 — Resolve the target plan](#step-1--resolve-the-target-plan) resolution order item **5** applies (multiple PR plans with unchecked deploy steps):
+
+Put candidate slugs and one-line unchecked counts in **`displayMarkdown`**. Include [Session orientation table (binding)](#session-orientation-table-binding) when inline context supplies **`worktreePath`**.
+
+USER_CHECKPOINT — pick which PR plan this deploy walk targets.
+
+| Option id | Label (brief) | Act |
+|-----------|---------------|-----|
+| *(one per candidate slug)* | Walk `{slug}` deploy checklist | Bind target plan; continue Step **2** on **next** turn |
+| `more-details` | More details for option _ | Elaborate; re-open this gate |
+
+- **Forbidden:** prose-only plan pick menus — every choosable slug is an **`options`** row.
+- **Next-step resolution:** Auto-advance Step **1** items **1–4** on the happy path — no `USER_CHECKPOINT` until multiple candidates remain.
+
+### Deploy status transition gate (binding)
+
+When **`### Before deploy`** is fully `[x]` (or skipped) while `**Status:**` is still `drafted`, or the developer invokes **`deploy-walk deployed`**, close with structured choice **before** flipping `drafted → deployed`.
+
+USER_CHECKPOINT — approve deploy status transition to deployed.
+
+| Option id | Label (brief) | Act |
+|-----------|---------------|-----|
+| `mark-deployed` | Mark deployed — proceed to After deploy | Run **`deploy-walk deployed`** semantics; open After-deploy walk on **next** turn when steps remain |
+| `review-before-deploy` | Review Before-deploy checklist first | Re-present unchecked or skipped Before-deploy rows; no status flip |
+| `block-deploy-transition` | Block deploy transition | Keep `**Status:** drafted`; report blocked reason in recap |
+| `more-details` | More details for option _ | Elaborate; re-open this gate |
+
+When any `[ ]` boxes remain in `### Before deploy` and the developer still requests **`deploy-walk deployed`**, use [Deploy with gaps gate](#deploy-with-gaps-gate-binding) instead of this gate.
+
+- **`defaultOptionId: mark-deployed`** when Before deploy is fully `[x]` or skipped with audit notes.
+- **Checkpoint — Before deploy only scope:** When `deployWalkScope: before-deploy-only`, **forbidden** — do not open this gate; hand back to **`coding-session`** for [Auto-spawn pre-pr-review](../coding-session/SKILL.md#auto-spawn-pre-pr-review) instead.
+
+### Deploy with gaps gate (binding)
+
+When **`deploy-walk deployed`** is requested while unchecked `[ ]` items remain in `### Before deploy`:
+
+USER_CHECKPOINT — proceed to deployed with unchecked Before-deploy steps?
+
+| Option id | Label (brief) | Act |
+|-----------|---------------|-----|
+| `proceed-deployed-with-gaps` | Proceed to deployed with unchecked Before-deploy steps | Flip `**Status:** drafted → deployed`; list unchecked indexes in status history note |
+| `review-before-deploy` | Review Before-deploy steps first | No status flip |
+| `block-deploy-transition` | Block deploy transition | No status flip |
+| `more-details` | More details for option _ | Elaborate; re-open this gate |
+
+Only **`proceed-deployed-with-gaps`** authorizes the status mutation when gaps remain.
+
+### Deploy closure approval gate (binding)
+
+When **`### After deploy`** is fully `[x]` (or skipped) while `**Status:**` is `deployed`, or the last After-deploy **`done`** completes the sub-section, close with structured choice **before** flipping `deployed → done` or mutating capstone todo **`deploy-test-plan-verified`**.
+
+USER_CHECKPOINT — approve deploy checklist closure.
+
+| Option id | Label (brief) | Act |
+|-----------|---------------|-----|
+| `approve-deploy-closure` | Approve deploy checklist closure | Flip `**Status:** deployed → done`; run [Frontmatter capstone](#frontmatter-capstone--deploy-test-plan-verified-pending--done) mutation |
+| `review-deploy-checklist` | Review deploy checklist first | Re-read §7; no status flip |
+| `leave-status-deployed` | Leave status deployed | Keep `**Status:** deployed`; capstone stays `pending` |
+| `return-to-implementation-new-worktree` | Return to implementation — new worktree | Set **`outputs.returnToImplementation: true`**; hand back to **`coding-session`** — no `done` flip |
+| `more-details` | More details for option _ | Elaborate; re-open this gate |
+
+Only **`approve-deploy-closure`** authorizes the Status `deployed → done` flip and **`deploy-test-plan-verified`** `pending → done` mutation. **`return-to-implementation-new-worktree`** sets **`outputs.returnToImplementation: true`** — hand back to **`coding-session`**; do **not** flip to `done`.
+
+- **`defaultOptionId: approve-deploy-closure`** when After deploy is fully satisfied and no blockers remain.
+- **Checkpoint on parent lane:** Parent **`coding-session`** defers this gate to **`deploy-walk`** inline — **forbidden:** duplicate **`approve-deploy-closure`** modal on **`coding-session`** under Checkpoint auto-advance (see **`coding-session/SKILL.md`** § *Post-merge Checkpoint chain*).
 
 On inline start, run [Inline walk bootstrap](#inline-walk-bootstrap) — do not wait for `deploy-walk present 1`.
 
@@ -412,7 +492,7 @@ Resolution order (highest confidence first):
 2. **Mid-walk continuation.** Same chat already invoked `deploy-walk present <M>` against a specific plan; continue with that plan unless the **developer** names a different one.
 3. **Most recent agent recommendation.** The agent's last turn listed a **deploy-walk** step command in **`displayMarkdown`** or structured-choice **`options`** against a specific plan.
 4. **Single candidate in chat context.** Exactly one PR plan was read / referenced in the recent chat window — use it.
-5. **Multiple candidates.** Stop and use **AskQuestion** listing PR plans with at least one unchecked `[ ]` in their `## N. Deploy test plan`. The **developer** picks; subsequent commands stick with that plan.
+5. **Multiple candidates.** Stop and open [Target plan pick gate](#target-plan-pick-gate-binding) listing PR plans with at least one unchecked `[ ]` in their `## N. Deploy test plan`. The **developer** picks; subsequent commands stick with that plan.
 6. **No candidate.** Stop with: *"**deploy-walk** needs a target PR plan. Per **planning-target-resolution** and **`../README.md`** § *Recap, structured choice, act*, emit a fresh "Where we are now in the plan tree" snapshot, then collect the lane pick via **AskQuestion**, **`mission_control_present_structured_choice`** (§ *Sedea input channel* — prefer recap + modal in one message), then re-invoke."*
 
 The IDE focused-file list (host-injected **open and recently viewed files** metadata) is **not** consulted.
@@ -468,18 +548,8 @@ If `{note}` is omitted in `deploy-walk <N> done`, append `*(YYYY-MM-DD: done.)*`
 
 After the edit, **check whether step N was the last `[ ]` in the active sub-section**:
 
-- If `### Before deploy` is now fully `[x]` and Status is `drafted`, close with **AskQuestion** or **`mission_control_present_structured_choice`**: *Mark deployed* (runs **`deploy-walk deployed`**), *Review Before-deploy checklist*, or **More details for option _** — include the verbatim first After-deploy step in **`displayMarkdown`** when helpful.
-- If `### After deploy` is now fully `[x]` and Status is `deployed`, stop after marking the step and ask the developer for explicit closure approval with **AskQuestion** or **`mission_control_present_structured_choice`**. Required options (plus **`return-to-implementation-new-worktree`** and **More details for option _** per [Deploy developer-await modal options](#deploy-developer-await-modal-options-binding)):
-
-| Option id | Label (brief) |
-|-----------|---------------|
-| `approve-deploy-closure` | Approve deploy checklist closure |
-| `review-deploy-checklist` | Review deploy checklist first |
-| `leave-status-deployed` | Leave status deployed |
-| `return-to-implementation-new-worktree` | Return to implementation — new worktree |
-| `more-details` | More details for option _ |
-
-Only **`approve-deploy-closure`** authorizes the Status `deployed → done` flip and the **Frontmatter capstone** `deploy-test-plan-verified` `pending → done` mutation. Do not treat the final step's `done` command as approval for the larger deploy lifecycle closeout. **`return-to-implementation-new-worktree`** sets **`outputs.returnToImplementation: true`** — hand back to **`coding-session`**; do **not** flip to `done`.
+- If `### Before deploy` is now fully `[x]` and Status is `drafted`, open [Deploy status transition gate](#deploy-status-transition-gate-binding) — include the verbatim first After-deploy step in **`displayMarkdown`** when helpful.
+- If `### After deploy` is now fully `[x]` and Status is `deployed`, open [Deploy closure approval gate](#deploy-closure-approval-gate-binding).
 - Otherwise, if step N+1 is **agent-executable**, continue [Autonomous agent-executable pass](#autonomous-agent-executable-pass) in the same turn (no `deploy-walk present` wait).
 - If step N+1 is **manual**, close with **AskQuestion** or **`mission_control_present_structured_choice`** per [Manual step await gate](#manual-step-await-gate-binding) — **`present-next-manual-step`**, **`all-manual-steps-done`**, or **More details for option _** — put the verbatim next unchecked step line in **`displayMarkdown`**.
 
@@ -533,12 +603,8 @@ Confirmation: *"Marked {count} {Before or After}-deploy manual steps done in one
 Pre-conditions:
 
 - Status must currently be `drafted`. If `deployed` or `done`, reply: *"Status is already `{current}`. To override, reply `deploy-walk deployed force` (**developer** escape hatch — only use if the plan's lifecycle drifted from reality)."* (Skill's `force` branch is identical to the normal branch; the gate is the **developer**'s confirmation.)
-- If any `[ ]` boxes remain in `### Before deploy`, do **not** flip status yet. Use **AskQuestion** to confirm whether the developer wants to deploy with unchecked Before-deploy steps. Required options:
- - **Proceed to deployed with unchecked Before-deploy steps**
- - **Review Before-deploy steps first**
- - **Block deploy transition**
- - **More details for option _**
- Only **Proceed to deployed with unchecked Before-deploy steps** authorizes the status mutation. If approved, include a note listing unchecked indexes in the confirmation so the omission is auditable.
+- If any `[ ]` boxes remain in `### Before deploy`, open [Deploy with gaps gate](#deploy-with-gaps-gate-binding) — **forbidden** flipping status without developer pick.
+- When Before deploy is fully `[x]` or skipped, open [Deploy status transition gate](#deploy-status-transition-gate-binding) before `StrReplace` on the Status line.
 
 `StrReplace` on the Status line:
 
@@ -547,7 +613,7 @@ Pre-conditions:
 
 After status flip, close with **AskQuestion** or **`mission_control_present_structured_choice`**: *Present After-deploy step 1* (equivalent to **`deploy-walk present 1`**), *Deploy walk status*, or **More details for option _** — put the verbatim first After-deploy step line in **`displayMarkdown`**.
 
-If `### After deploy` has no `[ ]` items at all (it's empty by design or already all `[x]` — unusual), reply: *"Status flipped: `drafted → deployed`. No `### After deploy` steps remain. Deploy checklist closure still requires approval."* Then run the same **Approve deploy checklist closure** gate used by the last After-deploy `done` branch before flipping `deployed → done` or changing `deploy-test-plan-verified` to `done`.
+If `### After deploy` has no `[ ]` items at all (it's empty by design or already all `[x]` — unusual), reply: *"Status flipped: `drafted → deployed`. No `### After deploy` steps remain. Deploy checklist closure still requires approval."* Then open [Deploy closure approval gate](#deploy-closure-approval-gate-binding) before flipping `deployed → done` or changing `deploy-test-plan-verified` to `done`.
 
 ### `deploy-walk status` — read-only summary
 
