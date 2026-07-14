@@ -67,6 +67,16 @@ warmUpRules:
 
 # Pre-PR Review
 
+**Spawn-only (binding).** Run on a **fresh spawned child lane** opened by **`mission_control_spawn_agent`** from **`coding-session`**. Mission Control validates frontmatter **`inputs`** at spawn time. **Forbidden:** execute this skill **inline** on the **`coding-session`** lane — mirror [`create-pr/SKILL.md`](../create-pr/SKILL.md) (inline-only on **`coding-session`**; **`pre-pr-review`** is the inverse: spawn-only from that lane).
+
+### Standalone dispatch (stop immediately)
+
+If Mission Control opened a session whose only intent is **`pre-pr-review`** / pre-PR review with **no** spawn handover from active **`coding-session`** (`worktreePath`, `worktreeName`, `baseRef`, committed diff):
+
+1. **Stop** — do not run review steps.
+2. Tell the developer **`pre-pr-review`** is **spawn-only** — a fresh child lane from **`coding-session`** after ship cut-point + Before deploy.
+3. Direct them to open or return to **`coding-session`** and complete the ship chain through [Auto-spawn pre-pr-review](../coding-session/SKILL.md#auto-spawn-pre-pr-review).
+
 ## Warm-up manifest (spawned)
 
 Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea/docs/lane-manifest-contract.md) and **`../README.md`** § *Default warm-up* / *Warm-up cap exceptions*. Host merge: `effectiveWarmUp = dedupe(bootstrapRules → laneRules → skillWarmUp)`. Frontmatter matches this table. **384 KiB cap:** frontmatter omits **`plan.mdc`** and **`development-process.md`** — Step 3 reads **`development-process.md`**; Step 4 loads **`inputs.targetPlanPath`** (PR plan, not Squad Leader **`plan.mdc`**). **No `alwaysApply` frontmatter flip.**
@@ -100,15 +110,58 @@ This pass complements, and does not replace, the later GitHub-surface **reviewer
 
 **Worktree removal ownership (binding).** **Do not remove worktrees you do not own.** Review **`worktreePath`** only — this skill does **not** authorize **`git worktree remove`**, **`git worktree prune`**, or **`sedea_remove_worktree_folder`** except on **this pass’s** **`WORKTREE_ROOT`** when **all four** preconditions in [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § *Worktree ownership* and rule **20** § *Worktree removal ownership (binding)* hold. **`git worktree list` is read-only** when ownership is unclear — **stop; do not remove**.
 
+## Agent messaging (MCP)
+
+**MCP spawn/result skill.** Parent→child spawn and child terminal result use MCP tools per **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Agent-to-agent spawn protocol*.
+
+| Action | MCP tool |
+|--------|----------|
+| Parent spawn (when this skill emits a child lane) | **`mission_control_spawn_agent`** |
+| **This** spawned lane terminal (and terminal re-emits) | **`mission_control_send_agent_result`** |
+
+**Binding:**
+
+- Run **`../README.md`** § *MCP spawn preflight* (rows M1–M8) before every MCP spawn; **forbidden** host-resolved identity keys in MCP args (`correlationId`, `dispatchId`, `slotId`, … — see README § *Host-resolved identity*).
+- Inline skills on this mission stay **inline-only** — no spawn wire change unless the protocol step explicitly spawns a child lane.
+
+
 ## Structured choice (Mission Control)
 
-This skill does not own approval modals — **`coding-session`** collects developer consent before spawns. When this lane must surface a pick, use **AskQuestion**, **`MC_PHASED_RESPONSE_V1`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act*.
+This skill does not own approval modals — **`coding-session`** collects developer consent before spawns. When this lane must surface a pick, use **AskQuestion**, **`mission_control_present_structured_choice`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act*.
+
+## Checkpoint turn UX (skill-local)
+
+Under Checkpoint trust (`trustLevel: checkpoint`), auto-advance scripted happy-path steps; emit structured choice only at **USER_CHECKPOINT** markers in this section, implicit external-wait surfaces, or exception paths. **No cross-skill inheritance** — gate defaults here apply only to **`pre-pr-review`**; invoker missions **`plan-and-deliver`**, **`single-phase`**, **`quick-fix`**, and **`debug-and-fix`** document their own **`coding-session`** ship gates — see **`coding-session/SKILL.md`** § *Checkpoint turn UX* for Review feedback approval and Create-PR handoff.
+
+**Real-dispatch test loop (binding):** After merge, run one full **`pre-pr-review`** spawn on a Checkpoint dispatch through Step **8** — verify Steps **1–7** auto-advance and Step **8** **always** auto-emits terminal + parent refocus (including **`no-go`**) without a modal; the **`coding-session`** parent receives the bubble-up and owns next-step gates before the parent phase advances the next ship-chain skill PR — per **Phase 2 — R&D center audit** § *Single-concern strategy*.
+
+Marker syntax: [`.sedea/centers/sedea/docs/user-checkpoint-marker-syntax.md`](.sedea/centers/sedea/docs/user-checkpoint-marker-syntax.md).
+
+| Step | Checkpoint behavior | Gate |
+|------|---------------------|------|
+| **1** — Validate spawned inputs | Auto-advance on valid spawn `inputs` | exception: missing required inputs → `failure` terminal |
+| **Refresh lane display** | Auto-advance when labels match; act when stale | — |
+| **2** — Fresh reviewer lane | Auto-advance on clean detached lane | exception: reused coding-agent context → `aborted` |
+| **3** — Load standards and rules | Auto-advance | exception: missing required rule → `partial` |
+| **4** — Load anchor | Auto-advance | exception: wrong plan template → `failure` |
+| **5** — Read committed diff | Auto-advance against committed cut point | exception: zero commits / empty diff → `failure` |
+| **6** — Score categories | Auto-advance through category table | — |
+| **7** — Proposed follow-ups | Auto-advance (handoff only; no plan mutation) | — |
+| **8** — Report and result | Auto-advance — report, parent refocus, terminal same turn (all outcomes including **`no-go`**) | — |
+
+### Developer input vs external-wait (Checkpoint)
+
+Under Checkpoint trust, **happy-path** reviewer steps (**1–8**) **auto-advance without a turn-end modal** on this lane. This skill owns **no** developer-input **`USER_CHECKPOINT`** markers — **`coding-session`** owns Review feedback approval, Create-PR handoff (exceptional), and post-create-pr gates after terminal bubble-up.
+
+**Forbidden on this lane:** prose-only report handback without **`mission_control_send_agent_result`**; **`mission_control_present_structured_choice`** / AskQuestion at Step **8** (including **`no-go`**); *tell me when*, *waiting for developer*, or *stay advisory until you pick* — parent lane gates apply after **`mission_control_refocus_parent_lane`**.
+
+**Exception paths** (missing inputs, wrong anchor, empty diff, reused coding-agent context) emit **`failure`** / **`aborted`** / **`partial`** terminal results — not developer-choice modals on this reviewer lane.
 
 ## Session orientation table (binding)
 
 Give developers a **consistent state snapshot** during pre-PR review so they can re-orient after reload or parallel work.
 
-**When required:** At every **Mandatory gate** below — render as the **first block** in `display.markdown` (before step recap or checklist prose). **Forbidden:** omitting the table and substituting scattered one-liners on modal gates. The terminal **`AGENT_RESULT_RESPONSE_V1`** line uses the 1–3 sentence `summary` only — do **not** embed the markdown table in the terminal JSON.
+**When required:** At spawn bootstrap gates only — **not** at Step **8** under Checkpoint (Step **8** auto-advances). Render as the **first block** in `displayMarkdown` when a gate applies. **Forbidden:** omitting the table and substituting scattered one-liners on modal gates. The terminal **`mission_control_send_agent_result`** line uses the 1–3 sentence `summary` only — do **not** embed the markdown table in the terminal JSON.
 
 **Table shape (markdown):**
 
@@ -124,7 +177,7 @@ Give developers a **consistent state snapshot** during pre-PR review so they can
 
 **Population rules:** Same contract as [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`](../coding-session/SKILL.md) § *Session orientation table (binding)* — use spawn `inputs` and review outputs; never invent paths.
 
-**Mandatory gates (this skill):** any spawned turn that closes with **`MC_PHASED_RESPONSE_V1`** before terminal (for example lane closure after review).
+**Mandatory gates (this skill):** None at Step **8** under Checkpoint — the reviewer lane always auto-handbacks; **`coding-session`** owns developer gates for **`no-go`**, flags, and actionable handback (see [Step 8 — Report and result](#step-8--report-and-result)).
 
 ## Step 1 — Validate spawned inputs
 
@@ -139,20 +192,26 @@ For `anchorType: "plan"`, `targetPlanPath` is required and must point to a per-P
 
 If any required input is missing, stop with `failure`. Do not ask the developer to reconstruct a seed; the spawning `coding-session` agent owns input assembly.
 
+- **Next-step resolution:** Auto-advance to [Refresh lane display](#refresh-lane-display-when-stale) when validation passes — no `USER_CHECKPOINT` on happy-path spawn handoff. On missing required inputs, emit `failure` terminal — not a missing-inputs modal on this lane.
+
 ## Refresh lane display (when stale)
 
 After **`targetPlanSlug`** or free-form scope is validated (end of Step 1):
 
 1. Compare the visible tab **title** / **hover** to this review pass (plan slug, worktree name, or scope summary).
-2. When spawn labels are **generic or wrong**, call MCP **`mission_control_update_lane_display`** on **this lane only** with non-empty **`title`** and optional **`description`** / **`hoverDescription`** (max lengths in [`.sedea/centers/sedea/rules/9_display-metadata-authority.mdc`](.sedea/centers/sedea/rules/9_display-metadata-authority.mdc)).
+2. When spawn labels are **generic or wrong**, call MCP **`mission_control_update_lane_display`** on **this lane only** with **`title`** = `Pre-PR Review-{semantic title}` (**`targetPlanSlug`**, worktree name, or scope summary) and optional **`description`** / **`hoverDescription`** (max lengths in [`.sedea/centers/sedea/rules/9_display-metadata-authority.mdc`](.sedea/centers/sedea/rules/9_display-metadata-authority.mdc)). See [rule **50**](../../../../rules/50_mission-control-display-metadata-discipline.mdc) § *Lane title prefix conventions*.
 3. **Skip** when spawn labels already match scope.
 4. **Forbidden:** **`mission_control_update_dispatch_display`** from a child lane.
 
 See [`.sedea/centers/research-and-development/rules/50_mission-control-display-metadata-discipline.mdc`](../../../../rules/50_mission-control-display-metadata-discipline.mdc) § *Child lane — refresh own slot when labels are stale*.
 
+- **Next-step resolution:** Auto-advance to Step **2** after display refresh or skip — no `USER_CHECKPOINT` on this step.
+
 ## Step 2 — Fresh reviewer lane
 
 Confirm this is a fresh reviewer lane. Do not reuse context from the coding agent that implemented the worktree. If the lane already contains implementation edits or coding-agent tool history, stop with `aborted` and request a fresh `pre-pr-review` spawn.
+
+- **Next-step resolution:** Auto-advance to Step **3** on a clean detached lane — no `USER_CHECKPOINT` on this step.
 
 ## Step 3 — Load standards and rules
 
@@ -160,10 +219,14 @@ Read `.sedea/centers/research-and-development/docs/development-process.md` in fu
 
 Read every path from `projectRules`. If a rule path is missing, report it as `partial` unless the rule is clearly irrelevant to the diff.
 
+- **Next-step resolution:** Auto-advance to Step **4** — no `USER_CHECKPOINT` on this step.
+
 ## Step 4 — Load anchor
 
 - `plan`: read `targetPlanPath`. Verify per-PR template sections §§ 1–7 are present; § 8 and `## Follow-ups` are optional. Do not mutate §§ 1–8.
 - `free-form`: no plan file; review the committed diff only.
+
+- **Next-step resolution:** Auto-advance to Step **5** when anchor loads — no `USER_CHECKPOINT` on this step. Wrong plan template → `failure` terminal.
 
 ## Step 5 — Read committed diff
 
@@ -181,6 +244,8 @@ git status --short --ignore-submodules=dirty
 If `git status --short` is non-empty, continue against the committed diff but evaluate dirty-tree degradation using `git status --short --ignore-submodules=dirty` (aligns with `.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc` submodule-only drift guidance). Only non-submodule local edits should be flagged as not part of the reviewed cut point.
 
 If there are zero commits ahead and no diff, stop with `failure`: there is nothing to review.
+
+- **Next-step resolution:** Auto-advance to Step **6** when a committed diff exists — no `USER_CHECKPOINT` on this step.
 
 ## Pre-PR phase boundary (plan anchor)
 
@@ -239,6 +304,8 @@ Verdict per row: `PASS`, `FLAG`, or `FAIL`. `FAIL` blocks PR creation or merge r
 | **F2** | Repo-rule compliance |
 | **F3** | General code quality |
 
+- **Next-step resolution:** Auto-advance to Step **7** after category scoring — no `USER_CHECKPOINT` on this step.
+
 ## Step 7 — Proposed follow-ups
 
 For `plan` anchor only: collect actionable `FLAG` items that are not blockers as **proposed** `## Follow-ups` for the PR plan. Do **not** mutate the plan file from this reviewer lane; the active **`coding-session`** agent must present these proposed follow-ups to the developer and receive explicit approval before appending them.
@@ -253,6 +320,8 @@ Rules:
 6. **Exclude** every item that only restates **`### Staging test`**, **`### Production`**, or post-merge production verification — omit entirely (see **§7 Staging test and Production — silent omission** above), not in `proposedFollowUps` or handback.
 
 For `free-form`, skip file writes.
+
+- **Next-step resolution:** Auto-advance to Step **8** — handoff only; no plan mutation and no `USER_CHECKPOINT` on this step.
 
 ## Step 8 — Report and result
 
@@ -293,15 +362,31 @@ End with a child result containing:
 
 Set `continuationStatus`:
 
-- `terminal` when recommendation is `go` and no blocking review work remains.
-- `active` when blockers require a coding-session fix loop and developer approval is pending.
+- `terminal` when the review report is complete — including **`no-go`** (parent owns fix-loop gates; this lane does not wait on the developer).
 - `partial` status with `continuationStatus: "active"` when the review ran but missing rules, non-submodule dirty uncommitted edits, or incomplete anchors make the result degraded.
 
-After the report, close **this turn** with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** per **Squad Leader bubble-up** below — the report is not a valid turn end alone. Do not run `git`, `gh`, source edits, commits, pushes, or PR creation.
+After the report, hand back per **Squad Leader bubble-up** below. Do not run `git`, `gh`, source edits, commits, pushes, or PR creation.
+
+- **Next-step resolution:** Auto-advance through Steps **1–8** on the happy path — **no** `USER_CHECKPOINT` on Step **8**. **`no-go`** is a recommendation for the parent lane, not a reviewer-lane pause.
 
 ## Squad Leader bubble-up (detached lanes)
 
-Runs on a **detached** reviewer lane; the **plan and deliver** Squad Leader may not see this result. When the review finishes, close with **AskQuestion** or **`MC_PHASED_RESPONSE_V1`** on **this lane**: recap recommendation + options **I'm done on this review lane** and **More details for option _**. §8 progress reaches the Squad Leader via **`AGENT_RESULT_RESPONSE_V1`** terminal **`outputs`** (`targetPlanPath`, `shipPhase`, `rowStatus`) and Mission Control host sync — **not** developer paste on the leader dispatch (**`../../plan.mdc`** §8 *Policy — no manual recap*). Do not prose-only handoff without structured choice.
+Runs on a **detached** reviewer lane; the **plan and deliver** Squad Leader may not see this result until terminal **`mission_control_send_agent_result`** host sync.
+
+### Auto terminal + parent refocus (binding — all outcomes)
+
+After Step **8** report completes ( **`go`** or **`no-go`** ):
+
+**Same turn** (report prose may precede MCP structured-choice call):
+
+1. Call **`mission_control_refocus_parent_lane`** (optional `{ "reason": "pre-pr-review-complete" }` — no host-resolved identity keys).
+2. Emit terminal **`mission_control_send_agent_result`** as the **last line** per [Completion (spawned)](#completion-spawned).
+
+Populate terminal **`outputs`** with full review result — including **`recommendation: no-go`**, **`blockers`**, **`flags`**, and **`codingAgentHandback`** when present. The **parent** (**`coding-session`**) opens **Review feedback approval gate** or blocks Create-PR per its skill; this reviewer lane does **not** pause for developer confirmation.
+
+**Forbidden at Step 8:** **`mission_control_present_structured_choice`** / AskQuestion report/result modal; **`USER_CHECKPOINT`** at Step **8**; waiting for **`review-lane-done`**; prose-only handback without MCP result.
+
+§8 progress reaches the Squad Leader via **`mission_control_send_agent_result`** terminal **`outputs`** (`targetPlanPath`, `shipPhase`, `rowStatus`) and Mission Control host sync — **not** developer paste on the leader dispatch (**`../../plan.mdc`** §8 *Policy — no manual recap*).
 
 | Outcome | `shipPhase` | `rowStatus` | Key `outputs` |
 |---------|-------------|-------------|---------------|
@@ -310,7 +395,7 @@ Runs on a **detached** reviewer lane; the **plan and deliver** Squad Leader may 
 
 ## Mission Control section 8 sync (required terminal `outputs`)
 
-On **every** terminal `AGENT_RESULT_RESPONSE_V1` (including follow-up re-emits), `outputs` **must** include:
+On **every** terminal `mission_control_send_agent_result` (including follow-up re-emits), `outputs` **must** include:
 
 | Field | Rule |
 |-------|------|
@@ -326,14 +411,34 @@ Mission Control writes `ship-ledger.v1.json` from child terminal **`outputs`** a
 
 Required `outputs` per **Step 8 — Report and result**, **Mission Control section 8 sync**, and the bubble-up table. Re-emit an **updated** terminal result after user-requested follow-up on this lane (same `correlationId`).
 
-### Host protocol line (required)
+### Parent refocus (binding)
 
-Emit **exactly one** line on its own: `AGENT_RESULT_RESPONSE_V1` immediately followed by a single JSON object on the **same** line. Required keys: `version` (1), `correlationId` (from the spawn request), `status` (`success` | `partial` | `failure` | `aborted` | `abandoned`), `summary` (1–3 sentences), `outputs`, `errors` (use `[]` when none). Populate `outputs` from Step 8 **and** include `targetPlanPath`, `shipPhase`, and `rowStatus` on every terminal line. The emitted line must be **valid JSON** (no `{...}` placeholders in the actual output). See **`.sedea/centers/sedea/skills/README.md`** § *Spawned terminal line*.
+On every successful Step **8** auto-handback, call **`mission_control_refocus_parent_lane`** **immediately before** the MCP result call so Mission Control focuses the **immediate parent** lane (typically **`coding-session`**) in the same dispatch. See **`.sedea/centers/sedea/skills/README.md`** § *Optional parent refocus (`mission_control_refocus_parent_lane`)*.
 
-Stop after the terminal line. Do not emit another `AGENT_RUN_REQUEST_V1` or run the next protocol step in the same turn (see **`../README.md`** § *Terminal stop (normative)*).
+| Path | Refocus |
+|------|---------|
+| Step **8** complete (**`go`** or **`no-go`**) | **`mission_control_refocus_parent_lane`** same turn, before terminal |
+| **`failure`** / **`aborted`** terminal without bubble-up | Omit refocus unless skill text requires parent attention |
+
+**Forbidden:** structured-choice options whose primary purpose is parent-switch — use **`mission_control_refocus_parent_lane`** instead.
+
+### MCP result preflight (`mission_control_send_agent_result`)
+
+| Step | Check |
+|------|--------|
+| R1 | Call **`mission_control_send_agent_result`** with **`status`**, **`summary`**, optional **`outputs`** / **`errors`** |
+| R2 | **Forbidden args absent** — no **`correlationId`**, **`dispatchId`**, **`slotId`**, or other host-resolved keys |
+| R3 | Populate **`outputs`** from the required field list below |
+| R4 | Re-emit updated MCP result after user-requested follow-up on this lane (same spawn session; host resolves **`correlationId`**) |
+
+**Message order on terminal turns:** report recap (optional prose) → **`mission_control_refocus_parent_lane`** (when required above) → **`mission_control_send_agent_result`** (**last line**).
+
+Stop after the MCP result call. Do not emit another `mission_control_spawn_agent` or run the next protocol step in the same turn (see **`../README.md`** § *Terminal stop (normative)*).
 
 ## Completion (inline)
 
-Report the fields below in prose to the invoker on the **same lane**. Do **not** emit `AGENT_RUN_REQUEST_V1`, `AGENT_RESULT_RESPONSE_V1`, or `MC_DISPATCH_RESOLVED_V1`. Do **not** add a **Host protocol line** under this section (see **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Inline completion* and **`.sedea/centers/sedea/skills/README.md`** § *Completion (inline)*).
+Report the fields below in prose to the invoker on the **same lane**. Do **not** emit `mission_control_spawn_agent`, `mission_control_send_agent_result`, or `mission_control_propose_dispatch_resolution`. Do **not** add a **MCP result** under this section (see **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Inline completion* and **`.sedea/centers/sedea/skills/README.md`** § *Completion (inline)*).
 
-Normally spawned from **`coding-session`** on a fresh reviewer lane. If run inline on the same lane, use the same `outputs` semantics as **Step 8 — Report and result** and **`## Completion (spawned)`** in prose only.
+**Forbidden when `upstreamSkill` is `coding-session`:** do **not** run inline on the **`coding-session`** lane — spawn only per **Spawn-only (binding)** above.
+
+When a mission protocol **explicitly** assigns this skill inline on a **non–`coding-session`** lane (rare), use the same `outputs` semantics as **Step 8 — Report and result** and **`## Completion (spawned)`** in prose only — **no** spawn or MCP results.

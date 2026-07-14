@@ -89,7 +89,7 @@ If Mission Control opened a session whose only intent is **`deploy-walk`** / dep
 
 1. **Stop** — do not walk checklists or edit the plan.
 2. Tell the developer **`deploy-walk`** is **inline-only** on the **`coding-session`** lane (Local test after commit, Staging test post-merge before Production, or Production after Staging complete).
-3. Direct them to open or return to **`coding-session`** with the PR plan and worktree — see [`coding-session/SKILL.md`](../coding-session/SKILL.md) § *Local test deploy-walk handoff*, § *Staging test deploy-walk handoff*, and § *Production deploy-walk handoff*.
+3. Direct them to open or return to **`coding-session`** with the PR plan and worktree — see [`coding-session/SKILL.md`](../coding-session/SKILL.md) § *Local test deploy-walk handoff*, § *Staging test deploy-walk handoff*, and § *Production-walk handoff*.
 
 **Execution owner:** the active **coding-session agent** runs this skill inline. Do **not** spawn a separate deploy-walk child lane.
 
@@ -103,6 +103,45 @@ If Mission Control opened a session whose only intent is **`deploy-walk`** / dep
 See [Agent-executable vs manual steps](#agent-executable-vs-manual-steps).
 
 **Worktree removal ownership (binding).** **Do not remove worktrees you do not own.** Deploy verification may read **`worktreePath`**; post-merge cleanup removes **only** **this pass’s** **`WORKTREE_ROOT`** after merge consent — see [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § *Worktree ownership* and rule **20** § *Worktree removal ownership (binding)*. **`git worktree list` is read-only** when ownership is unclear — **stop; do not remove**.
+
+## Checkpoint turn UX (skill-local)
+
+Under Checkpoint trust (`trustLevel: checkpoint`), auto-advance scripted happy-path steps; emit structured choice only at **USER_CHECKPOINT** markers in this section, implicit external-wait surfaces, or exception paths. **No cross-skill inheritance** — gate defaults here apply only to **`deploy-walk`**; other ship-chain skills document their own markers.
+
+**Real-dispatch test loop (binding):** After merge, run one full inline **`deploy-walk`** on a **`coding-session`** Checkpoint dispatch through [Manual step await gate](#manual-step-await-gate-binding) / [Step 4 — Step presentation contract](#step-4--step-presentation-contract) and collect a developer verdict before the parent phase advances **`create-pr`** PR 4 — per **Ship-chain skills UX** § *Single-concern strategy*.
+
+Marker syntax: [`.sedea/centers/sedea/docs/user-checkpoint-marker-syntax.md`](.sedea/centers/sedea/docs/user-checkpoint-marker-syntax.md).
+
+### Developer input vs external-wait (Checkpoint)
+
+Under Checkpoint trust, **happy-path** inline walk steps (bootstrap, agent-executable pass, sub-section auto-advance) **auto-advance without a turn-end modal**. **Manual** step presentation is **developer-input** — a **USER_CHECKPOINT** — and **must** close with [Manual step await gate](#manual-step-await-gate-binding) on the **same turn** as Step 4 presentation.
+
+**Forbidden:** recap of manual **Testing steps** + *reply with results*, *tell me when done*, *run these spot-checks then reply*, or *auto-advancing (no modal)* — those phrases describe developer-input gates, not happy-path auto-advance. **Forbidden:** treating manual deploy verification as rule **2** external-wait.
+
+When inline on **`coding-session`** Production under [Post-merge Checkpoint chain](../coding-session/SKILL.md#post-merge-checkpoint-chain-binding), the parent auto-advance chain stops **at** manual presentation; this skill owns the turn-end modal.
+
+| Step | Checkpoint behavior | Gate |
+|------|---------------------|------|
+| **1** — Resolve target plan | Auto-advance when slug/path is unambiguous | exception: multiple candidates → [Target plan pick gate](#target-plan-pick-gate-binding) |
+| **2** — Read § N deploy test plan | Auto-advance | exception: missing section / wrong checklist shape → stop with recap (no modal) |
+| **Inline walk bootstrap** | Auto-advance through [Autonomous agent-executable pass](#autonomous-agent-executable-pass) | exception: blocked step → block note; no auto-flip |
+| **Autonomous agent-executable pass** | Auto-advance while next steps are agent-executable | exception: run failure → block or manual handback |
+| **Manual step await** / **Step 4** presentation | **Gate** — primary developer-pick surface on inline walk | [Manual step await gate](#manual-step-await-gate-binding) |
+| **Local test complete** → **`deploy-walk deployed`** | **Gate** when sub-section completes or developer invokes status transition | [Deploy status transition gate](#deploy-status-transition-gate-binding) |
+| **`approve-deploy-closure`** | **Auto-advance** — resolve **`approve-deploy-closure`** **same turn** when Production is fully satisfied (Status `deployed → done` + capstone) | **Gate** on Non-Checkpoint / exception only — [Deploy closure approval gate](#deploy-closure-approval-gate-binding) |
+
+### Host classifier coupling (binding)
+
+Mission Control gate-surface detection for inline **`deploy-walk`** on Checkpoint dispatches consults **`deploy-walk/SKILL.md`** prose in addition to literal **`USER_CHECKPOINT`** lines. When [Step 4 — Step presentation contract](#step-4--step-presentation-contract) or [Manual step await gate](#manual-step-await-gate-binding) presentation ships on a turn, the host **`DEPLOY_WALK_MANUAL_STEP_BODY_PATTERNS`** classifier (see active hosting repo `extensions/mission-control/src/shared/checkpointTurnClassifier.ts`) must treat that body as a **developer-input gate** — including **continue-recovery** turns where policy preamble would otherwise suppress marker detection.
+
+| Presentation contract element | Host pattern family | Agent obligation |
+|--------------------------------|---------------------|------------------|
+| `**Manual step**` blockquote shell | Manual step body patterns | Same turn closes with [Manual step await gate](#manual-step-await-gate-binding) — not prose-only recap |
+| `manual step await gate` heading reference | Manual step body patterns | Recovery turns route to **gate recovery**, not continue recovery |
+| Numbered **Testing steps** under manual presentation | Manual step + testing-steps patterns | Do not end with command hints alone — modal options required |
+
+**Forbidden:** changing Step 4 presentation shape (for example removing `**Manual step**`, shortening **Testing steps** to one line, or dropping the manual-step await cross-ref) without updating the hosting-repo classifier patterns in the same PR chain. **Cross-ref:** PR 4 recovery routing — `.sedea/operations/.../plans/4_checkpoint_recovery_manual_gate_routing_*.plan.md` §8 Follow-ups **[J]**.
+
 
 ## Structured choice (Mission Control)
 
@@ -157,9 +196,9 @@ When `upstreamSkill` is **`coding-session`** and `deployWalkScope` is **`staging
 | **Scope** | Only **`### Staging test`** numbered steps while `**Status:**` is `deployed` (post-merge; merged code + staging deploy) |
 | **Forbidden** | Running this scope while `**Status:**` is `pr-open` (pre-merge) unless developer uses explicit `deploy-walk present staging <N>` override |
 | **Forbidden** | Walking **`### Local test`** or **`### Production`** in this scope |
-| **Terminal** | `stagingTestStatus: complete`; `deployStatus: deployed` (unchanged) — hand back to **`coding-session`** for [Production deploy-walk handoff](../coding-session/SKILL.md#production-deploy-walk-handoff) |
+| **Terminal** | `stagingTestStatus: complete`; `deployStatus: deployed` (unchanged) — hand back to **`coding-session`** for [Production-walk handoff](../coding-session/SKILL.md#production-deploy-walk-handoff) |
 | **Blocked** | Any Staging test step remains `[ ]` without skip/block resolution → report `blockedStep` in inline outputs |
-| **Handback** | Parent **`coding-session`** continues to [Production deploy-walk handoff](../coding-session/SKILL.md#production-deploy-walk-handoff) when §7 Production applies |
+| **Handback** | Parent **`coding-session`** continues to [Production-walk handoff](../coding-session/SKILL.md#production-deploy-walk-handoff) when §7 Production applies |
 
 Use `worktreePath` / `worktreeName` from inline context for command context in step presentations. PR fields (`prUrl`, `prNumber`, …) are usually present for staging scope.
 
