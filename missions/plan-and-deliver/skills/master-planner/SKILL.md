@@ -690,15 +690,35 @@ Invoke **AskQuestion** or **`mission_control_present_structured_choice`** in the
 
 **Phase-planner child active (binding):** When **`activeLanes`** (from inline **`delivery-phases`** / **`new-plan`** merge or bubbled **`mission_control_send_agent_result`**) includes **`continuationOwner: "phase-planner-agent"`** with **`continuationStatus: "active"`** for a **`Delivery phases`** row, **do not** offer **`route-6`**, **`expand-eligible-pr`**, **`expand-next-phase`**, or other phase-scoped decomposition options for that row on this **Master Plan** lane. Acknowledge in one line (phase slug, child lane id when known) and tell the developer to continue on the **phase-planner** child lane. Re-offer Step **7b** master-plan options only after **`phaseShipComplete`** for that phase or explicit defer/abandon — see **`phase-planner`** § *Phase delivery ownership*.
 
-**Inline `pr-plan` handoff pending (binding):** When **`spawnedPlans`** includes a PR plan whose inline merge reports **`implementationHandoffStatus`** in **`not-offered`**, **`offered`**, or **`spawned-coding-session`** (and no terminal **`coding-session`** yet), **omit** **`route-6`**, **`draft-7`**, and other master-plan options until §5c resolves or the **`coding-session`** child completes — **except** when merge includes **`prPlanHandoffSkipped: true`** (**`pr-breakdown`** **`approve-list`** auto-chain; §5c deferred). Then offer Step **7b** menus and an option to open inline **`pr-plan`** §5c on that **`targetPlanPath`** (for example *Start coding session — PR plan ready*). Offer **`pr-plan`** §5c options (or continue waiting on an open **`coding-session`** child) on **this lane** when **`prPlanHandoffSkipped`** is absent — see Step **7c** *Pending inline `pr-plan` handoff*.
+**Inline `pr-plan` handoff pending (binding):** When **`spawnedPlans`** includes a PR plan whose inline merge reports **`implementationHandoffStatus`** in **`not-offered`** or **`offered`** ( **`coding-session`** not yet spawned), **omit** **`route-6`**, **`draft-7`**, and other master-plan options until §5c resolves — **except** when merge includes **`prPlanHandoffSkipped: true`** (**`pr-breakdown`** **`approve-list`** auto-chain; §5c deferred). Then offer Step **7b** menus and an option to open inline **`pr-plan`** §5c on that **`targetPlanPath`** (for example *Start coding session — PR plan ready*). Offer **`pr-plan`** §5c options on **this lane** when **`prPlanHandoffSkipped`** is absent — see Step **7c** *Pending inline `pr-plan` handoff*.
 
-**Primary next moves (all complexity bands)** — include at minimum:
+**Plan entered execution (binding — Plan Change offer):** When any PR under this Master Plan tree reports **`implementationHandoffStatus: spawned-coding-session`**, or **`activeLanes`** includes a non-terminal **`coding-session`** child, the plan has **entered execution**. On every Step **7b** modal while that remains true:
+
+| Rule | Requirement |
+|------|-------------|
+| **Must include** | **`plan-change`** — *Plan Change — revise plan and notify open children* |
+| **May include** | Wait / ack for open child, **`pause`**, **`more-details`**, and other non-decomposition options that do not start a new §6 route |
+| **Still omit** | **`route-6`**, **`draft-7`**, expand options that would steal an active **`phase-planner`** subtree — unless that phase is ship-complete / deferred / abandoned |
+
+**Forbidden:** omit **Plan Change** once execution is open; treat child notify-**receive** as a substitute for this **offer**; auto-notify without a developer **Plan Change** (or equivalent revise) path on this lane.
+
+USER_CHECKPOINT — planner continuation while plan execution is open (must include Plan Change).
+
+**Primary next moves (all complexity bands)** — include at minimum **when execution has not started**:
 
 | Option id (example) | Label (brief) | Action |
 |---------------------|---------------|--------|
 | `route-6` | Route §6 — Delivery phases or PR breakdown | Step 7d → route **AskQuestion** → inline skill |
 | `draft-7` | Draft §7 Caveats | Inline §7 only |
 | `revise` | Revise a drafted section (§1–§5 or §7) | Step 7e |
+| `more` | More details for option _ | Elaborate, then re-ask |
+
+**When execution is open** — include at minimum:
+
+| Option id (example) | Label (brief) | Action |
+|---------------------|---------------|--------|
+| `plan-change` | Plan Change — revise plan and notify open children | Step 7c *Plan Change* |
+| `wait-child` | Wait / acknowledge open coding-session | Resume external-wait paths; no material plan edit |
 | `more` | More details for option _ | Elaborate, then re-ask |
 
 **When complexity is high (C > 20)** — **include `route-6`** (same as low/medium — do not withhold §6 at high band). In recap / **`displayMarkdown`**, recommend **Delivery phases** over **PR breakdown** and name the downstream chain (**`delivery-phases`** → **`new-plan`** → **`phase-planner`**). At Step **7c** route **AskQuestion**, list **Delivery phases** first with a brief label such as *Delivery phases — recommended (split into phase plans)* and **PR breakdown** second with caution such as *PR breakdown — skips phase layer; usually not for high band*. Also offer **revise §4**, **revise §5** when the user wants to narrow before decomposing. The **Squad Leader** must **never** run **`delivery-phases`** or **`pr-breakdown`** — only this **master-planner** lane runs them inline after **`route-6`**.
@@ -836,12 +856,24 @@ Set **`continuationStatus: terminal`** and empty **`remainingTasks`** **only whe
 
 When (2) holds but §7 is still **`_TBD_`**, keep **`continuationStatus: active`**, offer **`draft-7`**, list **`Draft §7 Caveats`** in **`remainingTasks`**. When §7 is drafted but **`pending`**, keep **`active`**, list **`Approve §7 Caveats`** in **`remainingTasks`**, offer **`approve-caveats`** / **`revise-caveats`** / **`skip-caveats`** — **not** terminal status.
 
+#### Plan Change (`plan-change`) — after execution (binding)
+
+Run when the developer selects **`plan-change`** from Step **7b** while execution is open (see *Plan entered execution* above).
+
+1. **Scope pick** — structured choice: which plan path(s) / Master Plan section(s) to revise (Master Plan §§1–5 / §7; or name a child PR / phase plan path from the ledger). Include **More details for option _**.
+2. **Revise** — apply the material edit (reuse Step **7e** discipline for Master Plan sections; for child plans, edit the named `.plan.md` on the main hosting clone operations path).
+3. **Notify** — for each affected **non-terminal** open child whose ongoing work intersects the edit, call **`mission_control_notify_child_lanes`** per § *Plan-change notify — emit-when* and **`../README.md`** § *MCP notify preflight* (one slug per call; `changeType: plan-revision` unless clarifying/cancelling).
+4. **Re-offer Step 7b** — while execution remains open, **must** still include **`plan-change`**.
+
+**Forbidden:** material plan edit after execution without offering **Plan Change** on this lane first (developer-initiated revise that explicitly names the section in the same message may satisfy act step 2 without a prior modal pick — still notify per emit-when); skip notify when emit-when applies.
+
 #### Revise section (`revise`) — Step 7e
 
 1. **AskQuestion:** which section — **§1 Background** … **§5 Changes** or **§7 Caveats** (not §6; owned by decomposition agents).
 2. Collect feedback via **prompt** / **More details for option _** if needed.
 3. Apply edit to **that section only**; re-run Step 6c after §4 or §5 edits.
 4. Flag sibling issues; do not fix silently.
+5. When execution is open and the edit is **material** per emit-when, run Step **7c** *Plan Change* notify steps **3–4** (or direct the developer to **`plan-change`** if scope spans child plans).
 
 #### Operations git requests (binding)
 

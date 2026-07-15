@@ -585,6 +585,26 @@ When the developer asks to revise § N, re-read that section and apply edits via
 
 When they choose **`delivery-phases`** or **`pr-breakdown`** via **AskQuestion**, run the chosen skill **inline** on this lane per **§ 5b** and [Inline handoff](#inline-handoff--phase-planner--delivery-phases--pr-breakdown-step-5b). Do **not** emit **`mission_control_spawn_agent`** for those skills. When the handoff ends the assistant turn while waiting for **`phase-planner`** or **`coding-session`** child results per step **5e**, close with structured choice per [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](.sedea/centers/sedea/rules/2_ask-question-instructions.mdc) § **Turn completion invariant** — do not prose-only stop after handoff.
 
+### Plan entered execution — Plan Change offer (binding)
+
+When this phase subtree has **entered execution** — any non-terminal **`coding-session`** child in **`activeLanes`**, or **`implementationHandoffStatus: spawned-coding-session`** on a PR under this phase — every follow-up / wait / continuation modal on **this** lane **must** include:
+
+| Option id | Label (brief) | Action |
+|-----------|---------------|--------|
+| `plan-change` | Plan Change — revise plan and notify open children | Act below |
+| `more-details` | More details for option _ | Elaborate; re-ask |
+
+USER_CHECKPOINT — phase-planner continuation while phase execution is open (must include Plan Change).
+
+**Plan Change act:**
+
+1. Pick scope (phase §§1–4 / assessment / §5 list row wording, or a child PR plan path).
+2. Apply material edit on the main hosting clone operations path.
+3. Call **`mission_control_notify_child_lanes`** per § *Plan-change notify — emit-when* for each affected non-terminal child (one slug per call).
+4. Re-offer the continuation modal — still include **`plan-change`** while execution remains open.
+
+**Forbidden:** omit **Plan Change** once phase execution is open; prose-only wait on coding-session without a modal that includes **`plan-change`**; treat notify-**receive** as a substitute for this **offer**.
+
 ## Step 5e — Aggregate downstream result
 
 **Inline `delivery-phases` / `pr-breakdown`:** Merge each decomposition skill’s **`## Completion (inline)`** into this skill’s ledger. If inline **`new-plan`** / **`pr-plan`** reports active **`phase-planner`** or **`coding-session`** lanes, keep the row open and add them to `activeLanes`. When inline decomposition reports **`prShipComplete`** for a PR under this phase, track it on the phase subtree ledger.

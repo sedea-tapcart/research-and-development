@@ -368,6 +368,8 @@ Child terminal: use § *MCP result preflight* in the spawned skill’s **`## Com
 
 Parent planner skills (**`master-planner`**, **`phase-planner`**, **`pr-breakdown`**) call **`mission_control_notify_child_lanes`** after **material** plan edits that affect named **non-terminal** open children. Normative protocol: **`.sedea/centers/sedea/rules/4_mission.mdc`** § *MCP notify protocol*. Per-skill **emit-when** tables live in each skill § *Plan-change notify — emit-when*.
 
+**Parent offer after execution (binding):** Once a plan under a planner lane has **entered execution** (open non-terminal **`coding-session`**, or **`implementationHandoffStatus: spawned-coding-session`**), that planner’s continuation / wait modals **must** offer a developer **`plan-change`** option (*Plan Change — revise plan and notify open children*) before relying on ad-hoc revise alone. Emit notify only after the material edit from that path (or an explicit same-message revise that names scope). **Receive** USER_CHECKPOINTs on children are **not** a substitute for this parent **offer**. Skills: **`master-planner`** Step **7b**, **`phase-planner`** Step **5d**, **`quick-fix-plan`** while aggregating an open **`coding-session`**.
+
 | Step | Check |
 |------|--------|
 | N1 | Caller authority — this skill may notify descendant slugs only (rule **4** § *MCP notify protocol* caller table); **`coding-session`** and leaf skills **forbidden** |
