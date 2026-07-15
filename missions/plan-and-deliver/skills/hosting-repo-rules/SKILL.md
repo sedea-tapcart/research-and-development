@@ -332,6 +332,7 @@ Run [worktree-setup](.sedea/centers/sedea/skills/worktree-setup/SKILL.md) with *
 ### 4. Ship cut-point
 
 Run [Ship cut-point gate](#ship-cut-point-gate-binding). On **`commit-only`** (Checkpoint auto-advance or developer pick), **`git commit`** on the response turn when tree dirty. **No** **`deploy-walk`** on this lane.
+
 ### 5. Pre-PR review (spawned)
 
 Spawn **`pre-pr-review`** after cut-point commit when tree is clean. Wait for **`recommendation: go`** before push / inline **`create-pr`** unless executive override documented in rule **20**.

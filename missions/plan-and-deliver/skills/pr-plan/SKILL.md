@@ -558,6 +558,7 @@ Invoke **AskQuestion** or **`mission_control_present_structured_choice`** per **
 - `askQuestion` — modal (`modalTitle`: *PR plan — next move*; options from the table)
 
 **Legacy split (obsolete on Mission Control lanes):** Prefer **`mission_control_present_structured_choice`** (recap in `displayMarkdown` + `askQuestion` same turn). If the tool is unavailable, still **must** close with structured choice — do not end with recap-only prose.
+
 #### Recap (same turn as structured choice)
 
 When using the legacy split, do **not** include **`mission_control_spawn_agent`** or **`mission_control_send_agent_result`** in the recap message. Put recap content in **`displayMarkdown`** and **`askQuestion`** on the **same** turn per [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](.sedea/centers/sedea/rules/2_ask-question-instructions.mdc) § **Turn completion invariant**. **Obsolete:** recap-only message with **AskQuestion** deferred to a separate turn.
