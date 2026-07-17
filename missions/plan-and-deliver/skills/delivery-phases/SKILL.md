@@ -300,6 +300,7 @@ Do **not** mirror the full **`Delivery phases`** body in chat. Count **K** from 
 **Preferred:** **AskQuestion tool** (brief recap allowed in the same message) or **`mission_control_present_structured_choice`** with recap in `displayMarkdown` and options in `askQuestion` — one assistant message.
 
 **Legacy split (when the tool and MCP structured choice are unavailable):** send the step **5d** recap, then a **separate** message with `mission_control_present_structured_choice`** (MCP structured choice; recap in `displayMarkdown` via MCP call).
+
 Collect the developer’s choice via **AskQuestion**, **`mission_control_present_structured_choice`** only in the structured-choice message — not in the same message as spawns or **`mission_control_send_agent_result`**.
 
 - When using split delivery (no AskQuestion tool), call **`mission_control_present_structured_choice`** with valid `displayMarkdown` + `askQuestion` — **no** prose recap in the same message as the MCP call when split per rule **2** priority **3**.

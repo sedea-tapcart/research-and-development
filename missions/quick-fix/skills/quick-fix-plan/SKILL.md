@@ -125,7 +125,7 @@ Marker syntax: [`.sedea/centers/sedea/docs/user-checkpoint-marker-syntax.md`](.s
 | **2d** — Inline **`pr-plan`** steps **1–4** | Auto-advance through §§1–4 draft | open items per **`pr-plan`** Step **5-open-items** when multiple gaps |
 | **§5c** — Implementation handoff (inline **`pr-plan`**) | **Gate** — **first developer-pick gate on this lane** | **`pr-plan`** §5c — start coding session (below) |
 | **§5d** — Spawn **`coding-session`** | Act-after-select; **#external-wait** on detached child | — |
-| **§5e** — Aggregate **`coding-session`** child | **#external-wait**; re-emit terminal when child completes | — |
+| **§5e** — Aggregate **`coding-session`** child | **#external-wait**; while child active, wait modal **must** include **Plan Change** | [Plan Change while coding-session open](#plan-change-while-coding-session-open-binding) |
 | **3** — Terminal **`mission_control_send_agent_result`** | Auto-advance after §5e merge or honest `partial` / `failure` | exception: blocked handoff → report without prose idle |
 
 ### Missing inputs gate (binding)
@@ -203,9 +203,29 @@ USER_CHECKPOINT — approve implementation handoff and start coding session (inl
 
    - **Next-step resolution:** **`start-coding-session`** → run **2e** §5d spawn; other picks → re-offer §5c or defer per **`pr-plan`** rules — no prose-only idle.
 
-   **2e. Spawn and aggregate **`coding-session`** — when developer picks **`start-coding-session`**, run **`pr-plan`** §5d **`mission_control_spawn_agent`** then §5e child aggregation. **#external-wait** until child terminal; merge child **`outputs`** before step **3**.
+   **2e. Spawn and aggregate **`coding-session`** — when developer picks **`start-coding-session`**, run **`pr-plan`** §5d **`mission_control_spawn_agent`** then §5e child aggregation. **#external-wait** until child terminal; merge child **`outputs`** before step **3**. While the child is open, every wait / resume modal **must** include **Plan Change** — see [Plan Change while coding-session open](#plan-change-while-coding-session-open-binding).
 
-   - **Next-step resolution:** Auto-advance to step **3** after §5e merge or honest blocked handoff. **Forbidden:** prose-only idle at external-wait surfaces — use structured resume options per rule **2** § *External-wait / next-step modal*.
+   - **Next-step resolution:** Auto-advance to step **3** after §5e merge or honest blocked handoff. **Forbidden:** prose-only idle at external-wait surfaces — use structured resume options per rule **2** § *External-wait / next-step modal* **and** include **`plan-change`**.
+
+### Plan Change while coding-session open (binding)
+
+After §5d spawn and until the **`coding-session`** child is terminal, this lane is the quick-fix **planner** surface. Continuity / external-wait modals **must** include:
+
+| Option id | Label (brief) | Action |
+|-----------|---------------|--------|
+| `plan-change` | Plan Change — revise PR plan and notify coding-session | Act below |
+| `check-child-status` | Check coding-session / resume wait | Stay in §5e aggregation |
+| `more-details` | More details for option _ | Elaborate; re-ask |
+
+USER_CHECKPOINT — quick-fix-plan wait while coding-session is open (must include Plan Change).
+
+**Plan Change act:**
+
+1. Revise the child PR plan (and/or minimal parent list wording) on the main hosting clone operations path.
+2. Call **`mission_control_notify_child_lanes`** targeting the open **`coding-session`** slug when the edit is material per **`pr-plan/SKILL.md`** § *Plan-change notify — emit-when* (one slug; host flag may skip delivery when off — still emit when emit-when applies).
+3. Re-open the wait modal — still include **`plan-change`**.
+
+**Forbidden:** omit **Plan Change** while **`coding-session`** is open; rely only on child notify-**receive** without this parent offer.
 
 3. **Emit child terminal **`mission_control_send_agent_result`** per **`## Completion (spawned)`** below.
 

@@ -188,7 +188,19 @@ Start **`plan-reconcile`** separately: developer phrase on active **`coding-sess
 
 ## Pre-PR review — spawn-only from **`coding-session`**
 
-**Rule (read first).** The **only** path that may execute [`pre-pr-review/SKILL.md`](../missions/plan-and-deliver/skills/pre-pr-review/SKILL.md) is a **fresh spawned child lane** opened by active **`coding-session`** via MCP **`mission_control_spawn_agent`** after ship cut-point + Before deploy (or documented skip). **Auto-spawn** on **`coding-session`** means **call MCP spawn + wait** for child **`mission_control_send_agent_result`** — **not** load and run review steps inline on the coding-session lane.
+**Rule (read first).** The **only** path that may execute [`pre-pr-review/SKILL.md`](../missions/plan-and-deliver/skills/pre-pr-review/SKILL.md) is a **fresh spawned child lane** opened by active **`coding-session`** via MCP **`mission_control_spawn_agent`** after ship cut-point + Local test (or documented skip). **Auto-spawn** on **`coding-session`** means **call MCP spawn + wait** for child **`mission_control_send_agent_result`** — **not** load and run review steps inline on the coding-session lane.
+
+| Lane | May run **`pre-pr-review`**? | Handoff |
+|------|------------------------------|---------|
+| **`coding-session`** | **Spawn only** — **forbidden** inline | Call **`mission_control_spawn_agent`** per [`coding-session/SKILL.md`](../missions/plan-and-deliver/skills/coding-session/SKILL.md) § *Pre-PR review handoff* |
+| **`pre-pr-review`** child lane | **Yes** — sole execution surface | Fresh reviewer lane; terminal **`mission_control_send_agent_result`** |
+| **Other lanes** (Squad Leader, planning, **`pr-review`**, …) | **No** | Direct developer to **`coding-session`** ship chain |
+
+When the user says *run pre-PR review* or *pre-pr-review* on **`coding-session`**, interpret it as **spawn the reviewer child lane** — **not** permission to execute the skill body inline on this lane.
+
+## Pre-PR review — spawn-only from **`coding-session`**
+
+**Rule (read first).** The **only** path that may execute [`pre-pr-review/SKILL.md`](../missions/plan-and-deliver/skills/pre-pr-review/SKILL.md) is a **fresh spawned child lane** opened by active **`coding-session`** via MCP **`mission_control_spawn_agent`** after ship cut-point + Local test (or documented skip). **Auto-spawn** on **`coding-session`** means **call MCP spawn + wait** for child **`mission_control_send_agent_result`** — **not** load and run review steps inline on the coding-session lane.
 
 | Lane | May run **`pre-pr-review`**? | Handoff |
 |------|------------------------------|---------|
@@ -220,7 +232,6 @@ When the user says *run pre-PR review* or *pre-pr-review* on **`coding-session`*
 | **`coding-session`** running **`create-pr` inline** | **Yes** — sole supported opener | Load **`create-pr/SKILL.md`** on this lane after clean **`go`** auto path or exceptional Create-PR gate |
 | **`coding-session`** (other steps) | **No** | Complete ship order through cut-point → Local test → **spawn** **`pre-pr-review`** (forbidden inline) → inline **`create-pr`** |
 | **Other lanes** (Squad Leader, planning, `pre-pr-review`, `pr-review`, `master-planner`, …) | **No** | Prepare worktree/context; direct developer to **`coding-session`** ship chain or emit copy-paste prompt — never open from the current lane |
-**Developer accountability:** the developer decides **when** to open a PR and approves creation in the ship chain; **`coding-session`** runs inline **`create-pr`** (including `gh pr create` on the inline route when authorized, or outsider handoff on tapcart product repos). Other lanes prepare context and hand off — they do not open GitHub themselves.
 
 **All other lanes:** do **not** call `gh pr create` except **`coding-session`** while executing inline **`create-pr`** on the **inline GitHub** route per the table above.
 

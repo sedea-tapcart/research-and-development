@@ -98,4 +98,4 @@ Required `outputs`:
 - `outputs.continuationOwner`: `"quick-fix-plan-agent"`
 - `outputs.continuationStatus`: `terminal` when PR plan ready and no blocking `remainingTasks`; `active` when §5c pending or **`coding-session`** child open
 
-Stop after the terminal line per **`../../../plan-and-deliver/skills/README.md`** § *Terminal stop (normative)*. On turns that emit terminal, also emit **`MC_PHASED_RESPONSE_V1`** in the **same** message when offering §5c per rule **2**.
+Stop after the terminal line per **`../../../plan-and-deliver/skills/README.md`** § *Terminal stop (normative)*. On turns that emit terminal, also emit **`mission_control_present_structured_choice`** in the **same** message when offering §5c per rule **2**.

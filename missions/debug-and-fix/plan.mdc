@@ -43,6 +43,7 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 | `.sedea/centers/research-and-development/rules/bootstrap.mdc` | Sole R&D `alwaysApply: true` bootstrap (≤10 KB); host merges when `centerSlug === research-and-development` |
 
 ### `laneRules` — mission protocol (Squad Leader)
+
 | Path | Role |
 |------|------|
 | `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc` | Structured choice at USER_CHECKPOINT gates and external-wait surfaces (Checkpoint precedence) |
@@ -66,6 +67,8 @@ Child spawns must satisfy **`missions/plan-and-deliver/skills/README.md`** spawn
 
 Under Checkpoint trust (`trustLevel: checkpoint`), auto-advance scripted happy-path steps on the **Squad Leader** lane; emit structured choice only at **USER_CHECKPOINT** markers in protocol steps below, **#external-wait** spawn-and-wait surfaces, or exception paths. **No cross-skill inheritance** — gate defaults here apply only to this mission **`plan.mdc`**; child skills document their own markers.
 
+**Ship lanes:** Checkpoint UX for shared **`coding-session`** (and sibling ship skills under **`plan-and-deliver`**) includes the **Yield gate** — mid-ship StreamFinal without same-turn Act requires structured choice (`missions/plan-and-deliver/skills/coding-session/SKILL.md` § *Yield gate*). Leader-lane Checkpoint happy-path above is unchanged.
+
 Marker syntax: [`.sedea/centers/sedea/docs/user-checkpoint-marker-syntax.md`](.sedea/centers/sedea/docs/user-checkpoint-marker-syntax.md).
 
 | Protocol § | Checkpoint behavior | Gate |
@@ -80,6 +83,7 @@ Marker syntax: [`.sedea/centers/sedea/docs/user-checkpoint-marker-syntax.md`](.s
 | **§5c** Ad-Hoc PRD spawn | **Waiting** — child owns PRD approval | **#external-wait** after spawn |
 | **§6** Findings report | Auto-advance recap when inputs present | — |
 | **§7** Dispatch resolution | **Gate** — developer approves closure | USER_CHECKPOINT — approve dispatch resolution |
+
 ## Protocol
 
 ```mermaid
@@ -156,7 +160,8 @@ USER_CHECKPOINT — confirm mission intent when the opening command phrase does 
 - `intent`: Gather symptom, scope, and reproduction hints before spawning the debug agent.
 - `inputs`: Opening user message remainder after `debug and fix`, Mission Control dispatch binding.
 - `expected output`: Structured handover: `issueSummary`, optional `reproductionSteps`, optional `logHints`, optional `repoPath`.
-- `next-step resolution`: Continue to step 3 when `issueSummary` is non-empty and intake confirmed (auto-advance). Empty summary or unconfirmed intake → USER_CHECKPOINT gate below.- `ordered actions`:
+- `next-step resolution`: Continue to step 3 when `issueSummary` is non-empty and intake confirmed (auto-advance). Empty summary or unconfirmed intake → USER_CHECKPOINT gate below.
+- `ordered actions`:
   0. **Intake mode (required first):** Open structured choice:
      - **`direct-intake`** — collect issue summary on the leader lane (steps 1–4)
      - **`brainstorm-first`** — optional research session → report enriches handover (§2.5) before §3
@@ -185,6 +190,7 @@ USER_CHECKPOINT — pick intake mode or provide issue summary before spawning th
 USER_CHECKPOINT — pick next step when brainstorm child reports failure or partial.
 
 **Procedure:** Emit spawn with **`warmUpRules`** including **`debug-and-fix/plan.mdc`**; announce that the **Squad Leader** is waiting for the child lane; open a **next-step resume** structured choice (**#external-wait**) before ending the turn; on approved report continue §3 without repeat §2 USER_CHECKPOINT.
+
 ### 3. Debug and fix (spawned skill)
 
 - `type`: Agent engagement and handover.
@@ -201,6 +207,9 @@ USER_CHECKPOINT — pick next step when brainstorm child reports failure or part
 - `expected output`: Child **`mission_control_send_agent_result`** with `outputs.fixStatus`, `outputs.worktreePath`, `outputs.worktreeName`, `outputs.hostingRoot`, `outputs.exitRecommendation` (`code-promotion` | `ad-hoc-prd` | `findings-report-only` | `blocked`), optional `outputs.abandonMission`, `outputs.fixSummary`, `outputs.testEvidence`.
 - `next-step resolution`: Emit spawn → **#external-wait** before turn end; on child terminal apply **§3 resume** (confirmed exits are binding auto-approval: abandon → propose **`abandoned`**; `code-promotion` → §5; `ad-hoc-prd` → §5c; `findings-report-only` / `blocked` / `failed` → §6; USER_CHECKPOINT only when `partial` or verified with missing exit).
 - **Agent session closure**: Child emits one parseable **`mission_control_send_agent_result`** line per skill **`## Completion (spawned)`**. Squad Leader waits for host delivery before continuing (**#external-wait**).
+
+USER_CHECKPOINT — pick next step when debug child reports partial status.
+- **Dispatch resolution**: Remains Squad Leader responsibility — child does not call MCP **`mission_control_propose_dispatch_resolution`**.
 
 USER_CHECKPOINT — pick next step when debug child reports partial status.
 - **Dispatch resolution**: Remains Squad Leader responsibility — child does not call MCP **`mission_control_propose_dispatch_resolution`**.
@@ -243,7 +252,7 @@ USER_CHECKPOINT — pick exactly one post-fix exit path after a verified fix.
 - `pr-plan standalone exception`: Debug fixes do not necessarily originate from an approved parent **`### PR list`**. This mission explicitly permits a standalone **`pr-plan`** population handoff after **`new-plan`** creates the target plan; the handoff must pass `targetPlanPath`, `targetPlanSlug`, and the debug handover seed. If **`pr-plan`** cannot populate without parent topology, stop and use structured choice to revise the plan anchor, create the missing parent planning context, or switch exits — do not spawn **`coding-session`** without a PR plan.
 - **§7 Deploy test plan seeding (binding — `upstreamSkill: debug-and-fix`):** When **`pr-plan`** drafts the PR plan **`## N. Deploy test plan`** from the debug handover seed, treat manual scenarios already verified in the debug session (`outputs.testEvidence` / approved manual gates) as **already covered pre-promotion**:
   - **`### Local test`** — omit those manual scenarios as deploy-walk manual steps. Prefer agent-executable checks only (scripts, automated verify, standing pre-review bar). When no PR-specific agent-executable Local test items remain, use the empty-section form (*None — manual checks covered in debug session; agent-executable / standing pre-review only.*) rather than re-listing debug manual scenarios.
-  - **`### Production`** — list those same debug-verified manual scenarios as **post-merge retests** (plus any production-only checks). Do **not** drop them from the plan entirely.
+  - **`### After deploy`** — list those same debug-verified manual scenarios as **post-merge retests** (plus any production-only checks). Do **not** drop them from the plan entirely.
   - **Forbidden:** copying debug-session manual test gates unchanged into Local test so **`coding-session`** / **`deploy-walk`** re-run them as pre-PR manual waits.
 - `expected output`: Child terminal or aggregate output with `outputs.targetPlanPath`, `outputs.targetPlanSlug`, `outputs.readyForImplementation: true`, optional `outputs.implementationHandoffStatus` / `outputs.spawnCorrelationId` / ship fields after **`pr-plan` §5d–§5e**, and any `outputs.remainingTasks` from **`new-plan`** / **`pr-plan`**.
 - `next-step resolution`: After spawn, the planning child continues through **`pr-plan` handoff + §5d** **`coding-session`** spawn; Squad Leader enters §5b **oversight wait** (**#external-wait**) — **ack only**, do **not** emit a leader **`coding-session`** spawn when §5 resume reports ready. If the planning child reports unresolved plan target, missing parent topology that blocks standalone population, approval gaps, or terminates without §5d and without explicit defer, USER_CHECKPOINT gate below.
@@ -252,6 +261,17 @@ USER_CHECKPOINT — pick exactly one post-fix exit path after a verified fix.
 USER_CHECKPOINT — revise planning anchor, retry, or switch exits when PR plan creation is blocked.
 
 ### 5b. Code promotion oversight (Squad Leader)
+
+- `type`: Branching logic (oversight wait — not a Squad Leader spawn).
+- `execution`: none on leader — detached **`coding-session`** is spawned by the §5 planning child via **`pr-plan` §5d**.
+- `intent`: Track the detached **`coding-session`** ship chain (already-modified debug worktree) after the §5 planning child creates the PR plan and emits §5d; resume on bubbled child terminals.
+- `target agent role`: Coding session agent (plan-and-deliver) — **owned by §5 planning child spawn**, not the Squad Leader.
+- `assigned skill`: [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`](../plan-and-deliver/skills/coding-session/SKILL.md) (spawn contract consumed by **`pr-plan` §5d** on the planning lane).
+- `inputs` (for the **planning child's** §5d spawn, not leader emit): `repoPath` / `outputs.hostingRoot`, existing `outputs.worktreePath` and `outputs.worktreeName` from debug child (worktree already created and modified), `developerApprovedImplementation: true`, `upstreamSkill: debug-and-fix`, required `targetPlanPath` and `targetPlanSlug` from step 5, plus `planningHandoffMode: "sections-1-4-complete"` and `planningHandoffApproved: true` when supplied by the **`pr-plan`** handoff; **ownership handoff (required with reuse):** `worktreeOwnership: "inherited"`, `worktreeCreatedByUpstream: "debug-and-fix"`, `mountedViaMcp: true` when the debug lane mounted the path (else `false` and **`coding-session`** may attach once without creating a new worktree); **`initiatingPrompt`** on that spawn must state ship starts at cut-point / commit, the §5 deploy-plan binding (Local test must **not** re-gate debug-verified manual scenarios), and that **inherited ownership authorizes post-merge auto-cleanup** on that exact path — **forbidden** to treat remount-only reuse as unclear ownership.
+- `expected output`: Bubbled child terminals after ship chain milestones per **`coding-session`** **`## Completion (spawned)`** / inline ship skills (and/or planning-child aggregate after §5e).
+- `next-step resolution`: Continue to step 7 after bubbled **`coding-session`** / planning terminal or when developer selects an external-wait resume option per skill gates (**#external-wait** while waiting).
+- **Forbidden:** Squad Leader **`mission_control_spawn_agent`** for **`coding-session`** on this path.
+- **Note:** Ship steps (commit, deploy-walk, pre-pr-review, create-pr, pr-review, post-merge cleanup, plan-reconcile) are **owned by `coding-session`** — do not duplicate procedure here. **`pre-pr-review`** spawn runs on a detached reviewer lane that auto-advances Steps **1–8** under Checkpoint trust — see **`pre-pr-review/SKILL.md`** § *Developer input vs external-wait (Checkpoint)*. **Debug upstream:** honor the PR plan §7 shape from §5 — do not invent Local test manual steps that re-run debug-session verification.
 
 - `type`: Branching logic (oversight wait — not a Squad Leader spawn).
 - `execution`: none on leader — detached **`coding-session`** is spawned by the §5 planning child via **`pr-plan` §5d**.
