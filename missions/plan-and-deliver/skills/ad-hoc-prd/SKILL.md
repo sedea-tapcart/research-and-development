@@ -217,7 +217,7 @@ USER_CHECKPOINT — provide missing ad-hoc PRD inputs on this lane.
 
    - **Next-step resolution:** Auto-advance to step **5** after successful write — emit non-terminal **`mission_control_send_agent_result`** with `developerApprovedPrd: false` when the invoker protocol requires leader ack before step **5**; do **not** treat that ack as PRD approval.
 
-5. **Present for approval** — Recap the new file (workspace / `file://` link, one-line summary of §§1–3). Use **AskQuestion**, **`mission_control_present_structured_choice`** per **`../README.md`** § *Recap, structured choice, act* and **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`**.
+5. **Present for approval** — Recap the new file with a backtick path (prefer the hosting-absolute path; a `.sedea/operations/…/docs/…` path is also valid) and a one-line summary of §§1–3. Do **not** use a `file://` Markdown link or put backticks inside a Markdown link label. Use **AskQuestion**, **`mission_control_present_structured_choice`** per **`../README.md`** § *Recap, structured choice, act* and **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`**.
 
 USER_CHECKPOINT — approve, revise, or resolve open items on this Ad-Hoc PRD before invoker downstream steps.
 

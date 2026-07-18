@@ -411,7 +411,7 @@ After writing, read the file back and confirm the section reads as intended.
 
 After step **5c**, present step **6** handoff in **one turn** via **`mission_control_present_structured_choice`** or **AskQuestion tool** — put in **`displayMarkdown`** (or brief prose with the tool):
 
-1. A **`file://`** link to the target `.plan.md` under `.sedea/operations/.../plans/...` (resolved path from **`plan-state resolve`** or equivalent).
+1. A backtick path to the target `.plan.md` (prefer the hosting-absolute path resolved by **`plan-state resolve`** or equivalent; a `.sedea/operations/…/plans/…` path is also valid). Do **not** use a `file://` Markdown link or put backticks inside a Markdown link label.
 2. One line: *Drafted `## <N>. PR breakdown` with **K** PR rows — open the plan to review the full section.*
 
 Do **not** mirror the full **`PR breakdown`** body in chat (no duplicated headings, tables, Mermaid fences, or numbered PR list). The plan file is the review surface.

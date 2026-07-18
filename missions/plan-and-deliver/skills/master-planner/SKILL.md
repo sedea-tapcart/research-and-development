@@ -519,9 +519,11 @@ prs: []
 
 Both files must be written in the same skill turn so the Plan Board picks the plan up cleanly on first scan.
 
-After writing, link the plan file with an absolute path so the user can click through:
+After writing, present the plan file as a backtick path so Mission Control can open it. Prefer the hosting-absolute path; a `.sedea/operations/…/plans/…` path is also valid:
 
-> Plan file: [`<slug>.plan.md`](file:///<absolute-targetPlanPath>)
+> Plan file: `<absolute-targetPlanPath>`
+
+Do **not** wrap a backtick label in a `file://` Markdown link (for example `` [`<slug>.plan.md`](file:///<absolute-targetPlanPath>) ``); that shape is mangled by transcript Markdown parsing.
 
 ## Step 6 — Draft sections 1 through 5 into the plan file
 

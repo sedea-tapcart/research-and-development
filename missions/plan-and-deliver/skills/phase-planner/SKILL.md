@@ -567,7 +567,7 @@ Per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../R
 
 Recap content:
 
-1. A **file link** — absolute `file://` path to the target `.plan.md` under `.sedea/operations/.../plans/...`.
+1. A backtick path to the target `.plan.md` (prefer the hosting-absolute path; a `.sedea/operations/…/plans/…` path is also valid). Do **not** use a `file://` Markdown link or put backticks inside a Markdown link label.
 2. The parent's indicative decomposition line for this phase: **`<Delivery phases | PR breakdown>`** (from step 3a).
 
 **Structured route options** — one `option` per protocol branch (brief `label`; detail in `prompt`). Example `options`:

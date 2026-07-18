@@ -559,7 +559,7 @@ Invoke **AskQuestion** or **`mission_control_present_structured_choice`** per **
 
 When using the legacy split, do **not** include **`mission_control_spawn_agent`** or **`mission_control_send_agent_result`** in the recap message. Put recap content in **`displayMarkdown`** and **`askQuestion`** on the **same** turn per [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](.sedea/centers/sedea/rules/2_ask-question-instructions.mdc) § **Turn completion invariant**. **Obsolete:** recap-only message with **AskQuestion** deferred to a separate turn.
 
-1. A **`file://`** link to the target `.plan.md` under `.sedea/operations/.../plans/...`.
+1. A backtick path to the target `.plan.md` (prefer the hosting-absolute path; a `.sedea/operations/…/plans/…` path is also valid). Do **not** use a `file://` Markdown link or put backticks inside a Markdown link label.
 2. One-line summary: *Drafted per-PR §§ 1–4; implementation readiness: `<ready|not ready>`.*
 3. Planning handoff note: *§§ **5–8** stay **`_TBD_`** until **`coding-session`** fills them on the implementation lane (or you choose **Pre-fill §§ 5–8 here (sketch, then coding)** below). Worktree validation may report **incomplete** — that is expected; the child lane **auto-starts** implementation when you pick **Start coding session** (no second approval modal) unless you pre-filled here or use detached entry.*
 
