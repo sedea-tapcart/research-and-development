@@ -720,7 +720,7 @@ In recaps, **link the target phase `.plan.md` first** — § 5 **`PR breakdown`*
 - Returning **`continuationStatus: terminal`** immediately after §§ 1–4 draft or route approval when inline decomposition or child lanes remain — use **`active`** and keep **`continuationOwner: "phase-planner-agent"`**
 - Emitting a MCP result call that causes **`master-planner`** Step **7b** to offer **`route-6`**, **`pr-breakdown`**, or phase-scoped **`expand-eligible`** / **`expand-next-eligible`** for work this lane still owns
 - Telling the developer to continue phase decomposition on the **Master Plan** lane when this **phase-planner** child lane is open — including *"run **`pr-breakdown`** on the **`master-planner`** lane"* or *"return to Master Plan agent / Step 7"* when **§ 5b-decompose** applies
-- Calling **`mission_control_refocus_parent_lane`** before **`mission_control_send_agent_result`** — refocus steers the developer to the parent lane and is equivalent to forbidden Master Plan handoff while this child owns active phase delivery (see **§ MCP parent refocus** under **`## Completion (spawned)`**)
+- Calling **`mission_control_refocus_parent_lane`** while this child still owns **active** phase delivery (**`continuationStatus: active`**, open PR rows, or §5f pending) — refocus steers the developer to the parent lane and is equivalent to forbidden Master Plan handoff; **Required** only on true terminal per **§ MCP parent refocus** under **`## Completion (spawned)`**
 
 When child terminal results bubble to inline **`new-plan`** / **`delivery-phases`** / **`master-planner`**, parents **acknowledge only** until **`phaseShipComplete`** or explicit defer/abandon — see **`new-plan`** step **5**, **`delivery-phases`** step **6b**, and **`master-planner`** Step **7b** *Phase-planner child active*.
 
@@ -750,7 +750,7 @@ Complete the step 5 handoff block, inline decomposition handoff, and any child-l
 | R2 | **Forbidden args absent** — no **`correlationId`**, **`dispatchId`**, **`slotId`**, or other host-resolved keys |
 | R3 | Populate **`outputs`** from the required field list below |
 | R4 | Re-emit updated MCP result after user-requested follow-up on this lane (same spawn session; host resolves **`correlationId`**) |
-| R5 | **`mission_control_refocus_parent_lane`** — **forbidden** when **`outputs.continuationStatus`** is **`active`**, when **`outputs.phaseShipComplete`** is not **`true`**, when open PR rows or **`remainingTasks`** remain under this phase subtree, or when §5f implementation handoff was not yet offered while handoff is pending — see **§ MCP parent refocus** below |
+| R5 | **`mission_control_refocus_parent_lane`** — **Required** when eligible per § *MCP parent refocus*; **forbidden** when **`outputs.continuationStatus`** is **`active`**, when **`outputs.phaseShipComplete`** is not **`true`**, when open PR rows or **`remainingTasks`** remain under this phase subtree, or when §5f implementation handoff was not yet offered while handoff is pending |
 
 ### MCP parent refocus (`mission_control_refocus_parent_lane`)
 
@@ -759,9 +759,14 @@ Complete the step 5 handoff block, inline decomposition handoff, and any child-l
 | **`continuationStatus: active`** | **Forbidden** |
 | **`phaseShipComplete: false`** with open **`### PR list`** rows or non-empty **`remainingTasks`** | **Forbidden** |
 | **`prPlanHandoffSkipped: true`** and §5f / **`implementationHandoffStatus: not-offered`** | **Forbidden** — work remains on this lane |
-| **`phaseShipComplete: true`**, explicit defer/abandon, or unrecoverable failure with no retry | **Optional** — skill may omit refocus in v1 |
+| Notify-only turns (child notification merge without skill terminal) | **Forbidden** |
+| **`phaseShipComplete: true`**, explicit defer/abandon, or unrecoverable failure with no retry | **Required** |
+
+Call **`mission_control_refocus_parent_lane`** (optional `{ "reason": "phase-planner-complete" }` — no host-resolved identity keys) **immediately before** **`mission_control_send_agent_result`** when **Required** above.
 
 **Binding:** Do **not** treat the first **`status: success`** terminal (§§1–4 drafted, inline **`pr-breakdown`**, PR 1 expanded) as skill completion eligible for parent refocus. **`mission_control_refocus_parent_lane`** is **not** the mechanism for notifying **`master-planner`** of progress — parent **ack-only** until **`phaseShipComplete`** per **`master-planner`** Step **7b**.
+
+**Message order on terminal turns:** optional recap → **`mission_control_present_structured_choice`** (when a gate is open) → **`mission_control_refocus_parent_lane`** (when required) → **`mission_control_send_agent_result`** (**last**).
 
 Required `outputs` fields:
 

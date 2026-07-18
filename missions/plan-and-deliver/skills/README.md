@@ -433,13 +433,24 @@ After emitting **`mission_control_send_agent_result`**, **stop on that lane** fo
 
 ### Parent refocus on terminal (`mission_control_refocus_parent_lane`)
 
+Spawned child lanes call **`mission_control_refocus_parent_lane`** on **true skill terminal** (not mid-flight **`continuationStatus: active`** re-emits) so the developer lands on the **immediate parent** lane before the MCP result. Ordering (when eligible): structured choice (if a gate is open) → **`mission_control_refocus_parent_lane`** → **`mission_control_send_agent_result`** → stop. See **`.sedea/centers/sedea/skills/README.md`** § *Optional parent refocus (`mission_control_refocus_parent_lane`)*.
+
 | Skill | Refocus before MCP result? |
 |-------|----------------------------|
-| **`phase-planner`** | **Forbidden** when **`outputs.continuationStatus: active`**, **`phaseShipComplete: false`**, open **`### PR list`** rows, or §5f implementation handoff not yet offered — parent **`master-planner`** **ack-only** until **`phaseShipComplete`** |
-| **`pre-pr-review`** | **Required** (Step 8) |
 | **`brainstorm-research`** | **Required** on Approve / Abandon terminal |
+| **`pre-pr-review`** | **Required** (Step 8 **`go`** / **`no-go`**) |
+| **`debug-and-fix`** (mission skill) | **Required** on all step-7/8 terminal outcomes |
+| **`phase-planner`** | **Forbidden** while **`continuationStatus: active`**, **`phaseShipComplete: false`**, open **`### PR list`** rows, or §5f handoff pending; **Required** when **`phaseShipComplete: true`**, explicit defer/abandon, or unrecoverable failure with no retry |
+| **`master-planner`** | **Forbidden** while **`continuationStatus: active`** or §7 **`caveatsApprovalStatus: pending`**; **Required** on true **`continuationStatus: terminal`** |
+| **`author-prd`**, **`ad-hoc-prd`** | **Forbidden** while approval pending (**`continuationStatus: active`**); **Required** on Approve / Abandon terminal |
+| **`delivery-phases`**, **`pr-breakdown`**, **`new-plan`**, **`pr-plan`** | **Forbidden** while **`continuationStatus: active`**, open children, or pending gates; **Required** on true **`continuationStatus: terminal`** when this skill runs **spawned** (standalone). Inline under a planner lane: no refocus (inline completion) |
+| **`coding-session`** | **Required** on true ship / abandon / blocked terminal **when** a resolvable spawned parent exists; **omit** on detached / parentless entry (host would no-op) |
+| **`hosting-repo-rules`** | **Forbidden** — fire-and-forget parallel fork; parent does not await focus handback |
+| **`quick-fix-plan`** (quick-fix mission) | **Forbidden** while **`continuationStatus: active`** or open **`coding-session`**; **Required** on true skill terminal |
 
 **Common mistake:** Emitting refocus on the first **`status: success`** terminal after §§1–4 + inline **`pr-breakdown`** while **`continuationStatus: active`** — milestone complete ≠ skill terminal eligible for refocus. See **`phase-planner/SKILL.md`** § *MCP parent refocus*.
+
+**Forbidden globally on notify-only turns:** **`mission_control_refocus_parent_lane`** solely because a child notification arrived — merge notify, then continue ownership on this lane until a true terminal.
 
 | Skill | Explicit “Stop after the MCP result is sent” in `## Completion (spawned)`? | Notes |
 |-------|------------------------------------------------------------------------|--------|
