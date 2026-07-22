@@ -243,6 +243,18 @@ USER_CHECKPOINT — quick-fix-plan wait while coding-session is open (must inclu
 | R2 | **Forbidden args absent** — no **`correlationId`**, **`dispatchId`**, **`slotId`**, or other host-resolved keys |
 | R3 | Populate **`outputs`** from the required field list below |
 | R4 | Re-emit updated MCP result after user-requested follow-up on this lane (same spawn session; host resolves **`correlationId`**) |
+| R5 | **`mission_control_refocus_parent_lane`** — when **Required** per § *MCP parent refocus* below; **forbidden** while open **`coding-session`** or mid-scaffold |
+
+### MCP parent refocus (`mission_control_refocus_parent_lane`)
+
+| Signal on this terminal | Refocus? |
+|-------------------------|----------|
+| Open **`coding-session`** child; scaffold / handoff still in progress | **Forbidden** |
+| True skill terminal (scaffold + inline **`pr-plan`** / child merge complete, or abandon) | **Required** |
+
+Call **`mission_control_refocus_parent_lane`** (optional `{ "reason": "quick-fix-plan-complete" }` — no host-resolved identity keys) **immediately before** **`mission_control_send_agent_result`** when **Required** above. See **`.sedea/centers/sedea/skills/README.md`** § *Optional parent refocus* and **`../../plan-and-deliver/skills/README.md`** § *Parent refocus on terminal*.
+
+**Message order on terminal turns:** optional recap → **`mission_control_present_structured_choice`** (when a gate is open) → **`mission_control_refocus_parent_lane`** (when required) → **`mission_control_send_agent_result`** (**last**).
 
 Required `outputs` fields:
 

@@ -27,8 +27,11 @@ Mission Control persists display metadata in **`dispatch-tab.v1.json`** under ea
 |------|--------|---------|
 | `mission_control_update_lane_display` | Agent on a lane | Own slot `title`, `description`, `hoverDescription` |
 | `mission_control_update_dispatch_display` | Squad Leader | `dispatchTitle`, `dispatchDescription`, `dispatchHoverDescription` |
+| `mission_control_update_relevant_documents` | Agent on a lane | Append authored/materially edited paths to calling slot `relevantDocuments` |
 
-Audit: successful updates append **`display-metadata-updated`** events to **`dispatch-events.v1.ndjson`**. Agents must not edit bundle JSON directly.
+**Documents vs chrome:** Relevant Links registration is **not** display-metadata chrome — see [rule **50**](../rules/50_mission-control-display-metadata-discipline.mdc) § *Relevant Links (documents)* and [plan-and-deliver skills README](../missions/plan-and-deliver/skills/README.md) § *Relevant Links — post-write registration*.
+
+Audit: successful display updates append **`display-metadata-updated`** events to **`dispatch-events.v1.ndjson`**. Agents must not edit bundle JSON directly.
 
 ---
 

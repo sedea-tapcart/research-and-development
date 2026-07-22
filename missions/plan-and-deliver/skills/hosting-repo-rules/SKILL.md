@@ -386,6 +386,17 @@ Remove or detach **only** **`WORKTREE_ROOT`** this pass created. **`git worktree
 | R2 | **Forbidden args absent** — no **`correlationId`**, **`dispatchId`**, **`slotId`**, or other host-resolved keys |
 | R3 | Populate **`outputs`** from the required field list below |
 | R4 | Re-emit updated MCP result after user-requested follow-up on this lane (same spawn session; host resolves **`correlationId`**) |
+| R5 | **`mission_control_refocus_parent_lane`** — **Forbidden** on this skill (fire-and-forget parallel fork) |
+
+### MCP parent refocus (`mission_control_refocus_parent_lane`)
+
+| Signal on this terminal | Refocus? |
+|-------------------------|----------|
+| Any terminal (success / failure / abandon) | **Forbidden** |
+
+**Binding:** Parents spawn this skill **fire-and-forget** and do not block expand on rules-lane focus handback. Do **not** call **`mission_control_refocus_parent_lane`**. Emit **`mission_control_send_agent_result`** so the parent can merge **`rulesUpdatesStatus`** / **`rulesPrUrl`** without switching the developer away from product ship work.
+
+**Message order on terminal turns:** optional recap → **`mission_control_present_structured_choice`** (when a gate is open) → **`mission_control_send_agent_result`** (**last** — no refocus).
 
 ```text
 ```

@@ -125,19 +125,19 @@ const ROLE_MANIFESTS = {
       '.sedea/centers/sedea/docs/mission-three-lane-cadence.md',
     ],
   },
-  'squad-leader-cursor-rules-improvement': {
+  'squad-leader-hosting-repo-rules-maintenance': {
     laneRules: [
       '.sedea/centers/sedea/rules/2_ask-question-instructions.mdc',
       '.sedea/centers/sedea/rules/4_mission.mdc',
-      '.sedea/centers/sedea/missions/cursor-rules-improvement/plan.mdc',
+      '.sedea/centers/sedea/missions/hosting-repo-rules-maintenance/plan.mdc',
       '.sedea/centers/sedea/docs/mission-three-lane-cadence.md',
     ],
   },
-  'squad-leader-cursor-center-rules-alignment': {
+  'squad-leader-align-existing-rules-with-sedea': {
     laneRules: [
       '.sedea/centers/sedea/rules/2_ask-question-instructions.mdc',
       '.sedea/centers/sedea/rules/4_mission.mdc',
-      '.sedea/centers/sedea/missions/cursor-center-rules-alignment/plan.mdc',
+      '.sedea/centers/sedea/missions/align-existing-rules-with-sedea/plan.mdc',
       '.sedea/centers/sedea/docs/mission-three-lane-cadence.md',
     ],
   },

@@ -111,6 +111,7 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 - Run **`../README.md`** § *MCP notify preflight* (rows N1–N8) before every **`mission_control_notify_child_lanes`** call — cross-ref **`.sedea/centers/sedea/rules/4_mission.mdc`** § *MCP notify protocol*.
 - **`laneRules`:** rely on this skill's frontmatter **`laneRules`**; MCP spawn schema omits **`laneRules`** on the wire (Phase 1 stub).
 - Inline skills (**`delivery-phases`**, **`pr-breakdown`**, inline **`pr-plan`**, inline **`new-plan`**) stay **inline-only** — no spawn wire change.
+- **Relevant Links (post-write):** After each Write/StrReplace that **creates or materially edits** this phase plan (or child ops plans written on this lane), call MCP **`mission_control_update_relevant_documents`** with absolute path(s) (`kind: plan`) — same turn preferred. **Skip** read-only loads, warm-up paths, and unchanged already-registered paths. Does **not** replace terminal plan path outputs. See **`../README.md`** § *Relevant Links — post-write registration*.
 
 ### Plan-change notify — emit-when (`mission_control_notify_child_lanes`)
 
@@ -389,6 +390,8 @@ flowchart LR
 - Emit `LegendTouch` only when the phase has at least one `phaseTouch` node; emit `LegendNew` only when it has at least one `phaseNew` node. If the phase has only one of the two, drop the unused legend node and its `class … phaseNew` / `class … phaseTouch` entry from the legend.
 - **Skip** the `Legend` subgraph for non-flowchart reused diagrams (`sequenceDiagram`, `erDiagram`, `stateDiagram`, etc.) — `subgraph` is flowchart-only syntax. For those, fall back to a short prose legend below the diagram (e.g. "*Bold actors are touched in this phase.*").
 
+**Flowchart vs sequence (binding):** Do **not** copy flowchart patterns into `sequenceDiagram` blocks. HTML `<br/>` in quoted labels and `subgraph` / `classDef` / `class` styling are **flowchart-only**. Sequence diagrams use opaque participant ids (`participant plannerAgent as Planner`) and single-line `Note` statements — **forbidden** in Note bodies: `<br/>`, multi-line Note text. Full contract: [`.sedea/centers/sedea/docs/mermaid-authoring.md`](.sedea/centers/sedea/docs/mermaid-authoring.md).
+
 If the parent's diagram is much bigger than this phase's scope (e.g. 15+ nodes and the phase touches 3), draft a **simplified subset** showing only the parts this phase touches plus their immediate neighbors — flag that you simplified, so the user can choose to expand.
 
 ### 4d — § 3 Code design
@@ -401,7 +404,7 @@ A new Mermaid diagram giving a visual representation of the change introduced by
 - State diagram — when the change introduces a new lifecycle / state machine.
 - ER / schema diagram — when the change is a data-model / DB delta.
 
-Use **Mermaid** in fenced ```` ```mermaid ```` blocks so the diagram renders in Cursor and on the Plan Board. Include only what is necessary to understand the *shape* of the change; this is design granularity, not pseudocode.
+Use **Mermaid** in fenced ```` ```mermaid ```` blocks so the diagram renders in Cursor and on the Plan Board. Include only what is necessary to understand the *shape* of the change; this is design granularity, not pseudocode. Follow [`.sedea/centers/sedea/docs/mermaid-authoring.md`](.sedea/centers/sedea/docs/mermaid-authoring.md) — opaque ids; when the diagram is a **flowchart**, `<br/>` in quoted labels and Legend `subgraph` are allowed; when it is a **`sequenceDiagram`**, use single-line `Note` only (no `<br/>`, no flowchart `subgraph`/`classDef`).
 
 The § 3 diagram complements § 2's reused-with-highlight diagram: § 2 shows *where in the parent's design* this phase lives; § 3 shows *what new shape* this phase introduces. They are usually different diagram types — § 2 inherits the parent's type (often component or flow), § 3 picks whatever conveys the per-phase change best (often sequence or state).
 
@@ -567,7 +570,7 @@ Per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../R
 
 Recap content:
 
-1. A **file link** — absolute `file://` path to the target `.plan.md` under `.sedea/operations/.../plans/...`.
+1. A backtick path to the target `.plan.md` (prefer the hosting-absolute path; a `.sedea/operations/…/plans/…` path is also valid). Do **not** use a `file://` Markdown link or put backticks inside a Markdown link label.
 2. The parent's indicative decomposition line for this phase: **`<Delivery phases | PR breakdown>`** (from step 3a).
 
 **Structured route options** — one `option` per protocol branch (brief `label`; detail in `prompt`). Example `options`:
@@ -720,7 +723,7 @@ In recaps, **link the target phase `.plan.md` first** — § 5 **`PR breakdown`*
 - Returning **`continuationStatus: terminal`** immediately after §§ 1–4 draft or route approval when inline decomposition or child lanes remain — use **`active`** and keep **`continuationOwner: "phase-planner-agent"`**
 - Emitting a MCP result call that causes **`master-planner`** Step **7b** to offer **`route-6`**, **`pr-breakdown`**, or phase-scoped **`expand-eligible`** / **`expand-next-eligible`** for work this lane still owns
 - Telling the developer to continue phase decomposition on the **Master Plan** lane when this **phase-planner** child lane is open — including *"run **`pr-breakdown`** on the **`master-planner`** lane"* or *"return to Master Plan agent / Step 7"* when **§ 5b-decompose** applies
-- Calling **`mission_control_refocus_parent_lane`** before **`mission_control_send_agent_result`** — refocus steers the developer to the parent lane and is equivalent to forbidden Master Plan handoff while this child owns active phase delivery (see **§ MCP parent refocus** under **`## Completion (spawned)`**)
+- Calling **`mission_control_refocus_parent_lane`** while this child still owns **active** phase delivery (**`continuationStatus: active`**, open PR rows, or §5f pending) — refocus steers the developer to the parent lane and is equivalent to forbidden Master Plan handoff; **Required** only on true terminal per **§ MCP parent refocus** under **`## Completion (spawned)`**
 
 When child terminal results bubble to inline **`new-plan`** / **`delivery-phases`** / **`master-planner`**, parents **acknowledge only** until **`phaseShipComplete`** or explicit defer/abandon — see **`new-plan`** step **5**, **`delivery-phases`** step **6b**, and **`master-planner`** Step **7b** *Phase-planner child active*.
 
@@ -750,7 +753,7 @@ Complete the step 5 handoff block, inline decomposition handoff, and any child-l
 | R2 | **Forbidden args absent** — no **`correlationId`**, **`dispatchId`**, **`slotId`**, or other host-resolved keys |
 | R3 | Populate **`outputs`** from the required field list below |
 | R4 | Re-emit updated MCP result after user-requested follow-up on this lane (same spawn session; host resolves **`correlationId`**) |
-| R5 | **`mission_control_refocus_parent_lane`** — **forbidden** when **`outputs.continuationStatus`** is **`active`**, when **`outputs.phaseShipComplete`** is not **`true`**, when open PR rows or **`remainingTasks`** remain under this phase subtree, or when §5f implementation handoff was not yet offered while handoff is pending — see **§ MCP parent refocus** below |
+| R5 | **`mission_control_refocus_parent_lane`** — **Required** when eligible per § *MCP parent refocus*; **forbidden** when **`outputs.continuationStatus`** is **`active`**, when **`outputs.phaseShipComplete`** is not **`true`**, when open PR rows or **`remainingTasks`** remain under this phase subtree, or when §5f implementation handoff was not yet offered while handoff is pending |
 
 ### MCP parent refocus (`mission_control_refocus_parent_lane`)
 
@@ -759,9 +762,14 @@ Complete the step 5 handoff block, inline decomposition handoff, and any child-l
 | **`continuationStatus: active`** | **Forbidden** |
 | **`phaseShipComplete: false`** with open **`### PR list`** rows or non-empty **`remainingTasks`** | **Forbidden** |
 | **`prPlanHandoffSkipped: true`** and §5f / **`implementationHandoffStatus: not-offered`** | **Forbidden** — work remains on this lane |
-| **`phaseShipComplete: true`**, explicit defer/abandon, or unrecoverable failure with no retry | **Optional** — skill may omit refocus in v1 |
+| Notify-only turns (child notification merge without skill terminal) | **Forbidden** |
+| **`phaseShipComplete: true`**, explicit defer/abandon, or unrecoverable failure with no retry | **Required** |
+
+Call **`mission_control_refocus_parent_lane`** (optional `{ "reason": "phase-planner-complete" }` — no host-resolved identity keys) **immediately before** **`mission_control_send_agent_result`** when **Required** above.
 
 **Binding:** Do **not** treat the first **`status: success`** terminal (§§1–4 drafted, inline **`pr-breakdown`**, PR 1 expanded) as skill completion eligible for parent refocus. **`mission_control_refocus_parent_lane`** is **not** the mechanism for notifying **`master-planner`** of progress — parent **ack-only** until **`phaseShipComplete`** per **`master-planner`** Step **7b**.
+
+**Message order on terminal turns:** optional recap → **`mission_control_present_structured_choice`** (when a gate is open) → **`mission_control_refocus_parent_lane`** (when required) → **`mission_control_send_agent_result`** (**last**).
 
 Required `outputs` fields:
 
