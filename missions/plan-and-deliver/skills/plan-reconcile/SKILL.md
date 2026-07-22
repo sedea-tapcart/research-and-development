@@ -48,6 +48,10 @@ inputs:
 
 # Plan reconcile
 
+## No agent gcloud secrets or env-var proposals (binding)
+
+**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/research-and-development/rules/60_no-agent-env-secrets.mdc`.
+
 ## Warm-up manifest (inline)
 
 Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea/docs/lane-manifest-contract.md) and **`../README.md`** § *Inline-only*. **No** frontmatter **`warmUpRules`** or **`laneRules`** — runs on the active **`coding-session`** lane whose **`effectiveWarmUp`** already loaded ship rules. **No `alwaysApply` frontmatter flip.**

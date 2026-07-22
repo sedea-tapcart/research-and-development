@@ -615,6 +615,10 @@ Do not conflate **pre-PR review** with **PR-surface review**:
 
 Full definitions: [`.sedea/centers/research-and-development/docs/development-process.md`](../docs/development-process.md) § *Agents and roles*.
 
+## No agent gcloud secrets or env-var proposals (binding)
+
+Agents **must not** update gcloud secrets, add environment variables to code, or **propose** new env vars. Env vars require an **explicit same-turn developer instruction** naming the variable. Normative detail: [`60_no-agent-env-secrets.mdc`](60_no-agent-env-secrets.mdc).
+
 ## Checkpoint step continuation (binding)
 
 This file is the **R&D ship-lane worktree / commit-push / PR-creation contract**, not a mission protocol with executable ship steps. Under **`trustLevel: checkpoint`**, turn-end modal UX for worktree-open, ship cut-points, pre-PR / create-PR / post-create-pr gates, and post-merge cleanup lives in invoker skills (`coding-session`, `create-pr`, `pre-pr-review`, `plan-reconcile`, `promote-center-submodule-pin`) and consent gates in sedea rules **6** / **2** / **1** / **7**. **Do not** add literal `USER_CHECKPOINT` markers here for happy-path HOSTING_ROOT resolution, worktree setup hints, ownership-clear remove paths, or policy redirects to **`coding-session`** — that would fight skill auto-advance.

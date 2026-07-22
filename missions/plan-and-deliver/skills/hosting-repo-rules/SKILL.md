@@ -61,6 +61,10 @@ warmUpRules:
 
 # Hosting-repo rules (detached ship lane)
 
+## No agent gcloud secrets or env-var proposals (binding)
+
+**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/research-and-development/rules/60_no-agent-env-secrets.mdc`.
+
 **Spawnable detached lane** for hosting-repo **`.cursor/rules/*.mdc`** updates when a **`coding-session`** terminal indicates §5 repo-rule work was **not fully landed** on the product lane. Distinct skill identity and lane slug from **`coding-session`** — same sedea ship primitives, different designation and scope.
 
 **Normative execution:** **`spawned`** (detached child lane). Parent **`master-planner`** / **`phase-planner`** emit **fire-and-forget** **`mission_control_spawn_agent`** — do **not** add the rules lane to **`pendingByParent`** or block next-row expand.

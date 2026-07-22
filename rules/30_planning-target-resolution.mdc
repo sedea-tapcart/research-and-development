@@ -214,6 +214,10 @@ Each planning skill (**new-plan**, **phase-planner**, **pr-plan**, **delivery-ph
 
 Skills still run their own **template / stage verification** on disk. If a skill loads without a resolved target, **stop** and resolve via this rule before proceeding.
 
+## No agent gcloud secrets or env-var proposals (binding)
+
+Agents **must not** update gcloud secrets, add environment variables to code, or **propose** new env vars. Env vars require an **explicit same-turn developer instruction** naming the variable. Normative detail: [`60_no-agent-env-secrets.mdc`](60_no-agent-env-secrets.mdc).
+
 ## Checkpoint step continuation (binding)
 
 This file is the **planning-target resolution contract** (snapshot tables, depth-first gates, plan-path binding) — not a mission protocol with executable ship steps. Under **`trustLevel: checkpoint`**, developer-pick UX for ambiguous targets and lane-change snapshots still uses **AskQuestion** / **`mission_control_present_structured_choice`** per § *Sedea input channel*; mid-flow unambiguous hops **auto-advance**. **Do not** add literal `USER_CHECKPOINT` gate markers here for happy-path resolution or depth-first eligibility compute — markers and option tables live on invoker planning skills (`master-planner`, `phase-planner`, `pr-plan`, `new-plan`, …) and rule **2**.

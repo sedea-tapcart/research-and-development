@@ -67,6 +67,10 @@ warmUpRules:
 
 # Pre-PR Review
 
+## No agent gcloud secrets or env-var proposals (binding)
+
+**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/research-and-development/rules/60_no-agent-env-secrets.mdc`.
+
 **Spawn-only (binding).** Run on a **fresh spawned child lane** opened by **`mission_control_spawn_agent`** from **`coding-session`**. Mission Control validates frontmatter **`inputs`** at spawn time. **Forbidden:** execute this skill **inline** on the **`coding-session`** lane — mirror [`create-pr/SKILL.md`](../create-pr/SKILL.md) (inline-only on **`coding-session`**; **`pre-pr-review`** is the inverse: spawn-only from that lane).
 
 ### Standalone dispatch (stop immediately)

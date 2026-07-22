@@ -49,6 +49,10 @@ warmUpRules:
 
 # Quick Fix Plan
 
+## No agent gcloud secrets or env-var proposals (binding)
+
+**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/research-and-development/rules/60_no-agent-env-secrets.mdc`.
+
 **Normative mode:** **Spawned only** on **`quick-fix`** — child lane owns minimal parent scaffold, inline **`new-plan`**, inline **`pr-plan`**, and **`coding-session`** spawn via **`pr-plan`** §5d. Does **not** run **`master-planner`**, **`pr-breakdown`**, **`delivery-phases`**, or **`phase-planner`**.
 
 **Procedure authority:** [`.sedea/centers/research-and-development/missions/quick-fix/plan.mdc`](.sedea/centers/research-and-development/missions/quick-fix/plan.mdc) §4 — execute that section on **this** lane.
