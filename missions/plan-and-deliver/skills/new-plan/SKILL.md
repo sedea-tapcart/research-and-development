@@ -71,6 +71,10 @@ warmUpRules:
 
 # New plan
 
+## No agent gcloud secrets or env-var proposals (binding)
+
+**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/research-and-development/rules/60_no-agent-env-secrets.mdc`.
+
 Scaffold a standalone `.plan.md` and `.state.yaml` under the **dispatch-scoped plans union** (flat `.../plans/` directory from spawn handover or resolved parent plan path — see **Slug and filename**). On first write, frontmatter must be valid YAML and match the shape Sedea tooling expects (see **Write the plan template** and naming guidance in `.sedea/centers/research-and-development/docs/development-process.md` plus `.sedea/centers/research-and-development/rules/10_plan-naming-convention.mdc`).
 
 **Resolution contract:** read `.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc` and follow it for target selection and snapshots. Resolve parents using **§ Parent derivation** below (explicit session/message → `plan-state resolve` → recent chat references).

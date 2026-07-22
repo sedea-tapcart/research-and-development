@@ -8,7 +8,7 @@ alwaysApply: true
 
 # R&D bootstrap (Mission Control warm-up)
 
-**Target:** This file is the **single** research-and-development center rule with `alwaysApply: true` once the §5.4 parity gate completes. Numbered rules **`10`–`50`** load **on demand** via lane manifests and explicit `Read` steps — not on every dispatch warm-up until the host resolver and frontmatter flip ship (reduce-alwaysapply-governance-load PRD §5.4).
+**Target:** This file is the **single** research-and-development center rule with `alwaysApply: true` once the §5.4 parity gate completes. Numbered rules **`10`–`60`** load **on demand** via lane manifests and explicit `Read` steps — not on every dispatch warm-up until the host resolver and frontmatter flip ship (reduce-alwaysapply-governance-load PRD §5.4).
 
 Sedea platform bootstrap and numbered Sedea rules load per **`.sedea/centers/sedea/rules/bootstrap.mdc`** and mission **`laneRules`** — not duplicated here.
 
@@ -62,15 +62,19 @@ Spawned lanes without the AskQuestion tool **must** call **`mission_control_pres
 
 ---
 
+## No agent gcloud secrets or env-var proposals (binding)
+
+Agents **must not** update gcloud secrets, add environment variables to code, or **propose** new env vars. Env vars require an **explicit same-turn developer instruction** naming the variable. Normative detail: [`60_no-agent-env-secrets.mdc`](60_no-agent-env-secrets.mdc).
+
 ## Checkpoint step continuation (binding)
 
-This file is the **sole R&D alwaysApply warm-up bind** — plan-and-deliver routing summary, lane warm-up manifest contract, and on-demand links to numbered R&D rules. It is **not** a mission protocol with executable ship steps. Under **`trustLevel: checkpoint`**, step-continuation UX for worktrees, ship chain, and planning gates lives in invoker skills and numbered R&D rules **10**–**50** (plus Sedea rules via platform bootstrap). **Do not** add literal `USER_CHECKPOINT` markers here for happy-path warm-up, lane-manifest reads, or on-demand rule hops — that would fight skill auto-advance.
+This file is the **sole R&D alwaysApply warm-up bind** — plan-and-deliver routing summary, lane warm-up manifest contract, and on-demand links to numbered R&D rules. It is **not** a mission protocol with executable ship steps. Under **`trustLevel: checkpoint`**, step-continuation UX for worktrees, ship chain, and planning gates lives in invoker skills and numbered R&D rules **10**–**60** (plus Sedea rules via platform bootstrap). **Do not** add literal `USER_CHECKPOINT` markers here for happy-path warm-up, lane-manifest reads, or on-demand rule hops — that would fight skill auto-advance.
 
 | Surface | Designation | Owner |
 |---------|-------------|--------|
 | Warm-up apply (R&D bootstrap + laneRules + skillWarmUp) | **auto-advance** | Host merge; this file as R&D `bootstrapRules` |
 | Lane warm-up manifest / merge-order reads | **auto-advance** | This § *Lane warm-up manifest* |
-| On-demand numbered R&D rule loads (`10`–`50`) | **auto-advance** | Lane manifest / skill `Read` — no USER_CHECKPOINT in bootstrap |
+| On-demand numbered R&D rule loads (`10`–`60`) | **auto-advance** | Lane manifest / skill `Read` — no USER_CHECKPOINT in bootstrap |
 | Skill helper interface hop | **auto-advance** | This § *Skill helper interfaces* — execution owned by named skill |
 | Turn completion (trust-keyed) | **baseline-governs** (reference) | Sedea rule **2** (Checkpoint binary + non-Checkpoint every-turn); summary table above |
 | No idle handoff | **baseline-governs** (reference) | Sedea rules **1**–**2**; Forbidden catalog below |
@@ -93,6 +97,7 @@ Load these **explicitly** when **`laneRules`**, **`skillWarmUp`**, spawn handove
 | **31** Dispatch scope | [`.sedea/centers/research-and-development/rules/31_dispatch-scope.mdc`](31_dispatch-scope.mdc) | `dispatchId`, `operationsDocsDirectory` / DbOnly, explicit plan paths |
 | **40** Maintain rules | [`.sedea/centers/research-and-development/rules/40_maintain-rules.mdc`](40_maintain-rules.mdc) | Hosting-repo **`.cursor/rules/*.mdc`** routing vs center rules |
 | **50** Display metadata | [`.sedea/centers/research-and-development/rules/50_mission-control-display-metadata-discipline.mdc`](50_mission-control-display-metadata-discipline.mdc) | Child lane display refresh, Squad Leader dispatch scope |
+| **60** Secret and environment-variable ban | [`.sedea/centers/research-and-development/rules/60_no-agent-env-secrets.mdc`](60_no-agent-env-secrets.mdc) | Any work involving secrets, configuration, application or infrastructure wiring, plans, options, or follow-ups |
 
 Mission **`plan.mdc`**, **`development-process.md`**, and skill **`SKILL.md`** procedures load per **`laneRules`** and **`skillWarmUp`** — not duplicated here.
 

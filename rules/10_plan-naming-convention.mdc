@@ -81,6 +81,10 @@ Do **not** copy stacked **hosting repo** examples such as `feat/token-auth` or b
 
 Stop and ask: *what is actually better after this change?* That answer is the title. Apply the rename in artifacts **before** create/push — do **not** ship the forbidden word hoping to fix it later.
 
+## No agent gcloud secrets or env-var proposals (binding)
+
+Agents **must not** update gcloud secrets, add environment variables to code, or **propose** new env vars. Env vars require an **explicit same-turn developer instruction** naming the variable. Normative detail: [`60_no-agent-env-secrets.mdc`](60_no-agent-env-secrets.mdc).
+
 ## Checkpoint step continuation (binding)
 
 This file is the **plan / PR / worktree naming and forbidden-word contract**, not a mission protocol with executable ship steps. Under **`trustLevel: checkpoint`**, turn-end modal UX for worktree-open, ship cut-points, and post-merge cleanup lives in invoker skills (`coding-session`, `create-pr`, `promote-center-submodule-pin`) and consent gates in rules **6** / **2** / **1** / sedea rule **7**. **Do not** add literal `USER_CHECKPOINT` markers here for happy-path benefit naming, prefix selection, or stacked-vs-separate pattern resolution when the plan or developer already named the outcome — that would fight skill auto-advance.

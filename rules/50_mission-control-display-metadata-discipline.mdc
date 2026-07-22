@@ -114,6 +114,10 @@ Normative Call/Skip, kind hints, and forbidden patterns: [`.sedea/centers/resear
 
 ---
 
+## No agent gcloud secrets or env-var proposals (binding)
+
+Agents **must not** update gcloud secrets, add environment variables to code, or **propose** new env vars. Env vars require an **explicit same-turn developer instruction** naming the variable. Normative detail: [`60_no-agent-env-secrets.mdc`](60_no-agent-env-secrets.mdc).
+
 ## Checkpoint step continuation (binding)
 
 This file is the **R&D Mission Control display-metadata spawn / refresh / Squad Leader chrome contract**, not a mission protocol with executable ship steps. Under **`trustLevel: checkpoint`**, turn-end modal UX for display-update failures and ownership ambiguity uses **AskQuestion** / **`mission_control_present_structured_choice`** per sedea rules **2** / **1** and rule **9**; happy-path spawn labels, prefix application, and own-slot refresh **auto-advance**. **Do not** add literal `USER_CHECKPOINT` markers here for happy-path spawn `name` / `description`, `{prefix}-{semantic title}` application, or own-slot MCP refresh when labels are clearly stale — that would fight skill auto-advance.
