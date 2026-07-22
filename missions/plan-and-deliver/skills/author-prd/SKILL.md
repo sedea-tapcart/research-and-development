@@ -206,6 +206,8 @@ Gather evidence, calibrate section policy, and draft or update a Product or Feat
 
 8. Write the document when an output path is resolved, then re-read it and verify the required sections.
 
+   - **Relevant Links (post-write):** After a successful create or material edit, call MCP **`mission_control_update_relevant_documents`** with the absolute PRD path (`kind: prd`) on this lane — same turn preferred. **Skip** when the path is already registered this session with no content change. Does **not** replace terminal `prdPath` / `prdRef`. See **`../README.md`** § *Relevant Links — post-write registration*.
+
    - **Next-step resolution:** Auto-advance to step **9** after successful write — emit non-terminal **`mission_control_send_agent_result`** with `developerApprovedPrd: false` when **`plan.mdc`** §3 requires leader ack before step **10**; do **not** treat that ack as PRD approval.
 
 9. **Refresh lane display** when spawn labels are generic — MCP **`mission_control_update_lane_display`** on this lane only (rule **50**). **`title`:** `PRD-{semantic title}` where semantic title is **`prdTitle`** or approved PRD heading — see [rule **50**](../../../../rules/50_mission-control-display-metadata-discipline.mdc) § *Lane title prefix conventions*.
@@ -377,6 +379,20 @@ The **`plan and deliver`** Squad Leader spawns this skill on a child lane (**`pl
 | R2 | **Forbidden args absent** — no **`correlationId`**, **`dispatchId`**, **`slotId`**, or other host-resolved keys |
 | R3 | Populate **`outputs`** from the required field list below |
 | R4 | Re-emit updated MCP result after user-requested follow-up on this lane (same spawn session; host resolves **`correlationId`**) |
+| R5 | **`mission_control_refocus_parent_lane`** — when **Required** per § *MCP parent refocus* below; **forbidden** while **`continuationStatus: active`** |
+
+### MCP parent refocus (`mission_control_refocus_parent_lane`)
+
+| Signal on this terminal | Refocus? |
+|-------------------------|----------|
+| **`continuationStatus: active`** (approval pending; post-write ack) | **Forbidden** |
+| **`continuationStatus: terminal`** (**Approve PRD** or abandon) | **Required** |
+
+Call **`mission_control_refocus_parent_lane`** (optional `{ "reason": "author-prd-complete" }` — no host-resolved identity keys) **immediately before** **`mission_control_send_agent_result`** when **Required** above. See **`../README.md`** § *Parent refocus on terminal*.
+
+**Forbidden:** structured-choice options whose primary purpose is parent-switch — use **`mission_control_refocus_parent_lane`** instead.
+
+**Message order on terminal turns:** optional recap → **`mission_control_present_structured_choice`** (when a gate is open) → **`mission_control_refocus_parent_lane`** (when required) → **`mission_control_send_agent_result`** (**last**).
 
 Top-level `status`: `success`, `partial`, `failure`, `aborted`, or `abandoned`.
 

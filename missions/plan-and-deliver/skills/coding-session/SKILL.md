@@ -2680,6 +2680,22 @@ Required `outputs` per **## Implementation handoff result**, **Mission Control s
 | R2 | **Forbidden args absent** — no **`correlationId`**, **`dispatchId`**, **`slotId`**, or other host-resolved keys |
 | R3 | Populate **`outputs`** from **## Implementation handoff result** and §8 sync fields |
 | R4 | Re-emit updated MCP result after user-requested follow-up on this lane (same spawn session; host resolves **`correlationId`**) |
+| R5 | **`mission_control_refocus_parent_lane`** — when **Required** per § *MCP parent refocus* below; **omit** on detached / parentless entry |
+
+### MCP parent refocus (`mission_control_refocus_parent_lane`)
+
+| Signal on this terminal | Refocus? |
+|-------------------------|----------|
+| Detached / parentless entry (no resolvable spawned parent) | **Omit** — do not call refocus |
+| Notify-only turns; mid-ship re-emits while work remains on this lane | **Forbidden** |
+| Open **`pre-pr-review`** / ship child; cut-point or post-create gate still open | **Forbidden** |
+| True ship / abandon / blocked terminal with resolvable spawned parent (typical **`pr-plan`** §5d child) | **Required** |
+
+Call **`mission_control_refocus_parent_lane`** (optional `{ "reason": "coding-session-complete" }` — no host-resolved identity keys) **immediately before** **`mission_control_send_agent_result`** when **Required** above. See **`../README.md`** § *Parent refocus on terminal*.
+
+**Forbidden:** structured-choice options whose primary purpose is parent-switch — use **`mission_control_refocus_parent_lane`** instead.
+
+**Message order on terminal turns:** optional recap → **`mission_control_present_structured_choice`** (when a gate is open) → **`mission_control_refocus_parent_lane`** (when required) → **`mission_control_send_agent_result`** (**last**).
 
 Stop after the MCP result call. Do not emit another `mission_control_spawn_agent` or run the next protocol step in the same turn (see **`../README.md`** § *Terminal stop (normative)*).
 

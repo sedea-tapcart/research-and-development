@@ -152,6 +152,8 @@ USER_CHECKPOINT — approve brainstorm report, revise research, or abandon dispa
 
 3. **Write report** — Resolve docs write root per **31_dispatch-scope.mdc** § *Docs write root resolution*; save under that directory as `brainstorm_<slug>_<8hex>.brainstorm-report.md` (kebab slug from title; regenerate hex on collision once).
 
+   - **Relevant Links (post-write):** After a successful create or material revise write, call MCP **`mission_control_update_relevant_documents`** with the absolute report path (`kind: other`) on this lane — same turn preferred. **Skip** when already registered this session with no content change. Does **not** replace terminal `brainstormReportPath` / `brainstormReportRef`. See **`../README.md`** § *Relevant Links — post-write registration*.
+
    - **Next-step resolution:** Auto-advance to step **4** after successful write — no `USER_CHECKPOINT` on this step.
 
 4. **Present for approval** — Recap report path and §5 Handoff summary excerpt in **`displayMarkdown`** when using **`mission_control_present_structured_choice`**. Open [Report approval gate](#report-approval-gate-binding) via **`mission_control_present_structured_choice`** or **AskQuestion** — **same turn**, not prose-only.
@@ -189,6 +191,18 @@ USER_CHECKPOINT — approve brainstorm report, revise research, or abandon dispa
 | R2 | **Forbidden args absent** — no **`correlationId`**, **`dispatchId`**, **`slotId`**, or other host-resolved keys |
 | R3 | Populate **`outputs`** from the required field list below |
 | R4 | Re-emit updated MCP result after user-requested follow-up on this lane (same spawn session; host resolves **`correlationId`**) |
+| R5 | **`mission_control_refocus_parent_lane`** — **Required** on Approve / Abandon terminal per procedure steps 5–6; **forbidden** while **`continuationStatus: active`** |
+
+### MCP parent refocus (`mission_control_refocus_parent_lane`)
+
+| Signal on this terminal | Refocus? |
+|-------------------------|----------|
+| **`continuationStatus: active`** (research / pre-approval) | **Forbidden** |
+| **Approve report** / **Abandon dispatch** (**`continuationStatus: terminal`**) | **Required** |
+
+Call **`mission_control_refocus_parent_lane`** (optional `{ "reason": "brainstorm-research-complete" }` — no host-resolved identity keys) **immediately before** **`mission_control_send_agent_result`** when **Required** above. See **`../README.md`** § *Parent refocus on terminal*.
+
+**Message order on terminal turns:** optional recap → **`mission_control_present_structured_choice`** (when a gate is open) → **`mission_control_refocus_parent_lane`** (when required) → **`mission_control_send_agent_result`** (**last**).
 
 Emit **exactly one** line on its own: `mission_control_send_agent_result` immediately followed by a single JSON object on the **same** line. Required keys: `version` (1), `correlationId`, `status`, `summary`, `outputs`, `errors` (use `[]` when none).
 

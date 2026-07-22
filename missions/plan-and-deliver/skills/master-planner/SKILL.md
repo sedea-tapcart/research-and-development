@@ -106,6 +106,7 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 - Run **`../README.md`** § *MCP spawn preflight* (rows M1–M8) before every MCP spawn; **forbidden** host-resolved identity keys in MCP args (`correlationId`, `dispatchId`, `slotId`, … — see README § *Host-resolved identity*).
 - Run **`../README.md`** § *MCP notify preflight* (rows N1–N8) before every **`mission_control_notify_child_lanes`** call — cross-ref **`.sedea/centers/sedea/rules/4_mission.mdc`** § *MCP notify protocol*.
 - Inline skills on this mission stay **inline-only** — no spawn wire change unless the protocol step explicitly spawns a child lane.
+- **Relevant Links (post-write):** After each Write/StrReplace that **creates or materially edits** the Master Plan (or other ops plan under the plans union), call MCP **`mission_control_update_relevant_documents`** with absolute path(s) (`kind: plan`) on this lane — same turn preferred. **Skip** read-only loads, warm-up paths, and paths already registered this session with no content change. Does **not** replace terminal `masterPlanPath` / path outputs. See **`../README.md`** § *Relevant Links — post-write registration*.
 
 ### Plan-change notify — emit-when (`mission_control_notify_child_lanes`)
 
@@ -521,9 +522,11 @@ prs: []
 
 Both files must be written in the same skill turn so the Plan Board picks the plan up cleanly on first scan.
 
-After writing, link the plan file with an absolute path so the user can click through:
+After writing, present the plan file as a backtick path so Mission Control can open it. Prefer the hosting-absolute path; a `.sedea/operations/…/plans/…` path is also valid:
 
-> Plan file: [`<slug>.plan.md`](file:///<absolute-targetPlanPath>)
+> Plan file: `<absolute-targetPlanPath>`
+
+Do **not** wrap a backtick label in a `file://` Markdown link (for example `` [`<slug>.plan.md`](file:///<absolute-targetPlanPath>) ``); that shape is mangled by transcript Markdown parsing.
 
 ## Step 6 — Draft sections 1 through 5 into the plan file
 
@@ -578,7 +581,7 @@ One or more diagrams showing what the implementation will look like. Pick the di
 - State diagram — lifecycle / state-machine changes.
 - ER / schema diagram — data model or database changes.
 
-Use **Mermaid** (in fenced ```mermaid blocks) so the diagrams render in Cursor and on the Plan Board. Include only what is necessary to understand the *shape*; don't draft pseudocode here. If multiple diagrams are needed, label each one.
+Use **Mermaid** (in fenced ```mermaid blocks) so the diagrams render in Cursor and on the Plan Board. Include only what is necessary to understand the *shape*; don't draft pseudocode here. If multiple diagrams are needed, label each one. Follow [`.sedea/centers/sedea/docs/mermaid-authoring.md`](.sedea/centers/sedea/docs/mermaid-authoring.md) — opaque ids, sequence `Note` single-line (no `<br/>`), flowchart-only `<br/>` in quoted node labels.
 
 ### § 5 Changes
 
@@ -917,6 +920,22 @@ Required `outputs` fields (populate the JSON `outputs` object on the MCP result 
 | R2 | **Forbidden args absent** — no **`correlationId`**, **`dispatchId`**, **`slotId`**, or other host-resolved keys |
 | R3 | Populate **`outputs`** from the required field list below |
 | R4 | Re-emit updated MCP result after user-requested follow-up on this lane (same spawn session; host resolves **`correlationId`**) |
+| R5 | **`mission_control_refocus_parent_lane`** — when **Required** per § *MCP parent refocus* below; **forbidden** while **`continuationStatus: active`** or §7 approval pending |
+
+### MCP parent refocus (`mission_control_refocus_parent_lane`)
+
+| Signal on this terminal | Refocus? |
+|-------------------------|----------|
+| **`continuationStatus: active`** | **Forbidden** |
+| **`caveatsApprovalStatus: pending`** or §7 approval AskQuestion still open | **Forbidden** |
+| Open nested **`phase-planner`** / **`coding-session`** / **`hosting-repo-rules`** work; notify-only turns | **Forbidden** |
+| **`continuationStatus: terminal`** (skill-complete; §7 gate satisfied or abandoned) | **Required** |
+
+Call **`mission_control_refocus_parent_lane`** (optional `{ "reason": "master-planner-complete" }` — no host-resolved identity keys) **immediately before** **`mission_control_send_agent_result`** when **Required** above. See **`../README.md`** § *Parent refocus on terminal*.
+
+**Forbidden:** structured-choice options whose primary purpose is parent-switch — use **`mission_control_refocus_parent_lane`** instead.
+
+**Message order on terminal turns:** optional recap → **`mission_control_present_structured_choice`** (when a gate is open) → **`mission_control_refocus_parent_lane`** (when required) → **`mission_control_send_agent_result`** (**last**).
 
 Required `outputs` fields:
 
