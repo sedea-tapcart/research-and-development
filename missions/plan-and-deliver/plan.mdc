@@ -311,6 +311,7 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 | `.sedea/centers/sedea/rules/4_mission.mdc` | Mission protocol, spawn/reload manifest |
 | `.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc` | This mission plan (§§1–8) |
 | `.sedea/centers/research-and-development/docs/development-process.md` | Cadence and protocol branches |
+| `.sedea/centers/research-and-development/rules/60_github-issue-dispatch-closure.mdc` | Bind GitHub issue at intake; status update before dispatch resolution |
 
 ### `skillWarmUp` — child spawn overrides (binding)
 
@@ -355,7 +356,8 @@ Marker syntax: [`.sedea/centers/sedea/docs/user-checkpoint-marker-syntax.md`](.s
 1. Match `plan and deliver` on the opening message (case-insensitive).
 2. When scope is readable from the opening message (feature title or command remainder), run **Dispatch display refresh** (above) — **skip** when chrome already matches. Default **`Parent: null`** intake — see §4 *External PM scope*; do not prompt for Hub topic parents.
 3. Parse optional opening seeds: `prdTitle`, readable `@path` to an existing PRD, URLs, or description blurb — pass through to §2; do **not** treat seeds alone as developer-approved PRD.
-4. Continue to §2.
+4. When a **GitHub issue URL** is present (Hub intake note or opening message), bind it on the leader ledger per [rule **60**](../../rules/60_github-issue-dispatch-closure.mdc) (`githubIssueUrl` / number / repo).
+5. Continue to §2.
 
 **Out of scope for this step:** **`new-plan`** indexed-child expansion — uses **AskQuestion** per **30_planning-target-resolution** § *Sedea input channel* on planning lanes, not §1–2.
 
@@ -857,4 +859,5 @@ Before calling MCP **`mission_control_propose_dispatch_resolution`** when the de
 2. On each leader-lane turn that touches ship, update rows from **host-sync** messages and **`ship-ledger.v1.json`** before other protocol work.
 3. When host sync is missing for an `open` row, run *Pre-resolution checklist* **AskQuestion** before proposing dispatch resolution.
 4. When the developer signals done on **this dispatch**, run *Pre-resolution checklist* then re-check all rows against the gates table; choose `resolved` / `partial` / `abandoned` accordingly.
-5. Put the recap in the MCP **`summary`** argument; list open PR plans or deferred ship work when status is **`partial`**.
+5. When **`githubIssueBound`**, apply [rule **60**](../../rules/60_github-issue-dispatch-closure.mdc) status map for the chosen status **before** calling **`mission_control_propose_dispatch_resolution`**.
+6. Put the recap in the MCP **`summary`** argument; list open PR plans or deferred ship work when status is **`partial`**.

@@ -1,0 +1,63 @@
+---
+description: >-
+  GitHub issue link intake on R&D Mission Control dispatches and Squad Leader
+  status update at dispatch resolution so bound issues do not linger.
+globs: "**/*"
+alwaysApply: false
+---
+
+# GitHub issue dispatch closure (R&D)
+
+**On-demand rule.** Load when an R&D delivery mission binds a GitHub issue at intake or when the Squad Leader is about to call **`mission_control_propose_dispatch_resolution`**.
+
+## Purpose
+
+When a dispatch starts from (or otherwise binds) a **GitHub issue URL**, the Squad Leader must update that issue at **dispatch resolution** so the issue does not stay open after the Mission Control work is finished (or explicitly stopped).
+
+## Binding fields (leader ledger)
+
+| Field | Meaning |
+|-------|---------|
+| **`githubIssueUrl`** | Canonical HTTPS URL (`https://github.com/<owner>/<repo>/issues/<n>`) |
+| **`githubIssueNumber`** | Numeric issue id |
+| **`githubIssueRepo`** | `owner/repo` for `gh` |
+| **`githubIssueBound`** | `true` when the fields above are set |
+
+**Parse sources (first match wins):** Hub / Mission Control “GitHub issue link” intake note; opening message or remainder matching `/github\.com\/([^/]+)\/([^/]+)\/issues\/(\d+)/i`; developer-supplied URL at intake. **No issue → no-op** (do not invent).
+
+**Forbidden:** constructing issue numbers from PR numbers; closing unbound issues; child lanes calling **`gh issue close`** / status update (**Squad Leader only**).
+
+## Intake (mission protocol)
+
+On §1 open / §2 intake (mission-specific), when a GitHub issue URL is present:
+
+1. Set binding fields on the leader ledger.
+2. Optionally add the URL to **`sourceMaterials`** / Related / issue summary context.
+3. Pass **`githubIssueUrl`** in spawn **`initiatingPrompt`** when useful — **closure stays on the leader**.
+
+## Closure timing (binding)
+
+Immediately **before** each **`mission_control_propose_dispatch_resolution`** call on the Squad Leader lane, when **`githubIssueBound: true`**, apply the **status map** for that proposal’s **`status`**. If the developer **Continue**s and a later proposal uses a different status, re-apply (idempotent: skip re-close if already closed; add a fresh comment when useful).
+
+## Status map
+
+| Resolution **`status`** | GitHub action |
+|-------------------------|---------------|
+| **`resolved`** | **`gh issue comment`** with dispatch recap → **`gh issue close`** |
+| **`partial`** | **`gh issue comment`** with remaining work → **leave open** |
+| **`abandoned`** / **`aborted`** | **`gh issue comment`** that dispatch stopped → **leave open** |
+
+Optional close on abandoned only when the developer explicitly picks that path in a **USER_CHECKPOINT** on that turn.
+
+## Commands (illustrative)
+
+```bash
+gh issue comment <n> --repo <owner/repo> --body "<recap + dispatchId>"
+gh issue close <n> --repo <owner/repo>   # resolved only
+```
+
+Use the hosting / product repo that owns the issue (**`githubIssueRepo`**), not the center submodule.
+
+## Failures
+
+Auth / network / missing **`gh`**: note the failure in the resolution **`summary`**; still propose dispatch resolution; do not block closure solely on GitHub API failure unless the developer requires it via structured choice.

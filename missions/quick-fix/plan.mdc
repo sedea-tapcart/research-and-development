@@ -86,6 +86,7 @@ flowchart TB
 | `.sedea/centers/sedea/rules/4_mission.mdc` | Mission protocol, spawn/reload |
 | `.sedea/centers/research-and-development/missions/quick-fix/plan.mdc` | **This** mission plan |
 | `.sedea/centers/research-and-development/docs/development-process.md` | Cadence and protocol branches |
+| `.sedea/centers/research-and-development/rules/60_github-issue-dispatch-closure.mdc` | Bind GitHub issue at intake; status update before dispatch resolution |
 
 **Quick Fix Plan agent spawn `warmUpRules` (binding):** Merge target skill frontmatter defaults but **replace** `plan-and-deliver/plan.mdc` with **`quick-fix/plan.mdc`**.
 
@@ -130,7 +131,8 @@ USER_CHECKPOINT — confirm mission intent when the opening command phrase does 
 1. Match **`quick fix`** case-insensitively (longest phrase first per [`.sedea/centers/sedea/rules/4_mission.mdc`](.sedea/centers/sedea/rules/4_mission.mdc) § **Mission command phrases**).
 2. When dispatch scope is readable from the opening message (command remainder), run **Dispatch display refresh** (above) — **skip** when current dispatch chrome already matches.
 3. Strip the phrase; pass remainder as optional scope hint to §2.
-4. Continue to §2.
+4. When a **GitHub issue URL** is present (Hub intake note or opening message), bind it on the leader ledger per [rule **60**](../../rules/60_github-issue-dispatch-closure.mdc).
+5. Continue to §2.
 
 ### 2. Collect quick fix intake
 
@@ -314,7 +316,7 @@ USER_CHECKPOINT — approve dispatch resolution when planning and ship gates all
 
 USER_CHECKPOINT — approve dispatch resolution when planning and ship gates allow.
 
-Per [`.sedea/centers/sedea/rules/4_mission.mdc`](.sedea/centers/sedea/rules/4_mission.mdc) § **Dispatch resolution**. Use **`resolved`** when planning and ship complete; **`partial`** when PR open or follow-up remains.
+Per [`.sedea/centers/sedea/rules/4_mission.mdc`](.sedea/centers/sedea/rules/4_mission.mdc) § **Dispatch resolution**. Use **`resolved`** when planning and ship complete; **`partial`** when PR open or follow-up remains. When **`githubIssueBound`**, apply [rule **60**](../../rules/60_github-issue-dispatch-closure.mdc) status map for the chosen status **before** **`mission_control_propose_dispatch_resolution`**.
 
 ## Related assets
 

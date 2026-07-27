@@ -25,6 +25,7 @@ rules:
   - path: rules/31_dispatch-scope.mdc
   - path: rules/40_maintain-rules.mdc
   - path: rules/50_mission-control-display-metadata-discipline.mdc
+  - path: rules/60_github-issue-dispatch-closure.mdc
 
 missions:
   - slug: plan-and-deliver

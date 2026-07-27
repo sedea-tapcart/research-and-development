@@ -44,7 +44,10 @@ inputs:
     default: []
   diffSummary:
     type: object
-    description: Optional summary from coding-session, including commits, files, and line counts.
+    description: >-
+      Optional summary from coding-session. Must be a JSON object (not a string).
+      Expected keys when present: commitCount, fileCount, insertions, deletions,
+      head and/or subject; optional files (string array of paths).
     required: false
   ledgerParent:
     type: string
