@@ -100,6 +100,7 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 | `.sedea/centers/sedea/rules/4_mission.mdc` | Mission protocol, spawn/reload manifest |
 | `.sedea/centers/research-and-development/missions/single-phase/plan.mdc` | **This** mission plan (§§1–8) — not `plan-and-deliver/plan.mdc` |
 | `.sedea/centers/research-and-development/docs/development-process.md` | Cadence and protocol branches |
+| `.sedea/centers/research-and-development/rules/60_github-issue-dispatch-closure.mdc` | Bind GitHub issue at intake; status update before dispatch resolution |
 
 ### `skillWarmUp` — child spawn overrides (binding)
 
@@ -148,7 +149,8 @@ USER_CHECKPOINT — confirm mission intent when the opening command phrase does 
 1. Match **`plan and deliver a single phase`** case-insensitively (only command phrase for this mission).
 2. When dispatch scope is readable from the opening message (command remainder), run **Dispatch display refresh** (above) — **skip** when current dispatch chrome already matches.
 3. Strip the phrase; pass remainder as optional scope hint to §2.
-4. Continue to §2.
+4. When a **GitHub issue URL** is present (Hub intake note or opening message), bind it on the leader ledger per [rule **60**](../../rules/60_github-issue-dispatch-closure.mdc).
+5. Continue to §2.
 
 ### 2. Collect ad-hoc scope intake
 
@@ -320,7 +322,7 @@ USER_CHECKPOINT — close dispatch planning-only vs keep ship active when no shi
 
 USER_CHECKPOINT — approve dispatch resolution when planning and ship gates allow.
 
-**Dispatch resolution:** Squad Leader proposes **`mission_control_propose_dispatch_resolution`** when planning complete and ship rows closed (or planning-only close per plan-and-deliver §8 gates).
+**Dispatch resolution:** Squad Leader proposes **`mission_control_propose_dispatch_resolution`** when planning complete and ship rows closed (or planning-only close per plan-and-deliver §8 gates). When **`githubIssueBound`**, apply [rule **60**](../../rules/60_github-issue-dispatch-closure.mdc) status map for the chosen status **before** that MCP call.
 
 **Dispatch resolution:** Squad Leader proposes **`mission_control_propose_dispatch_resolution`** when planning complete and ship rows closed (or planning-only close per plan-and-deliver §8 gates).
 ## Related assets

@@ -5,7 +5,8 @@ description: >-
  (`.sedea/operations/.../plans/` via explicit handover paths — not user-id path construction),
  with required frontmatter (name, overview, todos, isProject) and `parent` only in the sidecar. Resolves
  parent per planning-target-resolution; confirms parent before write except on
- indexed child spawn when parent + index N are already locked by session context.
+ indexed child spawn when parent + index N are already locked by session context,
+ or when `upstreamSkill` is `debug-and-fix` (standalone root `parent: null` pre-locked).
  After an indexed handoff, may run **pr-plan** inline or spawn **phase-planner**. When run inline from
  **delivery-phases** or **pr-breakdown** under **master-planner**, reports Completion (inline) to the invoker.
  When spawned from an upstream decomposition agent that already approved the parent list, skips the child-stub populator approval
@@ -144,7 +145,7 @@ Marker syntax: [`.sedea/centers/sedea/docs/user-checkpoint-marker-syntax.md`](.s
 | Step | Checkpoint behavior | Gate |
 |------|---------------------|------|
 | **Indexed child validation** (1–4) | Auto-advance on spawned handoff with locked `inputs` | exception: depth-first block / row problems |
-| **Parent derivation** (standalone) | Auto-advance when parent locked | **Gate** when parent unresolved |
+| **Parent derivation** (standalone) | Auto-advance when parent locked (incl. `debug-and-fix` null root) | **Gate** when parent unresolved |
 | **Write stub + sidecar** | Auto-advance | — |
 | **After write 1–2** — parent `Plan:` link + child link | Auto-advance on happy path | open items per modal contract |
 | **Auto-authorize populator** | Auto-advance (skip step 3) when upstream `delivery-phases` / `pr-breakdown` | — |
@@ -165,7 +166,7 @@ Under Checkpoint trust, **happy-path** stub write, parent `Plan:` link verificat
 
 ### Parent derivation confirmation gate (binding)
 
-When **Parent derivation** runs on standalone / non-indexed path and parent is resolved but not yet confirmed (indexed-child spawn skips this gate):
+When **Parent derivation** runs on standalone / non-indexed path and parent is resolved but not yet confirmed (indexed-child spawn and **debug-and-fix null-root lock** skip this gate):
 
 USER_CHECKPOINT — confirm parent slug or root delivery plan before writing stub files.
 
@@ -180,6 +181,7 @@ USER_CHECKPOINT — confirm parent slug or root delivery plan before writing stu
 - Apply **Parent derivation — Open-item modal contract** when multiple parent candidates remain — this confirmation question stays **last** in `questions[]`.
 - **`defaultOptionId: confirm-parent`** when a single candidate is locked and no blocking open items remain.
 - **Next-step resolution:** Auto-advance to stub write when parent is pre-locked by indexed-child spawn — no `USER_CHECKPOINT` on that path.
+- **Skip (debug-and-fix null root — binding):** When spawn **`inputs.upstreamSkill`** is **`debug-and-fix`** (or **`initiatingPrompt`** / handover explicitly pre-locks root **`parent: null`** for code-promotion standalone), set sidecar **`parent: null`**, acknowledge in one line — `Parent: null (root delivery plan — locked by debug-and-fix)` — and **auto-advance** to stub write. **Forbidden:** treating that null as an error or missing parent; opening this confirmation gate (`confirm-parent` / `use-null-root`) for that spawn.
 
 ### Phase-planner spawn external-wait (binding)
 
@@ -291,8 +293,9 @@ Everything else (slug shape, frontmatter, sidecar, after-write steps, scope guar
 
 ## Parent derivation (context-aware)
 
-A plan without a parent is a **root delivery plan** (`parent: null` in the sidecar) — files always live in the flat `plans/` directory for the active dispatch scope. There is **no** `roadmap-topics/` subtree for new plans. Resolve a candidate in this order (align with **planning-target-resolution**; highest confidence first), then confirm before writing (unless **Indexed child spawn** already skipped the gate):
+A plan without a parent is a **root delivery plan** (`parent: null` in the sidecar) — files always live in the flat `plans/` directory for the active dispatch scope. There is **no** `roadmap-topics/` subtree for new plans. Resolve a candidate in this order (align with **planning-target-resolution**; highest confidence first), then confirm before writing (unless **Indexed child spawn** or **debug-and-fix null-root lock** already skipped the gate):
 
+0. **Pre-locked null root (`upstreamSkill: debug-and-fix`)** — when spawn **`inputs.upstreamSkill`** is **`debug-and-fix`**, or handover / **`initiatingPrompt`** states null parent is expected and approved for standalone code-promotion: lock **`parent: null`**, acknowledge once, **skip confirmation**, continue to stub write. Do **not** fall through to steps 1–4 as if parent were missing.
 1. **Explicit in session or message** — slug, path under `plans/`, or absolute `.sedea/operations/.../*.plan.md`.
 2. **Session anchor** — from hosting repo root:
 
@@ -306,7 +309,7 @@ A plan without a parent is a **root delivery plan** (`parent: null` in the sidec
 
 Lock the parent using the bullets above; **planning-target-resolution** is normative for combining signals.
 
-**Confirm** before writing on this path (unless **Indexed child spawn** already skipped the gate). Wrong parent is the expensive failure mode.
+**Confirm** before writing on this path (unless **Indexed child spawn** or **debug-and-fix null-root lock** already skipped the gate). Wrong parent is the expensive failure mode.
 
 ### Parent derivation — Open-item modal contract
 

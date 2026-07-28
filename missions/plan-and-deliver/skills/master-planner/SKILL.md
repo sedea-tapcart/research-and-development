@@ -587,6 +587,23 @@ One or more diagrams showing what the implementation will look like. Pick the di
 
 Use **Mermaid** (in fenced ```mermaid blocks) so the diagrams render in Cursor and on the Plan Board. Include only what is necessary to understand the *shape*; don't draft pseudocode here. If multiple diagrams are needed, label each one. Follow [`.sedea/centers/sedea/docs/mermaid-authoring.md`](.sedea/centers/sedea/docs/mermaid-authoring.md) — opaque ids, sequence `Note` single-line (no `<br/>`), flowchart-only `<br/>` in quoted node labels.
 
+**High-risk abbreviations:** Never use uppercased reserved keywords as bare ids — e.g. `OPT`, `ALT`, `END`, `LOOP`, `PAR`, `AND`, `AS` (Mermaid matches case-insensitively → `opt`, `alt`, …). Prefer opaque ids + labels (`participant scopeOpts as OPT`, `participant ScopeOpts as Scope options`). Do **not** reuse a flowchart node id as a sequence `participant` id.
+
+### Step 6b-lint — Post-write Mermaid lint (binding)
+
+After the §4 Architectural design StrReplace (any fenced ```mermaid in the Master Plan), and **before** Step **6c** complexity scoring, **Echo to chat**, or Step **7** AskQuestion:
+
+1. From **`HOSTING_ROOT`**, run:
+
+   ```bash
+   node .sedea/centers/sedea/scripts/verify-mermaid-authoring.mjs "<absolute-path-to-master-plan>"
+   ```
+
+2. **Exit 0** → continue. **Non-zero** → fix reserved bare ids / Note bodies in the plan file, re-run until exit **0**.
+3. **Forbidden:** complexity echo or Step **7** with failing Mermaid.
+
+Re-run after any Mermaid-only revise before re-echo.
+
 ### § 5 Changes
 
 Short bullet list of what changes, how, and where, scoped at the feature level. Same short-bullet rule as § 2: **2–3 words per bullet, never more than 5**.
@@ -657,7 +674,7 @@ When band is **high**, Step 7a must say e.g. *"Complexity: high (overall score =
 
 ### Echo to chat
 
-After writing §§ 1–5 **and** `### Complexity score` into the plan file, **echo all five sections in the chat reply** — including **`### Decomposition assessment`** and **`### Complexity score`** under `## 5. Changes` — so the user can review without opening the file. The plan file is the source of truth; the chat copy is a review surface. Use the same section headers (`## 1. Background`, etc.) so the chat output aligns line-for-line with the file. **Also** echo the **band** and **three table values** above or below the echoed sections (see Step 6c **Chat (required)**).
+When §4 contains Mermaid, confirm **Step 6b-lint** passed first. After writing §§ 1–5 **and** `### Complexity score` into the plan file, **echo all five sections in the chat reply** — including **`### Decomposition assessment`** and **`### Complexity score`** under `## 5. Changes` — so the user can review without opening the file. The plan file is the source of truth; the chat copy is a review surface. Use the same section headers (`## 1. Background`, etc.) so the chat output aligns line-for-line with the file. **Also** echo the **band** and **three table values** above or below the echoed sections (see Step 6c **Chat (required)**).
 
 ### What NOT to draft
 

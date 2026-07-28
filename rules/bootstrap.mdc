@@ -98,6 +98,7 @@ Load these **explicitly** when **`laneRules`**, **`skillWarmUp`**, spawn handove
 | **40** Maintain rules | [`.sedea/centers/research-and-development/rules/40_maintain-rules.mdc`](40_maintain-rules.mdc) | Hosting-repo **`.cursor/rules/*.mdc`** routing vs center rules |
 | **50** Display metadata | [`.sedea/centers/research-and-development/rules/50_mission-control-display-metadata-discipline.mdc`](50_mission-control-display-metadata-discipline.mdc) | Child lane display refresh, Squad Leader dispatch scope |
 | **60** Secret and environment-variable ban | [`.sedea/centers/research-and-development/rules/60_no-agent-env-secrets.mdc`](60_no-agent-env-secrets.mdc) | Any work involving secrets, configuration, application or infrastructure wiring, plans, options, or follow-ups |
+| **61** GitHub issue closure | [`.sedea/centers/research-and-development/rules/60_github-issue-dispatch-closure.mdc`](60_github-issue-dispatch-closure.mdc) | Bind GitHub issue URL at intake; Squad Leader status update before dispatch resolution |
 
 Mission **`plan.mdc`**, **`development-process.md`**, and skill **`SKILL.md`** procedures load per **`laneRules`** and **`skillWarmUp`** — not duplicated here.
 

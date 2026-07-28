@@ -36,11 +36,40 @@ function runScriptExit(args = []) {
   }
 }
 
+function section(body, startHeading, endHeading) {
+  const start = body.indexOf(startHeading);
+  const end = body.indexOf(endHeading, start + startHeading.length);
+  assert.notEqual(start, -1, `missing section: ${startHeading}`);
+  assert.notEqual(end, -1, `missing section boundary: ${endHeading}`);
+  return body.slice(start, end);
+}
+
 test('default warn-only exits 0 and scans governance files', () => {
   const out = runScript();
   assert.match(out, /verify-checkpoint-steps:/);
   assert.match(out, /(\d+ governance file\(s\) scanned|warn-only)/);
   assert.doesNotMatch(out, /^ERROR:/m);
+});
+
+test('coding-session fast-paths built-in pin rejection into After deploy', async () => {
+  const skillPath = path.resolve(SCRIPTS, '../skills/coding-session/SKILL.md');
+  const body = await fs.readFile(skillPath, 'utf8');
+  const chain = section(
+    body,
+    '### Post-merge Checkpoint chain (binding)',
+    '## Pre-worktree validation (plan completeness)',
+  );
+  const cleanup = section(
+    body,
+    '### Post-merge workspace cleanup',
+    '### After deploy deploy-walk handoff',
+  );
+
+  assert.match(chain, /terminal \*\*`skipped` \/ `not-applicable`\*\*/);
+  assert.match(chain, /Do \*\*not\*\* run gitlink, submodule, registry, remote-tip, or alignment inspection/);
+  assert.match(chain, /Continue immediately to step \*\*3\*\* in the \*\*same assistant turn\*\*/);
+  assert.doesNotMatch(cleanup, /on the \*\*next\*\* turn/i);
+  assert.match(cleanup, /do not StreamFinal after cleanup \*\*`--apply`\*\*/i);
 });
 
 test('--enforce exits 1 on fixture violation', async () => {

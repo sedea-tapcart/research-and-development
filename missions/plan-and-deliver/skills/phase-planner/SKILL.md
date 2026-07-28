@@ -396,6 +396,8 @@ flowchart LR
 
 **Flowchart vs sequence (binding):** Do **not** copy flowchart patterns into `sequenceDiagram` blocks. HTML `<br/>` in quoted labels and `subgraph` / `classDef` / `class` styling are **flowchart-only**. Sequence diagrams use opaque participant ids (`participant plannerAgent as Planner`) and single-line `Note` statements — **forbidden** in Note bodies: `<br/>`, multi-line Note text. Full contract: [`.sedea/centers/sedea/docs/mermaid-authoring.md`](.sedea/centers/sedea/docs/mermaid-authoring.md).
 
+**High-risk abbreviations:** Never use uppercased reserved keywords as bare ids — e.g. `OPT`, `ALT`, `END`, `LOOP`, `PAR`, `AND`, `AS` (Mermaid matches case-insensitively → `opt`, `alt`, …). Prefer opaque ids + labels (`participant scopeOpts as OPT`, `participant ScopeOpts as Scope options`). Do **not** reuse a flowchart node id as a sequence `participant` id.
+
 If the parent's diagram is much bigger than this phase's scope (e.g. 15+ nodes and the phase touches 3), draft a **simplified subset** showing only the parts this phase touches plus their immediate neighbors — flag that you simplified, so the user can choose to expand.
 
 ### 4d — § 3 Code design
@@ -411,6 +413,21 @@ A new Mermaid diagram giving a visual representation of the change introduced by
 Use **Mermaid** in fenced ```` ```mermaid ```` blocks so the diagram renders in Cursor and on the Plan Board. Include only what is necessary to understand the *shape* of the change; this is design granularity, not pseudocode. Follow [`.sedea/centers/sedea/docs/mermaid-authoring.md`](.sedea/centers/sedea/docs/mermaid-authoring.md) — opaque ids; when the diagram is a **flowchart**, `<br/>` in quoted labels and Legend `subgraph` are allowed; when it is a **`sequenceDiagram`**, use single-line `Note` only (no `<br/>`, no flowchart `subgraph`/`classDef`).
 
 The § 3 diagram complements § 2's reused-with-highlight diagram: § 2 shows *where in the parent's design* this phase lives; § 3 shows *what new shape* this phase introduces. They are usually different diagram types — § 2 inherits the parent's type (often component or flow), § 3 picks whatever conveys the per-phase change best (often sequence or state).
+
+### 4d-lint — Post-write Mermaid lint (binding)
+
+After **any** Write/StrReplace that creates or edits a fenced ```` ```mermaid ```` block in this phase plan (§2 Scope reused diagram and/or §3 Code design), and **before** Step **4f** echo or Step **5b** route handoff:
+
+1. From **`HOSTING_ROOT`**, run:
+
+   ```bash
+   node .sedea/centers/sedea/scripts/verify-mermaid-authoring.mjs "<absolute-path-to-phase-plan>"
+   ```
+
+2. **Exit 0** → continue to Step **4f** / **5b**.
+3. **Non-zero** → fix reserved bare ids / Note bodies in the plan file, re-run until exit **0**. **Forbidden:** echoing or handing off with failing Mermaid.
+
+Also run this lint after any later Mermaid-only revise (Step **5d**) before re-echo.
 
 ### 4e — § 4 Changes
 
@@ -438,7 +455,7 @@ Ground the recommendation in §§ 2–4 and the parent's `Delivery phases` item 
 
 ### 4f — Echo to chat
 
-After writing the body, **echo §§ 1–4 and `### Decomposition assessment`** in the chat reply so the user can review without opening the file. The plan file is the source of truth; the chat copy is a review surface. Use the same section headers (`## 1. Background`, etc.) so the chat output aligns line-for-line with the file. Render Mermaid diagrams inline as fenced code blocks so the user sees them without opening the file.
+When §§2–3 contain Mermaid, run **4d-lint** first. After writing the body, **echo §§ 1–4 and `### Decomposition assessment`** in the chat reply so the user can review without opening the file. The plan file is the source of truth; the chat copy is a review surface. Use the same section headers (`## 1. Background`, etc.) so the chat output aligns line-for-line with the file. Render Mermaid diagrams inline as fenced code blocks so the user sees them without opening the file.
 
 If you simplified the parent's diagram in § 2c (per § 4c) or noticed parent-Changes bullets that didn't fit any phase boundary (per § 4e), surface those notes in the echo or in the handoff line — flag, don't hide.
 
