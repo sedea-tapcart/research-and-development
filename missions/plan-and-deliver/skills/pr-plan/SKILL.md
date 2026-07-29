@@ -135,15 +135,16 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 
 ### Plan-change notify — emit-when (`mission_control_notify_child_lanes`)
 
-After a **material** edit to this target PR plan §§ **1–4** (or § **5–8** sketch chosen on this lane) that affects **ongoing work** on the open **`coding-session`** child for this row, notify that child with a **separate** MCP call (one slug per call, v1). Normative protocol: **`.sedea/centers/sedea/rules/4_mission.mdc`** § *MCP notify protocol*.
+After a **material** edit to this target PR plan §§ **1–4** (or § **5–8** sketch chosen on this lane) that affects the open **`coding-session`** child **or** reopens this **terminal** PR plan row, notify with a **separate** MCP call (one slug per call, v1). Normative protocol: **`.sedea/centers/sedea/rules/4_mission.mdc`** § *MCP notify protocol*.
 
 | Emit when | Target child slugs (examples) | §5e alignment |
 |-----------|------------------------------|---------------|
-| Material §§1–4 / handoff sketch edit while **`coding-session`** is non-terminal for this **`targetPlanPath`** | Dispatch-unique **`coding-session-<targetPlanSlug>`** (or slug recorded in **`outputs.spawnCorrelationId`** / **`activeLanes`**) | Notify **does not replace** §5e child terminal merge — still aggregate **`mission_control_send_agent_result`**; notify is handoff only |
+| Material §§1–4 / handoff sketch edit while **`coding-session`** is non-terminal for this **`targetPlanPath`** | Dispatch-unique **`coding-session-<targetPlanSlug>`** (or slug in **`activeLanes`**) | Notify **does not replace** §5e child terminal merge |
+| Material edit while this **`pr-plan`** lane is **terminal** but parent adds PR scope on this plan path | Parent notifies **this lane's slug** (terminal wake) — **forbidden** duplicate **`pr-plan`** spawn | Receive § *Terminal wake* below |
 
-**Material edit** includes: §1 single-concern scope change, §3 change-scope bullet adds/removes/rewrites, §4 reasoning that alters implementation constraints, and §5–8 sketch edits after **`prefill-sections`**.
+**Material edit** includes: §1 single-concern scope change, §3 change-scope bullet adds/removes/rewrites, §4 reasoning that alters implementation constraints, §5–8 sketch edits after **`prefill-sections`**, and **add-PR-to-ship-complete-row** parent list edits.
 
-**Forbidden:** empty or speculative **`targetSlugs`**; notify terminal / ship-complete children; notify instead of §5d spawn for first-time handoff; using notify when no open **`coding-session`** child exists for this plan.
+**Forbidden:** empty or speculative **`targetSlugs`**; notify terminal **`coding-session`** children; notify instead of §5d spawn for **first-time** handoff; duplicate spawn when slug exists.
 
 ### MCP notify preflight (`mission_control_notify_child_lanes`)
 
@@ -152,11 +153,11 @@ After a **material** edit to this target PR plan §§ **1–4** (or § **5–8**
 | N1 | Caller authority — **`pr-plan`** may notify the open **`coding-session`** child slug for **`inputs.targetPlanPath`** only |
 | N2 | Required args present: **`summary`**, **`changeType`**, **`affectedPlanPaths`** (non-empty), **`targetSlugs`** (exactly one slug) |
 | N3 | **Forbidden args absent** — no host-resolved identity keys, no **`notifyAllDescendants`** |
-| N4 | **`targetSlugs`** contains exactly **one** dispatch-unique **non-terminal** child slug per call |
+| N4 | **`targetSlugs`** contains exactly **one** dispatch-unique child slug per call |
 | N5 | **`affectedPlanPaths`** includes this target PR plan (and parent plan when parent row context changed) |
 | N6 | Multiple children → **separate MCP calls** (one slug per call, v1) — rare on this skill; default one **`coding-session`** child per PR plan |
-| N7 | Omit terminal lanes from **`targetSlugs`** before calling |
-| N8 | First implementation handoff → **`mission_control_spawn_agent`** §5d — never notify as a spawn workaround |
+| N7 | Notify open **`coding-session`** only when non-terminal; terminal **`pr-plan`** wake is **receive-only** on this lane from parent — omit terminal leaf slugs per rule **4** § *Leaf-lane omission* |
+| N8 | **First-time** implementation handoff → **`mission_control_spawn_agent`** §5d — when slug exists → parent notifies, never duplicate spawn |
 
 ### Plan-change notification receive (child lane)
 
@@ -167,7 +168,9 @@ When Mission Control delivers **`Mission Control: plan-change-notification deliv
 1. Parse host envelope fields: **`summary`**, **`changeType`**, **`affectedPlanPaths`**, optional **`excerptPointers`**, **`requestedChildActions`**, **`initiatingContext`**.
 2. **`Read`** each **`affectedPlanPaths`** entry in full before acting.
 3. Compare to **`inputs.targetPlanPath`**, **`inputs.parentPlanPath`**, parent **`### PR list`** row **N**, and open **`coding-session`** child state — do **not** close the PR plan row solely because notify arrived.
-4. Keep **`outputs.continuationStatus: active`** while §5c is not yet offered, a **`coding-session`** child is open, or blocking **`remainingTasks`** remain.
+4. Keep **`outputs.continuationStatus: active`** while §5c is not yet offered, a **`coding-session`** child is open, or blocking **`remainingTasks`** remain — on **terminal wake**, clear ship-complete flags when resuming PR scope expansion.
+
+**Terminal wake (binding):** When this lane was terminal and notify intersects **`inputs.targetPlanPath`**, reactivate — **forbidden** parent duplicate spawn.
 
 **Checkpoint vs external-wait (binding):** Notify delivery is **developer-input USER_CHECKPOINT** — **not** external-wait. Emit structured choice on the same turn after re-read; do **not** auto-advance to §5d spawn, §5e terminal merge, or **`mission_control_send_agent_result`** solely because notify arrived.
 
@@ -177,6 +180,7 @@ USER_CHECKPOINT — parent plan-change notification received on pr-plan child la
 
 | Option id | Label |
 |-----------|--------|
+| `add-pr-scope` | Add PR scope — resume PR plan after terminal wake |
 | `acknowledge-only` | Acknowledge — continue PR plan work with updated context |
 | `re-read-revise` | Re-read / revise affected PR or parent plan sections |
 | `plan-reconcile` | Run inline **`plan-reconcile`** when authorized |
@@ -188,6 +192,7 @@ USER_CHECKPOINT — parent plan-change notification received on pr-plan child la
 
 | Option | Act |
 |--------|-----|
+| **`add-pr-scope`** | Reactivate terminal lane: set **`continuationStatus: active`**; revise §§ or §5–8 sketch for added scope; re-offer §5c when ready — **re-emit updated** terminal when standalone spawned |
 | **`acknowledge-only`** | Merge notify context into lane ledger; resume prior step — **no** terminal MCP result |
 | **`re-read-revise`** | Update target PR plan §§ or spawn **`inputs`** when paths intersect — keep row open |
 | **`plan-reconcile`** | Inline **`plan-reconcile`** per contract — merge ledger; **no** terminal result solely from notify |

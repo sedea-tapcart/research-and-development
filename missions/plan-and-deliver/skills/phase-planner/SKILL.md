@@ -119,15 +119,15 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 
 ### Plan-change notify — emit-when (`mission_control_notify_child_lanes`)
 
-After a **material** phase plan edit on **this phase subtree** that affects **ongoing work** on named **non-terminal** child lanes, notify each affected child with a **separate** MCP call (one slug per call, v1). Normative protocol: **`.sedea/centers/sedea/rules/4_mission.mdc`** § *MCP notify protocol*.
+After a **material** phase plan edit on **this phase subtree** that affects named child lanes (active **or** terminal **`pr-plan`** row owners per rule **4** § *Planner-lane wake*), notify each affected child with a **separate** MCP call (one slug per call, v1). Normative protocol: **`.sedea/centers/sedea/rules/4_mission.mdc`** § *MCP notify protocol*.
 
 | Emit when | Target child slugs (examples) | Step **5e** alignment |
 |-----------|------------------------------|------------------------|
-| Material edit to phase plan §§1–4, **`### PR list`**, or decomposition scope on this file changes work for open children | Open **`coding-session`** spawns from this phase; nested **`phase-planner`** children on this subtree; inline **`new-plan`** / **`pr-plan`** row owners when **`activeLanes`** shows non-terminal work | Notify **does not replace** Step **5e** child terminal merge — still aggregate **`mission_control_send_agent_result`** deliveries; notify is handoff only |
+| Material edit to phase plan §§1–4, **`### PR list`**, or decomposition scope on this file changes work for affected children | Open **`coding-session`** spawns from this phase; **terminal `pr-plan`** slugs when a new PR row is added to a ship-complete plan path; nested **`phase-planner`** children on this subtree when material | Notify **does not replace** Step **5e** child terminal merge — still aggregate **`mission_control_send_agent_result`** deliveries; notify is handoff only |
 
-**Material edit** includes: PR list row scope/sequencing changes, §3 Changes bullets that alter a child PR plan path, and assessment/route updates that change what a named open child should implement.
+**Material edit** includes: PR list row scope/sequencing changes, **adding PR rows after phase ship-complete**, §3 Changes bullets that alter a child PR plan path, and assessment/route updates that change what a named child should implement.
 
-**Forbidden:** empty or speculative **`targetSlugs`**; notify terminal children; implicit fan-out; using notify instead of spawn for new PR rows or new lanes.
+**Forbidden:** empty or speculative **`targetSlugs`**; implicit fan-out; duplicate spawn when a planner slug already exists for the plan path; using notify instead of spawn for **first-time** PR row expansion with no prior slug.
 
 ### MCP notify preflight (`mission_control_notify_child_lanes`)
 
@@ -136,11 +136,11 @@ After a **material** phase plan edit on **this phase subtree** that affects **on
 | N1 | Caller authority — **`phase-planner`** may notify descendant slugs on this phase subtree only |
 | N2 | Required args present: **`summary`**, **`changeType`**, **`affectedPlanPaths`** (non-empty), **`targetSlugs`** (exactly one slug) |
 | N3 | **Forbidden args absent** — no host-resolved identity keys, no **`notifyAllDescendants`** |
-| N4 | **`targetSlugs`** contains exactly **one** dispatch-unique **non-terminal** child slug per call |
+| N4 | **`targetSlugs`** contains exactly **one** dispatch-unique child slug per call (terminal **`pr-plan`** slugs allowed per rule **4** § *Planner-lane wake*) |
 | N5 | **`affectedPlanPaths`** includes this phase plan and affected child PR plans when applicable |
 | N6 | Multiple children → **separate MCP calls** (one slug per call, v1) |
-| N7 | Omit terminal lanes from **`targetSlugs`** before calling |
-| N8 | New work → **`mission_control_spawn_agent`** — never notify as a spawn workaround |
+| N7 | Include **terminal planner** slugs when **`affectedPlanPaths`** intersects; omit terminal **leaf** lanes (`coding-session`) per rule **4** § *Leaf-lane omission* |
+| N8 | **First-time** PR row / lane with no prior slug → **`mission_control_spawn_agent`** — when slug exists → notify, never duplicate spawn |
 
 ### Plan-change notification receive (child lane)
 
@@ -151,7 +151,9 @@ When Mission Control delivers **`Mission Control: plan-change-notification deliv
 1. Parse host envelope fields: **`summary`**, **`changeType`**, **`affectedPlanPaths`**, optional **`excerptPointers`**, **`requestedChildActions`**, **`initiatingContext`**.
 2. **`Read`** each **`affectedPlanPaths`** entry in full before acting.
 3. Compare to **`inputs.targetPlanPath`**, phase subtree plans, **`activeLanes`**, and open **`### PR list`** rows — do **not** close the phase delivery row solely because notify arrived.
-4. Keep **`outputs.continuationStatus: active`** while open child lanes or inline decomposition work remains.
+4. Keep **`outputs.continuationStatus: active`** while open child lanes or inline decomposition work remains — on **terminal wake**, clear **`phaseShipComplete`** on the next re-emit when resuming decomposition (add-PR-to-closed-phase).
+
+**Terminal wake (binding):** When this lane previously reported **`continuationStatus: terminal`** or **`phaseShipComplete: true`** and notify delivery intersects **`inputs.targetPlanPath`**, treat the notification as **reactivation** — **forbidden** to tell the parent to spawn a duplicate **`phase-planner`**. Set ledger to active; offer **`resume-decomposition`** below.
 
 **Checkpoint vs external-wait (binding):** Notify delivery is **developer-input USER_CHECKPOINT** — **not** external-wait. Emit structured choice on the same turn after re-read; do **not** auto-advance to Step **5e** terminal merge or refocus parent.
 
@@ -161,6 +163,7 @@ USER_CHECKPOINT — parent plan-change notification received on phase-planner ch
 
 | Option id | Label |
 |-----------|--------|
+| `resume-decomposition` | Resume decomposition — add PR / revise phase plan (terminal wake) |
 | `acknowledge-only` | Acknowledge — continue phase delivery with updated context |
 | `re-read-revise` | Re-read / revise affected phase or PR plan sections |
 | `plan-reconcile` | Run inline **`plan-reconcile`** when authorized on this subtree |
@@ -172,6 +175,7 @@ USER_CHECKPOINT — parent plan-change notification received on phase-planner ch
 
 | Option | Act |
 |--------|-----|
+| **`resume-decomposition`** | Reactivate terminal lane: set **`continuationStatus: active`**, clear **`phaseShipComplete`** when adding PRs; route inline **`pr-breakdown`** / **`new-plan`** / **`pr-plan`** per Step **5** — **re-emit updated** terminal when standalone spawned |
 | **`acknowledge-only`** | Merge notify context into lane ledger; resume prior step — **no** terminal MCP result |
 | **`re-read-revise`** | Update phase plan §§ or child spawn **`inputs`** when paths intersect — keep phase row open |
 | **`plan-reconcile`** | Inline **`plan-reconcile`** per contract — merge ledger; **no** terminal result solely from notify |

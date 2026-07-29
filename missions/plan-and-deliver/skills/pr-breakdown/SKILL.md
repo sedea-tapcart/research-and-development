@@ -119,13 +119,13 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 
 ### Plan-change notify — emit-when (`mission_control_notify_child_lanes`)
 
-After a **material** decomposition or **`### PR list`** change on the target plan that affects **ongoing work** on named **non-terminal** child row owners, notify each affected owner with a **separate** MCP call (one slug per call, v1). Apply in **depth-first expand** context — notify open row owners when the list, sequencing, or per-row scope changes. Normative protocol: **`.sedea/centers/sedea/rules/4_mission.mdc`** § *MCP notify protocol*.
+After a **material** decomposition or **`### PR list`** change on the target plan that affects named child row owners (active **or** terminal **`pr-plan`** per rule **4** § *Planner-lane wake*), notify each affected owner with a **separate** MCP call (one slug per call, v1). Apply in **depth-first expand** context — notify row owners when the list, sequencing, or per-row scope changes. Normative protocol: **`.sedea/centers/sedea/rules/4_mission.mdc`** § *MCP notify protocol*.
 
 | Emit when | Target child slugs (examples) | Do not notify |
 |-----------|------------------------------|---------------|
-| PR list edit, **`### Sequencing`** change, or per-row scope change affects open row owners | **`new-plan`** / **`coding-session`** child lanes for affected **`### PR list`** indices in **`activeLanes`** / **`childRows`** with non-terminal status | Terminal rows; indices not yet expanded; empty or speculative **`targetSlugs`** |
+| PR list edit, **`### Sequencing`** change, or per-row scope change affects row owners | **`new-plan`** / **`coding-session`** child lanes for affected indices with non-terminal status; **terminal `pr-plan`** slugs when a new PR row is added on an existing plan path | Indices not yet expanded with no prior slug; empty or speculative **`targetSlugs`** |
 
-**Forbidden:** empty or speculative **`targetSlugs`**; notify terminal children; broadcast fan-out; using notify instead of **`mission_control_spawn_agent`** for first-time row expansion.
+**Forbidden:** empty or speculative **`targetSlugs`**; broadcast fan-out; duplicate spawn when a **`pr-plan`** slug exists for the plan path; using notify instead of **`mission_control_spawn_agent`** for **first-time** row expansion with no prior slug.
 
 ### MCP notify preflight (`mission_control_notify_child_lanes`)
 
@@ -134,11 +134,11 @@ After a **material** decomposition or **`### PR list`** change on the target pla
 | N1 | Caller authority — **`pr-breakdown`** may notify descendant slugs for affected PR row owners only |
 | N2 | Required args present: **`summary`**, **`changeType`**, **`affectedPlanPaths`** (non-empty), **`targetSlugs`** (exactly one slug) |
 | N3 | **Forbidden args absent** — no host-resolved identity keys, no **`notifyAllDescendants`** |
-| N4 | **`targetSlugs`** contains exactly **one** dispatch-unique **non-terminal** child slug per call |
+| N4 | **`targetSlugs`** contains exactly **one** dispatch-unique child slug per call (terminal **`pr-plan`** slugs allowed per rule **4** § *Planner-lane wake*) |
 | N5 | **`affectedPlanPaths`** includes the parent plan and affected child PR plans for the row |
 | N6 | Multiple row owners → **separate MCP calls** (one slug per call, v1) |
-| N7 | Omit terminal / ship-complete rows from **`targetSlugs`** before calling |
-| N8 | New PR row expansion → **`mission_control_spawn_agent`** (inline **`new-plan`** or spawn) — never notify as a spawn workaround |
+| N7 | Include **terminal planner** slugs when **`affectedPlanPaths`** intersects; omit terminal **leaf** rows (`coding-session`) per rule **4** § *Leaf-lane omission* |
+| N8 | **First-time** PR row expansion with no prior slug → **`mission_control_spawn_agent`** (inline **`new-plan`** or spawn) — when slug exists → notify, never duplicate spawn |
 
 ## Trigger
 

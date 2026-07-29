@@ -123,11 +123,12 @@ Asserts **`verify-skill-manifest.mjs`** exit **0**, parity **`--bootstrap full`*
 
 **Plan-change notification dogfood enablement.** After PRs 1–3 merge, center pin promotes, and **`./scripts/verify-center-governance.sh`** is green:
 
-1. **Preconditions** — notify emit/receive lint passes; active dispatch with parent planner + one non-terminal child target.
+1. **Preconditions** — notify emit/receive lint passes; active dispatch with parent planner + child target (active **or** terminal **`phase-planner`** for wake scenario).
 2. **Enable** — set **`sedea.features.plan-change-notification`: `true`** (User or Workspace); reload window. See **`extensions/mission-control/src/host/featureFlags/README.md`** § *Plan-change notification dogfood*.
-3. **Scope (v1)** — one active **`phase-planner`** child per master-plan material edit; parent **`mission_control_notify_child_lanes`** with exactly **one** **`targetSlugs`** slug per call (README N4/N6).
-4. **Dry-run** — parent material plan edit → N1–N8 preflight → notify MCP → child receives **`Mission Control: plan-change-notification delivered.`** → child **`Read`**s **`affectedPlanPaths`** → USER_CHECKPOINT (not terminal MCP result solely from notify).
-5. **Revert** — set flag **`false`**, reload, record gaps under PR plan **`## Follow-ups`** if any.
+3. **Scope (v1)** — one **`phase-planner`** child per master-plan material edit (active notify) **or** terminal **`phase-planner`** wake when a ship-complete phase gains another PR; parent **`mission_control_notify_child_lanes`** with exactly **one** **`targetSlugs`** slug per call (README N4/N6). **Forbidden** duplicate **`phase-planner`** spawn when registry finds existing slug.
+4. **Dry-run — active child** — parent material plan edit → N1–N8 preflight → notify MCP → child receives **`Mission Control: plan-change-notification delivered.`** → child **`Read`**s **`affectedPlanPaths`** → USER_CHECKPOINT (not terminal MCP result solely from notify).
+5. **Dry-run — terminal wake** — after **`phaseShipComplete`**, material edit adding PR scope on that phase plan → parent notifies **existing terminal** **`phase-planner`** slug → child offers **`resume-decomposition`** → **`continuationStatus: active`** on re-emit — **no** new spawn.
+6. **Revert** — set flag **`false`**, reload, record gaps under PR plan **`## Follow-ups`** if any.
 
 **Forbidden before verify passes:** workspace-wide or packaged-default enable before **`verify-skill-manifest.mjs`** notify lint is green.
 

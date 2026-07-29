@@ -422,7 +422,7 @@ Child terminal: use § *MCP result preflight* in the spawned skill’s **`## Com
 
 ### MCP notify preflight (`mission_control_notify_child_lanes`)
 
-Parent planner skills (**`master-planner`**, **`phase-planner`**, **`pr-breakdown`**) call **`mission_control_notify_child_lanes`** after **material** plan edits that affect named **non-terminal** open children. Normative protocol: **`.sedea/centers/sedea/rules/4_mission.mdc`** § *MCP notify protocol*. Per-skill **emit-when** tables live in each skill § *Plan-change notify — emit-when*.
+Parent planner skills (**`master-planner`**, **`phase-planner`**, **`pr-breakdown`**) call **`mission_control_notify_child_lanes`** after **material** plan edits that affect named child lanes (active **or** terminal **planner** slugs per rule **4** § *Planner-lane wake*). Normative protocol: **`.sedea/centers/sedea/rules/4_mission.mdc`** § *MCP notify protocol*. Per-skill **emit-when** tables live in each skill § *Plan-change notify — emit-when*.
 
 **Parent offer after execution (binding):** Once a plan under a planner lane has **entered execution** (open non-terminal **`coding-session`**, or **`implementationHandoffStatus: spawned-coding-session`**), that planner’s continuation / wait modals **must** offer a developer **`plan-change`** option (*Plan Change — revise plan and notify open children*) before relying on ad-hoc revise alone. Emit notify only after the material edit from that path (or an explicit same-message revise that names scope). **Receive** USER_CHECKPOINTs on children are **not** a substitute for this parent **offer**. Skills: **`master-planner`** Step **7b**, **`phase-planner`** Step **5d**, **`quick-fix-plan`** while aggregating an open **`coding-session`**.
 
@@ -431,18 +431,21 @@ Parent planner skills (**`master-planner`**, **`phase-planner`**, **`pr-breakdow
 | N1 | Caller authority — this skill may notify descendant slugs only (rule **4** § *MCP notify protocol* caller table); **`coding-session`** and leaf skills **forbidden** |
 | N2 | Required args present: **`summary`**, **`changeType`**, **`affectedPlanPaths`** (non-empty), **`targetSlugs`** (exactly one slug) |
 | N3 | **Forbidden args absent** — no host-resolved identity keys (§ *Host-resolved identity* above), no **`notifyAllDescendants`** |
-| N4 | **`targetSlugs`** contains exactly **one** dispatch-unique **non-terminal** child slug per MCP call (v1) |
+| N4 | **`targetSlugs`** contains exactly **one** dispatch-unique child slug per MCP call (v1); terminal **planner** slugs allowed per rule **4** § *Planner-lane wake* |
 | N5 | **`affectedPlanPaths`** lists every operations plan path that grounds the change |
 | N6 | Multiple children → **separate MCP calls** — one slug per call; **forbidden** empty or speculative **`targetSlugs`** |
-| N7 | Enumerate only **non-terminal** children whose ongoing work is affected — omit terminal lanes before calling |
-| N8 | New work → **`mission_control_spawn_agent`** — never use notify **`changeType`** as a spawn workaround |
+| N7 | Include **terminal planner** slugs when **`affectedPlanPaths`** intersects their anchored plan; omit terminal **leaf** lanes (`coding-session`) per rule **4** § *Leaf-lane omission* — run registry lookup before spawn ( **`master-planner`** § *Spawn vs notify — phase-planner registry lookup*, **`new-plan`** § *Populator registry lookup*) |
+| N8 | **First-time** expansion with no prior slug → **`mission_control_spawn_agent`** — when slug exists → notify, never duplicate spawn |
 
 **Spawn vs notify (binding):**
 
 | Mechanism | When | Tool |
 |-----------|------|------|
-| **Spawn** | New child lane / new skill session / first-time row expansion | **`mission_control_spawn_agent`** |
-| **Notify** | Material plan edit affects **existing** named non-terminal child; handoff + re-read context only | **`mission_control_notify_child_lanes`** |
+| **Spawn** | New child lane / first-time row expansion — **no** prior slug for that plan path | **`mission_control_spawn_agent`** |
+| **Notify (active)** | Material plan edit affects **existing** non-terminal child; handoff + re-read | **`mission_control_notify_child_lanes`** |
+| **Notify (terminal wake)** | Material plan edit affects **existing terminal planner** slug for that plan path (add PR to ship-complete phase, etc.) | **`mission_control_notify_child_lanes`** — host **wakes** lane; child sets **`continuationStatus: active`** on re-emit |
+
+**Depth-first + plan change:** When a **ship-complete** Delivery phases row or PR list row needs another PR, parents **notify** the sleeping **`phase-planner`** / **`pr-plan`** lane — **forbidden** duplicate spawn for the same **`targetPlanPath`** / parent index (rule **4** § *Spawn vs notify*).
 
 Notify does **not** replace child terminal **`mission_control_send_agent_result`** merge on parent lanes (see **`phase-planner`** Step **5e**, **`pr-breakdown`** Step **6b**). Feature flag **`sedea.features.plan-change-notification`** must be on for host delivery (default off until dogfood PR 4).
 

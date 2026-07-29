@@ -619,6 +619,52 @@ Full definitions: [`.sedea/centers/research-and-development/docs/development-pro
 
 Agents **must not** update gcloud secrets, add environment variables to code, or **propose** new env vars. Env vars require an **explicit same-turn developer instruction** naming the variable. Normative detail: [`60_no-agent-env-secrets.mdc`](60_no-agent-env-secrets.mdc).
 
+## PR approve-merge and merge inspect (binding)
+
+R&D ship lanes (**`coding-session`**, inline **`pr-review`** when merge options apply, and **`plan-reconcile`** fallbacks) inherit the Phase **1** platform contract from [`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`](.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc) § *Approval-gated agent approve+merge*, § *PR approve-merge structured choice*, and § *Merge inspect procedure*. This rule does **not** duplicate those tables — it binds R&D ship-lane behavior to rule **6**.
+
+### Modal scope (binding)
+
+Rule **6** § *PR approve-merge structured choice* **modal scope** applies to **every** structured-choice surface in the **current ship chain** that offers agent approve+merge while the PR is **open** (`prState: open`) — not only the first modal after **`create-pr`**. That includes **`coding-session`** post-create-pr, pre-merge authorization, and inline **`pr-review`** disposition gates when agent merge is in scope. Invoker skills own marker placement and option tables; rule **6** binds scope, ordering, and inspect.
+
+### Option ordering (binding)
+
+When agent merge is offered on any R&D ship-chain modal for **that** open PR:
+
+| Contract | Requirement |
+|----------|-------------|
+| **Option id** | **`approve-merge-pr`** (canonical cross-center id) |
+| **Option label** | **Approve and Merge PR** (exact string — forbid *Merge and Approve*) |
+| **Ordering** | **`approve-merge-pr`** is **option index 1**. **`merged-pr-proceed`** (when present) is **option index 2** — never before **`approve-merge-pr`**. Review-first or delegate paths (**`start-pr-review`**, **`start-pr-review-delegate-merge`**, and similar) follow as option 3+ unless the invoker documents a narrower modal. |
+
+Detail and forbidden patterns: rule **6** § *PR approve-merge structured choice*.
+
+### Merge inspect procedure (binding)
+
+After the developer picks **`approve-merge-pr`** (or an equivalent same-turn merge-delegation pick for **that** PR), agents **always inspect before mutating GitHub** — never unconditional approve or merge.
+
+1. **Inspect** — from the worktree or repo root that owns the PR branch:
+   ```bash
+   gh pr view <number> --json state,mergeable,mergeStateStatus,reviewDecision,statusCheckRollup,url
+   ```
+2. **Not mergeable** — when **`mergeable`** is not **`MERGEABLE`**, or rollup signals blocked CI, conflicts, or pending required checks: **stop**; do **not** run **`gh pr review --approve`** or **`gh pr merge`**. Offer retry / check CI / defer via structured choice on the invoker skill.
+3. **Mergeable — approval not required** — run **`gh pr merge`** **only** — do **not** run **`gh pr review --approve`** first.
+4. **Mergeable — approval required** — run **`gh pr review --approve`**, then **`gh pr merge`**, in the **same act turn** after the structured-choice pick.
+
+Full algorithm and minimum signals: rule **6** § *Merge inspect procedure*.
+
+**Checkpoint auto-advance:** when Checkpoint trust auto-advances past a merge modal (implicit **`delegate-merge-confirm`** or equivalent), the **inspect procedure still runs** before any **`gh`** mutate — auto-advance waives the modal, not inspect.
+
+### Post-create modal scope note
+
+On **`coding-session`**, the first structured-choice surface after inline **`create-pr`** completes is a **post-create-pr** gate while the PR remains **open**. That gate is **in scope** for rule **6** modal scope and **`approve-merge-pr`** first ordering above — same as pre-merge and disposition gates later in the chain. PR 2 (**`coding-session`** gate table edits) implements the option rows; this rule **20** cross-ref must exist before those edits cite stable contract text.
+
+### Default path without approve+merge pick
+
+Prefer user merge on GitHub (**`merged-pr-proceed`** / status detect). Agents may offer approval-gated approve+merge only with explicit same-turn structured-choice pick per rule **6** — **forbidden** to infer merge consent from silence, prior turns, or commit/push/create-PR consent.
+
+**Carve-out:** [`.sedea/centers/sedea/skills/promote-center-submodule-pin/SKILL.md`](.sedea/centers/sedea/skills/promote-center-submodule-pin/SKILL.md) runs skill-owned **`gh pr merge`** with zero user approval options — distinct from approval-gated mission ship merge; do not copy its auto-merge into R&D ship lanes.
+
 ## Checkpoint step continuation (binding)
 
 This file is the **R&D ship-lane worktree / commit-push / PR-creation contract**, not a mission protocol with executable ship steps. Under **`trustLevel: checkpoint`**, turn-end modal UX for worktree-open, ship cut-points, pre-PR / create-PR / post-create-pr gates, and post-merge cleanup lives in invoker skills (`coding-session`, `create-pr`, `pre-pr-review`, `plan-reconcile`, `promote-center-submodule-pin`) and consent gates in sedea rules **6** / **2** / **1** / **7**. **Do not** add literal `USER_CHECKPOINT` markers here for happy-path HOSTING_ROOT resolution, worktree setup hints, ownership-clear remove paths, or policy redirects to **`coding-session`** — that would fight skill auto-advance.
@@ -631,6 +677,7 @@ This file is the **R&D ship-lane worktree / commit-push / PR-creation contract**
 | Worktree remove / cleanup when Path A or Path B ownership is clear | **auto-advance** | This § *Worktree removal ownership*; invoker post-merge cleanup |
 | Worktree remove / cleanup when ownership is unsure | **checkpoint** | Invoker cleanup / ship skill — strengthened stop prose above; no markers in this file |
 | Review-before-commit / ship cut-point / pre-PR / create-PR gates | **baseline-governs** (reference) | **`coding-session/SKILL.md`** Checkpoint turn UX + sedea rule **6** — not duplicated here |
+| PR approve-merge modal scope / **`approve-merge-pr`** ordering / merge inspect | **baseline-governs** (reference) | This rule § *PR approve-merge and merge inspect*; rule **6** owns contract |
 | Wrong-lane `gh pr create` / create-PR URL handoff | **auto-advance** (policy stop) | This § *PR creation* — redirect to **`coding-session`** ship chain; no prose create-PR substitute |
 | Commit and push cadence after same-message / gate consent | **auto-advance** | This § *Commit and push cadence*; sedea rule **6** + skill gates authorize git |
 | Center submodule pin promotion after center merge | **auto-advance** | This § *Center submodule pin promotion*; inline **`promote-center-submodule-pin`** |
@@ -646,5 +693,6 @@ This file is the **R&D ship-lane worktree / commit-push / PR-creation contract**
 - Commit/push gate: [`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`](.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc)
 - Stacked worktree naming: [`.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc`](.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc)
 - Ship executor: [`coding-session/SKILL.md`](../missions/plan-and-deliver/skills/coding-session/SKILL.md)
+- PR approve-merge / merge inspect: [`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`](.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc) § *PR approve-merge structured choice* / § *Merge inspect procedure*; this rule § *PR approve-merge and merge inspect*
 - Turn completion / no idle handoff: [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](.sedea/centers/sedea/rules/2_ask-question-instructions.mdc); [`.sedea/centers/sedea/rules/1_agent-code-of-conduct.mdc`](.sedea/centers/sedea/rules/1_agent-code-of-conduct.mdc)
 - Plan naming cross-ref: [10_plan-naming-convention.mdc](10_plan-naming-convention.mdc)
