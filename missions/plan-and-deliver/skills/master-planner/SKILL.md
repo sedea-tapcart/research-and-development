@@ -114,15 +114,24 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 
 ### Plan-change notify — emit-when (`mission_control_notify_child_lanes`)
 
-After a **material** Master Plan edit that affects **ongoing work** on named **non-terminal** child lanes, notify each affected child with a **separate** MCP call (one slug per call, v1). Normative protocol: **`.sedea/centers/sedea/rules/4_mission.mdc`** § *MCP notify protocol*.
+After a **material** Master Plan edit that affects named child lanes (active **or** terminal **`phase-planner`** per rule **4** § *Planner-lane wake*), notify each affected child with a **separate** MCP call (one slug per call, v1). Normative protocol: **`.sedea/centers/sedea/rules/4_mission.mdc`** § *MCP notify protocol*.
 
 | Emit when | Target child slugs (examples) | Do not notify |
 |-----------|------------------------------|---------------|
-| Material edit to §§1–7, **`### Delivery phases`** rows, or §6 decomposition scope changes **`affectedPlanPaths`** for open children | **`phase-planner`** children on active Delivery phases rows; nested **`pr-breakdown`** / **`new-plan`** / **`coding-session`** lanes listed in **`activeLanes`** with non-terminal **`continuationStatus`** | Terminal lanes (`continuationStatus: terminal`, completed without active continuation); empty or speculative **`targetSlugs`**; broadcast fan-out |
+| Material edit to §§1–7, **`### Delivery phases`** rows, or §6 decomposition scope changes **`affectedPlanPaths`** for affected children | **`phase-planner`** slugs on Delivery phases rows (including **terminal** / ship-complete phases when the edit adds PRs or revises that phase plan path); nested **`pr-breakdown`** / **`new-plan`** / **`coding-session`** lanes listed in **`activeLanes`** with non-terminal **`continuationStatus`** | Empty or speculative **`targetSlugs`**; broadcast fan-out; duplicate spawn when a planner slug already exists for the plan path |
 
-**Material edit** includes: scope/sequencing changes on **`Delivery phases`** or PR breakdown blocks, §4–§5 architectural or Changes bullets that alter child plan paths, and ledger updates that change what a named open child should implement — not typo-only or §7 Caveats-only edits with no child impact.
+**Material edit** includes: scope/sequencing changes on **`Delivery phases`** or PR breakdown blocks, §4–§5 architectural or Changes bullets that alter child plan paths, adding PR rows to a **ship-complete** phase plan, and ledger updates that change what a named child should implement — not typo-only or §7 Caveats-only edits with no child impact.
 
-**Forbidden:** empty or speculative **`targetSlugs`**; notify terminal children; implicit fan-out or **`notifyAllDescendants`**; using notify instead of **`mission_control_spawn_agent`** for new work.
+**Forbidden:** empty or speculative **`targetSlugs`**; implicit fan-out or **`notifyAllDescendants`**; using notify instead of **`mission_control_spawn_agent`** for **first-time** row expansion with no prior slug; **duplicate `phase-planner` spawn** when registry lookup finds an existing slug for the same **`targetPlanPath`** / **`parentIndex`** — notify that slug instead (rule **4** § *Spawn vs notify*).
+
+### Spawn vs notify — phase-planner registry lookup (binding)
+
+Before **`expand-next-eligible`**, inline **`delivery-phases`** handoff, or **`new-plan`** populator spawn for Delivery phases index **N**:
+
+1. Resolve the phase **`Plan:`** link (or pending stub path) for row **N**.
+2. Look up a prior **`phase-planner`** slug from **`activeLanes`**, **`spawnedPlans`**, terminal **`mission_control_send_agent_result`** history, or Mission Control lane registry keyed by **`targetPlanPath`** + **`parentIndex`**.
+3. When a slug exists (active **or** terminal): call **`mission_control_notify_child_lanes`** per emit-when — **forbidden** **`mission_control_spawn_agent`** for a second **`phase-planner`** on the same plan path.
+4. When no slug exists: proceed with inline **`new-plan`** + **`phase-planner`** spawn per existing contracts.
 
 ### MCP notify preflight (`mission_control_notify_child_lanes`)
 
@@ -131,11 +140,11 @@ After a **material** Master Plan edit that affects **ongoing work** on named **n
 | N1 | Caller authority — **`master-planner`** may notify descendant slugs only (rule **4** § *MCP notify protocol* caller table) |
 | N2 | Required args present: **`summary`**, **`changeType`**, **`affectedPlanPaths`** (non-empty), **`targetSlugs`** (exactly one slug) |
 | N3 | **Forbidden args absent** — no host-resolved identity keys, no **`notifyAllDescendants`** |
-| N4 | **`targetSlugs`** contains exactly **one** dispatch-unique **non-terminal** child slug per call |
+| N4 | **`targetSlugs`** contains exactly **one** dispatch-unique child slug per call (terminal **`phase-planner`** slugs allowed per rule **4** § *Planner-lane wake*) |
 | N5 | **`affectedPlanPaths`** lists every operations plan path that grounds the change (Master Plan + affected child plans when applicable) |
 | N6 | Multiple children → **separate MCP calls** (one slug per call, v1) |
-| N7 | Enumerate targets from **`activeLanes`** / registry — omit terminal lanes before calling |
-| N8 | New lanes or new work → **`mission_control_spawn_agent`** — never notify as a spawn workaround |
+| N7 | Enumerate targets from **`activeLanes`** / registry / **`spawnedPlans`** — include **terminal planner** slugs when **`affectedPlanPaths`** intersects; omit terminal **leaf** lanes (`coding-session`) per rule **4** § *Leaf-lane omission* |
+| N8 | **First-time** row expansion with no prior slug → **`mission_control_spawn_agent`** — never notify as a spawn workaround; when slug exists → notify, never duplicate spawn |
 
 ### Plan-change notification receive (child lane)
 
@@ -888,7 +897,7 @@ Run when the developer selects **`plan-change`** from Step **7b** while executio
 
 1. **Scope pick** — structured choice: which plan path(s) / Master Plan section(s) to revise (Master Plan §§1–5 / §7; or name a child PR / phase plan path from the ledger). Include **More details for option _**.
 2. **Revise** — apply the material edit (reuse Step **7e** discipline for Master Plan sections; for child plans, edit the named `.plan.md` on the main hosting clone operations path).
-3. **Notify** — for each affected **non-terminal** open child whose ongoing work intersects the edit, call **`mission_control_notify_child_lanes`** per § *Plan-change notify — emit-when* and **`../README.md`** § *MCP notify preflight* (one slug per call; `changeType: plan-revision` unless clarifying/cancelling).
+3. **Notify** — for each affected child whose work intersects the edit, call **`mission_control_notify_child_lanes`** per § *Plan-change notify — emit-when* and **`../README.md`** § *MCP notify preflight* (one slug per call; `changeType: plan-revision` unless clarifying/cancelling). Include **terminal `phase-planner`** slugs when the edit affects their anchored plan path (rule **4** § *Planner-lane wake*) — run § *Spawn vs notify — phase-planner registry lookup* before any new spawn.
 4. **Re-offer Step 7b** — while execution remains open, **must** still include **`plan-change`**.
 
 **Forbidden:** material plan edit after execution without offering **Plan Change** on this lane first (developer-initiated revise that explicitly names the section in the same message may satisfy act step 2 without a prior modal pick — still notify per emit-when); skip notify when emit-when applies.

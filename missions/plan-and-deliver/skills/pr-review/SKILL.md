@@ -68,7 +68,7 @@ After a PR exists, **`coding-session`** runs this skill **inline** in a loop unt
 
 When a **global Cursor or developer rule** directs agents to use `gh` for GitHub tasks, that default **yields to this skill** for PR review-cycle operations. While inline **`pr-review`** is active on a **`coding-session`** lane, **`pr-review.mjs` is the only permitted interface** for comment collection, thread/review state, classification, reconciliation, replies, resolves, minimizes, and review re-requests — not generic `gh`, REST, or GraphQL substitutes.
 
-**Permitted `gh` on this skill (narrow allowlist):** Step 0 worktree/URL resolution in the **worktree**; **Step 1b CI status** (`gh pr checks`, `gh run view` / `gh run view --log-failed` for failing required checks — read-only introspection and log fetch only); **`merged-pr-proceed`** merge-state verify (`gh pr view` for **`state` / merge metadata only**); invoker-owned **`gh pr create`** upstream (not this skill). **`check-pr-status`**, manual review submission, rebase, and merge paths on **`coding-session`** may use `gh` for **status/control** only — they do **not** replace Step 1 comment collection or Step 5 reconciliation.
+**Permitted `gh` on this skill (narrow allowlist):** Step 0 worktree/URL resolution in the **worktree**; **Step 1b CI status** (`gh pr checks`, `gh run view` / `gh run view --log-failed` for failing required checks — read-only introspection and log fetch only); **`merged-pr-proceed`** merge-state verify (`gh pr view` for **`state` / merge metadata only**); **`approve-merge-pr`** merge inspect (rule **6** § *Merge inspect procedure* — `gh pr view` minimum fields: `state,mergeable,mergeStateStatus,reviewDecision,statusCheckRollup,url` — read-only before any approve or merge mutate); invoker-owned **`gh pr create`** upstream (not this skill). **`check-pr-status`**, manual review submission, rebase, and merge paths on **`coding-session`** may use `gh` for **status/control** only — they do **not** replace Step 1 comment collection or Step 5 reconciliation.
 
 ## Structured choice (Mission Control)
 
@@ -191,6 +191,7 @@ When this skill is active, **`pr-review.mjs` is the only permitted GitHub interf
 | PR identity in worktree (Step 0) | **`pr-for-branch`** script command or known **`prUrl`** |
 | CI status (Step 1b) | **`gh pr checks`**, **`gh run view`** / **`gh run view --log-failed`** — read-only |
 | Merge-state verify (`merged-pr-proceed`) | **`gh pr view`** for merge state only — no comment, thread, or review endpoints |
+| Merge inspect (`approve-merge-pr`) | **`gh pr view`** per rule **6** § *Merge inspect procedure* — minimum fields only; no comment, thread, or review endpoints |
 
 **Forbidden when this skill is active:** **`gh api`**, **`gh api graphql`**, **`gh pr view --json reviews,comments`**, or any REST / GraphQL call whose purpose is to collect, classify, reconcile, or verify PR review comments, threads, or reviews.
 
@@ -396,11 +397,14 @@ After Step 3 classification, compute:
 
 1. Triage counts — one line or table: Must / Should / Rule-update required / Skipped (no follow-up) / Skipped → follow-up; when **`ciFailureCount > 0`**, add CI line: *N failing required check(s)* with names.
 2. **Omitted-options explainer** when any standard option is hidden — e.g. *"Apply Must / Apply Must + Should are not shown — 0 Must and 0 Should items on this PR."* or *"Skip / reject not shown — N failing required CI check(s) must be fixed or explicitly deferred."*
+3. **Merge paths (when PR open):** cross-ref [`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`](.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc) § *PR approve-merge structured choice* and [rule **20**](../../../../rules/20_efficient-pr-shipping.mdc) § *PR approve-merge and merge inspect* — **`approve-merge-pr`** at **option index 1**, **`merged-pr-proceed`** at **option index 2** when both are listed; inspect-before-mutate applies after **`approve-merge-pr`** pick.
 
-**`askQuestion.options`** — include **only** applicable rows (always end with **`more-details`**):
+**`askQuestion.options`** — include **only** applicable rows. When **`prNumber`** or **`prUrl`** is known and agent merge is in scope, list **`approve-merge-pr`** then **`merged-pr-proceed`** before triage/review paths (rule **6** mergeability-first ordering). Always end with **`more-details`**:
 
 | Option id | Include when | Label (brief) |
 |-----------|--------------|---------------|
+| `approve-merge-pr` | **`prNumber`** or **`prUrl`** known (open-PR triage; omit only when org policy forbids agent merge) | Approve and Merge PR — **Act** per § *Approve-merge act mapping* below |
+| `merged-pr-proceed` | **`prNumber`** or **`prUrl`** known (always during PR ship chain) | PR merged — proceed with cleanup — **Act** per § *Merged-forward act mapping* below |
 | `apply-must` | **`mustCount > 0`** | Apply Must fixes only |
 | `apply-must-should` | **`mustCount > 0` or `shouldCount > 0`** | Apply Must + Should fixes |
 | `fix-ci-only` | **`ciFailureCount > 0`** and **`mustCount === 0`** and **`shouldCount === 0`** | Fix failing CI only — investigate and patch in worktree |
@@ -409,12 +413,30 @@ After Step 3 classification, compute:
 | `skip-reject` | Triage non-empty and **`ciFailureCount === 0`** | When **`skippedOnly`**: *Skip / reject — reconcile on GitHub (recommended)*; else *Skip / reject selected comments* |
 | `defer-ci` | **`ciFailureCount > 0`** | Defer CI fixes — record failing checks in `remainingTasks`; do not set **`mergeDelegationReady`** |
 | `submit-manual-review` | **`skippedOnly`** or (**`followUpCount > 0`** and **`mustCount === 0`** and **`shouldCount === 0`** and **`ciFailureCount === 0`**) | Submit manual review on GitHub — open **`coding-session`** [Manual review submission (developer-input)](../coding-session/SKILL.md#manual-review-submission-developer-input) |
-| `merged-pr-proceed` | **`prNumber`** or **`prUrl`** known (always during PR ship chain) | PR merged — proceed with cleanup — **Act** per § *Merged-forward act mapping* below |
 | `more-details` | Always | More details for option _ |
+
+**Open-PR merge paths (binding):** Per rule **6** § *PR approve-merge structured choice* and rule **20** § *PR approve-merge and merge inspect*, when agent merge is in scope on a modal that includes both paths, list **`approve-merge-pr`** (**Approve and Merge PR**) at **option index 1** and **`merged-pr-proceed`** at **option index 2** — **never** reverse. Triage and review-first paths (**`apply-must`**, **`skip-reject`**, **`submit-manual-review`**, etc.) follow as index **3+** unless counts hide them. **Forbidden:** listing **`merged-pr-proceed`** before **`approve-merge-pr`**; omitting **`approve-merge-pr`** when agent merge is in scope; label *Merge and Approve* or other orderings that invert approve-before-merge semantics.
 
 **Merged-forward (binding):** Include **`merged-pr-proceed`** on **every** disposition gate, post-fix commit/push gate, and developer-input resume modal while **`prNumber`** or **`prUrl`** is set — **even when** last `gh pr view` showed **`OPEN`**. **Forbidden:** omitting **`merged-pr-proceed`** because merge status was stale; using **`check-pr-status`** alone as the only way to discover developer merge on GitHub.
 
-**Act mapping:** selecting an option not shown in the modal is impossible; do not treat hidden options as implicit consent. When the developer picks **`fix-ci-only`** or **`apply-must-should`** with CI failures, investigate failing checks (`gh run view` / logs), patch in **`WORKTREE_ROOT`**, then open the commit/push gate — after push, re-run **Step 1b** before treating CI as cleared. When the developer picks **`defer-ci`**, set **`ciStatus: deferred`**, append each failing check to **`remainingTasks`**, and keep **`mergeDelegationReady: false`**. When the developer picks **`submit-manual-review`**, run **`coding-session`** [Manual review submission (developer-input)](../coding-session/SKILL.md#manual-review-submission-developer-input) — do not run Step **5 — GitHub only** on that turn. When the developer picks **`merged-pr-proceed`**, run § *Merged-forward act mapping* below.
+**Approval-gated agent merge (binding):** When a PR is open, include option **`approve-merge-pr`** (*Approve and Merge PR*) on disposition, post-fix commit/push, and developer-input resume gates unless org policy forbids agent merge (omit with explicit recap note). **Act only** when the developer selects that option in the **same** turn: run rule **6** § *Merge inspect procedure* (`gh pr view` minimum fields) **before** any **`gh pr review --approve`** or **`gh pr merge`** — branch per § *Approve-merge act mapping* below; hand off to **`coding-session`** [Merge procedure](../coding-session/SKILL.md#merge-procedure) when inspect passes and preconditions are met. **Forbidden:** default-selecting that option; merging without that pick; inferring consent from silence or from commit/push picks; unconditional approve or merge when inspect shows merge-only is sufficient. When the developer does **not** pick **`approve-merge-pr`**, merge stays on GitHub; this lane verifies via **`merged-pr-proceed`**. See rule **6** § *Approval-gated agent approve+merge* and rule **20** § *PR approve-merge and merge inspect*.
+
+**Act mapping:** selecting an option not shown in the modal is impossible; do not treat hidden options as implicit consent. When the developer picks **`fix-ci-only`** or **`apply-must-should`** with CI failures, investigate failing checks (`gh run view` / logs), patch in **`WORKTREE_ROOT`**, then open the commit/push gate — after push, re-run **Step 1b** before treating CI as cleared. When the developer picks **`defer-ci`**, set **`ciStatus: deferred`**, append each failing check to **`remainingTasks`**, and keep **`mergeDelegationReady: false`**. When the developer picks **`submit-manual-review`**, run **`coding-session`** [Manual review submission (developer-input)](../coding-session/SKILL.md#manual-review-submission-developer-input) — do not run Step **5 — GitHub only** on that turn. When the developer picks **`approve-merge-pr`**, run § *Approve-merge act mapping* below. When the developer picks **`merged-pr-proceed`**, run § *Merged-forward act mapping* below.
+
+#### Approve-merge act mapping (binding)
+
+Run on the **developer's response turn** when they pick **`approve-merge-pr`**:
+
+1. **Inspect** — rule **6** § *Merge inspect procedure* (read-only, before any GitHub mutate):
+   ```bash
+   gh pr view <n> --json state,mergeable,mergeStateStatus,reviewDecision,statusCheckRollup,url
+   ```
+2. **Not mergeable** — when **`mergeable`** is not **`MERGEABLE`**, or **`mergeStateStatus`** / **`statusCheckRollup`** indicates blocked CI, conflicts, or pending required checks: **stop**; do **not** run **`gh pr review --approve`** or **`gh pr merge`**. One-line recap of blockers; re-open the same gate with **`approve-merge-pr`** and **`merged-pr-proceed`** still listed — or offer retry / check CI / defer via structured choice when blockers need a separate pick.
+3. **Mergeable — approval not required** — when inspect shows merge may proceed **without** a new approval from this actor (no blocking review requirement, no unresolved **`CHANGES_REQUESTED`**, branch policy allows merge without new **`gh pr review --approve`**): set **`outputs.mergeDelegationAuthorized: true`** on the invoker lane; run **`coding-session`** [Merge procedure](../coding-session/SKILL.md#merge-procedure) **`gh pr merge`** path only — **do not** run **`gh pr review --approve`** first per rule **6** § *Mergeable — approval not required*.
+4. **Mergeable — approval required** — when inspect shows approval is required before merge: set **`outputs.mergeDelegationAuthorized: true`**; run **`coding-session`** [Merge procedure](../coding-session/SKILL.md#merge-procedure) — **`gh pr review --approve`** then **`gh pr merge`** in the **same act turn** after inspect passes.
+5. **Preconditions not met** — when inline triage is incomplete (**`mergeDelegationReady: false`**, open Must fixes, **`githubReconciliationStatus: pending`**, or **`ciStatus: failing`** without prior **`defer-ci`**): recap blockers; do **not** merge — re-open disposition or **`coding-session`** [Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate) as appropriate.
+
+**Checkpoint auto-advance:** when Checkpoint trust auto-advances past a merge modal on the invoker lane, the **inspect procedure still runs** before any **`gh`** mutate — auto-advance waives the modal, not inspect.
 
 **Act mapping:** selecting an option not shown in the modal is impossible; do not treat hidden options as implicit consent. When the developer picks **`fix-ci-only`** or **`apply-must-should`** with CI failures, investigate failing checks (`gh run view` / logs), patch in **`WORKTREE_ROOT`**, then open the commit/push gate — after push, re-run **Step 1b** before treating CI as cleared. When the developer picks **`defer-ci`**, set **`ciStatus: deferred`**, append each failing check to **`remainingTasks`**, and keep **`mergeDelegationReady: false`**. When the developer picks **`submit-manual-review`**, run **`coding-session`** [Manual review submission (developer-input)](../coding-session/SKILL.md#manual-review-submission-developer-input) — do not run Step **5 — GitHub only** on that turn. When the developer picks **`merged-pr-proceed`**, run § *Merged-forward act mapping* below.
 #### Merged-forward act mapping (binding)
@@ -423,20 +445,20 @@ Run on the **developer's response turn** when they pick **`merged-pr-proceed`**:
 
 1. **`gh pr view <n> --json state,mergedAt,mergeCommit,url`** — always refresh on pick; never trust stale session state.
 2. **If `state: merged`:** Set inline result fields `prState: merged`, `mergeSha`, `mergedAt`, `shipPhase: pr-merged`, `prReviewStatus: terminal`, `continuationStatus: terminal`. On **`coding-session`** invoker lanes, continue with [Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate) **`spawn-production-walk`** **Act** (post-merge cleanup → Production walk when applicable).
-3. **If `state: open`:** One line: *PR still open on GitHub — pick again after merge or choose another path.* Re-open the same gate **with `merged-pr-proceed` still listed**.
+3. **If `state: open`:** One line: *PR still open on GitHub — pick again after merge or choose another path.* Re-open the same gate **with `approve-merge-pr` and `merged-pr-proceed` still listed**.
 
-**Example fixtures** (illustrative `askQuestion.options` after counts):
+**Example fixtures** (illustrative `askQuestion.options` after counts — merge paths always **`approve-merge-pr`** then **`merged-pr-proceed`** when both listed):
 
 | Scenario | Typical options |
 |----------|-----------------|
-| Must present | `apply-must`, `apply-must-should`, `skip-reject`, `merged-pr-proceed`, `more-details` |
-| Rule-update only (0 Must / 0 Should / 0 follow-up) | `apply-rule-updates`, `skip-reject`, `submit-manual-review`, `merged-pr-proceed`, `more-details` |
-| Skip-only (0 Must / 0 Should / 0 rule-update / 0 follow-up) | `skip-reject` (recommended), `submit-manual-review`, `merged-pr-proceed`, `more-details` |
-| Follow-up only (0 Must / 0 Should / 0 rule-update) | `follow-ups-only`, `submit-manual-review`, `skip-reject`, `merged-pr-proceed`, `more-details` |
-| Mixed (Must + follow-up) | `apply-must`, `apply-must-should`, `follow-ups-only`, `skip-reject`, `merged-pr-proceed`, `more-details` |
-| Mixed (rule-update + code) | `apply-must`, `apply-must-should`, `apply-rule-updates`, `skip-reject`, `merged-pr-proceed`, `more-details` |
-| CI-only (0 Must / 0 Should / 0 rule-update / 0 follow-up, N failing checks) | `fix-ci-only`, `defer-ci`, `merged-pr-proceed`, `more-details` |
-| CI + Must | `apply-must`, `apply-must-should`, `fix-ci-only`, `defer-ci`, `merged-pr-proceed`, `more-details` |
+| Must present | `approve-merge-pr`, `merged-pr-proceed`, `apply-must`, `apply-must-should`, `skip-reject`, `more-details` |
+| Rule-update only (0 Must / 0 Should / 0 follow-up) | `approve-merge-pr`, `merged-pr-proceed`, `apply-rule-updates`, `skip-reject`, `submit-manual-review`, `more-details` |
+| Skip-only (0 Must / 0 Should / 0 rule-update / 0 follow-up) | `approve-merge-pr`, `merged-pr-proceed`, `skip-reject` (recommended), `submit-manual-review`, `more-details` |
+| Follow-up only (0 Must / 0 Should / 0 rule-update) | `approve-merge-pr`, `merged-pr-proceed`, `follow-ups-only`, `submit-manual-review`, `skip-reject`, `more-details` |
+| Mixed (Must + follow-up) | `approve-merge-pr`, `merged-pr-proceed`, `apply-must`, `apply-must-should`, `follow-ups-only`, `skip-reject`, `more-details` |
+| Mixed (rule-update + code) | `approve-merge-pr`, `merged-pr-proceed`, `apply-must`, `apply-must-should`, `apply-rule-updates`, `skip-reject`, `more-details` |
+| CI-only (0 Must / 0 Should / 0 rule-update / 0 follow-up, N failing checks) | `approve-merge-pr`, `merged-pr-proceed`, `fix-ci-only`, `defer-ci`, `more-details` |
+| CI + Must | `approve-merge-pr`, `merged-pr-proceed`, `apply-must`, `apply-must-should`, `fix-ci-only`, `defer-ci`, `more-details` |
 
 **Forbidden:** “Review the PR and tell me when to continue”, “wait for the user to review”, fixed five-option menus when counts make options inert, or ending the turn without structured choice when dispositions need approval **and** Checkpoint auto-advance does not apply.
 
@@ -449,19 +471,20 @@ When the developer picks **`apply-rule-updates`**, run **`coding-session`** [Pos
 
 ### Post-fix commit/push gate (binding)
 
-When the disposition pick authorizes source edits and fixes are ready to land, use structured choice **before** `git commit` or `git push` — even when **`coding-session`** already authorized push at ship cut-point. Under Checkpoint trust, this gate is **developer-input** — not happy-path auto-advance.
+When the disposition pick authorizes source edits and fixes are ready to land, use structured choice **before** `git commit` or `git push` — even when **`coding-session`** already authorized push at ship cut-point. Under Checkpoint trust, this gate is **developer-input** — not happy-path auto-advance. Include **`approve-merge-pr`** then **`merged-pr-proceed`** when PR is open (rule **6** / rule **20** ordering — see § *Build disposition options*).
 
-Put the session orientation table, disposition summary, and `git status --short` in **`display.markdown`**.
+Put the session orientation table, disposition summary, and `git status --short` in **`displayMarkdown`**. Cross-ref rule **6** § *Merge inspect procedure* and rule **20** § *PR approve-merge and merge inspect* in recap when merge paths are listed.
 
 USER_CHECKPOINT — authorize commit and push for approved PR review fixes on this lane.
 
 | Option id | Label (brief) | Act |
 |-----------|---------------|-----|
+| `approve-merge-pr` | Approve and Merge PR | § *Approve-merge act mapping* — rule **6** inspect before mutate |
+| `merged-pr-proceed` | PR merged — proceed with cleanup | § *Merged-forward act mapping* |
 | `commit-and-push` | Commit and push — run Step 5 same turn | **`git commit`** + **`git push`** per rule **6**; **same turn** run Step **5 — GitHub only**; re-run **Step 1b** before declaring CI cleared |
 | `commit-only` | Commit only — defer push | **`git commit`**; open push gate on next turn or defer via **`coding-session`** |
 | `revise-dispositions` | Revise dispositions or fixes | Re-open [Disposition gate](#step-4--report-and-disposition-gate) |
 | `defer-pr-review` | Defer — stay on pr-review | `continuationStatus: "active"`; no commit/push |
-| `merged-pr-proceed` | PR merged — proceed with cleanup | § *Merged-forward act mapping* |
 | `more-details` | More details for option _ | Elaborate; re-open this gate |
 
 - **`defaultOptionId: commit-and-push`** when fixes are complete and CI re-check is not pending.

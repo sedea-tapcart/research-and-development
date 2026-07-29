@@ -232,7 +232,16 @@ When `requestedPopulatorSkill` is **`pr-plan`**, run that skill **inline on this
 | `parentRowSingleConcern` | From **`pr-breakdown`** inline handoff when present — PR description seed for item **N** |
 | `skipPrPlanHandoffModal` | `true` when `autoChainFirstPr: true` from **`pr-breakdown`** **`approve-list`** auto-expand; otherwise omit or `false` |
 
-When `requestedPopulatorSkill` is **`phase-planner`**, emit **`mission_control_spawn_agent`** per step **4** (spawned populator lane — unchanged).
+When `requestedPopulatorSkill` is **`phase-planner`**, run § *Populator registry lookup — phase-planner* before step **4** spawn. When lookup finds an existing slug → **`mission_control_notify_child_lanes`** per **`../README.md`** § *Spawn vs notify* and report **`## Completion (inline)`** to invoker — **forbidden** duplicate spawn. When no slug → emit **`mission_control_spawn_agent`** per step **4**.
+
+### Populator registry lookup — phase-planner (binding)
+
+Before **`mission_control_spawn_agent`** for **`phase-planner`** on indexed-child path:
+
+1. Resolve **`targetPlanPath`** from the child stub (existing link on parent row **N** or path about to be written).
+2. Look up prior **`phase-planner`** slug from **`activeLanes`**, invoker **`spawnedPlans`**, or lane registry by **`targetPlanPath`** + **`parentIndex`**.
+3. **Match found (active or terminal):** notify that slug; skip spawn; return **`populatorHandoff: notify-existing-phase-planner`** in **`## Completion (inline)`**.
+4. **No match:** proceed with step **4** spawn unchanged.
 
 When **`parentAgentRole`** is **`delivery-phases-agent`** or **`pr-breakdown-agent`** (this skill run **inline** from decomposition under **`master-planner`**), report **`## Completion (inline)`** to the invoker — do **not** emit **`mission_control_send_agent_result`**.
 
@@ -255,7 +264,7 @@ The regular parent-confirmation gate below is **skipped** when that pre-resoluti
  - `Delivery phases` parent heading requires `childKind: "phase-planner"` and `requestedPopulatorSkill: "phase-planner"` when a populator is requested.
  - `PR breakdown` parent heading requires `childKind: "pr-plan"` and `requestedPopulatorSkill: "pr-plan"` when a populator is requested.
  - If the requested kind conflicts with the parent heading, stop with `failure`; do not create a child file.
-3. **Capture the exact `Plan:` placeholder for item N.** The selected row must contain exactly one `Plan:` line that is still pending. Accept `_TBD`, `_TBD_`, or a clear spawn-hint placeholder after `Plan:`. If the row has no `Plan:` line, has multiple `Plan:` lines, or already links a `.plan.md`, stop with `partial` and report the row problem; do not create a duplicate child.
+3. **Capture the exact `Plan:` line for item N.** The selected row must contain exactly one `Plan:` line. Accept `_TBD`, `_TBD_`, or a clear spawn-hint placeholder after `Plan:` for **new** stubs. When the row **already links** a `.plan.md`, **do not** create a duplicate child — run § *Populator registry lookup — phase-planner* (or equivalent for **`pr-plan`**) and notify the existing populator lane per rule **4** § *Spawn vs notify*; return **`partial`** only when lookup cannot resolve a slug and the parent link is untrusted. If the row has no `Plan:` line or has multiple `Plan:` lines, stop with `partial` and report the row problem.
 4. **Capture parent row prose for the child stub.** When item **N** includes sub-bullets per the dev-process **§ 6 / § 5 contents rule** (decomposition decision, scope sentence, `Plan:`), treat that text as **already reviewed on the parent** — copy the scope sentence (and optional decomposition line) into the child `overview:` and `## Overview` when writing the stub. Do **not** ask the developer to re-approve that prose.
 
 ### Indexed child — Open-item modal contract

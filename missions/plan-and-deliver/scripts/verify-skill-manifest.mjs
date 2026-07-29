@@ -679,6 +679,17 @@ async function validateNotifyReadmeCoverage() {
     errors.push(`${rel}: missing plan-change-notification feature flag reference`);
   }
 
+  for (const skillName of NOTIFY_EMIT_SKILL_NAMES) {
+    const rel = skillRelPath(skillName);
+    const abs = path.join(CENTER_ROOT, rel);
+    const raw = await fs.readFile(abs, 'utf8');
+    if (!raw.includes('Planner-lane wake') && !raw.includes('Leaf-lane omission') && !raw.includes('terminal planner')) {
+      errors.push(
+        `${rel}: emit skill should reference planner-lane wake or terminal planner notify (rule 4 cross-ref)`,
+      );
+    }
+  }
+
   return errors;
 }
 
