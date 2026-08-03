@@ -138,18 +138,18 @@ inputs:
 laneRules:
   - ".sedea/centers/sedea/rules/2_ask-question-instructions.mdc"
   - ".sedea/centers/sedea/rules/6_git-commit-push-gate.mdc"
-  - ".sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc"
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md"
+  - ".sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc"
+  - ".sedea/centers/software-development/missions/plan-and-deliver/skills/coding-session/SKILL.md"
 warmUpRules:
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
-  - ".sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc"
+  - ".sedea/centers/software-development/missions/plan-and-deliver/skills/README.md"
+  - ".sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc"
 ---
 
 # Coding session
 
 ## No agent gcloud secrets or env-var proposals (binding)
 
-**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/research-and-development/rules/60_no-agent-env-secrets.mdc`.
+**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/software-development/rules/60_no-agent-env-secrets.mdc`.
 
 Hand off a unit of work into a **dedicated git worktree**, with the worktree visible in the **same Sedea workbench** (multi-root workspace), not a second editor process. Worktree **setup** is **center `worktree-setup.sh` only** (from **`HOSTING_ROOT`**); workbench **attach** is **`sedea_add_worktree_folder` only** — see [Hard rules — git worktree vs workbench attach (binding)](#hard-rules--git-worktree-vs-workbench-attach-binding) and [Center worktree scripts (binding)](#center-worktree-scripts-binding). **Execution mode** after setup depends on entry path — see [Execution mode after worktree attach](#execution-mode-after-worktree-attach).
 
@@ -165,14 +165,14 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 
 | Path | Purpose |
 |------|---------|
-| `.sedea/centers/research-and-development/rules/bootstrap.mdc` | Sole Software Development `alwaysApply: true` bootstrap (≤10 KB); host merges when `centerSlug === research-and-development` |
+| `.sedea/centers/software-development/rules/bootstrap.mdc` | Sole Software Development `alwaysApply: true` bootstrap (≤10 KB); host merges when `centerSlug === software-development` |
 
 ### `skillWarmUp` — frontmatter `warmUpRules`
 
 | Path | Purpose |
 |------|---------|
-| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` | Spawn contracts, terminal stop, cap exceptions |
-| `.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc` | Worktree naming, ship chain, bootstrap |
+| `.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md` | Spawn contracts, terminal stop, cap exceptions |
+| `.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc` | Worktree naming, ship chain, bootstrap |
 
 **Omitted from frontmatter (384 KiB spawn cap — runtime `Read`):** `plan.mdc`, `development-process.md` — load via **`inputs.targetPlanPath`** and explicit **`Read`** when ship-chain or procedure steps require them.
 
@@ -182,8 +182,8 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 |------|---------|
 | `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc` | Structured choice, AskQuestion / MCP structured choice |
 | `.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc` | Commit/push gate before ship cut-point |
-| `.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc` | Ship lane minimum (role row in README) |
-| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md` | This skill procedure |
+| `.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc` | Ship lane minimum (role row in README) |
+| `.sedea/centers/software-development/missions/plan-and-deliver/skills/coding-session/SKILL.md` | This skill procedure |
 
 ## Agent messaging (MCP)
 
@@ -425,7 +425,7 @@ After **`targetPlanPath`** / PR concern is clear (before worktree attach or imme
 3. **Skip** when spawn labels already match scope.
 4. **Forbidden:** **`mission_control_update_dispatch_display`** from a child lane.
 
-See [`.sedea/centers/research-and-development/rules/50_mission-control-display-metadata-discipline.mdc`](../../../../rules/50_mission-control-display-metadata-discipline.mdc) § *Child lane — refresh own slot when labels are stale*.
+See [`.sedea/centers/software-development/rules/50_mission-control-display-metadata-discipline.mdc`](../../../../rules/50_mission-control-display-metadata-discipline.mdc) § *Child lane — refresh own slot when labels are stale*.
 
 ### Spawned lane — MCP structured choice (binding)
 
@@ -578,7 +578,7 @@ Only **two** developer-consent layers apply before worktrees. Do not stack extra
 
 | Layer | Where decided | Output field | This skill |
 |-------|---------------|--------------|------------|
-| **1 — Planning handoff** | **`pr-plan`** §5c **Start coding session** + §5d spawn `inputs` | `readyForImplementation`, `planningHandoffApproved` | Hint only; **do not** re-ask. Does **not** authorize worktrees or advance **`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`** §8 `phase` past `not-started`. |
+| **1 — Planning handoff** | **`pr-plan`** §5c **Start coding session** + §5d spawn `inputs` | `readyForImplementation`, `planningHandoffApproved` | Hint only; **do not** re-ask. Does **not** authorize worktrees or advance **`.sedea/centers/software-development/missions/plan-and-deliver/plan.mdc`** §8 `phase` past `not-started`. |
 | **2 — Worktree open** | [Worktree-open gate](#worktree-open-gate) **or** [Auto-authorize implementation (pr-plan spawn)](#auto-authorize-implementation-pr-plan-spawn) | `developerApprovedImplementation` | Set `true` after an authorizing gate choice **or** auto-authorize when spawn handoff + §§1–4 drafted (see below). |
 
 **Not consent layers** (validation / setup only — no separate approval **AskQuestion**):
@@ -747,7 +747,7 @@ Otherwise:
 2. From **`HOSTING_ROOT`**:
  ```bash
  cd "$HOSTING_ROOT"
- .sedea/centers/sedea/scripts/run-sedea-node.sh .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-ws-completeness.mjs --file "<absolute-plan-path>"
+ .sedea/centers/sedea/scripts/run-sedea-node.sh .sedea/centers/software-development/missions/plan-and-deliver/scripts/plan-ws-completeness.mjs --file "<absolute-plan-path>"
  ```
  - Exit **0** (`OK` / `SKIP_NOT_PER_PR`) → `planCompleteness: complete` for the worktree-open gate.
  - Exit **1** (`INCOMPLETE`) → `planCompleteness: incomplete` — **do not** create worktrees yet; route to the worktree-open gate (pr-plan spawn handoff vs generic incomplete).
@@ -836,7 +836,7 @@ After **`batchShipAuthorized`**, follow [`.sedea/centers/sedea/docs/batch-ship-c
 
 ```bash
 .sedea/centers/sedea/scripts/run-sedea-node.sh \
-  .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/post-merge-ship-mechanics.mjs \
+  .sedea/centers/software-development/missions/plan-and-deliver/scripts/post-merge-ship-mechanics.mjs \
   --hosting-root "$HOSTING_ROOT" --pr-numbers "<comma-separated PR numbers>" --apply
 git submodule update --init --recursive
 ```
@@ -1101,7 +1101,7 @@ Run only **after** [Pre-worktree validation](#pre-worktree-validation-plan-compl
  ```
 
  - **Forbidden (step 1):** **`sedea_add_worktree_folder`** — MCP attach is step **3** only. **Forbidden:** inline **`git worktree add`** / dirty-primary **`git status`** gate on the default path when this script exists on **`HOSTING_ROOT`**.
- - Worktree naming: **`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`** § *Worktree naming* (primary **hosting repo** → Sedea **`.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc`**).
+ - Worktree naming: **`.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc`** § *Worktree naming* (primary **hosting repo** → Sedea **`.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc`**).
  - **Exit 0:** parse the stdout JSON line; set **`WORKTREE_ROOT`**, **`outputs.bootstrapMode`**, and provisional **`outputs.bootstrapStatus`** from hint. **`success`** / **`skipped-idempotent`** → set **`outputs.bootstrapStatus: success`** after step **1**. **`skipped-noop`** → continue to step **4** (do **not** treat as dev-ready on **`mode: none`** script-bootstrap hosts).
  - **Non-zero:** parse failure JSON when present; set **`outputs.bootstrapStatus: failed`**, **`outputs.bootstrapFailureReason`** from **`message`**; stop with structured retry — exit **10** dirty primary (on sedea-push run **`.cursor/rules/dot-sedea.mdc`** § *Housekeeping pass (dirty hosting tree before bootstrap)* before retry); exit **11** warm-primary (**no `full` fallback** on center path); exit **12** overlay missing / mode not allowed.
  - If `baseRef` input is supplied, it must be a remote integration ref such as `origin/main`; do not accept a local-only ref for worktree creation.
@@ -1109,10 +1109,10 @@ Run only **after** [Pre-worktree validation](#pre-worktree-validation-plan-compl
 2. **Record the session on the plan** (see [Sidecar state](#sidecar-state)). From **`HOSTING_ROOT`**:
  ```bash
  cd "$HOSTING_ROOT"
- .sedea/centers/sedea/scripts/run-sedea-node.sh .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs set-worktrees \
+ .sedea/centers/sedea/scripts/run-sedea-node.sh .sedea/centers/software-development/missions/plan-and-deliver/scripts/plan-state.mjs set-worktrees \
  --slug <plan-slug> \
  --json '[{"repo":"<repo-basename>","path":"<absolute-worktree-path>"}]'
- .sedea/centers/sedea/scripts/run-sedea-node.sh .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs set-session \
+ .sedea/centers/sedea/scripts/run-sedea-node.sh .sedea/centers/software-development/missions/plan-and-deliver/scripts/plan-state.mjs set-session \
  --slug <plan-slug> \
  --focus <absolute-worktree-path>
  ```
@@ -1133,7 +1133,7 @@ Run only **after** [Pre-worktree validation](#pre-worktree-validation-plan-compl
 
  **Forbidden:** treat **`skipped-noop`** alone as dev-ready on **`mode: none`** script-bootstrap hosts.
 
- Alternatively invoke [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md`](../worktree-bootstrap/SKILL.md) **inline** with the same **`worktreePath`** / **`hostingRoot`** when step **4** conditions apply — same success contract.
+ Alternatively invoke [`.sedea/centers/software-development/missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md`](../worktree-bootstrap/SKILL.md) **inline** with the same **`worktreePath`** / **`hostingRoot`** when step **4** conditions apply — same success contract.
 
 5. **Bootstrap complete (default path)** — When **`outputs.bootstrapStatus: success`**, set **`outputs.shipPhase: worktree`** on the first terminal line that reports setup complete. **Do not** run inline **`worktree-bootstrap`** on the default path when step **4** completed successfully. **Exception:** retry only per [Worktree bootstrap (inline mandatory)](#worktree-bootstrap-inline-mandatory) when setup or step **4** failed or developer attests **`--skip-*`** on a follow-up turn.
 
@@ -1179,7 +1179,7 @@ Use **only** when setup failed and the developer chooses retry with attested **`
 
 1. Set `outputs.bootstrapStatus: pending`.
 
-2. **Execute inline** — In the **same agent session**, read and follow [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md`](../worktree-bootstrap/SKILL.md) with **inline** context:
+2. **Execute inline** — In the **same agent session**, read and follow [`.sedea/centers/software-development/missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md`](../worktree-bootstrap/SKILL.md) with **inline** context:
 
 | Field | Value |
 |-------|--------|
@@ -1572,7 +1572,7 @@ Run from [Act after ship cut-point pick](#act-after-ship-cut-point-pick) when th
 When `targetPlanPath` resolves to a PR plan:
 
 1. **Read** §7 **`### Local test`**. If empty, only *None — …*, or every item is `[x]`, note in one line and continue to [Auto-spawn pre-pr-review](#auto-spawn-pre-pr-review).
-2. When any **`[ ]`** Local-test items remain, load `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/deploy-walk/SKILL.md` and run it **inline on this lane** — **do not** emit **`mission_control_spawn_agent`** for **`deploy-walk`**.
+2. When any **`[ ]`** Local-test items remain, load `.sedea/centers/software-development/missions/plan-and-deliver/skills/deploy-walk/SKILL.md` and run it **inline on this lane** — **do not** emit **`mission_control_spawn_agent`** for **`deploy-walk`**.
 
 **Inline context:**
 
@@ -1663,7 +1663,7 @@ Per [`.sedea/centers/sedea/rules/4_mission.mdc`](.sedea/centers/sedea/rules/4_mi
 
 | Turn | Obligation |
 |------|------------|
-| **Spawn turn** | Call **`mission_control_spawn_agent`** for `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pre-pr-review/SKILL.md` with compiled inputs — **alone**. Optional one-line ack: *Pre-PR spawn request recorded — host mirror pending* — **forbidden:** *Spawned pre-PR reviewer*, *Child is running*, or *Waiting for child result* before host-visible child confirmation. **Forbidden:** **`mission_control_present_structured_choice`** or **AskQuestion** on this turn. |
+| **Spawn turn** | Call **`mission_control_spawn_agent`** for `.sedea/centers/software-development/missions/plan-and-deliver/skills/pre-pr-review/SKILL.md` with compiled inputs — **alone**. Optional one-line ack: *Pre-PR spawn request recorded — host mirror pending* — **forbidden:** *Spawned pre-PR reviewer*, *Child is running*, or *Waiting for child result* before host-visible child confirmation. **Forbidden:** **`mission_control_present_structured_choice`** or **AskQuestion** on this turn. |
 | **Next turn** | Open **`mission_control_present_structured_choice`** (next-step resume: continue when child returns / check status / pause / More details) per [Yield gate](#yield-gate-checkpoint--binding) and [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](.sedea/centers/sedea/rules/2_ask-question-instructions.mdc) § **External-wait / next-step modal**. **Forbidden:** prose-only *waiting for child* StreamFinal. |
 
 Do not open a PR before the reviewer returns `recommendation: "go"`.
@@ -1888,7 +1888,7 @@ When **`pre-pr-review`** returns `recommendation: "go"` **and** **`actionablePre
 
 1. One-line recap: reviewer **`go`**, no Must/Should/blockers, no proposed follow-ups, optional non-actionable flags noted — **pre-PR gate cleared**; push + PR may proceed.
 2. When the branch is not on the remote, run **`git push`** per rule **20** § *Commit and push cadence* **before** inline **`create-pr`** — this is the **default** first push after **`prePrReviewCleared`**, not a cut-point modal option.
-3. Load `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/create-pr/SKILL.md` and run it **inline on this lane** — **do not** emit **`mission_control_spawn_agent`** for **`create-pr`**. Under Checkpoint trust, follow **`create-pr`** § *Developer input vs external-wait (Checkpoint)* — clean path uses [Checkpoint — auto-advance `authorize-create-pr`](../create-pr/SKILL.md#checkpoint--auto-advance-authorize-create-pr-binding); [Push authorization](../create-pr/SKILL.md#push-authorization-gate-binding) / [Pre-gh](../create-pr/SKILL.md#pre-gh-authorization-gate-binding) only when that skill’s exception criteria apply.
+3. Load `.sedea/centers/software-development/missions/plan-and-deliver/skills/create-pr/SKILL.md` and run it **inline on this lane** — **do not** emit **`mission_control_spawn_agent`** for **`create-pr`**. Under Checkpoint trust, follow **`create-pr`** § *Developer input vs external-wait (Checkpoint)* — clean path uses [Checkpoint — auto-advance `authorize-create-pr`](../create-pr/SKILL.md#checkpoint--auto-advance-authorize-create-pr-binding); [Push authorization](../create-pr/SKILL.md#push-authorization-gate-binding) / [Pre-gh](../create-pr/SKILL.md#pre-gh-authorization-gate-binding) only when that skill’s exception criteria apply.
 
 **Default authorization:** clean **`go`** authorizes entering inline **`create-pr`** **without** appending proposed follow-ups (`followUpsAppended: false`). Do **not** open [Create-PR handoff after go](#create-pr-handoff-after-go) on this path.
 
@@ -2002,7 +2002,7 @@ When inline **`create-pr`** completes with a PR URL/number (or the developer ret
 
 **Batch path (binding):** Append the row to **`outputs.openPrBatch[]`**. When **`openPrBatch.length > 1`**, **forbidden** this per-PR gate — open [Batch ship authorization gate](#batch-ship-authorization-gate) on the same turn when every batch row has **`prState: open`**, or defer the batch gate until the last row opens. When **`batchShipAuthorized`**, proceed to [batch ship auto-advance tail](#batch-ship-auto-advance-tail-binding) — **forbidden** re-opening this gate for individual rows.
 
-**Rule 6 supersession (binding):** While **`prState: open`**, option ordering, presence, and inspect-before-mutate for agent approve+merge on this gate follow [`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`](.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc) § *PR approve-merge structured choice* and § *Merge inspect procedure*, cross-referenced by [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc) § *PR approve-merge and merge inspect*. This gate's option tables implement that contract — not a parallel vocabulary.
+**Rule 6 supersession (binding):** While **`prState: open`**, option ordering, presence, and inspect-before-mutate for agent approve+merge on this gate follow [`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`](.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc) § *PR approve-merge structured choice* and § *Merge inspect procedure*, cross-referenced by [`.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc`](.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc) § *PR approve-merge and merge inspect*. This gate's option tables implement that contract — not a parallel vocabulary.
 
 **Binding — Checkpoint and non-Checkpoint:** When **`prState`** is **`open`** (or just created this turn) and **`prState`** is not **`merged`**, **same assistant turn** must close with **`mission_control_present_structured_choice`** post-create-pr **`options`** — not prose-only PR URL, *Next: inline pr-review*, or idle handoff. **`defaultOptionId: approve-merge-pr`** when agent merge is in scope, required CI is **`passing`** or **`pending`**, and the developer did not name **`defer-ship`**, **`submit-manual-review`**, **`rebase-onto-main-and-resolve-conflicts`**, or a review-only path in the **same** message.
 
@@ -2258,7 +2258,7 @@ Run on this lane **after** `prState: merged` **and before** [Post-merge deploy r
 | Developer explicitly says *defer cleanup* or *skip cleanup* | Honor defer; optional modal if ambiguous |
 
 
-**Worktree removal ownership (binding).** **Do not remove worktrees you do not own.** Apply **`sedea_remove_worktree_folder`**, center **`worktree-cleanup.sh`**, and any cleanup **`--apply`** **only** to **this pass’s** **`WORKTREE_ROOT`** when **all** preconditions in [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § *Worktree ownership* and [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc) § *Worktree removal ownership (binding)* hold — **or** when [Inherited worktree ownership](#inherited-worktree-ownership-upstream-handoff-binding) applies to that exact absolute path (inherited handoff **satisfies** the “this pass ran setup / this pass MCP-mounted” bars for cleanup attestation). **`WORKTREE_ROOT`** must be the exact path from **this pass’s** center setup hint **`worktreeRoot`** **or** spawn **`inputs.worktreePath`** under inherited ownership — **not** inferred from **`git worktree list`**, sidecar **`worktrees[]`**, or stale entries alone. **Forbidden:** repo-wide **`git worktree prune`**; removing paths another developer, dispatch, lane, or session created; treating remount-only reuse of an **inherited** path as unclear ownership; **`git worktree remove`** on **`HOSTING_ROOT`**; hand-deleting directories while still mounted. **`git worktree list` is read-only** when ownership is unclear — stop and use structured choice. Center **`worktree-cleanup.sh`** removes **only** candidates from **`detect-stale-workspaces`** for **this plan/session** after the gate above.
+**Worktree removal ownership (binding).** **Do not remove worktrees you do not own.** Apply **`sedea_remove_worktree_folder`**, center **`worktree-cleanup.sh`**, and any cleanup **`--apply`** **only** to **this pass’s** **`WORKTREE_ROOT`** when **all** preconditions in [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § *Worktree ownership* and [`.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc`](.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc) § *Worktree removal ownership (binding)* hold — **or** when [Inherited worktree ownership](#inherited-worktree-ownership-upstream-handoff-binding) applies to that exact absolute path (inherited handoff **satisfies** the “this pass ran setup / this pass MCP-mounted” bars for cleanup attestation). **`WORKTREE_ROOT`** must be the exact path from **this pass’s** center setup hint **`worktreeRoot`** **or** spawn **`inputs.worktreePath`** under inherited ownership — **not** inferred from **`git worktree list`**, sidecar **`worktrees[]`**, or stale entries alone. **Forbidden:** repo-wide **`git worktree prune`**; removing paths another developer, dispatch, lane, or session created; treating remount-only reuse of an **inherited** path as unclear ownership; **`git worktree remove`** on **`HOSTING_ROOT`**; hand-deleting directories while still mounted. **`git worktree list` is read-only** when ownership is unclear — stop and use structured choice. Center **`worktree-cleanup.sh`** removes **only** candidates from **`detect-stale-workspaces`** for **this plan/session** after the gate above.
 
 **Purpose:** Sync **`HOSTING_ROOT`** with **`origin/main`**, detach/remove **this session’s** worktree from Mission Control and git, drop the local worktree name ref when eligible, and run optional **post-merge host rebuild** on **`HOSTING_ROOT`** per **`.cursor/rules/dot-sedea.mdc`** when documented — then **Developer: Reload Window** before Production verification — not from a stale worktree with **`main` behind**.
 
@@ -2276,7 +2276,7 @@ When **`mergedPr: false`** (open PRs in sidecar) or remote head still exists, **
 ```bash
 cd "$HOSTING_ROOT"
 
-.sedea/centers/sedea/scripts/run-sedea-node.sh .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs \
+.sedea/centers/sedea/scripts/run-sedea-node.sh .sedea/centers/software-development/missions/plan-and-deliver/scripts/plan-state.mjs \
   detect-stale-workspaces --slug <slug> --json
 ```
 
@@ -2285,7 +2285,7 @@ When **`candidates`** is empty and sidecar **`worktrees[]`** / session focus is 
 **Dry-run git plan:**
 
 ```bash
-node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/post-reconcile-workspace-cleanup.mjs \
+node .sedea/centers/software-development/missions/plan-and-deliver/scripts/post-reconcile-workspace-cleanup.mjs \
   --dry-run [--slug <slug>]
 ```
 
@@ -2345,7 +2345,7 @@ Use **`--ownership-path b`** and **`--dispatch-worktree-context`** instead of **
 ```bash
 cd "$HOSTING_ROOT"
 
-.sedea/centers/sedea/scripts/run-sedea-node.sh .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs \
+.sedea/centers/sedea/scripts/run-sedea-node.sh .sedea/centers/software-development/missions/plan-and-deliver/scripts/plan-state.mjs \
   prune-sessions --path "$WORKTREE_ROOT"
 ```
 
@@ -2369,7 +2369,7 @@ Run from [Act after post-create-pr pick](#act-after-post-create-pr-pick) when th
 
 1. **Verify merge** — `prState` must be **`merged`** (from coding-session `outputs` after inline **`create-pr`** or a fresh `gh pr view` / repo check). If still **`open`**, report one line and re-open [Post-create-pr handoff gate](#post-create-pr-handoff-gate) — do **not** run inline **`deploy-walk`** for Staging test only.
 2. When plan-anchored, **read** §7. If **`### Production`** is empty or all `[x]` and capstone is done, note in one line and under Checkpoint trust auto-run [Post–Staging test remainder inventory](#post-staging-test-remainder-inventory) when non-empty — **forbidden:** re-open [Post-create-pr handoff gate](#post-create-pr-handoff-gate). Otherwise offer [Plan-reconcile handoff (inline)](#plan-reconcile-handoff-inline) defer — no inline walk.
-3. Load `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/deploy-walk/SKILL.md` and run it **inline on this lane** — **post-merge full walk** (do **not** set `deployWalkScope: local-test-only`). **Do not** emit **`mission_control_spawn_agent`** for **`deploy-walk`**.
+3. Load `.sedea/centers/software-development/missions/plan-and-deliver/skills/deploy-walk/SKILL.md` and run it **inline on this lane** — **post-merge full walk** (do **not** set `deployWalkScope: local-test-only`). **Do not** emit **`mission_control_spawn_agent`** for **`deploy-walk`**.
 
 **Inline context:**
 
@@ -2522,7 +2522,7 @@ If any precondition fails, report one line what is missing; offer defer or compl
 
 **Broad reconcile** (developer phrase without a single PR plan anchor): may run when active **dispatch scope** resolves — skip ship-chain preconditions but still use structured choice before mutations per **`plan-reconcile/SKILL.md`** [Checkpoint turn UX (skill-local)](#checkpoint-turn-ux-skill-local) gates.
 
-1. Load `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/plan-reconcile/SKILL.md` and run it **inline on this lane** — **do not** emit **`mission_control_spawn_agent`** for **`plan-reconcile`**.
+1. Load `.sedea/centers/software-development/missions/plan-and-deliver/skills/plan-reconcile/SKILL.md` and run it **inline on this lane** — **do not** emit **`mission_control_spawn_agent`** for **`plan-reconcile`**.
 
 **Inline context:**
 

@@ -14,9 +14,9 @@ designation:
 
 ## No agent gcloud secrets or env-var proposals (binding)
 
-**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/research-and-development/rules/60_no-agent-env-secrets.mdc`.
+**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/software-development/rules/60_no-agent-env-secrets.mdc`.
 
-**Lane requirement (no separate warm-up).** This skill has **no** frontmatter **`warmUpRules`** by design. Run it **only** on the active **`coding-session`** lane after that session has loaded ship rules (**`20_efficient-pr-shipping`**, **`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`**, **`skills/README.md`**, dev-process). Do **not** start a standalone Mission Control session on **`pr-review`** alone — context will be incomplete.
+**Lane requirement (no separate warm-up).** This skill has **no** frontmatter **`warmUpRules`** by design. Run it **only** on the active **`coding-session`** lane after that session has loaded ship rules (**`20_efficient-pr-shipping`**, **`.sedea/centers/software-development/missions/plan-and-deliver/plan.mdc`**, **`skills/README.md`**, dev-process). Do **not** start a standalone Mission Control session on **`pr-review`** alone — context will be incomplete.
 
 ### Standalone dispatch (stop immediately)
 
@@ -137,7 +137,7 @@ Give developers a **consistent state snapshot** during PR review cycles so they 
 | CI | `passing` · `failing (N)` · `pending` · `deferred` |
 | Review | `prReviewStatus` · GitHub `reviewState` · open Must/Should counts |
 
-**Population rules:** Same as [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`](../coding-session/SKILL.md) § *Session orientation table (binding)* — recover missing PR/worktree context from **`coding-session`** before triage.
+**Population rules:** Same as [`.sedea/centers/software-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`](../coding-session/SKILL.md) § *Session orientation table (binding)* — recover missing PR/worktree context from **`coding-session`** before triage.
 
 **Mandatory gates (this skill):** [Disposition gate](#step-4--report-and-disposition-gate); [Post-fix commit/push gate](#post-fix-commitpush-gate-binding) when approved fixes require commit/push; **`coding-session`** [Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate) for cycle resume (developer-input — **not** rule **2** external-wait). Each cycle reopen when new comments land **or** required CI fails again.
 
@@ -147,7 +147,7 @@ Script: `.sedea/centers/sedea/scripts/pr-review.mjs` (reads PAT from `GH_TOKEN`,
 
 ### Hosting repo cwd (`pr-review.mjs` and `plan-state.mjs`)
 
-**`pr-review.mjs`** and **`plan-state.mjs`** run from **`HOSTING_ROOT`** (hosting repo whose root contains **`.sedea/`**), not from a worktree’s `git rev-parse --show-toplevel` alone. Canonical contract: [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](../../../../rules/20_efficient-pr-shipping.mdc) § *Hosting repo cwd for scripts (canonical)* and [`.sedea/centers/research-and-development/rules/31_dispatch-scope.mdc`](../../../../rules/31_dispatch-scope.mdc) § *Legacy CLI (`plan-state.mjs`) — hybrid only*.
+**`pr-review.mjs`** and **`plan-state.mjs`** run from **`HOSTING_ROOT`** (hosting repo whose root contains **`.sedea/`**), not from a worktree’s `git rev-parse --show-toplevel` alone. Canonical contract: [`.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc`](../../../../rules/20_efficient-pr-shipping.mdc) § *Hosting repo cwd for scripts (canonical)* and [`.sedea/centers/software-development/rules/31_dispatch-scope.mdc`](../../../../rules/31_dispatch-scope.mdc) § *Legacy CLI (`plan-state.mjs`) — hybrid only*.
 
 - **`WORKTREE_ROOT`** — hosting repo worktree where you edit code (`git` / `gh` in Step 0).
 - **`HOSTING_ROOT`** — walk up until **`.sedea/centers/sedea/`** or **`.sedea/`** exists; **`cd "$HOSTING_ROOT"`** before **`node …/plan-state.mjs`** or **`.sedea/centers/sedea/scripts/run-sedea-node.sh …/pr-review.mjs`**.
@@ -255,21 +255,21 @@ Always confirm which PR is being reviewed (print URL and title) before proceedin
 
 #### Link the PR to its plan sidecar (idempotent)
 
-Before Step 1, attempt to upsert the resolved PR number into the plan sidecar so `plan-reconcile` can later archive the plan when all linked PRs merge. This is the same `upsert-pr` call documented in rule **20** § *Commit and push cadence* step 4 ([`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](../../../../rules/20_efficient-pr-shipping.mdc)) — running it here as well closes the gap when **`pr-review`** triage ends with all comments skipped (no follow-up commit-and-push pass, so that upsert never fires) or when the PR is otherwise quiet enough that no second push happens. The helper is idempotent, so running it on every **`pr-review`** invocation is harmless.
+Before Step 1, attempt to upsert the resolved PR number into the plan sidecar so `plan-reconcile` can later archive the plan when all linked PRs merge. This is the same `upsert-pr` call documented in rule **20** § *Commit and push cadence* step 4 ([`.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc`](../../../../rules/20_efficient-pr-shipping.mdc)) — running it here as well closes the gap when **`pr-review`** triage ends with all comments skipped (no follow-up commit-and-push pass, so that upsert never fires) or when the PR is otherwise quiet enough that no second push happens. The helper is idempotent, so running it on every **`pr-review`** invocation is harmless.
 
-**`plan-state.mjs`** lives in the center tree: `.sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs`. On Mission Control lanes, prefer spawn **`inputs.targetPlanPath`** when known; otherwise **`resolve --cwd "$WORKTREE_ROOT"`** discovers the anchored plan under **`.sedea/operations/…/plans/`** — do **not** construct **`.sedea/operations/.../...`** or **`joint/plans`** paths. See rule **31** § *Dispatch scope (binding)*.
+**`plan-state.mjs`** lives in the center tree: `.sedea/centers/software-development/missions/plan-and-deliver/scripts/plan-state.mjs`. On Mission Control lanes, prefer spawn **`inputs.targetPlanPath`** when known; otherwise **`resolve --cwd "$WORKTREE_ROOT"`** discovers the anchored plan under **`.sedea/operations/…/plans/`** — do **not** construct **`.sedea/operations/.../...`** or **`joint/plans`** paths. See rule **31** § *Dispatch scope (binding)*.
 
 ```bash
 WORKTREE_ROOT="$(pwd)" # hosting repo worktree (after cd into it)
 # HOSTING_ROOT: walk up until .sedea/centers/sedea/ exists — see rule 20 § *Resolve HOSTING_ROOT*
 cd "$HOSTING_ROOT"
 
-node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs \
+node .sedea/centers/software-development/missions/plan-and-deliver/scripts/plan-state.mjs \
   resolve --cwd "$WORKTREE_ROOT"
 # → exit 0 prints "<slug>\t<planPath>"; exit 2 = no plan; other = error.
 
 # If resolve succeeded, upsert the PR number from Step 0 into the sidecar:
-node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs \
+node .sedea/centers/software-development/missions/plan-and-deliver/scripts/plan-state.mjs \
   upsert-pr \
   --slug <slug-from-resolve> \
   --repo "$(basename "$HOSTING_ROOT")" \
@@ -522,7 +522,7 @@ If all comments were **Skipped (no follow-up)** with **no** code edits **and** *
 
 **Entry points:**
 
-- **After commit and push (normal path)** — [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](../../../../rules/20_efficient-pr-shipping.mdc) § *Commit and push cadence* runs **git commit + push** in steps 1–2 first (same user message). The agent handling that cadence must then run **this skill’s Step 5 — GitHub only** as **step 3** (same agent turn), **before** plan upsert and **create-pr** prompt. Do **not** treat the cadence as finished at push if Step 4 ran in this chat and GitHub is still open.
+- **After commit and push (normal path)** — [`.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc`](../../../../rules/20_efficient-pr-shipping.mdc) § *Commit and push cadence* runs **git commit + push** in steps 1–2 first (same user message). The agent handling that cadence must then run **this skill’s Step 5 — GitHub only** as **step 3** (same agent turn), **before** plan upsert and **create-pr** prompt. Do **not** treat the cadence as finished at push if Step 4 ran in this chat and GitHub is still open.
 
 - **Skipped-only triage** — Step 3 marked every comment **Skipped (no follow-up)** with **no** code edits: run **GitHub only** immediately (no commit/push).
 

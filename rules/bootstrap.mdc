@@ -20,9 +20,9 @@ The **software-development** center owns **plan and deliver** delivery process, 
 
 | Tree | Role |
 |------|------|
-| **`.sedea/centers/research-and-development/rules/`** | Center governance (this file + numbered rules) |
-| **`.sedea/centers/research-and-development/missions/`** | Mission **`plan.mdc`**, skills, protocol branches |
-| **`.sedea/centers/research-and-development/docs/`** | **`development-process.md`** — NFD cadence, ship chain glossary |
+| **`.sedea/centers/software-development/rules/`** | Center governance (this file + numbered rules) |
+| **`.sedea/centers/software-development/missions/`** | Mission **`plan.mdc`**, skills, protocol branches |
+| **`.sedea/centers/software-development/docs/`** | **`development-process.md`** — NFD cadence, ship chain glossary |
 
 Built-in **`sedea`** center lives at **`.sedea/centers/sedea/`** — see Sedea bootstrap for hosting layout, operations union, and platform spawn protocol.
 
@@ -30,7 +30,7 @@ Built-in **`sedea`** center lives at **`.sedea/centers/sedea/`** — see Sedea b
 
 ## Lane warm-up manifest (Software Development dispatch)
 
-Normative field semantics: [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea/docs/lane-manifest-contract.md). R&D authoring notes: [`.sedea/centers/research-and-development/docs/development-process.md`](../docs/development-process.md) § *Lane warm-up manifest contract*. Spawn/reload bindings: [`.sedea/centers/sedea/rules/4_mission.mdc`](.sedea/centers/sedea/rules/4_mission.mdc) § *Lane warm-up manifest (spawn and reload)*.
+Normative field semantics: [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea/docs/lane-manifest-contract.md). R&D authoring notes: [`.sedea/centers/software-development/docs/development-process.md`](../docs/development-process.md) § *Lane warm-up manifest contract*. Spawn/reload bindings: [`.sedea/centers/sedea/rules/4_mission.mdc`](.sedea/centers/sedea/rules/4_mission.mdc) § *Lane warm-up manifest (spawn and reload)*.
 
 ```text
 effectiveWarmUp = dedupe( sedeaBootstrapRules → rdBootstrapRules → laneRules → skillWarmUp )
@@ -39,11 +39,11 @@ effectiveWarmUp = dedupe( sedeaBootstrapRules → rdBootstrapRules → laneRules
 | Layer | Owner | Content |
 |-------|--------|---------|
 | **Sedea `bootstrapRules`** | Host | **`.sedea/centers/sedea/rules/bootstrap.mdc`** (≤ ~15 KB) |
-| **R&D `bootstrapRules`** | Host when `centerSlug === research-and-development` | **This file** — `.sedea/centers/research-and-development/rules/bootstrap.mdc` (≤ ~10 KB) |
+| **R&D `bootstrapRules`** | Host when `centerSlug === software-development` | **This file** — `.sedea/centers/software-development/rules/bootstrap.mdc` (≤ ~10 KB) |
 | **`laneRules`** | Mission protocol / spawn request / lane record | Role-specific governance beyond both bootstrap layers |
 | **`skillWarmUp`** | Skill frontmatter + run-request **`warmUpRules`** | Subject to **384 KiB** combined warm-up cap |
 
-Definitive per-role **`laneRules`** minimums: [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md`](../missions/plan-and-deliver/skills/README.md) § *Definitive `laneRules`*. Skill **`SKILL.md`** § *Warm-up manifest* tables document **`skillWarmUp`** and **`laneRules`**; **`bootstrapRules`** rows document the R&D bootstrap path for host parity lint.
+Definitive per-role **`laneRules`** minimums: [`.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md`](../missions/plan-and-deliver/skills/README.md) § *Definitive `laneRules`*. Skill **`SKILL.md`** § *Warm-up manifest* tables document **`skillWarmUp`** and **`laneRules`**; **`bootstrapRules`** rows document the R&D bootstrap path for host parity lint.
 
 **Spawned children:** Assigned **`SKILL.md`**, validated **`inputs`**, merged **`warmUpRules`**, and persisted spawn handover define the lane contract after reload — not center READMEs alone.
 
@@ -91,14 +91,14 @@ Load these **explicitly** when **`laneRules`**, **`skillWarmUp`**, spawn handove
 
 | Rule | Path | Load when |
 |------|------|-----------|
-| **10** Plan naming | [`.sedea/centers/research-and-development/rules/10_plan-naming-convention.mdc`](10_plan-naming-convention.mdc) | Plan/PR/worktree naming, forbidden-word policy |
-| **20** PR shipping | [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](20_efficient-pr-shipping.mdc) | Worktrees, commit/push cadence, ship chain, PR creation gate |
-| **30** Planning targets | [`.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`](30_planning-target-resolution.mdc) | Resolve `.plan.md` targets, snapshot tables, depth-first gates |
-| **31** Dispatch scope | [`.sedea/centers/research-and-development/rules/31_dispatch-scope.mdc`](31_dispatch-scope.mdc) | `dispatchId`, `operationsDocsDirectory` / DbOnly, explicit plan paths |
-| **40** Maintain rules | [`.sedea/centers/research-and-development/rules/40_maintain-rules.mdc`](40_maintain-rules.mdc) | Hosting-repo **`.cursor/rules/*.mdc`** routing vs center rules |
-| **50** Display metadata | [`.sedea/centers/research-and-development/rules/50_mission-control-display-metadata-discipline.mdc`](50_mission-control-display-metadata-discipline.mdc) | Child lane display refresh, Squad Leader dispatch scope |
-| **60** Secret and environment-variable ban | [`.sedea/centers/research-and-development/rules/60_no-agent-env-secrets.mdc`](60_no-agent-env-secrets.mdc) | Any work involving secrets, configuration, application or infrastructure wiring, plans, options, or follow-ups |
-| **61** GitHub issue closure | [`.sedea/centers/research-and-development/rules/60_github-issue-dispatch-closure.mdc`](60_github-issue-dispatch-closure.mdc) | Bind GitHub issue URL at intake; Squad Leader status update before dispatch resolution |
+| **10** Plan naming | [`.sedea/centers/software-development/rules/10_plan-naming-convention.mdc`](10_plan-naming-convention.mdc) | Plan/PR/worktree naming, forbidden-word policy |
+| **20** PR shipping | [`.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc`](20_efficient-pr-shipping.mdc) | Worktrees, commit/push cadence, ship chain, PR creation gate |
+| **30** Planning targets | [`.sedea/centers/software-development/rules/30_planning-target-resolution.mdc`](30_planning-target-resolution.mdc) | Resolve `.plan.md` targets, snapshot tables, depth-first gates |
+| **31** Dispatch scope | [`.sedea/centers/software-development/rules/31_dispatch-scope.mdc`](31_dispatch-scope.mdc) | `dispatchId`, `operationsDocsDirectory` / DbOnly, explicit plan paths |
+| **40** Maintain rules | [`.sedea/centers/software-development/rules/40_maintain-rules.mdc`](40_maintain-rules.mdc) | Hosting-repo **`.cursor/rules/*.mdc`** routing vs center rules |
+| **50** Display metadata | [`.sedea/centers/software-development/rules/50_mission-control-display-metadata-discipline.mdc`](50_mission-control-display-metadata-discipline.mdc) | Child lane display refresh, Squad Leader dispatch scope |
+| **60** Secret and environment-variable ban | [`.sedea/centers/software-development/rules/60_no-agent-env-secrets.mdc`](60_no-agent-env-secrets.mdc) | Any work involving secrets, configuration, application or infrastructure wiring, plans, options, or follow-ups |
+| **61** GitHub issue closure | [`.sedea/centers/software-development/rules/60_github-issue-dispatch-closure.mdc`](60_github-issue-dispatch-closure.mdc) | Bind GitHub issue URL at intake; Squad Leader status update before dispatch resolution |
 
 Mission **`plan.mdc`**, **`development-process.md`**, and skill **`SKILL.md`** procedures load per **`laneRules`** and **`skillWarmUp`** — not duplicated here.
 
@@ -115,7 +115,7 @@ Cross-ref: [`.sedea/centers/sedea/rules/1_agent-code-of-conduct.mdc`](.sedea/cen
 ## Related
 
 - Lane manifest contract (Sedea doc): [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea/docs/lane-manifest-contract.md)
-- Plan-and-deliver spawn contracts: [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md`](../missions/plan-and-deliver/skills/README.md)
-- NFD cadence: [`.sedea/centers/research-and-development/docs/development-process.md`](../docs/development-process.md)
+- Plan-and-deliver spawn contracts: [`.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md`](../missions/plan-and-deliver/skills/README.md)
+- NFD cadence: [`.sedea/centers/software-development/docs/development-process.md`](../docs/development-process.md)
 - Sedea platform bootstrap: [`.sedea/centers/sedea/rules/bootstrap.mdc`](.sedea/centers/sedea/rules/bootstrap.mdc)
 - Turn completion / no idle handoff: [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](.sedea/centers/sedea/rules/2_ask-question-instructions.mdc); [`.sedea/centers/sedea/rules/1_agent-code-of-conduct.mdc`](.sedea/centers/sedea/rules/1_agent-code-of-conduct.mdc)

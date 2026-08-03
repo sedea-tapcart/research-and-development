@@ -53,7 +53,7 @@ warmUpRules:
 
 ## No agent gcloud secrets or env-var proposals (binding)
 
-**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/research-and-development/rules/60_no-agent-env-secrets.mdc`.
+**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/software-development/rules/60_no-agent-env-secrets.mdc`.
 
 **Normative execution (plan and deliver):** **Spawned only** on a **new child lane** — Squad Leader §5 emits **`mission_control_spawn_agent`**. End with **`mission_control_send_agent_result`** per **`## Completion (spawned)`**. Do **not** run as an inline skill on the Squad Leader lane. Decomposition skills (**`delivery-phases`**, **`pr-breakdown`**, **`new-plan`**) run **inline on the planner child lane** after §§1–5. See **`../README.md`** § *Normative execution mode*.
 

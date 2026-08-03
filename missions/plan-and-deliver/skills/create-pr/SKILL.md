@@ -65,11 +65,11 @@ inputs:
 
 ## No agent gcloud secrets or env-var proposals (binding)
 
-**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/research-and-development/rules/60_no-agent-env-secrets.mdc`.
+**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/software-development/rules/60_no-agent-env-secrets.mdc`.
 
 **Inline context schema (not spawn).** The frontmatter **`inputs`** map describes values **`coding-session`** passes in prose or handoff on the **same lane**. Mission Control does **not** spawn **`create-pr`** via **`mission_control_spawn_agent`**. Do **not** treat **`inputs`** as a spawn contract.
 
-**Lane requirement (no separate warm-up).** This skill has **no** frontmatter **`warmUpRules`** by design. Run it **only** on the active **`coding-session`** lane after that session has loaded ship rules (**`20_efficient-pr-shipping`**, **`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`**, **`skills/README.md`**, dev-process) and **`pre-pr-review`** has returned `recommendation: "go"`. Do **not** start a standalone Mission Control session on **`create-pr`** alone — context will be incomplete.
+**Lane requirement (no separate warm-up).** This skill has **no** frontmatter **`warmUpRules`** by design. Run it **only** on the active **`coding-session`** lane after that session has loaded ship rules (**`20_efficient-pr-shipping`**, **`.sedea/centers/software-development/missions/plan-and-deliver/plan.mdc`**, **`skills/README.md`**, dev-process) and **`pre-pr-review`** has returned `recommendation: "go"`. Do **not** start a standalone Mission Control session on **`create-pr`** alone — context will be incomplete.
 
 ### Standalone dispatch (stop immediately)
 
@@ -146,7 +146,7 @@ Give developers a **consistent state snapshot** during inline PR creation so the
 | Deploy scope | — (create-pr does not own deploy walk) |
 | Review | `go` from **`pre-pr-review`** when present |
 
-**Population rules:** Same as [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`](../coding-session/SKILL.md) § *Session orientation table (binding)* — use inline context; never invent paths or PR numbers.
+**Population rules:** Same as [`.sedea/centers/software-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`](../coding-session/SKILL.md) § *Session orientation table (binding)* — use inline context; never invent paths or PR numbers.
 
 **Mandatory gates (this skill):** [Push authorization gate](#push-authorization-gate-binding); [Pre-gh authorization gate](#pre-gh-authorization-gate-binding).
 
@@ -265,7 +265,7 @@ Give developers a **consistent state snapshot** during inline PR creation so the
 | Deploy scope | — (create-pr does not own deploy walk) |
 | Review | `go` from **`pre-pr-review`** when present |
 
-**Population rules:** Same as [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`](../coding-session/SKILL.md) § *Session orientation table (binding)* — use inline context; never invent paths or PR numbers.
+**Population rules:** Same as [`.sedea/centers/software-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`](../coding-session/SKILL.md) § *Session orientation table (binding)* — use inline context; never invent paths or PR numbers.
 
 **Mandatory gates (this skill):** [Push authorization gate](#push-authorization-gate-binding); [Pre-gh authorization gate](#pre-gh-authorization-gate-binding).
 
@@ -332,7 +332,7 @@ USER_CHECKPOINT — authorize `gh pr create` on this lane.
 **Standalone dispatch:** When [Standalone dispatch (stop immediately)](#standalone-dispatch-stop-immediately) applies, **skip** this gate — stop before **`gh`**.
 ## Relationship to rule 20 (`gh pr create`)
 
-**`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`** forbids **`gh pr create`** on planning, Squad Leader, **`pre-pr-review`**, and other non-ship lanes. **Exception:** the active **`coding-session`** agent **while executing this skill inline** on the **inline GitHub** route after pre-PR clean **`go`** (auto path) or exceptional Create-PR gate may call `gh pr create` when gates pass and push/creation is authorized. **Outsider repos** never use this exception — see **## PR route evaluation** below.
+**`.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc`** forbids **`gh pr create`** on planning, Squad Leader, **`pre-pr-review`**, and other non-ship lanes. **Exception:** the active **`coding-session`** agent **while executing this skill inline** on the **inline GitHub** route after pre-PR clean **`go`** (auto path) or exceptional Create-PR gate may call `gh pr create` when gates pass and push/creation is authorized. **Outsider repos** never use this exception — see **## PR route evaluation** below.
 
 ## Gate
 

@@ -78,7 +78,7 @@ inputs:
 
 ## No agent gcloud secrets or env-var proposals (binding)
 
-**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/research-and-development/rules/60_no-agent-env-secrets.mdc`.
+**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/software-development/rules/60_no-agent-env-secrets.mdc`.
 
 ## Warm-up manifest (inline)
 
@@ -210,11 +210,11 @@ Mission Control gate-surface detection for inline **`deploy-walk`** on Checkpoin
 | Paraphrase § 7 Staging test as *defer plan-reconcile to dispatch close* or recommend skipping a step until dispatch resolution | **Forbidden** — reconcile runs inline on active **`coding-session`** while dispatch is open; revise plan text or modal copy |
 | Emit **`mission_control_spawn_agent`** for **`plan-reconcile`** from this lane | **Forbidden** — hand off in prose only |
 
-Canonical: **`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`** § *deploy-walk vs plan-reconcile (not chained)*.
+Canonical: **`.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc`** § *deploy-walk vs plan-reconcile (not chained)*.
 
 ## Entry points
 
-Canonical table: **`.sedea/centers/research-and-development/docs/development-process.md`** § *Ship chain* → **`deploy-walk` entry points**.
+Canonical table: **`.sedea/centers/software-development/docs/development-process.md`** § *Ship chain* → **`deploy-walk` entry points**.
 
 | How it starts | Lane |
 |---------------|------|
@@ -272,7 +272,7 @@ Give developers a **consistent state snapshot** during deploy verification so th
 | Deploy scope | Local test · Production · — |
 | Review | — (deploy walk does not own PR triage) |
 
-**Population rules:** Same as [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`](../coding-session/SKILL.md) § *Session orientation table (binding)* — use `—` when unknown; never invent paths or PR numbers.
+**Population rules:** Same as [`.sedea/centers/software-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`](../coding-session/SKILL.md) § *Session orientation table (binding)* — use `—` when unknown; never invent paths or PR numbers.
 
 **Mandatory gates (this skill):** [Inline walk bootstrap](#inline-walk-bootstrap) start; [Target plan pick gate](#target-plan-pick-gate-binding); each [Step 4 — Step presentation contract](#step-4--step-presentation-contract) manual presentation; [Deploy status transition gate](#deploy-status-transition-gate-binding); [Deploy with gaps gate](#deploy-with-gaps-gate-binding); [Deploy closure approval gate](#deploy-closure-approval-gate-binding) (**Non-Checkpoint / exception only** under Checkpoint — clean path auto-advances **`approve-deploy-closure`**); every developer-await **AskQuestion** / **`mission_control_present_structured_choice`** ([Deploy developer-await modal options](#deploy-developer-await-modal-options-binding)).
 
@@ -502,7 +502,7 @@ When the anchored PR plan's **`### Staging test`** step text references **submod
 
 1. From **`HOSTING_ROOT`**, run:
    ```bash
-   node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/verify-submodule-ship-attestation.mjs \
+   node .sedea/centers/software-development/missions/plan-and-deliver/scripts/verify-submodule-ship-attestation.mjs \
      --hosting-root "$HOSTING_ROOT"
    ```
    When **`promoteSubmodulePinOutcomes`** is non-empty, write a temp JSON array and pass **`--outcomes-json <path>`** (or embed in a wrapper object with key **`promoteSubmodulePinOutcomes`**).

@@ -9,7 +9,7 @@ alwaysApply: false
 
 ## Objectives
 
-The outcomes below span the **full cadence** (PRD → plans → implementation → PR → deploy → reconcile). **Not every step runs on the Squad Leader lane** for a `plan and deliver` dispatch — see **Squad operations** for who spawns whom. Skill procedures live under `missions/plan-and-deliver/skills/`; **worktree naming** and the strategic hosting-repo loop are in `.sedea/centers/research-and-development/docs/development-process.md` (**Protocol branches** + **Cadence** — *protocol branch* is skill routing, not git). **This `plan.mdc`** remains canonical for dispatch protocol §§1–8, spawn ownership, and §8 ship ledger.
+The outcomes below span the **full cadence** (PRD → plans → implementation → PR → deploy → reconcile). **Not every step runs on the Squad Leader lane** for a `plan and deliver` dispatch — see **Squad operations** for who spawns whom. Skill procedures live under `missions/plan-and-deliver/skills/`; **worktree naming** and the strategic hosting-repo loop are in `.sedea/centers/software-development/docs/development-process.md` (**Protocol branches** + **Cadence** — *protocol branch* is skill routing, not git). **This `plan.mdc`** remains canonical for dispatch protocol §§1–8, spawn ownership, and §8 ship ledger.
 
 8. **§8 automation-only** — Squad Leader ship ledger rows update **exclusively** via Mission Control **host sync** from ship child **`mission_control_send_agent_result`** terminals (including **`coding-session`** re-emits for inline milestones). Manual **Ship recap** paste is **not** a supported §8 input path. Unscripted milestones are **mission gaps** — see §8 *Automation completeness*.
 
@@ -90,7 +90,7 @@ All artifacts under **`.sedea/operations/`** — plans (`*.plan.md`, `*.state.ya
 | Run **`plan-state.mjs`** with `cd "$HOSTING_ROOT"`; pass **`--cwd "$WORKTREE_ROOT"`** only to **link** a plan to a worktree | Run **`plan-state.mjs set-*`** (or equivalent writes) with shell cwd inside a worktree |
 | Update sidecars during **`coding-session`** after resolving **`HOSTING_ROOT`** explicitly | Bootstrap or persist operations content under a worktree copy |
 
-Worktrees are **ephemeral**; operations artifacts must **persist** on the durable main clone. When a worktree lacks **`.sedea/operations/`**, **do not** treat it as the write surface — resolve the main hosting root first. Normative baseline: [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § **Operations persistence (main hosting root only)**; **`HOSTING_ROOT`** resolution: [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](../../rules/20_efficient-pr-shipping.mdc) § *Resolve `HOSTING_ROOT`*.
+Worktrees are **ephemeral**; operations artifacts must **persist** on the durable main clone. When a worktree lacks **`.sedea/operations/`**, **do not** treat it as the write surface — resolve the main hosting root first. Normative baseline: [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § **Operations persistence (main hosting root only)**; **`HOSTING_ROOT`** resolution: [`.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc`](../../rules/20_efficient-pr-shipping.mdc) § *Resolve `HOSTING_ROOT`*.
 
 ### Worktree removal ownership (binding)
 
@@ -200,7 +200,7 @@ flowchart TB
 
 ## Hub missionInputs *(legacy — host-removed)*
 
-**Target contract:** Root delivery plans use **`Parent: null`** in §4; external PM scope via optional **`Related:`** only — see **`.sedea/centers/research-and-development/docs/development-process.md`** § *Root delivery plans vs legacy Hub parent intake*.
+**Target contract:** Root delivery plans use **`Parent: null`** in §4; external PM scope via optional **`Related:`** only — see **`.sedea/centers/software-development/docs/development-process.md`** § *Root delivery plans vs legacy Hub parent intake*.
 
 Mission Control **host strip (phase 2 — merged app#282 / app#288)** removed Hub parent intake for **`plan-and-deliver`**. The host no longer injects **`missionInputs`**, does not render **`### Parent (Sedea Hub)`** on dispatch openings, and strips legacy keys if Hub **Start New Plan** still passes them until Hub UI removal (Master Plan phase 3).
 
@@ -289,7 +289,7 @@ Per rule **4** § *Spawn-ack semantics (binding)*:
 
 **Nested spawns.** The **Master Plan agent** (and decomposition agents) may emit further **`mission_control_spawn_agent`** lines on child lanes. The Squad Leader does **not** duplicate those spawns; it only consumes **terminal or updated** child results that bubble up through §7.
 
-**Spawn run-request display metadata (binding).** Every **`mission_control_spawn_agent`** on this mission — Squad Leader §§3 and 5 and nested planning/ship spawns — must satisfy **`missions/plan-and-deliver/skills/README.md`** § *Universal spawn preflight* (including display-metadata rows) and [`.sedea/centers/research-and-development/rules/50_mission-control-display-metadata-discipline.mdc`](../../rules/50_mission-control-display-metadata-discipline.mdc) § *Spawn discipline (parents)*:
+**Spawn run-request display metadata (binding).** Every **`mission_control_spawn_agent`** on this mission — Squad Leader §§3 and 5 and nested planning/ship spawns — must satisfy **`missions/plan-and-deliver/skills/README.md`** § *Universal spawn preflight* (including display-metadata rows) and [`.sedea/centers/software-development/rules/50_mission-control-display-metadata-discipline.mdc`](../../rules/50_mission-control-display-metadata-discipline.mdc) § *Spawn discipline (parents)*:
 
 | Field | Rule |
 |-------|------|
@@ -310,7 +310,7 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 
 | Path | Purpose |
 |------|---------|
-| `.sedea/centers/research-and-development/rules/bootstrap.mdc` | Sole Software Development `alwaysApply: true` bootstrap (≤10 KB); host merges when `centerSlug === research-and-development` |
+| `.sedea/centers/software-development/rules/bootstrap.mdc` | Sole Software Development `alwaysApply: true` bootstrap (≤10 KB); host merges when `centerSlug === software-development` |
 
 ### `laneRules` — mission protocol (Squad Leader)
 
@@ -318,9 +318,9 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 |------|------|
 | `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc` | Structured choice at USER_CHECKPOINT gates and external-wait surfaces (Checkpoint precedence) |
 | `.sedea/centers/sedea/rules/4_mission.mdc` | Mission protocol, spawn/reload manifest |
-| `.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc` | This mission plan (§§1–8) |
-| `.sedea/centers/research-and-development/docs/development-process.md` | Cadence and protocol branches |
-| `.sedea/centers/research-and-development/rules/60_github-issue-dispatch-closure.mdc` | Bind GitHub issue at intake; status update before dispatch resolution |
+| `.sedea/centers/software-development/missions/plan-and-deliver/plan.mdc` | This mission plan (§§1–8) |
+| `.sedea/centers/software-development/docs/development-process.md` | Cadence and protocol branches |
+| `.sedea/centers/software-development/rules/60_github-issue-dispatch-closure.mdc` | Bind GitHub issue at intake; status update before dispatch resolution |
 
 ### `skillWarmUp` — child spawn overrides (binding)
 
@@ -433,7 +433,7 @@ Do **not** invent PRD content from a URL alone.
 - **Intent:** Run optional free-form research; approved report pre-seeds §3 **`author-prd`** intake.
 - **Trigger:** Developer selects **`brainstorm-first`** at §2 step 0.
 - **Target agent role:** Brainstorm research agent
-- **Assigned skill:** [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/brainstorm-research/SKILL.md`](skills/brainstorm-research/SKILL.md)
+- **Assigned skill:** [`.sedea/centers/software-development/missions/plan-and-deliver/skills/brainstorm-research/SKILL.md`](skills/brainstorm-research/SKILL.md)
 - **Checkpoint child UX:** Report approval USER_CHECKPOINT lives on the child skill — see **`brainstorm-research/SKILL.md`** § *Checkpoint turn UX* and § *Report approval gate*; this §2.5 **#external-wait** covers leader spawn-and-wait only.
 - **Inputs:** `invokerMissionSlug: plan-and-deliver`, `operationsDocsDirectory` from lane identity / spawn preamble, optional `researchTopic`, `researchPrompt`, `openingSeeds` from §1.
 - **Expected output:** Child terminal with `outputs.brainstormReportPath`, `outputs.developerApprovedReport`, `outputs.downstreamHandoffSummary`, or `outputs.abandonMission: true`.
@@ -457,7 +457,7 @@ USER_CHECKPOINT — pick next step when brainstorm child reports failure or part
 - **Intent:** Delegate evidence gathering, drafting, and developer approval to a focused **Author PRD agent** while the **Squad Leader** keeps ownership of the **`plan and deliver`** protocol.
 - **Inputs:** Full intake bundle from §2; Sedea always-apply rules; this mission plan; `development-process.md`; assigned skill `skills/author-prd/SKILL.md`.
 - **Target agent role:** Author PRD agent
-- **Assigned skill:** `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/author-prd/SKILL.md`
+- **Assigned skill:** `.sedea/centers/software-development/missions/plan-and-deliver/skills/author-prd/SKILL.md`
 - **Required rule context:** Sedea center always-apply rules, this mission plan, `development-process.md`, and the `author-prd` skill.
 - **Expected output:** Child agent result per **`author-prd`** **`## Completion (spawned)`** — including `outputs.prdPath`, `outputs.prdRef`, `outputs.prdTitle`, `outputs.developerApprovedPrd`, `outputs.continuationOwner`, `outputs.continuationStatus`, and planning-readiness fields.
 - **Next-step resolution:** **Spawn turn** → spawn alone; **next turn** → **#external-wait** after host-visible confirmation; on child terminal apply **§3 resume** (auto-chain §4→§5 when `developerApprovedPrd: true` — §5 emit is a new spawn turn alone).
@@ -528,7 +528,7 @@ When an explicit developer override applies, replace the **`Parent:`** line with
 - **Intent:** Delegate Master Plan creation and §§1–5 drafting to a focused **Master Plan agent** while the **Squad Leader** keeps ownership of the overall `plan and deliver` protocol.
 - **Inputs:** Complete seed from §4 (`Feature planning`, `PRD`, `Parent`, optional `Related`); Sedea always-apply rules; this mission plan; `development-process.md`; assigned skill `skills/master-planner/SKILL.md`.
 - **Target agent role:** Master Plan agent
-- **Assigned skill:** `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/master-planner/SKILL.md`
+- **Assigned skill:** `.sedea/centers/software-development/missions/plan-and-deliver/skills/master-planner/SKILL.md`
 - **Required rule context:** Sedea center always-apply rules, this mission plan, `development-process.md`, planning target resolution rule, and the `master-planner` skill.
 - **Expected output:** Child agent result with `status: success` or `partial`, `outputs.masterPlanPath`, `outputs.masterPlanSlug`, `outputs.complexityBand`, `outputs.complexityScore`, `outputs.continuationOwner`, `outputs.continuationStatus`, `outputs.activeLanes`, `outputs.openLedgerEntries`, `outputs.spawnedPlans`, `outputs.remainingTasks`, and any recommended next action.
 - **Next-step resolution:**
@@ -543,7 +543,7 @@ USER_CHECKPOINT — retry master-planner spawn, revise seed, or abandon when spa
 **Procedure**
 
 1. Compile the **Master Plan agent** input from the §4 seed.
-2. **Spawn preflight (mandatory before emit).** Read **`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/master-planner/SKILL.md`** frontmatter **`inputs`** and **`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md`** § *Universal spawn preflight*. Build the spawn **`inputs`** object with **exact** keys:
+2. **Spawn preflight (mandatory before emit).** Read **`.sedea/centers/software-development/missions/plan-and-deliver/skills/master-planner/SKILL.md`** frontmatter **`inputs`** and **`.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md`** § *Universal spawn preflight*. Build the spawn **`inputs`** object with **exact** keys:
 
    | `inputs` key | Source |
    |--------------|--------|
@@ -610,7 +610,7 @@ USER_CHECKPOINT — retry, revise scope, accept partial resolution, or abandon w
 - The **Squad Leader** must receive terminal closure for every open **planning** entry before treating planning as complete.
 - A plan entry may close as completed, deferred, abandoned, or out of scope, but the closing status must be explicit.
 - Silence, missing metadata, or an unreported lane is not completion.
-- When a PR plan child reports `readyForImplementation` in planning `outputs`, record planning-handoff readiness on the **planning** ledger only. Planning vs ship signals and §8 phase rules: [`.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`](../../rules/30_planning-target-resolution.mdc) § *Planning readiness vs ship*; §8 registration: §8 *Register or refresh* below.
+- When a PR plan child reports `readyForImplementation` in planning `outputs`, record planning-handoff readiness on the **planning** ledger only. Planning vs ship signals and §8 phase rules: [`.sedea/centers/software-development/rules/30_planning-target-resolution.mdc`](../../rules/30_planning-target-resolution.mdc) § *Planning readiness vs ship*; §8 registration: §8 *Register or refresh* below.
 - **Depth-first indexed rows:** track each parent-list index with `listed` | `active` | `ship-complete` (or `deferred` / `abandoned`). The next **`new-plan`** expand on that parent is allowed only when **30_planning-target-resolution** § *Depth-first expansion eligibility* passes — for **Delivery phases** lists, the prior phase index must be **ship-complete** per that rule (including explicit `deferred` / `abandoned` closures); for **`### PR list`**, follow parsed **`### Sequencing`** stages. Do not treat planning-terminal child lanes alone as unlocking the next index.
 - **Spawn-chain ship-complete:** when child terminals bubble **`outputs.prShipComplete`** or **`outputs.phaseShipComplete`** through the planning tree (see **`missions/plan-and-deliver/skills/README.md`** § *Upstream ship-complete notification*), register the matching index as **`ship-complete`** on the planning ledger and acknowledge — the **Master Plan agent** owns **`expand-eligible`** / **`expand-next-eligible`** on its lane; the Squad Leader does not re-run expand. When spawn bubble-up is missing, treat as a **ship skill contract gap** (§8 *Automation completeness*) — do not substitute manual **Ship recap**.
 
@@ -709,11 +709,11 @@ flowchart TB
 
 **Known contract gaps (documented, not invented):** Outsider repos use agent-delegated merge after clean **`pr-review`** — **`gh pr create`** stays outsider handoff only. Loop-back after reconciliation is via post-create-pr gate + **`start-pr-review`**, not auto-spawn.
 
-**Start `coding-session`:** Runs on a **ship lane** (spawned child or detached session) — **not** a Squad Leader spawn from §§1–7. **Detached** means off the **leader** protocol §§1–7, **not** “only the Squad Leader may start it.” Planning child lanes (**`master-planner`**, **`phase-planner`**, Quick Fix Plan agent) emit §5d **`mission_control_spawn_agent`** from inline **`pr-plan`** on **their own lane** after §5c. Entry paths, required inputs, and anti-patterns: **`.sedea/centers/research-and-development/docs/development-process.md`** § *Start implementation (`coding-session` entry)*.
+**Start `coding-session`:** Runs on a **ship lane** (spawned child or detached session) — **not** a Squad Leader spawn from §§1–7. **Detached** means off the **leader** protocol §§1–7, **not** “only the Squad Leader may start it.” Planning child lanes (**`master-planner`**, **`phase-planner`**, Quick Fix Plan agent) emit §5d **`mission_control_spawn_agent`** from inline **`pr-plan`** on **their own lane** after §5c. Entry paths, required inputs, and anti-patterns: **`.sedea/centers/software-development/docs/development-process.md`** § *Start implementation (`coding-session` entry)*.
 
 **Tests and checks before developer review:** On **`coding-session`**, after implementation completes and **before** [Ship cut-point gate](skills/coding-session/SKILL.md#ship-cut-point-gate-approve-commit-local-test), run every locally executable **test and check** — Project rules (plan **§5**), plan **§6**, and repo entrypoints — per [Post-implementation tests and checks](skills/coding-session/SKILL.md#post-implementation-tests-and-checks). Block the review modal until all pass (**exit 0**). Commands stay in hosting rules and repo config only. See rule **20** § *Review before commit*.
 
-Procedures, gates, and spawn contracts live in those skills and in **`.sedea/centers/research-and-development/docs/development-process.md`** (**Protocol branches** table and § *Ship chain*). The Squad Leader **does not** emit `mission_control_spawn_agent` for this table unless a future protocol step explicitly adds it.
+Procedures, gates, and spawn contracts live in those skills and in **`.sedea/centers/software-development/docs/development-process.md`** (**Protocol branches** table and § *Ship chain*). The Squad Leader **does not** emit `mission_control_spawn_agent` for this table unless a future protocol step explicitly adds it.
 
 **Ship ledger row (per PR plan)**
 
@@ -743,7 +743,7 @@ Maintain one row per in-scope **PR plan** path under `.sedea/operations/.../plan
 | `deploy-walk` | `deployStatus: done` and `deployTodoStatus: done` → `deploy-walk` (then `done` when reconcile complete) |
 | `plan-reconcile` | terminal reconcile with target archived → `reconcile` or `done` |
 
-**Planning vs ship signals:** [`.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`](../../rules/30_planning-target-resolution.mdc) § *Planning readiness vs ship* and § *PR-plan completeness before coding-session*. When registering or refreshing a §8 row from planning signals alone, keep `phase: not-started` until layer-2 **`developerApprovedImplementation`** is reported on **`coding-session`**.
+**Planning vs ship signals:** [`.sedea/centers/software-development/rules/30_planning-target-resolution.mdc`](../../rules/30_planning-target-resolution.mdc) § *Planning readiness vs ship* and § *PR-plan completeness before coding-session*. When registering or refreshing a §8 row from planning signals alone, keep `phase: not-started` until layer-2 **`developerApprovedImplementation`** is reported on **`coding-session`**.
 
 **Register or refresh a ship row when:**
 
@@ -758,7 +758,7 @@ Ship skills run on **detached** lanes; the Squad Leader transcript often shows *
 
 ### Mission Control host sync (section 8)
 
-When Mission Control hosts a **`plan and deliver`** dispatch, the extension **must** auto-sync §8 from ship child terminals (hosting repo behavior in the **hosting repo Mission Control host integration** — not defined in this center repo alone). Host implementation contract: **`.cursor/rules/dot-sedea.mdc`** (or equivalent host overlay on the active hosting repo) and **`center.yaml`** `governance.hostSync`. See **`.sedea/centers/research-and-development/docs/development-process.md`** § *Leader-lane §8 host sync* — **Host sync scope*.
+When Mission Control hosts a **`plan and deliver`** dispatch, the extension **must** auto-sync §8 from ship child terminals (hosting repo behavior in the **hosting repo Mission Control host integration** — not defined in this center repo alone). Host implementation contract: **`.cursor/rules/dot-sedea.mdc`** (or equivalent host overlay on the active hosting repo) and **`center.yaml`** `governance.hostSync`. See **`.sedea/centers/software-development/docs/development-process.md`** § *Leader-lane §8 host sync* — **Host sync scope*.
 
 | Step | Behavior |
 |------|----------|
@@ -777,7 +777,7 @@ When Mission Control hosts a **`plan and deliver`** dispatch, the extension **mu
 
 - Host sync **does not** replace child **`mission_control_send_agent_result`** delivery to parent lanes, domain **`continuationStatus`** fields, or *Pre-resolution checklist* / **`mission_control_propose_dispatch_resolution`** gates.
 - If **`outputs.targetPlanPath`** or derivable **`shipPhase`** is missing, the host **skips** ledger sync for that result — treat as a **skill contract failure**.
-- **`pr-review`** is **not** a separate child terminal — **`coding-session`** **must** re-emit with `shipPhase: pr-review` after inline triage. See [`.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`](../../rules/30_planning-target-resolution.mdc) § *§8 ship ledger and inline `pr-review`*.
+- **`pr-review`** is **not** a separate child terminal — **`coding-session`** **must** re-emit with `shipPhase: pr-review` after inline triage. See [`.sedea/centers/software-development/rules/30_planning-target-resolution.mdc`](../../rules/30_planning-target-resolution.mdc) § *§8 ship ledger and inline `pr-review`*.
 - Leader-tab UI may lag **`ship-ledger.v1.json`** briefly; prefer the host-sync message and dispatch-bundle file over UI-only state.
 
 ### §8 automation completeness
@@ -794,7 +794,7 @@ Until the audit passes, treat **`plan-and-deliver`** §8 automation as **incompl
 
 ### §8 troubleshooting (when the ledger looks wrong)
 
-Use this when the **plan and deliver** leader dispatch cannot propose **`resolved`**, §8 rows look stale, or detached ship work finished but the leader lane shows no progress. **Cross-center:** [`.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`](../../rules/30_planning-target-resolution.mdc) § *§8 ship ledger and inline `pr-review`*.
+Use this when the **plan and deliver** leader dispatch cannot propose **`resolved`**, §8 rows look stale, or detached ship work finished but the leader lane shows no progress. **Cross-center:** [`.sedea/centers/software-development/rules/30_planning-target-resolution.mdc`](../../rules/30_planning-target-resolution.mdc) § *§8 ship ledger and inline `pr-review`*.
 
 | Symptom | Likely cause | What to do |
 |---------|--------------|------------|
@@ -898,7 +898,7 @@ Accept **any one** (Squad Leader **check-only** from **`HOSTING_ROOT`** after `g
 **Action when checks pass and status is not `success` / `skipped`:**
 
 1. If not yet spawned this dispatch (`releaseNoteStatus` unset / `not-required` wrongly / first pass): emit **`mission_control_spawn_agent`** **once** with:
-   - **`skillPath`:** `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/capture-release-note/SKILL.md`
+   - **`skillPath`:** `.sedea/centers/software-development/missions/plan-and-deliver/skills/capture-release-note/SKILL.md`
    - **`slug`:** `release-note` (dispatch-unique; **do not** open a second lane after success or skipped)
    - **`name`:** `RN-Capture release note` (rule **50** prefix shape)
    - **`description`:** Per-dispatch release-note fragment for unreleased notes

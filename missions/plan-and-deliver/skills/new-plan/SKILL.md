@@ -60,23 +60,23 @@ inputs:
     required: false
 laneRules:
   - ".sedea/centers/sedea/rules/2_ask-question-instructions.mdc"
-  - ".sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc"
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/new-plan/SKILL.md"
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
+  - ".sedea/centers/software-development/rules/30_planning-target-resolution.mdc"
+  - ".sedea/centers/software-development/missions/plan-and-deliver/skills/new-plan/SKILL.md"
+  - ".sedea/centers/software-development/missions/plan-and-deliver/skills/README.md"
 warmUpRules:
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
-  - ".sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc"
+  - ".sedea/centers/software-development/missions/plan-and-deliver/skills/README.md"
+  - ".sedea/centers/software-development/rules/30_planning-target-resolution.mdc"
 ---
 
 # New plan
 
 ## No agent gcloud secrets or env-var proposals (binding)
 
-**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/research-and-development/rules/60_no-agent-env-secrets.mdc`.
+**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/software-development/rules/60_no-agent-env-secrets.mdc`.
 
-Scaffold a standalone `.plan.md` and `.state.yaml` under the **dispatch-scoped plans union** (flat `.../plans/` directory from spawn handover or resolved parent plan path — see **Slug and filename**). On first write, frontmatter must be valid YAML and match the shape Sedea tooling expects (see **Write the plan template** and naming guidance in `.sedea/centers/research-and-development/docs/development-process.md` plus `.sedea/centers/research-and-development/rules/10_plan-naming-convention.mdc`).
+Scaffold a standalone `.plan.md` and `.state.yaml` under the **dispatch-scoped plans union** (flat `.../plans/` directory from spawn handover or resolved parent plan path — see **Slug and filename**). On first write, frontmatter must be valid YAML and match the shape Sedea tooling expects (see **Write the plan template** and naming guidance in `.sedea/centers/software-development/docs/development-process.md` plus `.sedea/centers/software-development/rules/10_plan-naming-convention.mdc`).
 
-**Resolution contract:** read `.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc` and follow it for target selection and snapshots. Resolve parents using **§ Parent derivation** below (explicit session/message → `plan-state resolve` → recent chat references).
+**Resolution contract:** read `.sedea/centers/software-development/rules/30_planning-target-resolution.mdc` and follow it for target selection and snapshots. Resolve parents using **§ Parent derivation** below (explicit session/message → `plan-state resolve` → recent chat references).
 
 ## Warm-up manifest (spawned)
 
@@ -86,14 +86,14 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 
 | Path | Purpose |
 |------|---------|
-| `.sedea/centers/research-and-development/rules/bootstrap.mdc` | Sole Software Development `alwaysApply: true` bootstrap (≤10 KB); host merges when `centerSlug === research-and-development` |
+| `.sedea/centers/software-development/rules/bootstrap.mdc` | Sole Software Development `alwaysApply: true` bootstrap (≤10 KB); host merges when `centerSlug === software-development` |
 
 ### `skillWarmUp` — frontmatter `warmUpRules`
 
 | Path | Purpose |
 |------|---------|
-| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` | Slim spawn contracts, terminal stop |
-| `.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc` | Target resolution, depth-first gates |
+| `.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md` | Slim spawn contracts, terminal stop |
+| `.sedea/centers/software-development/rules/30_planning-target-resolution.mdc` | Target resolution, depth-first gates |
 
 **Omitted from frontmatter (384 KiB spawn cap — runtime `Read`):** `plan.mdc`, `development-process.md` — load at named protocol steps. **`planning-mode-templates.md`** is intentionally omitted on the indexed-child stub path — inline **`pr-plan`** owns template **`Read`** when populating from Planning Modes templates.
 
@@ -102,9 +102,9 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 | Path | Purpose |
 |------|---------|
 | `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc` | Structured choice, AskQuestion |
-| `.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc` | Planning target resolution (role minimum) |
-| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/new-plan/SKILL.md` | This skill procedure |
-| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` | Spawn preflight M1–M9, definitive `laneRules` |
+| `.sedea/centers/software-development/rules/30_planning-target-resolution.mdc` | Planning target resolution (role minimum) |
+| `.sedea/centers/software-development/missions/plan-and-deliver/skills/new-plan/SKILL.md` | This skill procedure |
+| `.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md` | Spawn preflight M1–M9, definitive `laneRules` |
 
 ## Agent messaging (MCP)
 
@@ -136,7 +136,7 @@ The **developer** selects continuation per **30_planning-target-resolution** § 
 
 ### Software Development center edit destination gate (binding)
 
-When this skill would write under **`.sedea/centers/research-and-development/`**, open **USER_CHECKPOINT** per **`missions/plan-and-deliver/skills/README.md`** § *Software Development center edit destination gate* **before** any center write. Happy-path operations/plan writes do not open this gate. **Forbidden:** skip the gate; treat `sedea-centers/software-development` as Own on `sedea-ai/app`.
+When this skill would write under **`.sedea/centers/software-development/`**, open **USER_CHECKPOINT** per **`missions/plan-and-deliver/skills/README.md`** § *Software Development center edit destination gate* **before** any center write. Happy-path operations/plan writes do not open this gate. **Forbidden:** skip the gate; treat `sedea-centers/software-development` as Own on `sedea-ai/app`.
 
 
 Under Checkpoint trust (`trustLevel: checkpoint`), auto-advance scripted happy-path steps; emit structured choice only at **USER_CHECKPOINT** markers in this section, implicit external-wait surfaces, or exception paths. **No cross-skill inheritance** — gate defaults here apply only to **`new-plan`**; invoker skills **`master-planner`**, **`delivery-phases`**, **`pr-breakdown`**, and **`quick-fix-plan`** document upstream decomposition gates — see those skills' § *Checkpoint turn UX* and **`quick-fix/plan.mdc`** §4 inline chain.
@@ -220,7 +220,7 @@ USER_CHECKPOINT — pick next protocol branch after stub write on this lane.
 
 ### Inline handoff — **new-plan** → **`pr-plan`** (step 4)
 
-When `requestedPopulatorSkill` is **`pr-plan`**, run that skill **inline on this lane** — **do not** emit **`mission_control_spawn_agent`** for **`pr-plan`**. Load `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-plan/SKILL.md`, construct inline context from the table below, follow that skill’s steps, and merge its **`## Completion (inline)`** fields into this skill’s ledger (`spawnedPlans`, `activeLanes`, `openLedgerEntries`, `remainingTasks`, `readyForImplementation`, `implementationHandoffStatus`). Inline **`pr-plan`** may still spawn **`coding-session`** per **`pr-plan`** §5d; this lane aggregates that child result per step **5b**.
+When `requestedPopulatorSkill` is **`pr-plan`**, run that skill **inline on this lane** — **do not** emit **`mission_control_spawn_agent`** for **`pr-plan`**. Load `.sedea/centers/software-development/missions/plan-and-deliver/skills/pr-plan/SKILL.md`, construct inline context from the table below, follow that skill’s steps, and merge its **`## Completion (inline)`** fields into this skill’s ledger (`spawnedPlans`, `activeLanes`, `openLedgerEntries`, `remainingTasks`, `readyForImplementation`, `implementationHandoffStatus`). Inline **`pr-plan`** may still spawn **`coding-session`** per **`pr-plan`** §5d; this lane aggregates that child result per step **5b**.
 
 | Inline context field | Value |
 |----------------------|--------|
@@ -256,7 +256,7 @@ When `mode: "indexed-child"` is supplied, treat the indexed path as mandatory an
 
 The regular parent-confirmation gate below is **skipped** when that pre-resolution is explicit: acknowledge in one line — `Parent: <slug> (from <source>)` — then proceed to slug + filenames.
 
-**Stub vs full template.** Indexed-child files use the **generic** scaffold in *Write the plan template* below (`## Overview`, `## Phasing`, `## Out of scope`). **`phase-planner`** or **`pr-plan`** replaces that body with the Phase or per-PR template — intentional two-step split; see **`.sedea/centers/research-and-development/docs/development-process.md`** (§ *§ 6 / § 5 contents rule*, **Indexed-child stub** paragraph).
+**Stub vs full template.** Indexed-child files use the **generic** scaffold in *Write the plan template* below (`## Overview`, `## Phasing`, `## Out of scope`). **`phase-planner`** or **`pr-plan`** replaces that body with the Phase or per-PR template — intentional two-step split; see **`.sedea/centers/software-development/docs/development-process.md`** (§ *§ 6 / § 5 contents rule*, **Indexed-child stub** paragraph).
 
 1. **Read item N** from the parent’s dual-title section. Where the numbered list lives depends on the section heading:
  - **`Delivery phases`** (mode #2): the numbered list is the body of `## 6. Delivery phases` (Master Plan) or `## 5. Delivery phases` (Phase plan).
@@ -312,7 +312,7 @@ A plan without a parent is a **root delivery plan** (`parent: null` in the sidec
 2. **Session anchor** — from hosting repo root:
 
  ```bash
- node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs resolve --cwd "$PWD"
+ node .sedea/centers/software-development/missions/plan-and-deliver/scripts/plan-state.mjs resolve --cwd "$PWD"
  ```
 
  Exit **0** means `$PWD` is inside a worktree listed in some plan’s sidecar; that plan is a strong passive parent candidate. Prefer explicit **`parentPlanPath`** / **`targetPlanPath`** from spawn **`inputs`** when present.
@@ -475,7 +475,7 @@ USER_CHECKPOINT — approve child stub and populator handoff before inline pr-pl
 
  **`phase-planner`** (`childKind: "phase-planner"` or parent **`Delivery phases`**):
 
- 1. Emit exactly one child-spawn request for `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/phase-planner/SKILL.md`.
+ 1. Emit exactly one child-spawn request for `.sedea/centers/software-development/missions/plan-and-deliver/skills/phase-planner/SKILL.md`.
  2. Inputs: `targetPlanPath`, `targetPlanSlug`, `parentPlanPath`, `parentPlanSlug`, `parentIndex`, `ledgerParent`, `upstreamSkill: "new-plan"`.
  3. Emit **`mission_control_spawn_agent`**, then close the **same turn** with [Phase-planner spawn external-wait](#phase-planner-spawn-external-wait-binding) per [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](.sedea/centers/sedea/rules/2_ask-question-instructions.mdc) § **Turn completion invariant** — **forbidden** prose-only child-wait handoff.
 

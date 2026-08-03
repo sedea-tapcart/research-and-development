@@ -61,7 +61,7 @@ warmUpRules:
 
 ## No agent gcloud secrets or env-var proposals (binding)
 
-**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/research-and-development/rules/60_no-agent-env-secrets.mdc`.
+**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/software-development/rules/60_no-agent-env-secrets.mdc`.
 
 This skill drives the **second-tier** planning move under Sedea's New Feature Development Process: take a freshly-spawned phase plan stub (indexed child from the parent's `Delivery phases` list, typically right after the **`new-plan`** protocol branch) and populate its body with sections 1 through 4 of the **Phase plan template** — Background, Scope, Code design, Changes — plus **`### Decomposition assessment`** (sizing and routing recommendation) **immediately before** the dual-title `## 5. Delivery phases | PR breakdown` section. The dual-title **list** body and § 6 (Caveats) stay `_TBD_` until follow-up turns.
 

@@ -28,8 +28,8 @@ inputs:
     description: Operations user id from Mission Control session context.
     required: true
 warmUpRules:
-  - ".sedea/centers/research-and-development/missions/debug-and-fix/plan.mdc"
-  - ".sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc"
+  - ".sedea/centers/software-development/missions/debug-and-fix/plan.mdc"
+  - ".sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc"
   - ".sedea/centers/sedea/skills/worktree-setup/SKILL.md"
   - ".sedea/centers/sedea/rules/0_hosting-repo.mdc"
   - ".cursor/rules/dot-sedea.mdc"
@@ -40,7 +40,7 @@ warmUpRules:
 
 ## No agent gcloud secrets or env-var proposals (binding)
 
-**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/research-and-development/rules/60_no-agent-env-secrets.mdc`.
+**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/software-development/rules/60_no-agent-env-secrets.mdc`.
 
 **Intent:** **Debug and Fix agent** runs a log-first diagnosis and fix loop in a dedicated hosting-repo worktree. Prioritize log access and debug instrumentation before substantive analysis. When the fix is verified, recommend a post-fix exit: **`code-promotion`** (parent creates a PR plan anchor through **new-plan/pr-plan**, then runs **coding-session** with `targetPlanPath`), **`ad-hoc-prd`** (parent captures fix context without immediate code promotion), or **`findings-report-only`** (parent produces a debug session findings report with no downstream spawn).
 
@@ -193,7 +193,7 @@ USER_CHECKPOINT — approve fix proposal, request revision, or abort on this lan
 
 ### 4 — Worktree create, attach, bootstrap (binding)
 
-Follow [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § *Attach worktree to VS Code workspace*, [`.sedea/centers/sedea/skills/worktree-setup/SKILL.md`](../../../../../sedea/skills/worktree-setup/SKILL.md), and [rule **20**](.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc) § *Worktree setup in plans* / *Bootstrap profiles*:
+Follow [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § *Attach worktree to VS Code workspace*, [`.sedea/centers/sedea/skills/worktree-setup/SKILL.md`](../../../../../sedea/skills/worktree-setup/SKILL.md), and [rule **20**](.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc) § *Worktree setup in plans* / *Bootstrap profiles*:
 
 | Step | Action |
 |------|--------|
