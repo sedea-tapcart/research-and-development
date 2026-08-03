@@ -1,0 +1,476 @@
+---
+lastSyncedUpstreamSha: ''
+entries:
+- commitSha: b9f1b3f44815befdf39573c0b16ea8641cc82323
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Route tapcart submodule PRs through create-pr outsider handoff.
+  paths:
+  - docs/development-process.md
+  - missions/debug-and-fix/plan.mdc
+  - missions/plan-and-deliver/skills/README.md
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+  - missions/plan-and-deliver/skills/create-pr/SKILL.md
+  - missions/plan-and-deliver/skills/pr-review/SKILL.md
+  - rules/20_efficient-pr-shipping.mdc
+- commitSha: d8de5f165109690e9767f837280bad29995caef3
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Remove CodeRabbit references from pr-review skill.
+  paths:
+  - missions/plan-and-deliver/skills/pr-review/SKILL.md
+- commitSha: b8300c499a1d76698ba7302d6f5e368947a363b7
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: 'Merge pull request #3 from vinko-tapcart/improve/01-outsider-pr-handoff'
+  paths: []
+- commitSha: c2cf69157ce4657883e59d25f3761e3ac7342d63
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Document dashboard local-dev-files bootstrap and simplify outsider PR handoff.
+  paths:
+  - missions/plan-and-deliver/skills/create-pr/SKILL.md
+  - missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md
+- commitSha: 6d26a30a03fade2e7f679359dcf7af2a0b13a0f7
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: 'Merge pull request #4 from vinko-tapcart/improve/bootstrap-secrets-and-pr-prompt'
+  paths: []
+- commitSha: 1b39203cb7aff2349da50ccb7e32507137886316
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Split deploy test plan into Local and Staging test phases.
+  paths:
+  - docs/development-process.md
+  - missions/plan-and-deliver/plan.mdc
+  - missions/plan-and-deliver/skills/README.md
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+  - missions/plan-and-deliver/skills/deploy-walk/SKILL.md
+  - missions/plan-and-deliver/skills/pr-plan/SKILL.md
+  - missions/plan-and-deliver/skills/pre-pr-review/SKILL.md
+  - rules/20_efficient-pr-shipping.mdc
+- commitSha: f91399c9f0917f9d25185daa44dd36c90697ebce
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: 'Merge pull request #5 from vinko-tapcart/improve/local-staging-deploy-test-plan'
+  paths: []
+- commitSha: d8f526e37dc8c6fc26112a61945b6499d435fb60
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Harden outsider handoff with remote-branch gate before prompt emission.
+  paths:
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+  - missions/plan-and-deliver/skills/create-pr/SKILL.md
+  - rules/20_efficient-pr-shipping.mdc
+- commitSha: 5e63bbe91d7288912106c5c8f66eb86bfa18466c
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: 'Merge pull request #6 from vinko-tapcart/improve/outsider-remote-branch-gate'
+  paths: []
+- commitSha: cb92195b1274ca84691262b03dfc2719650ed374
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Add post-pr-review approve-and-merge gate on coding-session lane.
+  paths:
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+  - missions/plan-and-deliver/skills/pr-review/SKILL.md
+  - rules/20_efficient-pr-shipping.mdc
+- commitSha: d7e26a5fabcc01969c98edd162fde05b6df17841
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: 'Merge pull request #7 from vinko-tapcart/improve/post-pr-review-merge-gate'
+  paths: []
+- commitSha: f9fe62b9a25e02365f084551ed1dcba1aa49d74a
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Merge main into vinko-tapcart with fork-aware conflict resolution.
+  paths:
+  - docs/development-process.md
+  - missions/plan-and-deliver/plan.mdc
+  - missions/plan-and-deliver/skills/README.md
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+  - missions/plan-and-deliver/skills/deploy-walk/SKILL.md
+  - missions/plan-and-deliver/skills/pr-plan/SKILL.md
+  - missions/plan-and-deliver/skills/pr-review/SKILL.md
+  - missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md
+  - rules/20_efficient-pr-shipping.mdc
+- commitSha: c56d7b8fe869baa72136ad7c72312ffd35b03b23
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Trim coding-session warm-up rules to stay under spawn cap.
+  paths:
+  - missions/plan-and-deliver/skills/README.md
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+- commitSha: b1e4a16f273277955d04a17826b3c0c63271848c
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Document PR review cycle and outsider merge handoff on coding-session.
+  paths:
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+  - missions/plan-and-deliver/skills/pr-review/SKILL.md
+  - missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md
+  - rules/20_efficient-pr-shipping.mdc
+- commitSha: 5370e913a7915b1d3734c1fd7678570f8d8e0c0c
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Merge main into vinko-tapcart with fork-aware conflict resolution.
+  paths:
+  - docs/development-process.md
+  - missions/plan-and-deliver/plan.mdc
+  - missions/plan-and-deliver/skills/README.md
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+  - missions/plan-and-deliver/skills/pr-review/SKILL.md
+- commitSha: 7423408abd5aad23190829e62c66c90f05c46747
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Merge main into vinko-tapcart with fork-aware conflict resolution
+  paths:
+  - docs/development-process.md
+  - missions/debug-and-fix/plan.mdc
+  - missions/plan-and-deliver/plan.mdc
+  - missions/plan-and-deliver/skills/README.md
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+  - missions/plan-and-deliver/skills/deploy-walk/SKILL.md
+  - missions/plan-and-deliver/skills/pr-plan/SKILL.md
+  - missions/plan-and-deliver/skills/pr-review/SKILL.md
+  - missions/plan-and-deliver/skills/pre-pr-review/SKILL.md
+  - missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md
+  - rules/20_efficient-pr-shipping.mdc
+- commitSha: 7223f0abaedbb66c4072d14a760e3cf27d12e740
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Merge main into vinko-tapcart with fork-aware conflict resolution
+  paths:
+  - docs/development-process.md
+  - missions/plan-and-deliver/plan.mdc
+  - missions/plan-and-deliver/skills/README.md
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+  - missions/plan-and-deliver/skills/deploy-walk/SKILL.md
+  - missions/plan-and-deliver/skills/pr-plan/SKILL.md
+  - missions/plan-and-deliver/skills/pr-review/SKILL.md
+  - missions/plan-and-deliver/skills/pre-pr-review/SKILL.md
+  - rules/20_efficient-pr-shipping.mdc
+- commitSha: 1cd98d174967c7aead2b9fef10c4a9fde8124818
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Add cross-repo dashboard-first planning guidance for sedea-push.
+  paths:
+  - docs/development-process.md
+  - missions/plan-and-deliver/skills/delivery-phases/SKILL.md
+  - missions/plan-and-deliver/skills/phase-planner/SKILL.md
+  - missions/plan-and-deliver/skills/planner/SKILL.md
+  - missions/plan-and-deliver/skills/pr-breakdown/SKILL.md
+- commitSha: 9a22a984d242fc122e4dab5215c55cd798ee1129
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: 'Merge pull request #1 from vinko-tapcart/improve/02-cross-repo-planning-guidance'
+  paths:
+  - docs/development-process.md
+- commitSha: e5a8e9fe6fd5eaa15963b7760a4e2290d7db0745
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Merge upstream-main into main with fork-aware conflict resolution
+  paths:
+  - docs/development-process.md
+  - missions/debug-and-fix/plan.mdc
+  - missions/plan-and-deliver/plan.mdc
+  - missions/plan-and-deliver/skills/README.md
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+  - missions/plan-and-deliver/skills/create-pr/SKILL.md
+  - missions/plan-and-deliver/skills/planner/SKILL.md
+  - missions/plan-and-deliver/skills/pr-review/SKILL.md
+- commitSha: 6cf4a35608156d07504bdd9142a1233149a36acb
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Register quick-fix-plan-agent skill entry in center manifest.
+  paths:
+  - center.yaml
+  - missions/quick-fix/skills/quick-fix-plan-agent/SKILL.md
+- commitSha: d1bc8fa8056171b9c00045518c764d738efdc7da
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Add capture-team-feedback gate for offline teammate PR review.
+  paths:
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+  - missions/plan-and-deliver/skills/pr-review/SKILL.md
+- commitSha: 3ab148093a2c50d66af476a5b2b276beface53a6
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Merge upstream-main into main with fork-aware conflict resolution
+  paths:
+  - center.yaml
+  - docs/development-process.md
+  - missions/debug-and-fix/plan.mdc
+  - missions/plan-and-deliver/plan.mdc
+  - missions/plan-and-deliver/skills/README.md
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+  - missions/plan-and-deliver/skills/create-pr/SKILL.md
+  - missions/plan-and-deliver/skills/delivery-phases/SKILL.md
+  - missions/plan-and-deliver/skills/deploy-walk/SKILL.md
+  - missions/plan-and-deliver/skills/phase-planner/SKILL.md
+  - missions/plan-and-deliver/skills/planner/SKILL.md
+  - missions/plan-and-deliver/skills/pr-breakdown/SKILL.md
+  - missions/plan-and-deliver/skills/pr-plan/SKILL.md
+  - missions/plan-and-deliver/skills/pr-review/SKILL.md
+  - missions/plan-and-deliver/skills/pre-pr-review/SKILL.md
+  - missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md
+  - rules/20_efficient-pr-shipping.mdc
+- commitSha: d3644c8f0b3ada46b20ad503ed0b2e4d5abf2615
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Align coding-session pr-review references to pr-review.mjs after upstream
+    merge
+  paths:
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+- commitSha: 71d30e056e036b33a994fd49ed89c984da53c2b9
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: 'Merge pull request #1 from vinko-tapcart/improve/research-and-development-upstream-merge'
+  paths: []
+- commitSha: 823198099f5e613195ed4cf029fc6fa964cfbdce
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Fix Hub center load by merging duplicate skillEntries in center.yaml.
+  paths:
+  - center.yaml
+- commitSha: cbced85f66afeec223c668f0e4e2366ef8a03b9d
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: 'Merge pull request #1 from sedea-tapcart/improve/fix-center-yaml-duplicate-skillentries'
+  paths: []
+- commitSha: 354c37d98cc1d119344fa3577b4863b6f4a725ad
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Audit R&D mission plan.mdc Checkpoint gates (#144)
+  paths:
+  - missions/debug-and-fix/plan.mdc
+  - missions/plan-and-deliver/plan.mdc
+  - missions/quick-fix/plan.mdc
+  - missions/single-phase/plan.mdc
+- commitSha: f1377da7f2c3687d967a9fcae5b02f379fe7cc1b
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Drop --operations-user-id from plan-state and post-reconcile cleanup
+  paths:
+  - missions/plan-and-deliver/scripts/plan-state.mjs
+  - missions/plan-and-deliver/scripts/post-reconcile-workspace-cleanup.mjs
+- commitSha: 2bdd38ef8812710e5c0a2fd5e33c1394ab3cd08a
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Adapt outsider PR merge delegation after upstream checkpoint merge
+  paths:
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+  - rules/20_efficient-pr-shipping.mdc
+- commitSha: 568560b4c63d087f86c6c230d59aac301525becb
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Align pr-review, plan, and dev-process with outsider delegate-merge
+  paths:
+  - docs/development-process.md
+  - missions/plan-and-deliver/plan.mdc
+  - missions/plan-and-deliver/skills/pr-review/SKILL.md
+- commitSha: 79425464bc33412e1dcf8308e3d3d6cb1d9290d7
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Wire R&D ship docs to hosting compose-worktree-teardown before center cleanup
+  paths:
+  - docs/development-process.md
+  - missions/plan-and-deliver/scripts/post-reconcile-workspace-cleanup.mjs
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+  - missions/plan-and-deliver/skills/plan-reconcile/SKILL.md
+  - rules/20_efficient-pr-shipping.mdc
+- commitSha: 41d7d8ca9b143d6ed767ac9c2db2f051fd883c55
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Align summary cross-refs with compose teardown ordering
+  paths:
+  - docs/development-process.md
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+  - rules/20_efficient-pr-shipping.mdc
+- commitSha: 4455eb1f82543e83b055a4507416f1810c695d2c
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Align Owns summary with compose teardown ordering
+  paths:
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+- commitSha: c88975a66e1fc1b63c15cb3d51a28e3dbd391129
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Align Staging deploy-walk to post-merge Model A timing.
+  paths:
+  - missions/debug-and-fix/plan.mdc
+  - missions/plan-and-deliver/plan.mdc
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+  - missions/plan-and-deliver/skills/deploy-walk/SKILL.md
+  - missions/plan-and-deliver/skills/pr-plan/SKILL.md
+  - missions/quick-fix/plan.mdc
+  - missions/single-phase/plan.mdc
+- commitSha: 78666558a03e25b47c702fd1a194a78c9dba1b05
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Align script-bootstrap two-phase flow across coding-session ship chain.
+  paths:
+  - missions/debug-and-fix/plan.mdc
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+  - missions/plan-and-deliver/skills/deploy-walk/SKILL.md
+  - missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md
+  - missions/quick-fix/plan.mdc
+  - missions/single-phase/plan.mdc
+  - rules/20_efficient-pr-shipping.mdc
+- commitSha: 0ca63580b80be42a407a9bc52ec3f22c61ef7a87
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Standardized deploy walk nomenclature to Local test, Staging test, and
+    Production across R&D missions and skills.
+  paths:
+  - docs/development-process.md
+  - missions/debug-and-fix/plan.mdc
+  - missions/plan-and-deliver/plan.mdc
+  - missions/plan-and-deliver/skills/README.md
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+  - missions/plan-and-deliver/skills/create-pr/SKILL.md
+  - missions/plan-and-deliver/skills/delivery-phases/SKILL.md
+  - missions/plan-and-deliver/skills/deploy-walk/SKILL.md
+  - missions/plan-and-deliver/skills/hosting-repo-rules/SKILL.md
+  - missions/plan-and-deliver/skills/plan-reconcile/SKILL.md
+  - missions/plan-and-deliver/skills/pr-breakdown/SKILL.md
+  - missions/plan-and-deliver/skills/pr-plan/SKILL.md
+  - missions/plan-and-deliver/skills/pr-review/SKILL.md
+  - missions/plan-and-deliver/skills/pre-pr-review/SKILL.md
+  - missions/quick-fix/plan.mdc
+  - missions/single-phase/plan.mdc
+  - rules/20_efficient-pr-shipping.mdc
+- commitSha: bd824223f152390e985e6757524c800a9c13aacb
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Smart merge upstream-main into main (research-and-development)
+  paths:
+  - center.yaml
+  - docs/checkpoint-skill-calibration.md
+  - docs/development-process.md
+  - missions/debug-and-fix/plan.mdc
+  - missions/debug-and-fix/skills/debug-and-fix/SKILL.md
+  - missions/plan-and-deliver/plan.mdc
+  - missions/plan-and-deliver/scripts/plan-state.mjs
+  - missions/plan-and-deliver/scripts/verify-center-governance-integration.test.mjs
+  - missions/plan-and-deliver/scripts/verify-checkpoint-steps.mjs
+  - missions/plan-and-deliver/scripts/verify-checkpoint-steps.test.mjs
+  - missions/plan-and-deliver/scripts/verify-designation.mjs
+  - missions/plan-and-deliver/scripts/verify-lane-warmup-parity.mjs
+  - missions/plan-and-deliver/scripts/verify-no-legacy-wire-tokens.mjs
+  - missions/plan-and-deliver/scripts/verify-no-mc-phased-response-v1.mjs
+  - missions/plan-and-deliver/scripts/verify-opt-in-skill-mcp.mjs
+  - missions/plan-and-deliver/scripts/verify-rules-mcp-only.mjs
+  - missions/plan-and-deliver/scripts/verify-skill-manifest.mjs
+  - missions/plan-and-deliver/skills/README.md
+  - missions/plan-and-deliver/skills/ad-hoc-prd/SKILL.md
+  - missions/plan-and-deliver/skills/author-prd/SKILL.md
+  - missions/plan-and-deliver/skills/brainstorm-research/SKILL.md
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+  - missions/plan-and-deliver/skills/create-pr/SKILL.md
+  - missions/plan-and-deliver/skills/delivery-phases/SKILL.md
+  - missions/plan-and-deliver/skills/deploy-walk/SKILL.md
+  - missions/plan-and-deliver/skills/hosting-repo-rules/SKILL.md
+  - missions/plan-and-deliver/skills/master-planner/SKILL.md
+  - missions/plan-and-deliver/skills/new-plan/SKILL.md
+  - missions/plan-and-deliver/skills/phase-planner/SKILL.md
+  - missions/plan-and-deliver/skills/plan-reconcile/SKILL.md
+  - missions/plan-and-deliver/skills/pr-breakdown/SKILL.md
+  - missions/plan-and-deliver/skills/pr-plan/SKILL.md
+  - missions/plan-and-deliver/skills/pr-review/SKILL.md
+  - missions/plan-and-deliver/skills/pre-pr-review/SKILL.md
+  - missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md
+  - missions/quick-fix/mission.yaml
+  - missions/quick-fix/plan.mdc
+  - missions/quick-fix/skills/quick-fix-plan/SKILL.md
+  - missions/single-phase/plan.mdc
+  - rules/10_plan-naming-convention.mdc
+  - rules/20_efficient-pr-shipping.mdc
+  - rules/30_planning-target-resolution.mdc
+  - rules/31_dispatch-scope.mdc
+  - rules/31_operations-user-id.mdc
+  - rules/40_maintain-rules.mdc
+  - rules/50_mission-control-display-metadata-discipline.mdc
+  - rules/bootstrap.mdc
+- commitSha: 00bb34572340d0ac215b804bb062ca7a84ef759d
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Smart merge upstream-main into main (research-and-development)
+  paths:
+  - missions/debug-and-fix/plan.mdc
+  - missions/plan-and-deliver/plan.mdc
+  - missions/plan-and-deliver/skills/README.md
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+  - missions/plan-and-deliver/skills/create-pr/SKILL.md
+  - missions/plan-and-deliver/skills/delivery-phases/SKILL.md
+  - missions/plan-and-deliver/skills/deploy-walk/SKILL.md
+  - missions/plan-and-deliver/skills/master-planner/SKILL.md
+  - missions/plan-and-deliver/skills/phase-planner/SKILL.md
+  - missions/plan-and-deliver/skills/plan-reconcile/SKILL.md
+  - missions/plan-and-deliver/skills/pr-breakdown/SKILL.md
+  - missions/plan-and-deliver/skills/pr-plan/SKILL.md
+  - missions/plan-and-deliver/skills/pr-review/SKILL.md
+  - missions/plan-and-deliver/skills/pre-pr-review/SKILL.md
+  - missions/quick-fix/plan.mdc
+  - missions/quick-fix/skills/quick-fix-plan-agent/SKILL.md
+  - missions/single-phase/plan.mdc
+  - rules/20_efficient-pr-shipping.mdc
+- commitSha: 45aada6f21a2c040d1a6a34737896fd04eff1702
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Smart merge upstream-main into main (research-and-development) (#11)
+  paths: []
+- commitSha: 4decd24d22f88e110fc4c4db083e417bae9e8137
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Smart merge origin/upstream-main into main (research-and-development).
+  paths:
+  - docs/development-process.md
+  - missions/plan-and-deliver/skills/README.md
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+  - missions/plan-and-deliver/skills/delivery-phases/SKILL.md
+  - missions/plan-and-deliver/skills/master-planner/SKILL.md
+  - missions/plan-and-deliver/skills/phase-planner/SKILL.md
+  - missions/plan-and-deliver/skills/pr-breakdown/SKILL.md
+  - missions/plan-and-deliver/skills/pr-plan/SKILL.md
+  - rules/20_efficient-pr-shipping.mdc
+- commitSha: 372b69e2b1e85451f315428c265d067c2eda746f
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Improve research-and-development upstream sync (Jul 22) (#12)
+  paths: []
+- commitSha: 4c44561a98dec0e5f739d5473f831b4ddf2fcfec
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Harden R&D environment and secret boundaries
+  paths:
+  - missions/debug-and-fix/skills/debug-and-fix/SKILL.md
+  - missions/plan-and-deliver/skills/ad-hoc-prd/SKILL.md
+  - missions/plan-and-deliver/skills/author-prd/SKILL.md
+  - missions/plan-and-deliver/skills/brainstorm-research/SKILL.md
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+  - missions/plan-and-deliver/skills/create-pr/SKILL.md
+  - missions/plan-and-deliver/skills/delivery-phases/SKILL.md
+  - missions/plan-and-deliver/skills/deploy-walk/SKILL.md
+  - missions/plan-and-deliver/skills/hosting-repo-rules/SKILL.md
+  - missions/plan-and-deliver/skills/master-planner/SKILL.md
+  - missions/plan-and-deliver/skills/new-plan/SKILL.md
+  - missions/plan-and-deliver/skills/phase-planner/SKILL.md
+  - missions/plan-and-deliver/skills/plan-reconcile/SKILL.md
+  - missions/plan-and-deliver/skills/pr-breakdown/SKILL.md
+  - missions/plan-and-deliver/skills/pr-plan/SKILL.md
+  - missions/plan-and-deliver/skills/pr-review/SKILL.md
+  - missions/plan-and-deliver/skills/pre-pr-review/SKILL.md
+  - missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md
+  - missions/quick-fix/skills/quick-fix-plan-agent/SKILL.md
+  - missions/quick-fix/skills/quick-fix-plan/SKILL.md
+  - rules/10_plan-naming-convention.mdc
+  - rules/20_efficient-pr-shipping.mdc
+  - rules/30_planning-target-resolution.mdc
+  - rules/31_dispatch-scope.mdc
+  - rules/40_maintain-rules.mdc
+  - rules/50_mission-control-display-metadata-discipline.mdc
+  - rules/60_no-agent-env-secrets.mdc
+  - rules/bootstrap.mdc
+- commitSha: bb45e3b1c0f128b993e1739c257acefb3be01edc
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Harden agent environment and secret boundaries (#13)
+  paths: []
+- commitSha: 1c4ca493cf2364a2c98b93a3a12808dd44ed15fc
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Smart merge upstream-main into main (research-and-development, Jul 27)
+  paths:
+  - center.yaml
+  - docs/development-process.md
+  - missions/debug-and-fix/plan.mdc
+  - missions/plan-and-deliver/plan.mdc
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+  - missions/plan-and-deliver/skills/master-planner/SKILL.md
+  - missions/plan-and-deliver/skills/new-plan/SKILL.md
+  - missions/plan-and-deliver/skills/phase-planner/SKILL.md
+  - missions/plan-and-deliver/skills/pre-pr-review/SKILL.md
+  - missions/quick-fix/plan.mdc
+  - missions/single-phase/plan.mdc
+  - rules/bootstrap.mdc
+- commitSha: 957d99e8246b470d672b38969e2bc2c2ae2c77cc
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Smart merge upstream-main into main (research-and-development, Jul 28)
+    (#14)
+  paths: []
+- commitSha: 5d80fcc838e6e9cb4c0f36c5471ca95f8fbdc178
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: Smart merge upstream-main into main (research-and-development, Jul 29)
+  paths:
+  - docs/development-process.md
+  - missions/plan-and-deliver/skills/README.md
+  - missions/plan-and-deliver/skills/coding-session/SKILL.md
+  - missions/plan-and-deliver/skills/delivery-phases/SKILL.md
+  - missions/plan-and-deliver/skills/master-planner/SKILL.md
+  - missions/plan-and-deliver/skills/new-plan/SKILL.md
+  - missions/plan-and-deliver/skills/phase-planner/SKILL.md
+  - missions/plan-and-deliver/skills/pr-breakdown/SKILL.md
+  - missions/plan-and-deliver/skills/pr-plan/SKILL.md
+  - missions/plan-and-deliver/skills/pr-review/SKILL.md
+  - rules/20_efficient-pr-shipping.mdc
+- commitSha: 91effc2669a6533427470c76684af226a2fe3f03
+  capturedAt: '2026-08-03T18:21:20Z'
+  summary: research-and-development upstream sync (Jul 29) (#15)
+  paths: []
+history: []
