@@ -45,17 +45,20 @@ warmUpRules:
 
 **Normative protocol:** [`.sedea/centers/software-development/missions/quick-fix/plan.mdc`](../../plan.mdc) §4. This skill implements minimal parent scaffold → **`new-plan`** inline → **`pr-plan`** inline → optional **`coding-session`** spawn via **`pr-plan`** §5d.
 
-**Forbidden on this lane:** **`planner`**, **`pr-breakdown`**, **`delivery-phases`**, **`phase-planner`**, second PR row, Squad Leader **`MC_DISPATCH_RESOLVED_V1`**.
+**Forbidden on this lane:** **`planner`**, **`pr-breakdown`**, **`delivery-phases`**, **`phase-planner`**, second PR row, Squad Leader dispatch resolution MCP on this lane.
 
-## Warm-up manifest (spawned)
+## Agent messaging (MCP)
 
-Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea/docs/lane-manifest-contract.md) and **`../../../plan-and-deliver/skills/README.md`** § *Default warm-up*. Host merge: `effectiveWarmUp = dedupe(bootstrapRules → laneRules → skillWarmUp)`.
+**MCP spawn/result skill.** Parent→child spawn and child terminal result use MCP tools per **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Agent-to-agent spawn protocol*.
 
-### `skillWarmUp` — frontmatter `warmUpRules`
+| Action | MCP tool |
+|--------|----------|
+| **`coding-session`** spawn (via **`pr-plan`** §5d) | **`mission_control_spawn_agent`** |
+| **This** spawned lane terminal (and terminal re-emits) | **`mission_control_send_agent_result`** |
 
-Uses **`quick-fix/plan.mdc`** (not **`plan-and-deliver/plan.mdc`**) per quick-fix §3 spawn contract.
+**Binding:** Run **`../../../plan-and-deliver/skills/README.md`** § *MCP spawn preflight* before every MCP spawn; **forbidden** host-resolved identity keys in MCP args.
 
-## Spawn contract (`AGENT_RUN_REQUEST_V1`)
+## Spawn contract (MCP inbound)
 
 Cross-check every emit against **`../../../plan-and-deliver/skills/README.md`** § *Universal spawn preflight*.
 
@@ -87,9 +90,7 @@ Cross-check every emit against **`../../../plan-and-deliver/skills/README.md`** 
 
 ## Completion (spawned)
 
-### Host protocol line (required)
-
-Emit **exactly one** line: `AGENT_RESULT_RESPONSE_V1` + JSON on the **same** line. Re-emit updated line after follow-up (same `correlationId`).
+Call MCP **`mission_control_send_agent_result`** exactly once at terminal with **`status`**, **`summary`**, and **`outputs`** below. Re-call only after user-requested follow-up on this lane. **Forbidden:** host-resolved identity keys in MCP args.
 
 Required `outputs`:
 
@@ -102,4 +103,4 @@ Required `outputs`:
 - `outputs.continuationOwner`: `"quick-fix-plan-agent"`
 - `outputs.continuationStatus`: `terminal` when PR plan ready and no blocking `remainingTasks`; `active` when §5c pending or **`coding-session`** child open
 
-Stop after the terminal line per **`../../../plan-and-deliver/skills/README.md`** § *Terminal stop (normative)*. On turns that emit terminal, also emit **`mission_control_present_structured_choice`** in the **same** message when offering §5c per rule **2**.
+Stop after the terminal MCP result call per **`../../../plan-and-deliver/skills/README.md`** § *Terminal stop (normative)*. On turns that emit terminal, also emit **`mission_control_present_structured_choice`** in the **same** message when offering §5c per rule **2**.
