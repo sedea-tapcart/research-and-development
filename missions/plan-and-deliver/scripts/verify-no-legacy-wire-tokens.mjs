@@ -2,19 +2,20 @@
 /**
  * Repo-wide zero-tolerance gate for legacy spawn/result wire token literals.
  *
- * Scans tracked source/docs under HOSTING_ROOT for legacy spawn/result wire token
+ * Scans tracked source/docs under the hosting or center repo root for legacy spawn/result wire token
  * string literals (AGENT_RUN_* / AGENT_RESULT_* sentinels). Zero matches allowed
  * excluded local-only trees (.sedea/operations session data).
  *
- * Run from hosting repo root:
+ * Run from hosting repo root or software-development center repo root:
  *
- *   node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/verify-no-legacy-wire-tokens.mjs
+ *   node .sedea/centers/software-development/missions/plan-and-deliver/scripts/verify-no-legacy-wire-tokens.mjs
  *
  * Exit 0 when no forbidden literals remain; exit 1 and list paths otherwise.
  */
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { resolveGovernanceContext } from './resolve-governance-root.mjs';
 
 const RUN_TOKEN = 'AGENT_RUN_' + 'REQUEST_V1';
 const RESULT_TOKEN = 'AGENT_RESULT_' + 'RESPONSE_V1';
@@ -50,21 +51,6 @@ const TEXT_EXTENSIONS = new Set([
 function die(msg) {
   process.stderr.write(`verify-no-legacy-wire-tokens: ${msg}\n`);
   process.exit(1);
-}
-
-async function resolveHostingRoot() {
-  let dir = process.cwd();
-  for (let depth = 0; depth < 32; depth += 1) {
-    try {
-      await fs.access(path.join(dir, '.sedea/centers/sedea'));
-      return dir;
-    } catch {
-      const parent = path.dirname(dir);
-      if (parent === dir) break;
-      dir = parent;
-    }
-  }
-  die('could not resolve hosting repo root — run from HOSTING_ROOT');
 }
 
 function shouldSkipRel(relPosix) {
@@ -109,8 +95,8 @@ function findForbiddenHits(body, rel) {
 }
 
 async function main() {
-  const hostingRoot = await resolveHostingRoot();
-  const files = await walkFiles(hostingRoot);
+  const ctx = await resolveGovernanceContext();
+  const files = await walkFiles(ctx.scanRoot);
   const allHits = [];
 
   for (const { abs, rel } of files) {
@@ -133,7 +119,7 @@ async function main() {
   }
 
   process.stdout.write(
-    `verify-no-legacy-wire-tokens: OK (${files.length} file(s) scanned under ${hostingRoot})\n`,
+    `verify-no-legacy-wire-tokens: OK (${files.length} file(s) scanned under ${ctx.scanRoot})\n`,
   );
 }
 

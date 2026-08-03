@@ -49,11 +49,11 @@ inputs:
 laneRules:
   - ".sedea/centers/sedea/rules/2_ask-question-instructions.mdc"
   - ".sedea/centers/sedea/rules/6_git-commit-push-gate.mdc"
-  - ".sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc"
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/hosting-repo-rules/SKILL.md"
+  - ".sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc"
+  - ".sedea/centers/software-development/missions/plan-and-deliver/skills/hosting-repo-rules/SKILL.md"
 warmUpRules:
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
-  - ".sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc"
+  - ".sedea/centers/software-development/missions/plan-and-deliver/skills/README.md"
+  - ".sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc"
   - ".sedea/centers/sedea/skills/worktree-setup/SKILL.md"
   - ".sedea/centers/sedea/skills/pr-review/SKILL.md"
   - ".sedea/centers/sedea/skills/worktree-cleanup/SKILL.md"
@@ -73,23 +73,33 @@ warmUpRules:
 
 Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea/docs/lane-manifest-contract.md) and **`../README.md`** § *Default warm-up* / *Warm-up cap exceptions*. Host merge: `effectiveWarmUp = dedupe(bootstrapRules → laneRules → skillWarmUp)`. Frontmatter matches this table; spawners may omit run-request **`laneRules`** when identical (README spawn preflight row 11). **384 KiB cap:** frontmatter omits **`plan.mdc`**, **`development-process.md`**, and rule **30** — explicit **`Read`** of those paths (and **`inputs.targetPlanPath`**) when ship/procedure steps require them. **No `alwaysApply` frontmatter flip.**
 
-### `bootstrapRules` — host-resolved (R&D layer)
+### `bootstrapRules` — host-resolved (Software Development center layer)
 
 | Path | Purpose |
 |------|---------|
-| `.sedea/centers/research-and-development/rules/bootstrap.mdc` | Sole R&D `alwaysApply: true` bootstrap (≤10 KB); host merges when `centerSlug === research-and-development` |
+| `.sedea/centers/software-development/rules/bootstrap.mdc` | Sole Software Development `alwaysApply: true` bootstrap (≤10 KB); host merges when `centerSlug === software-development` |
 
 ### `skillWarmUp` — frontmatter `warmUpRules`
 
 | Path | Purpose |
 |------|---------|
-| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` | Spawn contracts, terminal stop, parallel fork |
-| `.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc` | Worktree naming, ship chain, bootstrap |
+| `.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md` | Slim spawn contracts, terminal stop, parallel fork |
+| `.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc` | Worktree naming, ship chain, bootstrap |
 | `.sedea/centers/sedea/skills/worktree-setup/SKILL.md` | Center worktree setup (inline on this lane) |
 | `.sedea/centers/sedea/skills/pr-review/SKILL.md` | Inline PR review cycles |
 | `.sedea/centers/sedea/skills/worktree-cleanup/SKILL.md` | Post-merge worktree cleanup |
 
 **Omitted from frontmatter (384 KiB spawn cap — runtime `Read`):** `plan.mdc`, `development-process.md` — load via **`inputs.targetPlanPath`** and explicit **`Read`** when ship-chain or procedure steps require them.
+
+
+### On-demand docs — spawn/ship contracts (runtime `Read`)
+
+| Path | Load when |
+|------|-----------|
+| `.sedea/centers/software-development/missions/plan-and-deliver/docs/spawn-ship-contracts.md` | Before merging child terminals, parallel hosting-repo-rules fork, or MCP notify preflight N1-N8 detail |
+
+**Step-bound Read (binding):** Before acting on spawn-chain merge rules in this skill, `Read` [`docs/spawn-ship-contracts.md`](../../docs/spawn-ship-contracts.md) in full (no offset/limit).
+
 
 ### `laneRules` — frontmatter `laneRules`
 
@@ -97,8 +107,8 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 |------|---------|
 | `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc` | Structured choice, AskQuestion / MCP structured choice |
 | `.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc` | Commit/push gate before ship cut-point |
-| `.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc` | Ship lane minimum (rules-only PR) |
-| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/hosting-repo-rules/SKILL.md` | This skill procedure |
+| `.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc` | Ship lane minimum (rules-only PR) |
+| `.sedea/centers/software-development/missions/plan-and-deliver/skills/hosting-repo-rules/SKILL.md` | This skill procedure |
 
 ## Agent messaging (MCP)
 
@@ -319,9 +329,9 @@ Include [Session orientation table (binding)](#session-orientation-table-binding
 ### 1. Pre-worktree validation
 
 - **Read `inputs.targetPlanPath`** (anchored PR plan) §§1–4; confirm §5 describes rules work (may reference coding-session handoff).
-- **Read** `.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc` §§ relevant to ship ledger / row status before populating plan §§5–8 or emitting terminal outputs (384 KiB cap — not in frontmatter `warmUpRules`).
-- **Read** `.sedea/centers/research-and-development/docs/development-process.md` § *Ship chain* before cut-point, **`pre-pr-review`**, or merge steps (384 KiB cap — runtime `Read`).
-- **Read** `.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc` when validating plan anchor or resolving target-path picks (384 KiB cap — runtime `Read`).
+- **Read** `.sedea/centers/software-development/missions/plan-and-deliver/plan.mdc` §§ relevant to ship ledger / row status before populating plan §§5–8 or emitting terminal outputs (384 KiB cap — not in frontmatter `warmUpRules`).
+- **Read** `.sedea/centers/software-development/docs/development-process.md` § *Ship chain* before cut-point, **`pre-pr-review`**, or merge steps (384 KiB cap — runtime `Read`).
+- **Read** `.sedea/centers/software-development/rules/30_planning-target-resolution.mdc` when validating plan anchor or resolving target-path picks (384 KiB cap — runtime `Read`).
 - **Next-step resolution:** Auto-advance to [Worktree-open gate](#worktree-open-gate-binding) when validation passes — no `USER_CHECKPOINT` on this step.
 
 ### 2. Worktree-setup (inline)

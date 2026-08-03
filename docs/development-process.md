@@ -35,28 +35,28 @@ Single catalogue of **what we use** in this process. Later sections still spell 
 
 This center does **not** ship **`missions/<missionSlug>/rules/*.mdc`** for **`plan-and-deliver`** or **`prd`**. That is **intentional**, not incomplete setup. Sedea treats mission rules as **optional** (see **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Rules* — absence is normal).
 
-R&D delivery agents are governed by:
+Software Development delivery agents are governed by:
 
 - **Center rules** — `.sedea/centers/research-and-development/rules/`
 - **Mission plans** — `missions/<missionSlug>/plan.mdc`
 - **Skills** — `missions/<missionSlug>/skills/` and the **Protocol branches** table below
 
-**Lane warm-up manifest contract.** Per-lane warm-up semantics (`bootstrapRules`, `laneRules`, `skillWarmUp`, `effectiveWarmUp`, reload obligations) are normative in **`.sedea/centers/sedea/docs/lane-manifest-contract.md`**, with spawn/reload bindings in **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Lane warm-up manifest (spawn and reload)*. R&D plans and skills should reference that contract when declaring role-specific **`laneRules`**.
+**Lane warm-up manifest contract.** Per-lane warm-up semantics (`bootstrapRules`, `laneRules`, `skillWarmUp`, `effectiveWarmUp`, reload obligations) are normative in **`.sedea/centers/sedea/docs/lane-manifest-contract.md`**, with spawn/reload bindings in **`.sedea/centers/sedea/rules/4_mission.mdc`** § *Lane warm-up manifest (spawn and reload)*. Software Development plans and skills should reference that contract when declaring role-specific **`laneRules`**.
 
-| Layer | R&D dispatch path |
+| Layer | Software Development dispatch path |
 |-------|-------------------|
 | **Sedea `bootstrapRules`** | **`.sedea/centers/sedea/rules/bootstrap.mdc`** (sole Sedea `alwaysApply: true` bootstrap) |
-| **R&D `bootstrapRules`** | **`.sedea/centers/research-and-development/rules/bootstrap.mdc`** — sole R&D `alwaysApply: true` bootstrap (≤10 KB); documented in skill warm-up manifest **`bootstrapRules`** tables and **`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md`** § *Definitive `bootstrapRules`* |
+| **R&D `bootstrapRules`** | **`.sedea/centers/research-and-development/rules/bootstrap.mdc`** — sole Software Development `alwaysApply: true` bootstrap (≤10 KB); documented in skill warm-up manifest **`bootstrapRules`** tables and **`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md`** § *Definitive `bootstrapRules`* |
 | **`laneRules`** | Role minimums in **`skills/README.md`** § *Definitive `laneRules`* and skill frontmatter |
 | **`skillWarmUp`** | Skill frontmatter **`warmUpRules`** + optional spawn **`warmUpRules`** |
 
-Do not flip numbered R&D rule **`alwaysApply`** frontmatter until the host R&D resolver and parity gate ship (reduce-alwaysapply-governance-load PRD §5.4 phase 6 sequencing). Sedea center **`alwaysApply`** flip is governed separately (PRD §5.3).
+Do not flip numbered Software Development rule **`alwaysApply`** frontmatter until the host Software Development resolver and parity gate ship (reduce-alwaysapply-governance-load PRD §5.4 phase 6 sequencing). Sedea center **`alwaysApply`** flip is governed separately (PRD §5.3).
 
-**Audits and gap reports** must **not** flag missing mission-level rule files under this center. To change **this center's** process or rules, use **`improve center rules`** on **`research-and-development`** (`center-maintenance` on the **sedea** center). For **Sedea platform** governance (hosting layout, git gate, Safeguard), use **`improve center rules`** on **`sedea`**. To change **repo** agent guidance in a hosting repo, use **`.cursor/rules/*.mdc`** per **`.sedea/centers/research-and-development/rules/40_maintain-rules.mdc`** and per-PR plan **§ 5. Repo rules impact**.
+**Audits and gap reports** must **not** flag missing mission-level rule files under this center. To change **this center's** process or rules, use **`improve center rules`** on **`software-development`** (`center-maintenance` on the **sedea** center). For **Sedea platform** governance (hosting layout, git gate, Safeguard), use **`improve center rules`** on **`sedea`**. To change **repo** agent guidance in a hosting repo, use **`.cursor/rules/*.mdc`** per **`.sedea/centers/research-and-development/rules/40_maintain-rules.mdc`** and per-PR plan **§ 5. Repo rules impact**.
 
-### Center submodule git (two repositories)
+### Development tools index (on-demand detail)
 
-Non-built-in centers (including **`research-and-development`**) are **separate git repositories** submodule-pinned in the hosting repo. Agents must treat **center-repo git** and **hosting-repo gitlink promotion** as two steps — not one.
+Subsections below are **indexes** — load linked rules, skills, or on-demand docs at the protocol step that needs them. **Do not** duplicate full prose here after the Phase C slim split.
 
 | Repository | What ships | Typical mission / skill |
 |------------|------------|-------------------------|
@@ -297,7 +297,7 @@ Labels reuse numbers and § symbols across documents. **Read the owning doc** be
 | **`pr-review` Steps 1–5** | **`pr-review/SKILL.md`** inline on **`coding-session`** | Full comment triage; Step 5 = GitHub reconciliation. |
 | **Per-PR plan §§1–8** | Plan file template | §§1–4 = planning; §§5–8 = implementation/ship (often filled on **`coding-session`** lane). |
 | **§8 `shipPhase` / `rowStatus`** | Squad Leader **`plan.mdc` §8** | Ship ledger on leader dispatch — updated **only** via Mission Control **host sync** from ship child terminals. |
-| **Sedea rule 6 / rule 30** | **`.sedea/centers/sedea/rules/`** | Git consent gate vs planning-target resolution — not R&D skill step numbers. |
+| **Sedea rule 6 / rule 30** | **`.sedea/centers/sedea/rules/`** | Git consent gate vs planning-target resolution — not Software Development skill step numbers. |
 
 ### Agents and roles
 
@@ -307,13 +307,13 @@ Labels reuse numbers and § symbols across documents. **Read the owning doc** be
 
 **PR-creating agent.** Only *a PR-creating agent* drafts the GitHub PR description from the prompt **a coding agent** supplies; the parenthetical names the sole supported implementation today. Use that full phrase wherever the PR-authoring role must be explicit.
 
-**Reviewer agent.** The role is *a reviewer-agent* — whichever **dedicated** automated PR-review agent consumes the PR diff and description on the review surface. It might be part of a Sedea Squad agents, or it might be a third-party service connected directly to GitHub PRs. These agents are not part of Sedea and are not mandated by the Mission Control. Dedicated reviewer-agents are **not** the only review pass — see **Pre-PR reviewer agent** above. Use that full phrase wherever that dedicated reviewing role must be explicit (distinct from **developer**, who reads planning-mode plans on the plan board). In the same paragraph, *they / them* may refer to that reviewer-agent.
+**Reviewer agent.** The role is *a reviewer-agent* — whichever **dedicated** automated PR-review agent consumes the PR diff and description on the review surface. It might be part of a Sedea Squad agents, or it might be a third-party service connected directly to GitHub PRs. These agents are not part of Sedea and are not mandated by the Mission Control. Dedicated reviewer-agents are **not** the only review pass — see **Pre-PR reviewer agent** above. Use that full phrase wherever that dedicated reviewing role must be explicit (distinct from **developer**, who reads planning-mode plans in the operations plan tree). In the same paragraph, *they / them* may refer to that reviewer-agent.
 
 ### Surfaces and artifacts
 
 - **GitHub** — Pull requests, diffs, and PR description fields (e.g. “Notes for the reviewer”). **A PR-creating agent** fills the body from the prompt **a coding agent** supplies.
-- **Plan board** — Where **developers** open and review planning-mode `.plan.md` files in the plans folder `.sedea/operations/**/plans/**`).
-- **Path placeholders (`...`)** — In this document and R&D governance, `` `...` `` inside path examples (e.g. `.sedea/operations/.../plans/`) denotes **omitted segments**, not a folder named `...`. Substitute the **bundle-relative** segment or a handover-supplied absolute path — never literal **`joint`**. See **`.sedea/centers/research-and-development/rules/31_dispatch-scope.mdc`** § *Path placeholders in documentation*.
+- **Operations plan files** — Where **developers** open and review planning-mode `.plan.md` files in the plans folder `.sedea/operations/**/plans/**` (Mission Control **Relevant Links**, workspace paths, or `plan-state.mjs list-candidates` — not a Hub Plans pane).
+- **Path placeholders (`...`)** — In this document and Software Development governance, `` `...` `` inside path examples (e.g. `.sedea/operations/.../plans/`) denotes **omitted segments**, not a folder named `...`. Substitute the **bundle-relative** segment or a handover-supplied absolute path — never literal **`joint`**. See **`.sedea/centers/research-and-development/rules/31_dispatch-scope.mdc`** § *Path placeholders in documentation*.
 - **`.plan.md` files** — Standalone plan files at each hierarchy level (Master Plan, phase plans, PR plans); canonical location is under `.sedea/operations/**/plans/**`.
 - **PRD** — Product (or feature) Requirements Document — the prime input for the one-shot **Master Plan** (mode #1). Every **`plan and deliver`** dispatch authors or validates PRD via **`author-prd`** (§§1–3) before **`master-planner`** — see § *PRD routing (canonical)*.
 - **Git worktree** — Isolated worktree used by the **`coding-session`** protocol branch when spinning up a coding agent.
@@ -345,11 +345,12 @@ Labels reuse numbers and § symbols across documents. **Read the owning doc** be
 - **Mermaid** (or similar) — Diagrams inside plan files (mode #1 **Architectural design**, mode #2 **Code design**, mode #3 **Sequencing** optional graph). Safe-generation contract (opaque ids, no reserved bare ids including uppercased traps like `OPT`/`ALT`/`END`/`LOOP`, sequence `Note` single-line, flowchart-only `<br/>`): [`.sedea/centers/sedea/docs/mermaid-authoring.md`](.sedea/centers/sedea/docs/mermaid-authoring.md). **Planner skills** (`master-planner`, `phase-planner`) must run `node .sedea/centers/sedea/scripts/verify-mermaid-authoring.mjs "<absolute plan path>"` after any Mermaid fence edit and before echo/handoff.
 - **Slack**, support tickets, production telemetry, customer interviews — Async inputs listed under **Cadence** → *Customer feedback* / *New ideas from teammates*; drained at *Plan Updates*, not plan-authoring tools.
 
+
 ## Planning Modes
 
-Per Strategy principle #2, planning happens in three modes, applied top-down: **architectural / code design**, **delivery phases**, and **PR breakdown**. Each addresses a different question — design says *what* will exist, delivery says *how the design decomposes* (into sub-phases or into PRs) *on its way to delivery*, and PR breakdown says *which coding-ready PRs* a PR-ready phase produces. PRs are the only units that ship; phases are organizing structure, not delivery units.
+Planning happens in three top-down modes (**architectural / code design** → **delivery phases** → **PR breakdown**). Template prose, sizing rules, and per-mode authoring conventions live in the on-demand doc — **not** in this warm-up core.
 
-**Every level of the plan tree gets its own plan file.** A feature is a plan tree rooted at the **Master Plan** (one file per feature, mode #1). Every phase, sub-phase, and sub-sub-phase below it is its own standalone plan file authored from the **Phase plan template** in mode #2 — recursion stops only when a plan is decided to be **PR-ready**. Every PR is its own standalone plan file authored from the per-PR template in mode #3. Standalone files at every level keep each plan focused on a single granularity, let **a coding agent** work without broader-context distraction when working from a PR plan (Strategy #6), and make **indexed child expansion** via **`new-plan`** the natural way to grow any non-PR-ready entry one level down.
+**Step-bound Read (binding):** Before drafting or populating plan bodies from a template, `Read` [`.sedea/centers/research-and-development/docs/planning-mode-templates.md`](planning-mode-templates.md) in full (no offset/limit). Acknowledge which template you will follow (Master Plan, Phase plan, set-level PR breakdown, or per-PR plan).
 
 **The dual-title `Delivery phases | PR breakdown` section is the recursion point.** Both the Master Plan template (§ 6) and the Phase plan template (§ 5) end in a dual-title section whose heading is one of `Delivery phases` (children are sub-phase plans) or `PR breakdown` (children are PR plans, mode #3). The shared **§ 6 / § 5 contents rule** below the Phase plan template defines both shapes once. Until the decomposition decision is made, the heading reads `Delivery phases | PR breakdown` and the body is `_TBD_`.
 
@@ -757,15 +758,27 @@ The triage decision is the human-in-the-loop part of the cycle — there is no r
 
 ### Loop stages
 
-#### Next Phase Decomposition
+Normative skill procedures — not duplicated here. Read **`plan-and-deliver/plan.mdc`** § *Cadence reference* and the linked skill for each stage.
 
-Pick up the next phase to ship from the active plan's dual-title section (Master Plan § 6 or, recursively, a phase plan's § 5). The **section's heading** is the decomposition decision: `Delivery phases` means the body is a **short numbered list** of child phases; `PR breakdown` means "skip mode #2 and go straight to mode #3 here" — the body's `### PR list` sub-section is itself a **short numbered list** of child PRs. The two heading variants share the same numbered-list shape. Expanding list item **N** uses **`new-plan`** (indexed child) after the developer picks **N** per **`.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`** § *Sedea input channel* (**N** is the parent plan list index).
+| Stage | Skill / doc |
+| --- | --- |
+| Next Phase Decomposition | **`new-plan`** indexed spawn; rule **30** § *Sedea input channel* |
+| PRs Breakdown | **`pr-breakdown/SKILL.md`**; templates in **`planning-mode-templates.md`** § *PR breakdown* |
+| Planning readiness vs worktree | Rule **30** § *Planning readiness vs ship*; **`coding-session/SKILL.md`** worktree-open gate |
+| Start implementation | **`coding-session/SKILL.md`** § *Start implementation*; **`spawn-ship-contracts.md`** |
+| Ship chain (per PR) | **`coding-session/SKILL.md`** + **`docs/coding-session-ship-chain.md`** |
+| Feedback / Plan Updates | This doc § *Targeted plan updates* above; **`plan-reconcile/SKILL.md`** when reconcile is explicitly started |
 
-#### PRs Breakdown
+## §7 Deploy test plan — ship-chain boundary (binding)
 
-For a plan decided to be PR-ready (its dual-title section is titled `PR breakdown`), this stage produces the per-PR plans. See **§ 3 PR breakdown** above and its set-level + per-PR templates.
+Per-PR **`## 7. Deploy test plan`** (**`### Local test`** / **`### Staging test`**) lists **PR-specific verification only** — not the mission ship chain. Full exclusion list: **planning-mode-templates.md** § mode #3 per-PR template § 7 **What NOT to include**.
 
-#### Planning readiness vs worktree completeness
+| Belongs in § 7 | Belongs in **`coding-session`** ship chain (not § 7) |
+|----------------|------------------------------------------------------|
+| PR-specific smoke, monitors, rollback triggers for **this change** | Worktree setup, attach, cleanup |
+| Production checks beyond standing CI / § 6 tests | Pre-PR review, create PR, PR review, merge |
+| Submodule attestation when **this PR** changes a gitlink | **`promote-submodule-pin`**, hosting **`git pull`** |
+| | **`plan-reconcile`**, **`pr-ship-complete`**, dispatch resolution |
 
 **Canonical (do not duplicate here):** [`.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`](../rules/30_planning-target-resolution.mdc) § *Planning readiness vs ship* (three signals + agent checklist), § *PR-plan completeness before coding-session* (script + snapshot ordering), and § *§8 ship ledger and inline `pr-review`* (leader recap after inline **`pr-review`**).
 
@@ -935,33 +948,19 @@ The diagram above describes the per-feature shape and deliberately does not draw
 
 | Event | Starts **`plan-reconcile`?** |
 |-------|---------------------------|
-| **`deploy-walk`** completes (deploy checklist + capstone todo **done**) | **No** — use **AskQuestion** if the user wants reconcile next |
-| **`coding-session`** after production walk; developer chooses reconcile | **Yes** (inline **`plan-reconcile`**; requires `deployStatus` / `deployTodoStatus` **done** when plan-anchored on ship chain) |
+| **`deploy-walk`** completes (deploy checklist + capstone todo **done**) | **No** — Checkpoint clean path may **auto-run** inline reconcile on **`coding-session`**; otherwise use structured choice if the user wants reconcile next |
+| **`coding-session`** after deploy; developer chooses reconcile | **Yes** (inline **`plan-reconcile`**; requires `deployStatus` / `deployTodoStatus` **done** when plan-anchored on ship chain) |
+| **`coding-session`** Checkpoint post–Staging test tail (clean path) | **Yes** (inline auto-advance — **before** terminal emit and **before** Squad Leader dispatch resolution) |
 | Developer says **plan reconcile** on active **`coding-session`** | **Yes** (inline) |
+| Squad Leader **`mission_control_propose_dispatch_resolution`** / dispatch closed | **No** — **forbidden** — all agent lanes ended |
 | Detached **`plan-reconcile`** dispatch | **Stop** — redirect to **`coding-session`** |
 
 Ship cadence detail: **`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`** § *deploy-walk vs plan-reconcile (not chained)*. Skill procedure: **`plan-reconcile/SKILL.md`** § *When this skill runs*.
 
 ## Plan metadata backfill (`backfill-prs-from-body`)
 
-Optional **`plan-state.mjs`** subcommand (see **`--help`**) — run **before** reconcile step 1 when a PR plan lists merged PRs **only in body prose** and sidecar **`prs[]`** / frontmatter **`shippedPrs`** are empty (otherwise PR-tracked **`reconcile`** may **skip** the plan).
+Optional **`plan-state.mjs`** subcommand — run before reconcile when PR numbers exist only in plan body prose. See **`plan-state.mjs --help`** and **`plan-reconcile/SKILL.md`**.
 
-| Step | Action |
-|------|--------|
-| 1 | Dry-run: `backfill-prs-from-body --slug <slug>` or `--all` |
-| 2 | **AskQuestion** — approve backfill vs skip |
-| 3 | Re-run without `--dry-run`; add `--force` only when overwriting existing **`shippedPrs`** after prose fixes |
-
-The subcommand **only** backfills **`shippedPrs`** — it does not archive, reparent, or run follow-ups triage.
-
-```bash
-cd "$HOSTING_ROOT"
-
-node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs \
-  backfill-prs-from-body --slug <slug> --dry-run
-node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs \
-  backfill-prs-from-body --all --dry-run
-```
 
 ## Out of scope
 

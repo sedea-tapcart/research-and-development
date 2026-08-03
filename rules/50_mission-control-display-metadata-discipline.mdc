@@ -6,11 +6,11 @@ description: >-
 alwaysApply: false
 ---
 
-# Mission Control display metadata discipline (R&D)
+# Mission Control display metadata discipline (Software Development)
 
-**On-demand rule.** Mission Control warm-up loads [`.sedea/centers/research-and-development/rules/bootstrap.mdc`](bootstrap.mdc) as the sole R&D `alwaysApply: true` bootstrap. Read **this file** when you need child lane display refresh and Squad Leader dispatch scope — not on every dispatch warm-up.
+**On-demand rule.** Mission Control warm-up loads [`.sedea/centers/software-development/rules/bootstrap.mdc`](bootstrap.mdc) as the sole Software Development `alwaysApply: true` bootstrap. Read **this file** when you need child lane display refresh and Squad Leader dispatch scope — not on every dispatch warm-up.
 
-Mission Control persists **dispatch-level** and **per-lane (slot)** display labels in the dispatch bundle. The **normative authority table**, MCP tool names, field max lengths, and forbidden cross-slot writes live only in [`.sedea/centers/sedea/rules/9_display-metadata-authority.mdc`](.sedea/centers/sedea/rules/9_display-metadata-authority.mdc). This rule adds **R&D center** spawn and refresh discipline for **plan-and-deliver** and related dispatches — read rule **9** first when behavior conflicts.
+Mission Control persists **dispatch-level** and **per-lane (slot)** display labels in the dispatch bundle. The **normative authority table**, MCP tool names, field max lengths, and forbidden cross-slot writes live only in [`.sedea/centers/sedea/rules/9_display-metadata-authority.mdc`](.sedea/centers/sedea/rules/9_display-metadata-authority.mdc). This rule adds **Software Development center** spawn and refresh discipline for **plan-and-deliver** and related dispatches — read rule **9** first when behavior conflicts.
 
 ---
 
@@ -20,14 +20,14 @@ Mission Control persists **dispatch-level** and **per-lane (slot)** display labe
 |-------|------|
 | Who may update what (child vs Squad Leader) | [`.sedea/centers/sedea/rules/9_display-metadata-authority.mdc`](.sedea/centers/sedea/rules/9_display-metadata-authority.mdc) § *Authority table* |
 | MCP tools and max lengths | Same file § *MCP tools* |
-| Host additive field names and persistence | [`.sedea/centers/research-and-development/docs/mission-control-display-metadata-host-spec.md`](docs/mission-control-display-metadata-host-spec.md) |
-| Agent UX pitfalls (display / spawn) | [`.sedea/centers/research-and-development/docs/development-process.md`](docs/development-process.md) § *Agent UX pitfalls* |
+| Host additive field names and persistence | [`.sedea/centers/software-development/docs/mission-control-display-metadata-host-spec.md`](docs/mission-control-display-metadata-host-spec.md) |
+| Agent UX pitfalls (display / spawn) | [`.sedea/centers/software-development/docs/development-process.md`](docs/development-process.md) § *Agent UX pitfalls* |
 
 ---
 
 ## Spawn discipline (parents)
 
-When calling MCP **`mission_control_spawn_agent`** on **plan-and-deliver** or other R&D spawn paths:
+When calling MCP **`mission_control_spawn_agent`** on **plan-and-deliver** or other Software Development spawn paths:
 
 1. Set **`name`** to a short, topic-specific label (not generic placeholders like "Child agent" alone).
 2. Include **`description`** (and optional spawn metadata the host maps to initial slot copy) so the Agents strip is readable before the child runs.
@@ -98,7 +98,7 @@ When the user asks why a tab still shows an old title after reload:
 3. **Squad Leader** refreshes **dispatch** chrome via **`mission_control_update_dispatch_display`** when the dispatch scope label is wrong.
 4. If MCP fails or the wrong lane owns the update, use structured choice once — do not guess cross-slot permissions from **`git worktree list`** or transcript alone.
 
-Full recovery steps: [`.sedea/centers/research-and-development/docs/mission-control-display-metadata-host-spec.md`](docs/mission-control-display-metadata-host-spec.md) § *Stale tab title recovery*.
+Full recovery steps: [`.sedea/centers/software-development/docs/mission-control-display-metadata-host-spec.md`](docs/mission-control-display-metadata-host-spec.md) § *Stale tab title recovery*.
 
 ---
 
@@ -110,7 +110,7 @@ Full recovery steps: [`.sedea/centers/research-and-development/docs/mission-cont
 |------|------|
 | After Write/StrReplace that creates or materially edits ops plans, PRDs, brainstorm reports the lane wants in Relevant Links | Read-only loads; warm-up manifests; unchanged already-registered paths |
 
-Normative Call/Skip, kind hints, and forbidden patterns: [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md`](../missions/plan-and-deliver/skills/README.md) § *Relevant Links — post-write registration*. Platform display authority remains [rule **9**](.sedea/centers/sedea/rules/9_display-metadata-authority.mdc) — do not overload display MCP for documents.
+Normative Call/Skip, kind hints, and forbidden patterns: [`.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md`](../missions/plan-and-deliver/skills/README.md) § *Relevant Links — post-write registration*. Platform display authority remains [rule **9**](.sedea/centers/sedea/rules/9_display-metadata-authority.mdc) — do not overload display MCP for documents.
 
 ---
 
@@ -142,6 +142,6 @@ This file is the **R&D Mission Control display-metadata spawn / refresh / Squad 
 ## Related rules
 
 - Platform authority: [`.sedea/centers/sedea/rules/9_display-metadata-authority.mdc`](.sedea/centers/sedea/rules/9_display-metadata-authority.mdc)
-- Spawn contracts: [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md`](../missions/plan-and-deliver/skills/README.md)
-- Efficient shipping / MCP attach: [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](20_efficient-pr-shipping.mdc)
+- Spawn contracts: [`.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md`](../missions/plan-and-deliver/skills/README.md)
+- Efficient shipping / MCP attach: [`.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc`](20_efficient-pr-shipping.mdc)
 - Turn completion / no idle handoff: [`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`](.sedea/centers/sedea/rules/2_ask-question-instructions.mdc); [`.sedea/centers/sedea/rules/1_agent-code-of-conduct.mdc`](.sedea/centers/sedea/rules/1_agent-code-of-conduct.mdc)

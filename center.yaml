@@ -1,11 +1,11 @@
-name: R&D
+name: Software Development
 description: >-
   How developers deliver new features from idea to production — planning, implementation,
   PR shipping, deploy verification, and plan hygiene. Agents and Mission Control discover
   skills from `missions/<slug>/skills/**/SKILL.md` on disk; this manifest documents the
   center layout for audits and center-maintenance. Keep `skillEntries` in sync when adding skills.
 
-# Paths below are relative to `.sedea/centers/research-and-development/` unless noted.
+# Paths below are relative to `.sedea/centers/software-development/` unless noted.
 
 layout:
   rules: rules/
@@ -37,6 +37,7 @@ missions:
       - missions/plan-and-deliver/skills/author-prd/SKILL.md
       - missions/plan-and-deliver/skills/brainstorm-research/SKILL.md
       - missions/plan-and-deliver/skills/ad-hoc-prd/SKILL.md
+      - missions/plan-and-deliver/skills/capture-release-note/SKILL.md
       - missions/plan-and-deliver/skills/coding-session/SKILL.md
       - missions/plan-and-deliver/skills/create-pr/SKILL.md
       - missions/plan-and-deliver/skills/delivery-phases/SKILL.md

@@ -3,7 +3,7 @@ name: brainstorm-research
 description: >-
   Optional free-form research session on a spawned child lane. Produces a
   brainstorm report under `.sedea/operations/.../docs/` for downstream PRD,
-  Ad-Hoc PRD, quick-fix planning, or debug handover. Invoked from R&D mission
+  Ad-Hoc PRD, quick-fix planning, or debug handover. Invoked from Software Development mission
   intake when the developer selects brainstorm-first.
 designation:
   allowed: Research, synthesize, and write brainstorm report under operations docs; approval gate
@@ -33,13 +33,13 @@ inputs:
     required: false
 laneRules:
   - ".sedea/centers/sedea/rules/2_ask-question-instructions.mdc"
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/brainstorm-research/SKILL.md"
-  - ".sedea/centers/research-and-development/rules/31_dispatch-scope.mdc"
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
+  - ".sedea/centers/software-development/missions/plan-and-deliver/skills/brainstorm-research/SKILL.md"
+  - ".sedea/centers/software-development/rules/31_dispatch-scope.mdc"
+  - ".sedea/centers/software-development/missions/plan-and-deliver/skills/README.md"
 warmUpRules:
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
-  - ".sedea/centers/research-and-development/docs/development-process.md"
-  - ".sedea/centers/research-and-development/rules/10_plan-naming-convention.mdc"
+  - ".sedea/centers/software-development/missions/plan-and-deliver/skills/README.md"
+  - ".sedea/centers/software-development/docs/development-process.md"
+  - ".sedea/centers/software-development/rules/10_plan-naming-convention.mdc"
 ---
 
 # Brainstorm research
@@ -52,29 +52,29 @@ warmUpRules:
 
 Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea/docs/lane-manifest-contract.md) and **`../README.md`** § *Definitive `laneRules`*. Host merge: `effectiveWarmUp = dedupe(bootstrapRules → laneRules → skillWarmUp)`. **Invoker `warmUpRules` override (binding):** merge skill frontmatter **`warmUpRules`** but **add** the **invoking mission `plan.mdc`** (§§1–2.5) — **not** full plan-and-deliver unless that mission is the invoker.
 
-### `bootstrapRules` — host-resolved (R&D layer)
+### `bootstrapRules` — host-resolved (Software Development center layer)
 
 | Path | Purpose |
 |------|---------|
-| `.sedea/centers/research-and-development/rules/bootstrap.mdc` | Sole R&D `alwaysApply: true` bootstrap |
+| `.sedea/centers/software-development/rules/bootstrap.mdc` | Sole Software Development `alwaysApply: true` bootstrap |
 
 ### `skillWarmUp` — frontmatter `warmUpRules`
 
 | Path | Purpose |
 |------|---------|
 | *(invoker-supplied on spawn)* **Invoking mission `plan.mdc`** | Mission protocol for brainstorm-first intake |
-| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` | Spawn contracts, terminal stop |
-| `.sedea/centers/research-and-development/docs/development-process.md` | § *Brainstorm research (optional pre-intake)* |
-| `.sedea/centers/research-and-development/rules/10_plan-naming-convention.mdc` | Report filename slug |
+| `.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md` | Spawn contracts, terminal stop |
+| `.sedea/centers/software-development/docs/development-process.md` | § *Brainstorm research (optional pre-intake)* |
+| `.sedea/centers/software-development/rules/10_plan-naming-convention.mdc` | Report filename slug |
 
 ### `laneRules` — frontmatter `laneRules`
 
 | Path | Purpose |
 |------|---------|
 | `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc` | Structured choice for research and approval |
-| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/brainstorm-research/SKILL.md` | This skill procedure |
-| `.sedea/centers/research-and-development/rules/31_dispatch-scope.mdc` | Dispatch scope + explicit docs paths |
-| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` | Spawn preflight |
+| `.sedea/centers/software-development/missions/plan-and-deliver/skills/brainstorm-research/SKILL.md` | This skill procedure |
+| `.sedea/centers/software-development/rules/31_dispatch-scope.mdc` | Dispatch scope + explicit docs paths |
+| `.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md` | Spawn preflight |
 
 **Intent:** **Brainstorm research agent** runs a free-form exploration with the developer, writes a structured report, and closes with **approve report** (hand off to Squad Leader for auto-chained downstream spawn) or **abandon dispatch** (direction not viable).
 
@@ -99,11 +99,16 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 
 **Actor:** **Brainstorm research agent** — spawned child lane only.
 
-**Act when** the invoker selected **`brainstorm-first`** at mission intake and supplied **`invokerMissionSlug`** plus **`operationsDocsDirectory`** per **`.sedea/centers/research-and-development/rules/31_dispatch-scope.mdc`** § *Docs write root resolution*.
+**Act when** the invoker selected **`brainstorm-first`** at mission intake and supplied **`invokerMissionSlug`** plus **`operationsDocsDirectory`** per **`.sedea/centers/software-development/rules/31_dispatch-scope.mdc`** § *Docs write root resolution*.
 
 If **`invokerMissionSlug`** is missing or **`operationsDocsDirectory`** does not resolve, stop with `status: "partial"`, `outputs.missingFields` populated — do not write files.
 
 ## Checkpoint turn UX (skill-local)
+
+### Software Development center edit destination gate (binding)
+
+When this skill would write under **`.sedea/centers/software-development/`**, open **USER_CHECKPOINT** per **`missions/plan-and-deliver/skills/README.md`** § *Software Development center edit destination gate* **before** any center write. Happy-path operations/plan writes do not open this gate. **Forbidden:** skip the gate; treat `sedea-centers/software-development` as Own on `sedea-ai/app`.
+
 
 Under Checkpoint trust (`trustLevel: checkpoint`), auto-advance scripted happy-path steps; emit structured choice only at **USER_CHECKPOINT** markers in this section, implicit external-wait surfaces, or exception paths. **No cross-skill inheritance** — gate defaults here apply only to **`brainstorm-research`**; invoking missions (**`plan-and-deliver`**, **`single-phase`**, **`quick-fix`**, **`debug-and-fix`**) document their own Squad Leader §2.5 **#external-wait** and failure/partial USER_CHECKPOINT gates — see each mission **`plan.mdc`** §2.5.
 

@@ -10,7 +10,7 @@ alwaysApply: false
 
 # Planning target resolution
 
-**On-demand rule.** Mission Control warm-up loads [`.sedea/centers/research-and-development/rules/bootstrap.mdc`](bootstrap.mdc) as the sole R&D `alwaysApply: true` bootstrap. Read **this file** when you need to resolve `.plan.md` targets, snapshot tables, and planning depth-first gates — not on every dispatch warm-up.
+**On-demand rule.** Mission Control warm-up loads [`.sedea/centers/software-development/rules/bootstrap.mdc`](bootstrap.mdc) as the sole Software Development `alwaysApply: true` bootstrap. Read **this file** when you need to resolve `.plan.md` targets, snapshot tables, and planning depth-first gates — not on every dispatch warm-up.
 
 Planning protocol branches act on a specific `.plan.md` under the **`.sedea/operations/`** union. The target is resolved from **session input, chat context, and structured choices** — not from the IDE focused-file list alone (IDE state can drift from planning intent).
 
@@ -53,12 +53,12 @@ Two different **step 3** labels appear in ship docs. **Do not** conflate them wi
 
 | Label | Where | Meaning |
 |-------|--------|---------|
-| **Rule 20 — cadence step 3** | [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](20_efficient-pr-shipping.mdc) § *Commit and push cadence* → *Steps* item **3** | On a **`coding-session`** (implementation) lane, **after** commit and push: run **`pr-review`** skill **Step 5 — GitHub only** via `pr-review.mjs` — **only** when that skill’s Steps **1–4** already ran in this chat. **Skip** cadence step 3 when there was no **`pr-review`** triage. **Not** a second full triage from scratch. |
+| **Rule 20 — cadence step 3** | [`.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc`](20_efficient-pr-shipping.mdc) § *Commit and push cadence* → *Steps* item **3** | On a **`coding-session`** (implementation) lane, **after** commit and push: run **`pr-review`** skill **Step 5 — GitHub only** via `pr-review.mjs` — **only** when that skill’s Steps **1–4** already ran in this chat. **Skip** cadence step 3 when there was no **`pr-review`** triage. **Not** a second full triage from scratch. |
 | **`pr-review` Steps 1–5** | [`pr-review/SKILL.md`](../missions/plan-and-deliver/skills/pr-review/SKILL.md) | Inline on the active **`coding-session`** lane. **Step 5** is the GitHub reconciliation that rule 20 cadence step 3 names. |
 
-Pitfall cross-reference: **`.sedea/centers/research-and-development/docs/development-process.md`** § *Agent UX pitfalls* — *Commit and push cadence step 3*.
+Pitfall cross-reference: **`.sedea/centers/software-development/docs/development-process.md`** § *Agent UX pitfalls* — *Commit and push cadence step 3*.
 
-Details: § *Planning readiness vs ship* below; ship ledger: **`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`** §8.
+Details: § *Planning readiness vs ship* below; ship ledger: **`.sedea/centers/software-development/missions/plan-and-deliver/plan.mdc`** §8.
 
 ## Planning readiness vs ship (do not conflate)
 
@@ -84,13 +84,13 @@ Three different signals appear in plan-and-deliver; advancing one does **not** a
 | Treat planning **AskQuestion** (*next phase*, *continue planning*) as ship or git consent | Planning picks use § *Standard flow*; commit/push need rule **20** + **`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`** same-message words |
 | Treat rule **20** cadence **step 3** as “run full **`pr-review`** from Step 1” after every push | Cadence step **3** = **`pr-review` Step 5 — GitHub only** when Steps 1–4 already ran; otherwise **skip** cadence step 3 — § *Disambiguation — rule 20 cadence step 3 vs `pr-review` steps* and rule **20** § *Commit and push cadence* |
 
-Squad Leader §8 ship rows advance **only** from Mission Control host sync on ship child terminals — see [`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`](../missions/plan-and-deliver/plan.mdc) §8 and rule **20** § *Leader §8 host sync*.
+Squad Leader §8 ship rows advance **only** from Mission Control host sync on ship child terminals — see [`.sedea/centers/software-development/missions/plan-and-deliver/plan.mdc`](../missions/plan-and-deliver/plan.mdc) §8 and rule **20** § *Leader §8 host sync*.
 
 ## Planning vs ship cadence
 
 **Planning-tree** moves (§ *Standard flow* below): **`AskQuestion`** options, each naming **protocol branch + target plan** (§ *Sedea input channel*).
 
-**Implementation / ship** moves: **`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`** § *Commit and push cadence* and **[`pr-review/SKILL.md`](../missions/plan-and-deliver/skills/pr-review/SKILL.md)**:
+**Implementation / ship** moves: **`.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc`** § *Commit and push cadence* and **[`pr-review/SKILL.md`](../missions/plan-and-deliver/skills/pr-review/SKILL.md)**:
 
 | Intent | Control surface |
 |--------|-----------------|
@@ -139,7 +139,7 @@ Markdown table for each in-flight plan (typically one Master Plan subtree):
 | **Status** | Drafted sections, `_TBD_`, PR linked, archived. |
 | **Next viable moves** | **Numbered** options naming **protocol branch + target** (e.g. *1. **new-plan** — expand list item **2** under `<parent-slug>`*; *2. **phase-planner** — populate child `<path>`*). Mark ineligible rows in the snapshot (e.g. *blocked — PR 1 ship incomplete*) but **do not** offer them as **`AskQuestion`** `options` — see § *Depth-first expansion eligibility*. |
 
-When a pick is required, offer the same moves as **`AskQuestion`** `options` (§ *Sedea input channel*). Session and plan-path contracts for planning live in this center rule, **`planning-target-resolution`**, center skills, and **`.sedea/centers/research-and-development/docs/development-process.md`** — hosting-repo **`.cursor/rules/`** cover codebase architecture and navigation only.
+When a pick is required, offer the same moves as **`AskQuestion`** `options` (§ *Sedea input channel*). Session and plan-path contracts for planning live in this center rule, **`planning-target-resolution`**, center skills, and **`.sedea/centers/software-development/docs/development-process.md`** — hosting-repo **`.cursor/rules/`** cover codebase architecture and navigation only.
 
 **Root delivery plans only (binding).** New plans scaffold under the flat **`.sedea/operations/.../plans/`** union with sidecar **`parent: null`** unless the developer explicitly overrides **`Parent`** in the same message — see **development-process.md** § *Root delivery plans vs legacy Hub parent intake*. **Forbidden in snapshots and **`AskQuestion`** expand options:** paths under **`plans/roadmap-topics/`**, Hub **`top_level_topic`** intake, or “expand roadmap topic” moves. Legacy topic rows on disk may still appear in read-only snapshots until Hub UI removal (Master Plan phase 3); do **not** offer **`new-plan`** expand or parent-picker flows that recreate topic-parent intake.
 
@@ -171,11 +171,11 @@ Per PR plan path: §8 row `shipPhase: done` and `rowStatus: closed`, or explicit
 
 Snapshots should respect **coding-session** pre-worktree validation and the worktree-open gate when a PR plan would anchor a worktree session. **`readyForImplementation: true`** from **`pr-plan`** does **not** bypass validation — see § *Planning readiness vs ship* above.
 
-1. For each in-scope **PR plan** row, detect `_TBD_` outside fenced code in §§5–8 / deploy where applicable, or run **`plan-ws-completeness.mjs`** from **`HOSTING_ROOT`** (§ *Hosting repo cwd for scripts (canonical)* in [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](20_efficient-pr-shipping.mdc)):
+1. For each in-scope **PR plan** row, detect `_TBD_` outside fenced code in §§5–8 / deploy where applicable, or run **`plan-ws-completeness.mjs`** from **`HOSTING_ROOT`** (§ *Hosting repo cwd for scripts (canonical)* in [`.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc`](20_efficient-pr-shipping.mdc)):
 
  ```bash
  cd "$HOSTING_ROOT"
- node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-ws-completeness.mjs \
+ node .sedea/centers/software-development/missions/plan-and-deliver/scripts/plan-ws-completeness.mjs \
  --file "<absolute path to .plan.md>"
  ```
 
@@ -187,7 +187,7 @@ Snapshots should respect **coding-session** pre-worktree validation and the work
 
  ```bash
  cd "$HOSTING_ROOT"
- node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs \
+ node .sedea/centers/software-development/missions/plan-and-deliver/scripts/plan-state.mjs \
   resolve --cwd "$WORKTREE_ROOT"
  ```
 

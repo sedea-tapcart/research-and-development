@@ -5,7 +5,7 @@
  * Run from hosting repo root (after npm ci in scripts/):
  *
  *   HOSTING_ROOT="$(pwd)" node --test \
- *     .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/verify-prd-acceptance-checklist.test.mjs
+ *     .sedea/centers/software-development/missions/plan-and-deliver/scripts/verify-prd-acceptance-checklist.test.mjs
  */
 
 import assert from 'node:assert/strict';
@@ -42,7 +42,7 @@ const PRD_ACCEPTANCE_MAP = [
   {
     criterion: 'New sidecars default parent: null on new-plan path',
     automated: [
-      '.sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs (readSidecarPlain default)',
+      '.sedea/centers/software-development/missions/plan-and-deliver/scripts/plan-state.mjs (readSidecarPlain default)',
     ],
     manual: 'Run new-plan scaffold — sidecar parent: null under flat plans/',
   },
@@ -130,7 +130,7 @@ test('PRD §2.2 — hubMissionInputs fixtures omit roadmap-topics paths', async 
 
 test('PRD §2.2 — plan.mdc §4 defaults Parent: null without parent AskQuestion', async () => {
   const planMdc = await readUtf8(
-    '.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc',
+    '.sedea/centers/software-development/missions/plan-and-deliver/plan.mdc',
   );
   assert.match(planMdc, /Parent: null/);
   assert.match(planMdc, /no.*parent.*AskQuestion/i);
@@ -138,7 +138,7 @@ test('PRD §2.2 — plan.mdc §4 defaults Parent: null without parent AskQuestio
 
 test('PRD §2.2 — plan-state readSidecarPlain defaults parent: null', async () => {
   const planState = await readUtf8(
-    '.sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs',
+    '.sedea/centers/software-development/missions/plan-and-deliver/scripts/plan-state.mjs',
   );
   assert.match(planState, /async function readSidecarPlain/);
   assert.match(planState, /parent: null,/);

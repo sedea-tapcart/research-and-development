@@ -5,7 +5,7 @@
  * preflight row 11 — README § Definitive laneRules for author-prd, master-planner,
  * coding-session).
  *
- * Also lints mission_control_spawn_agent spawn examples on master-planner skills (R&D and Sedea
+ * Also lints mission_control_spawn_agent spawn examples on master-planner skills (Software Development and Sedea
  * maintenance copies): when frontmatter declares inputs.parent.type: string, JSON
  * null for parent is forbidden — wire encoding must use "parent":"null".
  *
@@ -15,9 +15,14 @@
  * - coding-session must not document notify caller paths
  * - skills/README.md — N1–N8 notify preflight + v1 child receive table
  *
- * Run from hosting repo root (directory containing .sedea/):
+ * Spawn byte budget: sums warmUpRules ∪ laneRules path bodies; excludes assigned skill
+ * SKILL.md when listed (host skillPath inject — lane-manifest-contract § Spawn cap).
+ * --enforce-spawn-byte-budget: strict cap for planning + coding-session spawn roles.
  *
- *   node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/verify-skill-manifest.mjs
+ * Run from hosting repo root (directory containing `.sedea/centers/sedea/`) or from the
+ * software-development center repo root (standalone clone / center-repo CI):
+ *
+ *   node .sedea/centers/software-development/missions/plan-and-deliver/scripts/verify-skill-manifest.mjs
  *
  * Exit 0 when lists match, warm-up manifest parity passes, and spawn wire lint passes; exit 1 otherwise.
  */
@@ -26,6 +31,11 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse as parseYaml } from 'yaml';
+import {
+  mapWarmUpPath,
+  resolveGovernanceContext,
+  SD_CENTER_PREFIX,
+} from './resolve-governance-root.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CENTER_ROOT = path.resolve(__dirname, '../../..');
@@ -58,36 +68,58 @@ const NOTIFY_RECEIVE_OPTION_IDS = [
 
 const SKILLS_README_REL =
   'missions/plan-and-deliver/skills/README.md';
+const SKILLS_SPAWN_SHIP_REL =
+  'missions/plan-and-deliver/docs/spawn-ship-contracts.md';
+/** PRD C1 — slim README core warm-up target (bytes). */
+const SKILLS_README_BYTE_CAP = 25 * 1024;
+const DEV_PROCESS_REL = 'docs/development-process.md';
+const PLANNING_MODE_TEMPLATES_REL = 'docs/planning-mode-templates.md';
+/** PRD C2 — slim development-process core warm-up target (bytes). */
+const DEV_PROCESS_BYTE_CAP = 60 * 1024;
 
 const SKILL_WARMUP_HEADING = '### `skillWarmUp` — frontmatter `warmUpRules`';
 const LANE_RULES_HEADING = '### `laneRules` — frontmatter `laneRules`';
 /** Host spawn cap — `.sedea/centers/sedea/rules/4_mission.mdc` § Spawned execution */
 const WARM_UP_BYTE_CAP = 384 * 1024;
 
+/** Spawn skills — strict byte-budget enforce when `--enforce-spawn-byte-budget` (planning + ship roles). */
+const SPAWN_BYTE_BUDGET_ENFORCE_SKILLS = new Set([
+  'master-planner',
+  'phase-planner',
+  'pr-plan',
+  'pr-breakdown',
+  'delivery-phases',
+  'new-plan',
+  'author-prd',
+  'ad-hoc-prd',
+  'quick-fix-plan',
+  'coding-session',
+]);
+
 /** Definitive laneRules rows from skills/README.md § Definitive laneRules (spawn preflight row 11). */
 const DEFINITIVE_LANE_RULES_BY_SKILL = {
   'author-prd': [
     '.sedea/centers/sedea/rules/2_ask-question-instructions.mdc',
-    '.sedea/centers/research-and-development/missions/plan-and-deliver/skills/author-prd/SKILL.md',
-    '.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc',
+    '.sedea/centers/software-development/missions/plan-and-deliver/skills/author-prd/SKILL.md',
+    '.sedea/centers/software-development/missions/plan-and-deliver/plan.mdc',
   ],
   'brainstorm-research': [
     '.sedea/centers/sedea/rules/2_ask-question-instructions.mdc',
-    '.sedea/centers/research-and-development/missions/plan-and-deliver/skills/brainstorm-research/SKILL.md',
-    '.sedea/centers/research-and-development/rules/31_dispatch-scope.mdc',
-    '.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md',
+    '.sedea/centers/software-development/missions/plan-and-deliver/skills/brainstorm-research/SKILL.md',
+    '.sedea/centers/software-development/rules/31_dispatch-scope.mdc',
+    '.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md',
   ],
   'master-planner': [
     '.sedea/centers/sedea/rules/2_ask-question-instructions.mdc',
-    '.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc',
-    '.sedea/centers/research-and-development/missions/plan-and-deliver/skills/master-planner/SKILL.md',
-    '.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md',
+    '.sedea/centers/software-development/rules/30_planning-target-resolution.mdc',
+    '.sedea/centers/software-development/missions/plan-and-deliver/skills/master-planner/SKILL.md',
+    '.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md',
   ],
   'coding-session': [
     '.sedea/centers/sedea/rules/2_ask-question-instructions.mdc',
     '.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc',
-    '.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc',
-    '.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md',
+    '.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc',
+    '.sedea/centers/software-development/missions/plan-and-deliver/skills/coding-session/SKILL.md',
   ],
 };
 
@@ -111,21 +143,6 @@ function normalizeRepoPath(p) {
 function skillNameFromRel(repoRelativePath) {
   const m = repoRelativePath.match(/missions\/[^/]+\/skills\/([^/]+)\/SKILL\.md$/);
   return m ? m[1] : undefined;
-}
-
-async function resolveHostingRoot() {
-  let dir = process.cwd();
-  for (let depth = 0; depth < 32; depth += 1) {
-    try {
-      await fs.access(path.join(dir, '.sedea/centers/sedea'));
-      return dir;
-    } catch {
-      const parent = path.dirname(dir);
-      if (parent === dir) break;
-      dir = parent;
-    }
-  }
-  die('could not resolve hosting repo root — run from HOSTING_ROOT');
 }
 
 async function listSkillFilesOnDisk() {
@@ -246,10 +263,27 @@ function dedupeOrderedPaths(paths) {
   return out;
 }
 
-async function combinedWarmUpBytes(hostingRoot, paths) {
+/** Repo-relative warm-up path for the assigned skill body (host injects via skillPath — lane-manifest-contract § Spawn cap). */
+function assignedSkillBodyWarmUpPath(skillName) {
+  if (!skillName) return undefined;
+  return normalizeRepoPath(
+    `${SD_CENTER_PREFIX}missions/plan-and-deliver/skills/${skillName}/SKILL.md`,
+  );
+}
+
+/** Paths counted toward the 384 KiB spawn budget — excludes assigned skill body when listed in laneRules / warmUpRules. */
+function pathsForSpawnByteBudget(skillName, mergedPaths) {
+  const assigned = assignedSkillBodyWarmUpPath(skillName);
+  if (!assigned) return mergedPaths;
+  return mergedPaths.filter((p) => normalizeRepoPath(p) !== assigned);
+}
+
+async function combinedWarmUpBytes(ctx, paths) {
   let total = 0;
   for (const rel of dedupeOrderedPaths(paths)) {
-    const st = await fs.stat(path.join(hostingRoot, rel));
+    const abs = mapWarmUpPath(ctx, rel);
+    if (!abs) continue;
+    const st = await fs.stat(abs);
     total += st.size;
   }
   return total;
@@ -271,11 +305,13 @@ function diffSets(label, frontmatter, table, repoRelativePath) {
   return lines.join('\n');
 }
 
-async function assertPathsExist(hostingRoot, paths, repoRelativePath, label) {
+async function assertPathsExist(ctx, paths, repoRelativePath, label) {
   const missing = [];
   for (const rel of paths) {
+    const abs = mapWarmUpPath(ctx, rel);
+    if (!abs) continue;
     try {
-      await fs.access(path.join(hostingRoot, rel));
+      await fs.access(abs);
     } catch {
       missing.push(rel);
     }
@@ -290,7 +326,7 @@ function manifestKind(body) {
   return 'none';
 }
 
-async function validateWarmUpManifest(repoRelativePath, hostingRoot) {
+async function validateWarmUpManifest(repoRelativePath, ctx) {
   if (!repoRelativePath.startsWith(PLAN_AND_DELIVER_PREFIX)) return [];
 
   const abs = path.join(CENTER_ROOT, repoRelativePath);
@@ -380,14 +416,14 @@ async function validateWarmUpManifest(repoRelativePath, hostingRoot) {
     }
 
     const pathErrWarmUp = await assertPathsExist(
-      hostingRoot,
+      ctx,
       warmUpFm,
       repoRelativePath,
       'warmUpRules',
     );
     if (pathErrWarmUp) errors.push(pathErrWarmUp);
     const pathErrLane = await assertPathsExist(
-      hostingRoot,
+      ctx,
       laneRulesFm,
       repoRelativePath,
       'laneRules',
@@ -395,16 +431,25 @@ async function validateWarmUpManifest(repoRelativePath, hostingRoot) {
     if (pathErrLane) errors.push(pathErrLane);
 
     if (!errors.length) {
+      const skillName = skillNameFromRel(repoRelativePath);
       const mergedPaths = dedupeOrderedPaths([...warmUpFm, ...laneRulesFm]);
-      const bytes = await combinedWarmUpBytes(hostingRoot, mergedPaths);
+      const budgetPaths = pathsForSpawnByteBudget(skillName, mergedPaths);
+      const bytes = await combinedWarmUpBytes(ctx, budgetPaths);
       byteBudgetReports.push({ repoRelativePath, bytes });
       if (bytes > WARM_UP_BYTE_CAP) {
+        const assignedExcluded =
+          budgetPaths.length < mergedPaths.length
+            ? ' (assigned skill body excluded per lane-manifest-contract § Spawn cap)'
+            : '';
         process.stderr.write(
-          `WARN: ${repoRelativePath}: frontmatter warmUpRules ∪ laneRules is ${bytes} bytes (host spawn cap ${WARM_UP_BYTE_CAP}) — trim frontmatter or use README cap exceptions before --enforce-spawn-byte-budget\n`,
+          `WARN: ${repoRelativePath}: spawn byte budget paths total ${bytes} bytes (host spawn cap ${WARM_UP_BYTE_CAP})${assignedExcluded} — trim frontmatter or use README cap exceptions before --enforce-spawn-byte-budget\n`,
         );
-        if (enforceSpawnByteBudget) {
+        if (
+          enforceSpawnByteBudget &&
+          SPAWN_BYTE_BUDGET_ENFORCE_SKILLS.has(skillName)
+        ) {
           errors.push(
-            `${repoRelativePath}: frontmatter warmUpRules ∪ laneRules is ${bytes} bytes (cap ${WARM_UP_BYTE_CAP})`,
+            `${repoRelativePath}: spawn byte budget paths total ${bytes} bytes (cap ${WARM_UP_BYTE_CAP})${assignedExcluded}`,
           );
         }
       }
@@ -548,9 +593,9 @@ async function validateNotifyEmitSkill(skillName) {
     ),
     assertContains(
       raw,
-      '§ *MCP notify preflight* (rows N1–N8)',
+      'spawn-ship-contracts.md',
       rel,
-      'README notify preflight cross-ref',
+      'spawn-ship-contracts notify preflight cross-ref',
     ),
     assertContains(
       raw,
@@ -643,40 +688,92 @@ async function validateCodingSessionNotifyCallerForbidden() {
   return errors;
 }
 
+async function validateSkillsReadmeSlimSplit() {
+  const errors = [];
+  const readmeAbs = path.join(CENTER_ROOT, SKILLS_README_REL);
+  const spawnAbs = path.join(CENTER_ROOT, SKILLS_SPAWN_SHIP_REL);
+  const readmeRaw = await fs.readFile(readmeAbs, 'utf8');
+  const readmeBytes = Buffer.byteLength(readmeRaw, 'utf8');
+  if (readmeBytes > SKILLS_README_BYTE_CAP) {
+    errors.push(
+      `${SKILLS_README_REL}: ${readmeBytes} bytes exceeds slim core cap ${SKILLS_README_BYTE_CAP} (25 KiB)`,
+    );
+  }
+  try {
+    await fs.access(spawnAbs);
+  } catch {
+    errors.push(`${SKILLS_SPAWN_SHIP_REL}: missing on-demand spawn/ship contracts doc`);
+  }
+  return errors;
+}
+
+async function validateDevelopmentProcessSlimSplit() {
+  const errors = [];
+  const devProcAbs = path.join(CENTER_ROOT, DEV_PROCESS_REL);
+  const templatesAbs = path.join(CENTER_ROOT, PLANNING_MODE_TEMPLATES_REL);
+  const devProcRaw = await fs.readFile(devProcAbs, 'utf8');
+  const devProcBytes = Buffer.byteLength(devProcRaw, 'utf8');
+  if (devProcBytes > DEV_PROCESS_BYTE_CAP) {
+    errors.push(
+      `${DEV_PROCESS_REL}: ${devProcBytes} bytes exceeds slim core cap ${DEV_PROCESS_BYTE_CAP} (60 KiB)`,
+    );
+  }
+  if (!devProcRaw.includes('planning-mode-templates.md')) {
+    errors.push(
+      `${DEV_PROCESS_REL}: missing on-demand pointer to ${PLANNING_MODE_TEMPLATES_REL}`,
+    );
+  }
+  try {
+    await fs.access(templatesAbs);
+  } catch {
+    errors.push(`${PLANNING_MODE_TEMPLATES_REL}: missing on-demand planning mode templates doc`);
+  }
+  return errors;
+}
+
 async function validateNotifyReadmeCoverage() {
   const rel = SKILLS_README_REL;
+  const spawnRel = SKILLS_SPAWN_SHIP_REL;
   const abs = path.join(CENTER_ROOT, rel);
+  const spawnAbs = path.join(CENTER_ROOT, spawnRel);
   const raw = await fs.readFile(abs, 'utf8');
+  let spawnRaw = '';
+  try {
+    spawnRaw = await fs.readFile(spawnAbs, 'utf8');
+  } catch {
+    return [`${spawnRel}: missing — required for notify governance after README slim split`];
+  }
+  const corpus = `${raw}\n${spawnRaw}`;
   const errors = [];
 
-  const notifySection = extractSection(raw, '### MCP notify preflight (`mission_control_notify_child_lanes`)');
+  const notifySection = extractSection(corpus, '### MCP notify preflight (`mission_control_notify_child_lanes`)');
   if (!notifySection) {
-    errors.push(`${rel}: missing § MCP notify preflight (N1–N8)`);
+    errors.push(`${rel} + ${spawnRel}: missing § MCP notify preflight (N1–N8)`);
   } else {
     const missing = NOTIFY_PREFLIGHT_STEPS.filter((step) => !notifySection.includes(`| ${step} |`));
     if (missing.length) {
-      errors.push(`${rel}: MCP notify preflight missing row(s): ${missing.join(', ')}`);
+      errors.push(`${spawnRel}: MCP notify preflight missing row(s): ${missing.join(', ')}`);
     }
   }
 
   const receiveAnchor = '**Child delivery checkpoint (receive) — binding:**';
-  const receiveStart = raw.indexOf(receiveAnchor);
+  const receiveStart = corpus.indexOf(receiveAnchor);
   if (receiveStart === -1) {
-    errors.push(`${rel}: missing § Child delivery checkpoint (receive)`);
+    errors.push(`${rel} + ${spawnRel}: missing § Child delivery checkpoint (receive)`);
   } else {
-    const receiveEnd = raw.indexOf('### Lane title prefix', receiveStart);
+    const receiveEnd = corpus.indexOf('### Lane title prefix', receiveStart);
     const receiveSection =
-      receiveEnd === -1 ? raw.slice(receiveStart) : raw.slice(receiveStart, receiveEnd);
+      receiveEnd === -1 ? corpus.slice(receiveStart) : corpus.slice(receiveStart, receiveEnd);
     for (const skillName of NOTIFY_RECEIVE_SKILL_NAMES) {
       const tableRowNeedle = '| **`' + skillName;
       if (!receiveSection.includes(tableRowNeedle)) {
-        errors.push(`${rel}: child receive table missing skill \`${skillName}\``);
+        errors.push(`${spawnRel}: child receive table missing skill \`${skillName}\``);
       }
     }
   }
 
-  if (!raw.includes('sedea.features.plan-change-notification')) {
-    errors.push(`${rel}: missing plan-change-notification feature flag reference`);
+  if (!corpus.includes('sedea.features.plan-change-notification')) {
+    errors.push(`${spawnRel}: missing plan-change-notification feature flag reference`);
   }
 
   for (const skillName of NOTIFY_EMIT_SKILL_NAMES) {
@@ -702,6 +799,8 @@ async function validateNotifyGovernance() {
     errors.push(...(await validateNotifyReceiveSkill(skillName)));
   }
   errors.push(...(await validateCodingSessionNotifyCallerForbidden()));
+  errors.push(...(await validateSkillsReadmeSlimSplit()));
+  errors.push(...(await validateDevelopmentProcessSlimSplit()));
   errors.push(...(await validateNotifyReadmeCoverage()));
   return errors;
 }
@@ -747,7 +846,7 @@ async function validateNullableParentSpawnWire(hostingRoot, repoRelativePaths) {
 
 async function main() {
   ({ enforceSpawnByteBudget } = parseMainArgs(process.argv));
-  const hostingRoot = await resolveHostingRoot();
+  const ctx = await resolveGovernanceContext({ scriptDir: __dirname });
   const yamlText = await fs.readFile(CENTER_YAML, 'utf8');
   const listed = parseSkillEntriesFromYaml(yamlText);
   const disk = await listSkillFilesOnDisk();
@@ -757,7 +856,7 @@ async function main() {
   for (const rel of disk) {
     const err = await validateSkillFrontmatter(rel);
     if (err) frontmatterErrors.push(err);
-    const warmErrs = await validateWarmUpManifest(rel, hostingRoot);
+    const warmErrs = await validateWarmUpManifest(rel, ctx);
     warmUpErrors.push(...warmErrs);
   }
 
@@ -773,15 +872,16 @@ async function main() {
     process.exit(1);
   }
 
-  const sedeaPlannerSkills = await listSedeaPlannerSkillFiles(hostingRoot);
+  const sedeaPlannerSkills = ctx.hostingRoot
+    ? await listSedeaPlannerSkillFiles(ctx.hostingRoot)
+    : [];
   const rdPlannerSkills = [...disk].filter((rel) =>
     /\/skills\/master-planner\/SKILL\.md$/.test(rel),
   );
   const spawnWirePaths = [...rdPlannerSkills, ...sedeaPlannerSkills];
-  const spawnWireErrors = await validateNullableParentSpawnWire(
-    hostingRoot,
-    spawnWirePaths,
-  );
+  const spawnWireErrors = ctx.hostingRoot
+    ? await validateNullableParentSpawnWire(ctx.hostingRoot, spawnWirePaths)
+    : await validateNullableParentSpawnWire(ctx.centerRoot, rdPlannerSkills);
   if (spawnWireErrors.length) {
     process.stderr.write('nullable-parent spawn wire lint failed:\n');
     for (const e of spawnWireErrors) process.stderr.write(`  ${e}\n`);
@@ -807,6 +907,7 @@ async function main() {
         `notify emit/receive governance lint passed (${NOTIFY_EMIT_SKILL_NAMES.length} emit + ${NOTIFY_RECEIVE_SKILL_NAMES.length} receive skills); ` +
         `spawn byte budget smoke: ${overCap.length} skill(s) over ${WARM_UP_BYTE_CAP} bytes` +
         (enforceSpawnByteBudget ? ' (--enforce-spawn-byte-budget)' : '') +
+        (ctx.mode === 'center' ? '; center-repo-only mode (sedea warm-up paths skipped)' : '') +
         `\n`,
     );
     process.exit(0);

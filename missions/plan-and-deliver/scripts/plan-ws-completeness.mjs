@@ -10,7 +10,7 @@
 // development-process.md § Planning readiness vs worktree completeness.
 //
 // Usage (from hosting repo root):
-//   node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-ws-completeness.mjs --file /absolute/path/to/plan.plan.md
+//   node .sedea/centers/software-development/missions/plan-and-deliver/scripts/plan-ws-completeness.mjs --file /absolute/path/to/plan.plan.md
 //
 // Exit codes:
 //   0 — Gate passes: not a per-PR plan body, or per-PR plan with no `_TBD_` in prose.

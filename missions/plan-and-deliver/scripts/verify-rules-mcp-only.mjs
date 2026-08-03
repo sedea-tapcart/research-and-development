@@ -7,7 +7,7 @@
  *
  * Run from hosting repo root:
  *
- *   node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/verify-rules-mcp-only.mjs
+ *   node .sedea/centers/software-development/missions/plan-and-deliver/scripts/verify-rules-mcp-only.mjs
  *
  * Exit 0 when all checks pass; exit 1 otherwise.
  */
@@ -24,9 +24,9 @@ const RULE_PATHS = [
   '.sedea/centers/sedea/rules/0_hosting-repo.mdc',
   '.sedea/centers/sedea/rules/2_ask-question-instructions.mdc',
   '.sedea/centers/sedea/rules/9_display-metadata-authority.mdc',
-  '.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc',
-  '.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc',
-  '.sedea/centers/research-and-development/rules/50_mission-control-display-metadata-discipline.mdc',
+  '.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc',
+  '.sedea/centers/software-development/rules/30_planning-target-resolution.mdc',
+  '.sedea/centers/software-development/rules/50_mission-control-display-metadata-discipline.mdc',
   '.cursor/rules/mission-control-agent-runtime.mdc',
 ];
 

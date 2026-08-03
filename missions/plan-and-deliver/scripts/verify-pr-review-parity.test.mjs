@@ -9,7 +9,7 @@
  * Run from hosting repo root:
  *
  *   HOSTING_ROOT="$(pwd)" node --test \
- *     .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/verify-pr-review-parity.test.mjs
+ *     .sedea/centers/software-development/missions/plan-and-deliver/scripts/verify-pr-review-parity.test.mjs
  */
 
 import assert from 'node:assert/strict';
