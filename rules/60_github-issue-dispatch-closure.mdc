@@ -6,7 +6,7 @@ globs: "**/*"
 alwaysApply: false
 ---
 
-# GitHub issue dispatch closure (R&D)
+# GitHub issue dispatch closure (Software Development)
 
 **On-demand rule.** Load when an R&D delivery mission binds a GitHub issue at intake or when the Squad Leader is about to call **`mission_control_propose_dispatch_resolution`**.
 

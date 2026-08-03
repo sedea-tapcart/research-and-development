@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Plan Board sidecar writer for R&D plan-and-deliver (lifecycle + archive fields).
-// Normative contract: `.sedea/centers/sedea/rules/8_plan-board-contract.mdc`
+// Operations plan sidecar writer for Software Development plan-and-deliver (lifecycle + archive fields).
+// Normative contract: `.sedea/centers/sedea/rules/8_operations-plan-sidecar-contract.mdc`
 // Invoked by: coding-session skill, plan-reconcile, efficient-pr-shipping commit-and-push cadence, hosting repo automation.
 // Design contract: Sedea `.sedea/operations/` plan union across dispatch-scoped plan directories.
 
@@ -273,7 +273,7 @@ async function loadSidecarDoc(planPath) {
     doc = parseDocument(src, { keepSourceTokens: true });
   } else {
     doc = new Document({});
-    doc.commentBefore = ` Sidecar for Plan Board (runtime). Plan: ${slug}.plan.md`;
+    doc.commentBefore = ` Sidecar for operations plan runtime. Plan: ${slug}.plan.md`;
   }
   if (!isMap(doc.contents)) {
     // Replace malformed document with an empty map; callers will add fields.
@@ -341,7 +341,7 @@ async function readSidecarPlain(planPath) {
   return { statePath, data: { worktrees, prs, session, parent, archived, status } };
 }
 
-// Plan Board archive bucket: sidecar `archived` is authoritative (rule 8).
+// Sidecar archive bucket: sidecar `archived` is authoritative (rule 8).
 // Legacy frontmatter `archived: true` is a read fallback until migrated away.
 async function resolvePlanArchived(planPath) {
   const { data } = await readSidecarPlain(planPath);
@@ -1311,7 +1311,7 @@ function shippedPrsEqual(a, b) {
 }
 
 // Set or clear legacy `archived:` in plan frontmatter (migration cleanup only).
-// Plan Board archive bucket is sidecar `archived` per rule 8 — prefer
+// Sidecar archive bucket is sidecar `archived` per rule 8 — prefer
 // setSidecarArchived for new writes.
 async function setPlanArchivedFlag(planPath, value, { dryRun } = {}) {
   return mutateFrontmatter(planPath, (doc) => {
@@ -1331,7 +1331,7 @@ async function setPlanArchivedFlag(planPath, value, { dryRun } = {}) {
 
 // `archive --slug <slug> --signal "<text>" [--parent <target>|--clear] [--dry-run]`
 // — mechanical archive for one plan. Used by the plan-reconcile skill after the user
-// picks candidates via AskQuestion, and by the Plan Board drag-drop
+// picks candidates via AskQuestion, and by plan-state reconcile drag-drop
 // controller when archiving on drop. One slug per call (agent loops) so
 // each failure is isolated and logs are readable. Idempotent: archiving an
 // already-archived plan is a no-op; re-running with the same slug after a
@@ -1379,7 +1379,7 @@ async function cmdArchive(flags) {
 // ---------- subcommand: reparent ----------
 
 // `reparent --slug <slug> (--parent <target-slug> | --clear) [--dry-run]` —
-// rewrite a plan's frontmatter `parent:` value. Used by the Plan Board
+// rewrite a plan's frontmatter `parent:` value. Used by plan-state parent commands
 // drag-drop controller for same-status drops (both source + target active,
 // or both archived). Preserves YAML comments + other frontmatter via
 // `mutateFrontmatter`. Refuses cycles (target ancestor chain can't contain
@@ -1447,9 +1447,9 @@ async function collectAncestorSlugs(startSlug) {
 // for the parent link — Cursor's native Plan-mode writer strips frontmatter
 // fields it doesn't recognise, so we keep the hierarchy link in the sidecar
 // (which Cursor never touches) and leave plan-frontmatter alone. The
-// Plan Board extension resolves the effective parent via `resolveParentSlug`
-// in plan-board/src/model/merge.ts (sidecar wins, frontmatter is a legacy
-// fallback until the `migrate-parent-to-sidecar` subcommand runs).
+// plan-state resolves the effective parent via `resolveParentSlug`
+// (sidecar wins, frontmatter is a legacy fallback until the
+// `migrate-parent-to-sidecar` subcommand runs).
 //
 // Null writes as the literal `null` scalar. Returns `false` when the sidecar
 // `parent:` already equals `newParent` (idempotent). Position: inserted at
@@ -1476,7 +1476,7 @@ async function setSidecarParent(planPath, newParent, { dryRun } = {}) {
   return true;
 }
 
-// Set or clear sidecar `archived:` (Plan Board archive bucket — rule 8).
+// Set or clear sidecar `archived:` (sidecar archive bucket — rule 8).
 async function setSidecarArchived(planPath, value, { dryRun } = {}) {
   const want = value === true;
   const { doc, statePath } = await loadSidecarDoc(planPath);
@@ -1492,7 +1492,7 @@ async function setSidecarArchived(planPath, value, { dryRun } = {}) {
   return true;
 }
 
-// Set sidecar plan lifecycle `status` (Plan Board dot — rule 8 § Lifecycle).
+// Set sidecar plan lifecycle `status` (plan lifecycle status — rule 8 § Lifecycle).
 async function setSidecarStatus(planPath, status, { dryRun } = {}) {
   if (!PLAN_BOARD_STATUSES.has(status)) {
     die(`setSidecarStatus: status must be one of not_started|started|completed|canceled (got "${status}")`);
@@ -1559,7 +1559,7 @@ async function cmdUnarchive(flags) {
     statusPreserved,
     statusChanged: false,
     lifecycleNote:
-      'unarchive clears archived only; completed from archive is intentional — use set-plan-status to change the Plan Board dot',
+      'unarchive clears archived only; completed from archive is intentional — use set-plan-status to change the plan lifecycle status',
     dryRun,
   }));
 }
@@ -1589,12 +1589,12 @@ async function removeChildBullet(parent, childSlug, dryRun) {
 //      sidecar (creating the sidecar with the conventional header if
 //      missing) and then delete the frontmatter `parent:` key.
 //   2. When both locations already carry a `parent:` key and they
-//      disagree, the sidecar wins (Plan Board extension already resolves
+//      disagree, the sidecar wins (sidecar union already resolves
 //      it that way); the frontmatter is still stripped so the two
 //      locations can never drift again. The disagreement is reported in
 //      the run summary so the user can audit.
 //   3. Plans whose frontmatter already has no `parent:` key are left
-//      alone — the Plan Board's legacy-fallback reader handles both
+//      alone — the sidecar legacy-fallback reader handles both
 //      pre- and post-migration shapes.
 //
 // Idempotent: re-runs after a successful run report `alreadyMigrated`
@@ -1759,7 +1759,7 @@ async function stripFrontmatterParent(planPath, { dryRun } = {}) {
 // ---------- subcommand: set-plan-status ----------
 
 // `set-plan-status --slug <slug> --status <not_started|started|completed|canceled> [--dry-run]`
-// — write Plan Board lifecycle dot to sidecar only (rule 8).
+// — write plan lifecycle status to sidecar only (rule 8).
 async function cmdSetPlanStatus(flags) {
   const slug = requireString(flags, 'slug');
   const rawStatus = requireString(flags, 'status');
@@ -1965,7 +1965,7 @@ Subcommands:
       the plan is active and status is missing or not_started.
 
   set-plan-status --slug <slug> --status <not_started|started|completed|canceled> [--dry-run]
-      Write Plan Board lifecycle dot to sidecar status only (rule 8).
+      Write plan lifecycle status to sidecar status only (rule 8).
 
   upsert-pr --slug <slug> --repo <basename> --number <n>
       Append {repo, number} to sidecar prs[] (idempotent).
@@ -2003,7 +2003,7 @@ Subcommands:
   reparent --slug <slug> (--parent <target-slug> | --clear) [--dry-run]
       Rewrite a plan's sidecar parent: value. Refuses cycles and
       self-parenting. No-op when the value already matches. Used by the
-      Plan Board drag-drop controller for same-archive-status drops.
+      plan-state drag-drop controller for same-archive-status drops.
 
   unarchive --slug <slug> [--dry-run]
       Clear sidecar archived: on the plan, remove legacy frontmatter archived:

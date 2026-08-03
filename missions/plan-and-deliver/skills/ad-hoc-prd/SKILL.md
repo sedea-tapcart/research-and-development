@@ -40,50 +40,50 @@ inputs:
     default: []
 laneRules:
   - ".sedea/centers/sedea/rules/2_ask-question-instructions.mdc"
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/ad-hoc-prd/SKILL.md"
-  - ".sedea/centers/research-and-development/rules/31_dispatch-scope.mdc"
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
+  - ".sedea/centers/software-development/missions/plan-and-deliver/skills/ad-hoc-prd/SKILL.md"
+  - ".sedea/centers/software-development/rules/31_dispatch-scope.mdc"
+  - ".sedea/centers/software-development/missions/plan-and-deliver/skills/README.md"
 warmUpRules:
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
-  - ".sedea/centers/research-and-development/docs/development-process.md"
-  - ".sedea/centers/research-and-development/rules/10_plan-naming-convention.mdc"
+  - ".sedea/centers/software-development/missions/plan-and-deliver/skills/README.md"
+  - ".sedea/centers/software-development/rules/10_plan-naming-convention.mdc"
 ---
 
 # Ad-Hoc PRD
 
 ## No agent gcloud secrets or env-var proposals (binding)
 
-**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/research-and-development/rules/60_no-agent-env-secrets.mdc`.
+**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/software-development/rules/60_no-agent-env-secrets.mdc`.
 
 ## Warm-up manifest (spawned)
 
-Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea/docs/lane-manifest-contract.md) and **`../README.md`** § *Default warm-up*. Spawned from **`single-phase`** §3 or **`debug-and-fix`** §5c — **not** plan-and-deliver §3 (which uses **`author-prd`**). Host merge: `effectiveWarmUp = dedupe(bootstrapRules → laneRules → skillWarmUp)`. Frontmatter matches this table. **No `alwaysApply` frontmatter flip.**
+Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea/docs/lane-manifest-contract.md) and **`../README.md`** § *Default warm-up*. Spawned from **`single-phase`** §3 or **`debug-and-fix`** §5c — **not** plan-and-deliver §3 (which uses **`author-prd`**). Host merge: `effectiveWarmUp = dedupe(bootstrapRules → laneRules → skillWarmUp)`. Frontmatter matches this table. **384 KiB cap:** frontmatter omits **`development-process.md`** — explicit **`Read`** at named protocol steps. **No `alwaysApply` frontmatter flip.**
 
-**Invoker `warmUpRules` override (binding):** On **`mission_control_spawn_agent`**, invokers merge skill frontmatter **`warmUpRules`** but **must add** the **invoking mission `plan.mdc`** — **`.sedea/centers/research-and-development/missions/single-phase/plan.mdc`** (§§1–3) or **`.sedea/centers/research-and-development/missions/debug-and-fix/plan.mdc`** (post-fix step **5c**) — **instead of** `plan-and-deliver/plan.mdc`. See **`../README.md`** § *Definitive `laneRules`* and each mission's spawn step.
+**Invoker `warmUpRules` override (binding):** On **`mission_control_spawn_agent`**, invokers merge skill frontmatter **`warmUpRules`** but **must add** the **invoking mission `plan.mdc`** — **`.sedea/centers/software-development/missions/single-phase/plan.mdc`** (§§1–3) or **`.sedea/centers/software-development/missions/debug-and-fix/plan.mdc`** (post-fix step **5c**) — **instead of** `plan-and-deliver/plan.mdc`. See **`../README.md`** § *Definitive `laneRules`* and each mission's spawn step.
 
-### `bootstrapRules` — host-resolved (R&D layer)
+### `bootstrapRules` — host-resolved (Software Development center layer)
 
 | Path | Purpose |
 |------|---------|
-| `.sedea/centers/research-and-development/rules/bootstrap.mdc` | Sole R&D `alwaysApply: true` bootstrap (≤10 KB); host merges when `centerSlug === research-and-development` |
+| `.sedea/centers/software-development/rules/bootstrap.mdc` | Sole Software Development `alwaysApply: true` bootstrap (≤10 KB); host merges when `centerSlug === software-development` |
 
 ### `skillWarmUp` — frontmatter `warmUpRules`
 
 | Path | Purpose |
 |------|---------|
 | *(invoker-supplied on spawn)* **Invoking mission `plan.mdc`** — **`single-phase/plan.mdc`** (§§1–3) or **`debug-and-fix/plan.mdc`** (§5c) | Mission protocol for this spawn — **not** `plan-and-deliver/plan.mdc` |
-| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` | Spawn contracts, terminal stop |
-| `.sedea/centers/research-and-development/docs/development-process.md` | Ad-hoc vs Master Plan routing |
-| `.sedea/centers/research-and-development/rules/10_plan-naming-convention.mdc` | Ad-hoc PRD filename slug |
+| `.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md` | Spawn contracts, terminal stop |
+| `.sedea/centers/software-development/rules/10_plan-naming-convention.mdc` | Ad-hoc PRD filename slug |
+
+**Omitted from frontmatter (384 KiB spawn cap — runtime `Read`):** `development-process.md` — load at named protocol steps.
 
 ### `laneRules` — frontmatter `laneRules`
 
 | Path | Purpose |
 |------|---------|
 | `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc` | Structured choice for missing inputs |
-| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/ad-hoc-prd/SKILL.md` | This skill procedure |
-| `.sedea/centers/research-and-development/rules/31_dispatch-scope.mdc` | Dispatch scope + explicit plan/docs paths |
-| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` | Spawn preflight |
+| `.sedea/centers/software-development/missions/plan-and-deliver/skills/ad-hoc-prd/SKILL.md` | This skill procedure |
+| `.sedea/centers/software-development/rules/31_dispatch-scope.mdc` | Dispatch scope + explicit plan/docs paths |
+| `.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md` | Spawn preflight |
 
 **Intent:** **Ad-Hoc PRD creator agent** turns a short **change request** (bug or small improvement) into a **minimal Ad-Hoc PRD** — a **standalone root artifact**. **Master Plans** and all other plans are **downstream** of the PRD (see **development-process**); this skill does **not** require or resolve a parent `.plan.md`, and does **not** spawn **`master-planner`** from this lane.
 
@@ -124,7 +124,7 @@ This skill **never** emits **`mission_control_spawn_agent`** for **`master-plann
 1. **Create intent** — upstream step chose the ad-hoc change-request path (e.g. plan protocol “ad-hoc task description” branch).
 2. **Title** — non-empty title for the Ad-Hoc PRD (handoff fields or captured change-request summary).
 3. **Details** — non-empty change-request body.
-4. **Docs write root** — resolve per **`.sedea/centers/research-and-development/rules/31_dispatch-scope.mdc`** § *Docs write root resolution* from **`operationsDocsDirectory`** in spawn **`inputs`** / lane identity.
+4. **Docs write root** — resolve per **`.sedea/centers/software-development/rules/31_dispatch-scope.mdc`** § *Docs write root resolution* from **`operationsDocsDirectory`** in spawn **`inputs`** / lane identity.
 
 If **`operationsDocsDirectory`** does not resolve, stop with `partial` and report `outputs.missingFields` (for example `["operationsDocsDirectory"]`); do not invent a path or continue with a guessed operations path. In standalone mode, collect missing **title** / **details** via **AskQuestion**, **`mission_control_present_structured_choice`** per **`.sedea/centers/sedea/rules/2_ask-question-instructions.mdc`** and **`../README.md`** § *Recap, structured choice, act*.
 
@@ -142,7 +142,7 @@ Ad-hoc means **shorter PRD input**, not lower delivery scrutiny. Do not use this
 
 ## Docs write root (required to write)
 
-New Ad-Hoc PRDs are written under the **resolved docs write root** per **`.sedea/centers/research-and-development/rules/31_dispatch-scope.mdc`** § *Docs write root resolution*:
+New Ad-Hoc PRDs are written under the **resolved docs write root** per **`.sedea/centers/software-development/rules/31_dispatch-scope.mdc`** § *Docs write root resolution*:
 
 | Priority | Source | Write root |
 |----------|--------|------------|
@@ -163,9 +163,14 @@ After **`title`** / change-request scope is clear (before writing the Ad-Hoc PRD
 3. **Skip** when spawn labels already match scope.
 4. **Forbidden:** **`mission_control_update_dispatch_display`** from a child lane.
 
-See [`.sedea/centers/research-and-development/rules/50_mission-control-display-metadata-discipline.mdc`](../../../../rules/50_mission-control-display-metadata-discipline.mdc) § *Child lane — refresh own slot when labels are stale*.
+See [`.sedea/centers/software-development/rules/50_mission-control-display-metadata-discipline.mdc`](../../../../rules/50_mission-control-display-metadata-discipline.mdc) § *Child lane — refresh own slot when labels are stale*.
 
 ## Checkpoint turn UX (skill-local)
+
+### Software Development center edit destination gate (binding)
+
+When this skill would write under **`.sedea/centers/software-development/`**, open **USER_CHECKPOINT** per **`missions/plan-and-deliver/skills/README.md`** § *Software Development center edit destination gate* **before** any center write. Happy-path operations/plan writes do not open this gate. **Forbidden:** skip the gate; treat `sedea-centers/software-development` as Own on `sedea-ai/app`.
+
 
 Under Checkpoint trust (`trustLevel: checkpoint`), auto-advance scripted happy-path steps; emit structured choice only at **USER_CHECKPOINT** markers in this section, implicit external-wait surfaces, or exception paths. **No cross-skill inheritance** — gate defaults here apply only to **`ad-hoc-prd`**; invoker missions **`single-phase`** and **`debug-and-fix`** document their own Squad Leader gates — see **`single-phase/plan.mdc`** §3 / §2 and **`debug-and-fix/plan.mdc`** §5c for spawn and leader-lane resume tables.
 
@@ -256,6 +261,8 @@ USER_CHECKPOINT — approve, revise, or resolve open items on this Ad-Hoc PRD be
    - **Next-step resolution:** Auto-advance back to step **5** — no `USER_CHECKPOINT` until step **5** presents the revised PRD.
 
 ## Completion (spawned)
+
+**Spawn-ack (invoker context — binding):** Invokers (**`single-phase`** §3, **`debug-and-fix`** §5c) emit **`mission_control_spawn_agent`** for this lane on a **spawn-only turn** per [`.sedea/centers/sedea/rules/4_mission.mdc`](.sedea/centers/sedea/rules/4_mission.mdc) § *Spawn-ack semantics (binding)* — ack ≠ host spawn success; **forbidden** parallel spawn + wait modal on that turn. Cross-reference only; do **not** duplicate the full block here. This child lane owns PRD approval gates and terminal **`mission_control_send_agent_result`** — not invoker external-wait narration from **`transcriptOnly`** ack alone.
 
 ### MCP result preflight (`mission_control_send_agent_result`)
 

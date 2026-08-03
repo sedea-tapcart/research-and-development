@@ -1,0 +1,29 @@
+---
+description: >-
+  Authoring hygiene for mission skill prose — on-demand split justification when
+  new or expanded SKILL.md body exceeds 40 KiB. On-demand rule.
+alwaysApply: false
+---
+
+# Skill authoring hygiene — warm-up byte budget
+
+**On-demand rule.** Read when authoring or reviewing **`missions/*/skills/*/SKILL.md`** under the software-development center — especially spawn skills subject to the **384 KiB** host spawn cap (`.sedea/centers/sedea/rules/4_mission.mdc` § *Spawned execution*).
+
+## Skill prose size gate (binding — PRD D2)
+
+When a PR **adds or expands** a **`SKILL.md`** body (markdown after frontmatter) so the **on-disk file** exceeds **40 KiB** (40,960 bytes):
+
+1. **Justify on-demand split in the PR description** — name which prose moves to a satellite doc under `missions/<mission>/docs/` or `docs/`, and which **`Read`** hooks in the skill bind those paths at named protocol steps (same pattern as Phase B **`coding-session`** ship-chain docs and Phase C **`spawn-ship-contracts.md`** / **`planning-mode-templates.md`** splits).
+2. **Keep frontmatter `warmUpRules` / `laneRules` slim** — heavy tables, spawn preflight rows, and ship-chain procedure belong in on-demand docs unless the path is required on every spawn (see **`missions/plan-and-deliver/skills/README.md`** § *Warm-up cap exceptions*).
+3. **Do not** grow monolithic skill bodies to carry verify tables, MCP wire copies, or checkpoint option catalogs that already live in center rules or on-demand docs — link and **`Read`** at step boundaries instead.
+
+**Verification:** `missions/plan-and-deliver/scripts/verify-warmup-bytes.mjs` emits **`WARN:`** when skill body exceeds 40 KiB. **`verify-skill-manifest.mjs`** remains authoritative for the **384 KiB** spawn path budget.
+
+## Spawn path budget (cross-ref)
+
+The **384 KiB** cap applies to deduped frontmatter **`warmUpRules` ∪ `laneRules`** path bodies, excluding the assigned skill body when the host injects **`skillPath`** (lane-manifest-contract § *Spawn cap*). Per-role totals print in CI via **`verify-warmup-bytes.mjs --table`** (PRD D1).
+
+## Related
+
+- Lane manifest contract: `.sedea/centers/sedea/docs/lane-manifest-contract.md`
+- Warm-up cap exceptions: `missions/plan-and-deliver/skills/README.md` § *Warm-up cap exceptions*

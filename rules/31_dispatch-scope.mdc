@@ -7,7 +7,7 @@ alwaysApply: false
 
 # Dispatch scope (supersedes operations user id)
 
-**On-demand rule.** Mission Control warm-up loads [`.sedea/centers/research-and-development/rules/bootstrap.mdc`](bootstrap.mdc) as the sole R&D `alwaysApply: true` bootstrap. Read **this file** when you need **`dispatchId`**, **`operationsDocsDirectory`**, or DbOnly terminal dispatch binding — not on every dispatch warm-up.
+**On-demand rule.** Mission Control warm-up loads [`.sedea/centers/software-development/rules/bootstrap.mdc`](bootstrap.mdc) as the sole Software Development `alwaysApply: true` bootstrap. Read **this file** when you need **`dispatchId`**, **`operationsDocsDirectory`**, or DbOnly terminal dispatch binding — not on every dispatch warm-up.
 
 Normative hosting layout: [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § **Operations storage phases**, § **Dispatch persistence (DbOnly terminal)**, and § **Plans (dispatch-scoped discovery)**.
 
@@ -77,14 +77,14 @@ Operational docs (PRDs, brainstorm reports, ad-hoc PRDs, requirements docs, tria
 
 ## `plan-state.mjs` (canonical)
 
-**Hosting repo cwd:** **`plan-state.mjs`**, **`plan-ws-completeness.mjs`**, and **`pr-review.mjs`** run from **`HOSTING_ROOT`** — see [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](20_efficient-pr-shipping.mdc) § *Hosting repo cwd for scripts (canonical)*.
+**Hosting repo cwd:** **`plan-state.mjs`**, **`plan-ws-completeness.mjs`**, and **`pr-review.mjs`** run from **`HOSTING_ROOT`** — see [`.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc`](20_efficient-pr-shipping.mdc) § *Hosting repo cwd for scripts (canonical)*.
 
 ```bash
 WORKTREE_ROOT="$(pwd)"   # hosting repo worktree (or primary hosting repo when same)
 # Set HOSTING_ROOT: walk up until .sedea/centers/sedea/ or .sedea/ exists — see rule 20
 cd "$HOSTING_ROOT"
 
-node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/plan-state.mjs \
+node .sedea/centers/software-development/missions/plan-and-deliver/scripts/plan-state.mjs \
   resolve --cwd "$WORKTREE_ROOT"
 ```
 

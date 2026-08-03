@@ -7,9 +7,9 @@
  * Step-table contract (designation enum, inventory status): see
  * `.sedea/centers/sedea/docs/pr-step-table-template.md` (PR 1 / #865).
  *
- * Run from hosting repo root:
+ * Run from hosting repo root or software-development center repo root:
  *
- *   node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/verify-checkpoint-steps.mjs
+ *   node .sedea/centers/software-development/missions/plan-and-deliver/scripts/verify-checkpoint-steps.mjs
  *   node .../verify-checkpoint-steps.mjs --enforce
  *
  * Exit 0 when warn-only (default) or no violations under --enforce.
@@ -18,6 +18,7 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { resolveGovernanceContext } from './resolve-governance-root.mjs';
 
 /** @typedef {{ id: string; regex: RegExp; category: 'idle-handoff' | 'gate-terminal'; hint: string }} PatternDef */
 
@@ -167,19 +168,26 @@ Phase 1 default: warn-only — prints WARN lines and exits 0.
   return { enforce, pathsFile };
 }
 
-async function resolveHostingRoot() {
-  let dir = process.cwd();
-  for (let depth = 0; depth < 32; depth += 1) {
-    try {
-      await fs.access(path.join(dir, '.sedea/centers/sedea'));
-      return dir;
-    } catch {
-      const parent = path.dirname(dir);
-      if (parent === dir) break;
-      dir = parent;
+async function walkCenterGovernanceFiles(centerRoot, relDir = '', out = []) {
+  const abs = path.join(centerRoot, relDir);
+  let entries;
+  try {
+    entries = await fs.readdir(abs, { withFileTypes: true });
+  } catch {
+    return out;
+  }
+  for (const ent of entries) {
+    if (SKIP_DIR_NAMES.has(ent.name)) continue;
+    const rel = relDir ? `${relDir}/${ent.name}` : ent.name;
+    const relPosix = rel.split(path.sep).join('/');
+    const childAbs = path.join(centerRoot, rel);
+    if (ent.isDirectory()) {
+      await walkCenterGovernanceFiles(centerRoot, rel, out);
+    } else if (isGovernanceFile(relPosix, ent.name)) {
+      out.push({ abs: childAbs, rel: relPosix });
     }
   }
-  die('could not resolve hosting repo root — run from HOSTING_ROOT');
+  return out;
 }
 
 function shouldSkipRel(relPosix) {
@@ -294,7 +302,7 @@ function scanFile(body, rel) {
   return findings;
 }
 
-async function loadPathsFromFile(hostingRoot, pathsFile) {
+async function loadPathsFromFile(scanRoot, pathsFile) {
   const raw = await fs.readFile(pathsFile, 'utf8');
   return raw
     .split('\n')
@@ -302,17 +310,19 @@ async function loadPathsFromFile(hostingRoot, pathsFile) {
     .filter((line) => line.length > 0 && !line.startsWith('#'))
     .map((rel) => ({
       rel: rel.split(path.sep).join('/'),
-      abs: path.join(hostingRoot, rel),
+      abs: path.join(scanRoot, rel),
     }));
 }
 
 async function main() {
   const { enforce, pathsFile } = parseArgs(process.argv);
-  const hostingRoot = await resolveHostingRoot();
+  const ctx = await resolveGovernanceContext();
 
   const files = pathsFile
-    ? await loadPathsFromFile(hostingRoot, pathsFile)
-    : await walkGovernanceFiles(hostingRoot);
+    ? await loadPathsFromFile(ctx.scanRoot, pathsFile)
+    : ctx.mode === 'center'
+      ? await walkCenterGovernanceFiles(ctx.centerRoot)
+      : await walkGovernanceFiles(ctx.scanRoot);
 
   /** @type {Finding[]} */
   const allFindings = [];

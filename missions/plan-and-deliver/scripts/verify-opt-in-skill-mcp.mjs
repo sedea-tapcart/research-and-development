@@ -7,7 +7,7 @@
  *
  * Run from hosting repo root:
  *
- *   node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/verify-opt-in-skill-mcp.mjs
+ *   node .sedea/centers/software-development/missions/plan-and-deliver/scripts/verify-opt-in-skill-mcp.mjs
  *
  * Exit 0 when all checks pass; exit 1 otherwise.
  */

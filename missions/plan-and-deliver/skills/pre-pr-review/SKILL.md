@@ -59,20 +59,20 @@ inputs:
     required: false
 laneRules:
   - ".sedea/centers/sedea/rules/2_ask-question-instructions.mdc"
-  - ".sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc"
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/pre-pr-review/SKILL.md"
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
+  - ".sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc"
+  - ".sedea/centers/software-development/missions/plan-and-deliver/skills/pre-pr-review/SKILL.md"
+  - ".sedea/centers/software-development/missions/plan-and-deliver/skills/README.md"
 warmUpRules:
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
-  - ".sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc"
-  - ".sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc"
+  - ".sedea/centers/software-development/missions/plan-and-deliver/skills/README.md"
+  - ".sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc"
+  - ".sedea/centers/software-development/rules/30_planning-target-resolution.mdc"
 ---
 
 # Pre-PR Review
 
 ## No agent gcloud secrets or env-var proposals (binding)
 
-**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/research-and-development/rules/60_no-agent-env-secrets.mdc`.
+**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/software-development/rules/60_no-agent-env-secrets.mdc`.
 
 **Spawn-only (binding).** Run on a **fresh spawned child lane** opened by **`mission_control_spawn_agent`** from **`coding-session`**. Mission Control validates frontmatter **`inputs`** at spawn time. **Forbidden:** execute this skill **inline** on the **`coding-session`** lane — mirror [`create-pr/SKILL.md`](../create-pr/SKILL.md) (inline-only on **`coding-session`**; **`pre-pr-review`** is the inverse: spawn-only from that lane).
 
@@ -88,28 +88,28 @@ If Mission Control opened a session whose only intent is **`pre-pr-review`** / p
 
 Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea/docs/lane-manifest-contract.md) and **`../README.md`** § *Default warm-up* / *Warm-up cap exceptions*. Host merge: `effectiveWarmUp = dedupe(bootstrapRules → laneRules → skillWarmUp)`. Frontmatter matches this table. **384 KiB cap:** frontmatter omits **`plan.mdc`** and **`development-process.md`** — Step 3 reads **`development-process.md`**; Step 4 loads **`inputs.targetPlanPath`** (PR plan, not Squad Leader **`plan.mdc`**). **No `alwaysApply` frontmatter flip.**
 
-### `bootstrapRules` — host-resolved (R&D layer)
+### `bootstrapRules` — host-resolved (Software Development center layer)
 
 | Path | Purpose |
 |------|---------|
-| `.sedea/centers/research-and-development/rules/bootstrap.mdc` | Sole R&D `alwaysApply: true` bootstrap (≤10 KB); host merges when `centerSlug === research-and-development` |
+| `.sedea/centers/software-development/rules/bootstrap.mdc` | Sole Software Development `alwaysApply: true` bootstrap (≤10 KB); host merges when `centerSlug === software-development` |
 
 ### `skillWarmUp` — frontmatter `warmUpRules`
 
 | Path | Purpose |
 |------|---------|
-| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` | Spawn contracts, terminal stop |
-| `.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc` | Review-before-PR, worktree ownership |
-| `.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc` | Plan anchor validation (spawn-only) |
+| `.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md` | Spawn contracts, terminal stop |
+| `.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc` | Review-before-PR, worktree ownership |
+| `.sedea/centers/software-development/rules/30_planning-target-resolution.mdc` | Plan anchor validation (spawn-only) |
 
 ### `laneRules` — frontmatter `laneRules`
 
 | Path | Purpose |
 |------|---------|
 | `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc` | Structured choice when this lane must surface a pick |
-| `.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc` | Ship lane context |
-| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pre-pr-review/SKILL.md` | This skill procedure |
-| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` | Spawn preflight |
+| `.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc` | Ship lane context |
+| `.sedea/centers/software-development/missions/plan-and-deliver/skills/pre-pr-review/SKILL.md` | This skill procedure |
+| `.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md` | Spawn preflight |
 
 **Who runs this:** a fresh **pre-PR reviewer agent** lane spawned by **`coding-session`** after developer implementation approval, **commit**, and inline **Local test** **`deploy-walk`** (or documented skip). The reviewer must have no carry-over from the coding agent that changed the worktree.
 
@@ -131,6 +131,7 @@ This pass complements, and does not replace, the later GitHub-surface **reviewer
 - Run **`../README.md`** § *MCP spawn preflight* (rows M1–M8) before every MCP spawn; **forbidden** host-resolved identity keys in MCP args (`correlationId`, `dispatchId`, `slotId`, … — see README § *Host-resolved identity*).
 - Inline skills on this mission stay **inline-only** — no spawn wire change unless the protocol step explicitly spawns a child lane.
 
+**Spawn-only lane (binding):** **`pre-pr-review`** runs on a **fresh spawned child lane** from parent **`coding-session`** only — **forbidden** inline on the coding lane. Parent **`coding-session`** owns spawn turn sequencing, Yield / #external-wait resume, and external-wait gates per [`.sedea/centers/sedea/rules/4_mission.mdc`](.sedea/centers/sedea/rules/4_mission.mdc) § *Spawn-ack semantics (binding)* and **`coding-session/SKILL.md`** § *Pre-PR spawn turn sequencing* — cross-reference only; do **not** duplicate the full block here.
 
 ## Structured choice (Mission Control)
 
@@ -140,9 +141,9 @@ This skill does not own approval modals — **`coding-session`** collects develo
 
 Under Checkpoint trust (`trustLevel: checkpoint`), auto-advance scripted happy-path steps; emit structured choice only at **USER_CHECKPOINT** markers in this section, implicit external-wait surfaces, or exception paths. **No cross-skill inheritance** — gate defaults here apply only to **`pre-pr-review`**; invoker missions **`plan-and-deliver`**, **`single-phase`**, **`quick-fix`**, and **`debug-and-fix`** document their own **`coding-session`** ship gates — see **`coding-session/SKILL.md`** § *Checkpoint turn UX* for Review feedback approval and Create-PR handoff.
 
-**Parent yield gate:** After this child spawns (or while the parent awaits terminal result), **`coding-session`** must close the wait turn with a next-step resume modal per **`coding-session/SKILL.md`** § [Yield gate (Checkpoint — binding)](../coding-session/SKILL.md#yield-gate-checkpoint--binding). This skill’s Step **8** auto-emit does **not** waive that parent Yield obligation.
+**Parent yield gate:** After parent **`coding-session`** emits **`mission_control_spawn_agent`** for this lane (spawn-only turn per rule **4** § *Spawn-ack semantics (binding)* — cross-reference only), the parent must close the **next** turn with a next-step resume modal per **`coding-session/SKILL.md`** § [Yield gate (Checkpoint — binding)](../coding-session/SKILL.md#yield-gate-checkpoint--binding). **Forbidden:** batching spawn with that modal on the same turn. This skill’s Step **8** auto-emit does **not** waive the parent Yield obligation.
 
-**Real-dispatch test loop (binding):** After merge, run one full **`pre-pr-review`** spawn on a Checkpoint dispatch through Step **8** — verify Steps **1–7** auto-advance and Step **8** **always** auto-emits terminal + parent refocus (including **`no-go`**) without a modal; the **`coding-session`** parent receives the bubble-up and owns next-step gates before the parent phase advances the next ship-chain skill PR — per **Phase 2 — R&D center audit** § *Single-concern strategy*.
+**Real-dispatch test loop (binding):** After merge, run one full **`pre-pr-review`** spawn on a Checkpoint dispatch through Step **8** — verify Steps **1–7** auto-advance and Step **8** **always** auto-emits terminal + parent refocus (including **`no-go`**) without a modal; the **`coding-session`** parent receives the bubble-up and owns next-step gates before the parent phase advances the next ship-chain skill PR — per **Phase 2 — Software Development center audit** § *Single-concern strategy*.
 
 Marker syntax: [`.sedea/centers/sedea/docs/user-checkpoint-marker-syntax.md`](.sedea/centers/sedea/docs/user-checkpoint-marker-syntax.md).
 
@@ -184,7 +185,7 @@ Give developers a **consistent state snapshot** during pre-PR review so they can
 | Deploy scope | Local test complete · skipped · — |
 | Review | in progress · `go` · `no-go` when reporting |
 
-**Population rules:** Same contract as [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`](../coding-session/SKILL.md) § *Session orientation table (binding)* — use spawn `inputs` and review outputs; never invent paths.
+**Population rules:** Same contract as [`.sedea/centers/software-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`](../coding-session/SKILL.md) § *Session orientation table (binding)* — use spawn `inputs` and review outputs; never invent paths.
 
 **Mandatory gates (this skill):** None at Step **8** under Checkpoint — the reviewer lane always auto-handbacks; **`coding-session`** owns developer gates for **`no-go`**, flags, and actionable handback (see [Step 8 — Report and result](#step-8--report-and-result)).
 
@@ -212,7 +213,7 @@ After **`targetPlanSlug`** or free-form scope is validated (end of Step 1):
 3. **Skip** when spawn labels already match scope.
 4. **Forbidden:** **`mission_control_update_dispatch_display`** from a child lane.
 
-See [`.sedea/centers/research-and-development/rules/50_mission-control-display-metadata-discipline.mdc`](../../../../rules/50_mission-control-display-metadata-discipline.mdc) § *Child lane — refresh own slot when labels are stale*.
+See [`.sedea/centers/software-development/rules/50_mission-control-display-metadata-discipline.mdc`](../../../../rules/50_mission-control-display-metadata-discipline.mdc) § *Child lane — refresh own slot when labels are stale*.
 
 - **Next-step resolution:** Auto-advance to Step **2** after display refresh or skip — no `USER_CHECKPOINT` on this step.
 
@@ -224,7 +225,7 @@ Confirm this is a fresh reviewer lane. Do not reuse context from the coding agen
 
 ## Step 3 — Load standards and rules
 
-Read `.sedea/centers/research-and-development/docs/development-process.md` in full, or at minimum the per-PR template, strategy, cadence, and Pre-PR reviewer sections.
+Read `.sedea/centers/software-development/docs/development-process.md` in full, or at minimum the per-PR template, strategy, cadence, and Pre-PR reviewer sections.
 
 Read every path from `projectRules`. If a rule path is missing, report it as `partial` unless the rule is clearly irrelevant to the diff.
 
@@ -250,11 +251,23 @@ git status --short
 git status --short --ignore-submodules=dirty
 ```
 
-If `git status --short` is non-empty, continue against the committed diff but evaluate dirty-tree degradation using `git status --short --ignore-submodules=dirty` (aligns with `.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc` submodule-only drift guidance). Only non-submodule local edits should be flagged as not part of the reviewed cut point.
+If `git status --short` is non-empty, continue against the committed diff but evaluate dirty-tree degradation using `git status --short --ignore-submodules=dirty` (aligns with `.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc` submodule-only drift guidance). Only non-submodule local edits should be flagged as not part of the reviewed cut point.
 
 If there are zero commits ahead and no diff, stop with `failure`: there is nothing to review.
 
 - **Next-step resolution:** Auto-advance to Step **6** when a committed diff exists — no `USER_CHECKPOINT` on this step.
+
+### Gitlink-only diff recap (binding)
+
+When `git diff <baseRef>...HEAD` under the review worktree is **only** submodule gitlink pointer changes — or substantive edits live in a linked center / product / center-content repo — the review artifact is the **source repo**, not hosting gitlink stat lines.
+
+| Rule | Requirement |
+|------|-------------|
+| **Handback** | Terminal `codingAgentHandback` and parent-facing recap must name the **source repo**, branch/SHA when known, and changed paths — not treat gitlink-only diff as the content to review |
+| **Before `go`** | When the downstream hosting PR would be gitlink-only, include source-repo file summary in `codingAgentHandback` so **`coding-session`** [Post-create-pr handoff gate](../coding-session/SKILL.md#post-create-pr-handoff-gate) can lead with it |
+| **Forbidden** | Hosting PR link as primary recap; achievement-style orientation tables; asking the developer to review gitlink pointer deltas as substantive content |
+
+Resolve affected submodule role(s) per [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § *Three-repo submodule taxonomy*.
 
 ## Pre-PR phase boundary (plan anchor)
 

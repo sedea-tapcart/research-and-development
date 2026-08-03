@@ -49,13 +49,13 @@ inputs:
     required: false
 laneRules:
   - ".sedea/centers/sedea/rules/2_ask-question-instructions.mdc"
-  - ".sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc"
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md"
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
+  - ".sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc"
+  - ".sedea/centers/software-development/missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md"
+  - ".sedea/centers/software-development/missions/plan-and-deliver/skills/README.md"
 warmUpRules:
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
-  - ".sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc"
+  - ".sedea/centers/software-development/missions/plan-and-deliver/plan.mdc"
+  - ".sedea/centers/software-development/missions/plan-and-deliver/skills/README.md"
+  - ".sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc"
   - ".cursor/rules/dot-sedea.mdc"
 ---
 
@@ -63,7 +63,7 @@ warmUpRules:
 
 ## No agent gcloud secrets or env-var proposals (binding)
 
-**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/research-and-development/rules/60_no-agent-env-secrets.mdc`.
+**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/software-development/rules/60_no-agent-env-secrets.mdc`.
 
 > **Deprecated (read-only):** Normative bootstrap is **`.sedea/centers/sedea/scripts/worktree-setup.sh`** on the **`coding-session`** lane — see [`coding-session/SKILL.md`](../coding-session/SKILL.md) § *Center worktree scripts (binding)* and § *Worktree bootstrap (mandatory)*. This skill file stays on disk until [drain criteria](../README.md#worktree-bootstrap-skill-drain-gate) pass; do **not** spawn by default.
 
@@ -71,19 +71,19 @@ warmUpRules:
 
 Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea/docs/lane-manifest-contract.md) and **`../README.md`** § *Default warm-up*. Host merge: `effectiveWarmUp = dedupe(bootstrapRules → laneRules → skillWarmUp)`. **Exception-only** inline retry on **`coding-session`** when center setup failed; manifest applies when spawned or warm-up replay. **No `alwaysApply` frontmatter flip.**
 
-### `bootstrapRules` — host-resolved (R&D layer)
+### `bootstrapRules` — host-resolved (Software Development center layer)
 
 | Path | Purpose |
 |------|---------|
-| `.sedea/centers/research-and-development/rules/bootstrap.mdc` | Sole R&D `alwaysApply: true` bootstrap (≤10 KB); host merges when `centerSlug === research-and-development` |
+| `.sedea/centers/software-development/rules/bootstrap.mdc` | Sole Software Development `alwaysApply: true` bootstrap (≤10 KB); host merges when `centerSlug === software-development` |
 
 ### `skillWarmUp` — frontmatter `warmUpRules`
 
 | Path | Purpose |
 |------|---------|
-| `.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc` | Plan sidecar, worktree session |
-| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` | Spawn contracts, inline vs spawned |
-| `.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc` | Bootstrap profiles, hosting cwd |
+| `.sedea/centers/software-development/missions/plan-and-deliver/plan.mdc` | Plan sidecar, worktree session |
+| `.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md` | Spawn contracts, inline vs spawned |
+| `.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc` | Bootstrap profiles, hosting cwd |
 | `.cursor/rules/dot-sedea.mdc` | Worktree bootstrap mode (hosting overlay) |
 
 ### `laneRules` — frontmatter `laneRules`
@@ -91,11 +91,11 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 | Path | Purpose |
 |------|---------|
 | `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc` | Structured choice on bootstrap retry |
-| `.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc` | Ship lane context |
-| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md` | This skill procedure |
-| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` | Spawn preflight |
+| `.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc` | Ship lane context |
+| `.sedea/centers/software-development/missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md` | This skill procedure |
+| `.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md` | Spawn preflight |
 
-This skill prepares a fresh **`WORKTREE_ROOT`** after Mission Control attach. **Read dot-sedea first** — [`.cursor/rules/dot-sedea.mdc`](.cursor/rules/dot-sedea.mdc) § *Worktree bootstrap mode* and § *Fast bootstrap verification checklist* on the active hosting repo, then follow [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc) § *Bootstrap profiles*.
+This skill prepares a fresh **`WORKTREE_ROOT`** after Mission Control attach. **Read dot-sedea first** — [`.cursor/rules/dot-sedea.mdc`](.cursor/rules/dot-sedea.mdc) § *Worktree bootstrap mode* and § *Fast bootstrap verification checklist* on the active hosting repo, then follow [`.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc`](.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc) § *Bootstrap profiles*.
 
 | dot-sedea mode | What this skill runs |
 |----------------|----------------------|
@@ -172,7 +172,7 @@ Give developers a **consistent state snapshot** during inline bootstrap retry so
 | Review | — |
 | Bootstrap | `<outputs.bootstrapMode>` · pending · success · failed |
 
-**Population rules:** Same contract as [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`](../coding-session/SKILL.md) § *Session orientation table (binding)* — use inline context from the parent lane; never invent paths.
+**Population rules:** Same contract as [`.sedea/centers/software-development/missions/plan-and-deliver/skills/coding-session/SKILL.md`](../coding-session/SKILL.md) § *Session orientation table (binding)* — use inline context from the parent lane; never invent paths.
 
 **Mandatory gates (this skill):** [Step 1 validate gate](#step-1-validate-gate-binding) only under Checkpoint — Steps **2–3** auto-advance on the happy path; bootstrap script failure surfaces via exception path on the parent **`coding-session`** lane per [Worktree bootstrap (inline mandatory)](../coding-session/SKILL.md#worktree-bootstrap-inline-mandatory--retry--exception-only).
 

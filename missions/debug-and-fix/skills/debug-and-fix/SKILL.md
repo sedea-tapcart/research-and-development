@@ -28,8 +28,8 @@ inputs:
     description: Operations user id from Mission Control session context.
     required: true
 warmUpRules:
-  - ".sedea/centers/research-and-development/missions/debug-and-fix/plan.mdc"
-  - ".sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc"
+  - ".sedea/centers/software-development/missions/debug-and-fix/plan.mdc"
+  - ".sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc"
   - ".sedea/centers/sedea/skills/worktree-setup/SKILL.md"
   - ".sedea/centers/sedea/rules/0_hosting-repo.mdc"
   - ".cursor/rules/dot-sedea.mdc"
@@ -40,7 +40,7 @@ warmUpRules:
 
 ## No agent gcloud secrets or env-var proposals (binding)
 
-**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/research-and-development/rules/60_no-agent-env-secrets.mdc`.
+**Forbidden:** updating gcloud secrets; adding environment variables to code; proposing new env vars in plans, options, or follow-ups. **Allowed only** when the developer gives an **explicit same-turn instruction** for a **named** variable. Normative: `.sedea/centers/software-development/rules/60_no-agent-env-secrets.mdc`.
 
 **Intent:** **Debug and Fix agent** runs a log-first diagnosis and fix loop in a dedicated hosting-repo worktree. Prioritize log access and debug instrumentation before substantive analysis. When the fix is verified, recommend a post-fix exit: **`code-promotion`** (parent creates a PR plan anchor through **new-plan/pr-plan**, then runs **coding-session** with `targetPlanPath`), **`ad-hoc-prd`** (parent captures fix context without immediate code promotion), or **`findings-report-only`** (parent produces a debug session findings report with no downstream spawn).
 
@@ -71,15 +71,15 @@ warmUpRules:
 
 ```mermaid
 flowchart TD
-  A[Worktree create + attach + bootstrap] --> B[Logs first]
-  B --> C[Analyze + instrument]
-  C --> D[Propose fix + tests]
-  D --> E{Developer approves?}
-  E -->|no| C
-  E -->|yes| F[Apply fix]
+  A[Resolve HOSTING_ROOT + planned worktree name] --> B[Logs first — primary read-only]
+  B --> C[Analyze + propose fix + tests]
+  C --> D{Developer approves?}
+  D -->|no| C
+  D -->|yes| E[Worktree create + attach + bootstrap]
+  E --> F[Apply fix + instrument]
   F --> G[Automated + guided tests]
   G --> H{Fixed?}
-  H -->|no| C
+  H -->|no| B
   H -->|yes| I[Recommend post-fix exit]
 ```
 
@@ -98,11 +98,11 @@ Marker syntax: [`.sedea/centers/sedea/docs/user-checkpoint-marker-syntax.md`](.s
 | Step | Checkpoint behavior | Gate |
 |------|---------------------|------|
 | **1** — Resolve paths and worktree name | Auto-advance | — |
-| **2** — Worktree create, attach, bootstrap | Auto-advance on happy path after success-class **`bootstrapStatus`** | **Gate** on setup/bootstrap failure — [Bootstrap retry gate](#bootstrap-retry-gate-binding) |
-| **3** — Logs first | Auto-advance through log collection and instrumentation | exception: missing log access → `blocked` terminal |
-| **4** — Analyze and propose fix | **Gate** — developer approves fix proposal before implementation | [Fix proposal gate](#fix-proposal-gate-binding) |
-| **5** — Apply fix | Auto-advance automated tests on happy path | **Gate** for each manual test scenario — [Manual test verification gate](#manual-test-verification-gate-binding); **waiting** when developer runs tests outside chat |
-| **6** — Fix loop | Auto-advance routing back to step **3** or forward to step **7** | exception: `blocked` → terminal with evidence |
+| **2** — Logs first (primary read-only) | Auto-advance through log collection on **`HOSTING_ROOT`** | exception: missing log access → `blocked` terminal |
+| **3** — Analyze and propose fix | **Gate** — developer approves fix proposal before worktree or implementation | [Fix proposal gate](#fix-proposal-gate-binding) |
+| **4** — Worktree create, attach, bootstrap | Auto-advance on happy path after success-class **`bootstrapStatus`** | **Gate** on setup/bootstrap failure — [Bootstrap retry gate](#bootstrap-retry-gate-binding) |
+| **5** — Apply fix | Auto-advance automated tests on happy path | **Gate** for each manual test scenario — [Manual test verification gate](#manual-test-verification-gate-binding); **waiting** when developer runs tests outside chat; optional **Deploy Step Verification** agent handoff ([§ agent handoff](#deploy-step-verification-agent-handoff-binding)) |
+| **6** — Fix loop | Auto-advance routing back to step **2** or forward to step **7** | exception: `blocked` → terminal with evidence |
 | **7** — Post-fix recommendation + terminal | **Gate** — confirm **`exitRecommendation`** or abandon (binding Squad Leader auto-approval); then worktree path recap + bubble-up | Confirmation on this lane skips mission **§4**; leader override only when exit missing/ambiguous |
 
 ## Session orientation table (binding)
@@ -116,8 +116,8 @@ Give developers a **consistent state snapshot** during debug gates so they can r
 | Field | Value |
 |-------|-------|
 | Issue | `<issueSummary>` truncated or — |
-| Worktree | `<worktreePath>` from setup hints |
-| Branch | `<worktreeName>` from setup hints or — |
+| Worktree | `<worktreePath>` from setup hints, or **— (pending)** before step **4** |
+| Branch | `<worktreeName>` from step **1** or setup hints, or — |
 | Fix phase | `diagnose` · `propose` · `apply` · `verify` |
 | Bootstrap | `<outputs.bootstrapMode>` · `<outputs.bootstrapStatus>` |
 | Tests | automated pending · manual pending · verified · failed |
@@ -126,17 +126,74 @@ Give developers a **consistent state snapshot** during debug gates so they can r
 
 ## Steps
 
+### Debug lane phases (binding)
+
+| Phase | Cwd | Allowed |
+|-------|-----|--------|
+| Diagnose | **`HOSTING_ROOT`** | **Read-only** — logs, `git log` / `git status`, read scripts, smoke/dry-run helpers |
+| Propose fix | — | Analysis recap + [Fix proposal gate](#fix-proposal-gate-binding) — **no product or hosting-repo writes** |
+| Apply & verify | **`WORKTREE_ROOT`** | Worktree create (step **4**), approved fix, tests, manual verification gates |
+| Exit | Child lane | Post-fix recommendation → parent handoff |
+
+**Primary invariant:** During **Diagnose** (steps **1**–**3**), **`HOSTING_ROOT`** must not receive tracked edits, commits, pushes, hosting PR open/merge, or other **ship-class** automation.
+
+**Promote-pin example (incident class):** `pull-and-promote-pin-for-sedea-center.sh` resume with push/PR/merge is ship-class — **forbidden on primary during Diagnose**. Prefer smoke scripts (`run-center-pull-promote-smoke.sh`, `run-pull-and-promote-sedea-center-smoke.sh`) or `--dry-run`. Full E2E resume runs only under **`WORKTREE_ROOT`** when explicitly part of approved fix verification — not to unblock diagnosis.
+
+**Forbidden:** a structured-choice path to approve primary ship during debug — ship-class work belongs on the worktree after [Fix proposal gate](#fix-proposal-gate-binding) approval.
+
 ### 1 — Resolve paths and worktree name
 
-1. Set **`HOSTING_ROOT`** = `repoPath` or workspace root containing `.sedea/centers/sedea/`.
+1. Set **`HOSTING_ROOT`** = `repoPath` or workspace root containing `.sedea/centers/sedea/` — used for **read-only diagnosis** until fix approval (steps **2**–**3**).
 2. Derive **`worktreeName`** per [`.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc`](.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc) — default non-stacked: `improve/debug-and-fix-<short-slug>` from issue summary.
-3. Choose sibling **`WORKTREE_ROOT`** path per team convention (outside **`HOSTING_ROOT`** checkout tree).
+3. Choose sibling **`WORKTREE_ROOT`** path per team convention (outside **`HOSTING_ROOT`** checkout tree) — **planned only** until step **4** after fix approval.
 
 - **Next-step resolution:** Auto-advance to step **2** — no `USER_CHECKPOINT` on this step.
 
-### 2 — Worktree create, attach, bootstrap (binding)
+### 2 — Logs first (mandatory — primary read-only)
 
-Follow [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § *Attach worktree to VS Code workspace*, [`.sedea/centers/sedea/skills/worktree-setup/SKILL.md`](../../../../../sedea/skills/worktree-setup/SKILL.md), and [rule **20**](.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc) § *Worktree setup in plans* / *Bootstrap profiles*:
+**Do not start substantive root-cause analysis until log access is established.**
+
+**Binding:** Steps **1**–**3** run on **`HOSTING_ROOT`** read-only. **Forbidden:** product-code edits, worktree creation, and ship-class scripts (including promote-pin resume with push/PR/merge) before [Fix proposal gate](#fix-proposal-gate-binding) approval.
+
+1. Read [`.cursor/rules/sedea-debug-logging-settings.mdc`](.cursor/rules/sedea-debug-logging-settings.mdc) when present on the hosting repo — follow its **cwd routing** table before tuning any channel.
+2. When the bug is under a product submodule, read that submodule's logging rules first (for example [`tapcart-push/.cursor/rules/logging.mdc`](tapcart-push/.cursor/rules/logging.mdc) — `LOG_LEVEL`, pino) — **read-only** inspection from **`HOSTING_ROOT`** checkout paths.
+3. When the bug is **Mission Control**, **Sedea Hub**, or dispatch/agent lanes — tune `sedeaHub.logLevel`, `missionControl.logLevel`, and Output panel sinks per that router; inspect `.sedea/operations/.../dispatch/` on the **primary** clone when lane evidence is needed.
+4. Collect existing logs relevant to `issueSummary` / `logHints`.
+5. Reproduce using `reproductionSteps` when provided — prefer smoke/dry-run helpers on **`HOSTING_ROOT`**; capture log evidence before proposing fixes.
+6. **Defer** adding debug logging to product code until **`WORKTREE_ROOT`** exists (step **4**+) — during Diagnose, use existing logs and read-only inspection only.
+
+**Node toolchain:** when running `node` / `npm` / `yarn` in a submodule during diagnosis, use that repo's declared version (`fnm use` when `.node-version` or `.nvmrc` exists) per [`.cursor/rules/dot-sedea.mdc`](.cursor/rules/dot-sedea.mdc) — not a separate hosting-root warmUp rule.
+
+- **Next-step resolution:** Auto-advance to step **3** when log access is established — no `USER_CHECKPOINT` on this step (agent procedural gate, not developer-input).
+
+### 3 — Analyze and propose fix
+
+1. Analyze code with log evidence — prioritize log-backed hypotheses (**read-only** on **`HOSTING_ROOT`** and submodule checkouts).
+2. Propose fix with explicit **testing scenarios** (automated and manual).
+3. Close turn with structured choice at [Fix proposal gate](#fix-proposal-gate-binding) — developer approves fix proposal, requests revision, or aborts.
+
+- **Next-step resolution:** Auto-advance to step **4** only after **`approve-fix`** at the fix proposal gate — revision loops return to step **3** substeps **1**–**2**.
+
+#### Fix proposal gate (binding)
+
+After log-backed analysis and a concrete fix proposal with test scenarios, close the turn with structured choice **before** worktree creation or implementation under **`WORKTREE_ROOT`**.
+
+**When required:** Every fix proposal before step **4** worktree setup and step **5** implementation. **Forbidden:** creating a worktree or applying product edits before developer approval. **Forbidden:** prose-only *approve this fix?* without **`mission_control_present_structured_choice`** / AskQuestion under Checkpoint trust.
+
+Include [Session orientation table (binding)](#session-orientation-table-binding) as the first block in **`display.markdown`**. Recap: hypothesis, proposed change scope, automated test plan, manual test scenarios.
+
+USER_CHECKPOINT — approve fix proposal, request revision, or abort on this lane. defaultOptionId: approve-fix
+
+| Option id | Label (brief) | Act |
+|-----------|---------------|-----|
+| `approve-fix` | Approve — create worktree and implement (steps 4–5) | Proceed to [Worktree create](#4--worktree-create-attach-bootstrap-binding) |
+| `revise-proposal` | Revise proposal — more analysis | Return to step **3** substeps **1**–**2** |
+| `abort-debug` | Abort debug session | Terminal **`aborted`** with evidence recap |
+| `more-details` | More details for option _ | Elaborate; re-open this gate |
+
+### 4 — Worktree create, attach, bootstrap (binding)
+
+Follow [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § *Attach worktree to VS Code workspace*, [`.sedea/centers/sedea/skills/worktree-setup/SKILL.md`](../../../../../sedea/skills/worktree-setup/SKILL.md), and [rule **20**](.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc) § *Worktree setup in plans* / *Bootstrap profiles*:
 
 | Step | Action |
 |------|--------|
@@ -148,11 +205,11 @@ Follow [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/ru
 
 Do **not** edit product code before **`outputs.bootstrapStatus: success`**.
 
-- **Next-step resolution:** Auto-advance to step **3** on happy path — no `USER_CHECKPOINT` until [Bootstrap retry gate](#bootstrap-retry-gate-binding) when setup or bootstrap is not success-class.
+- **Next-step resolution:** Auto-advance to step **5** on happy path — no `USER_CHECKPOINT` until [Bootstrap retry gate](#bootstrap-retry-gate-binding) when setup or bootstrap is not success-class.
 
 #### Bootstrap retry gate (binding)
 
-When center **`worktree-setup.sh`** exits non-zero or hint **`bootstrapStatus`** is not success-class, close the turn with structured choice **before** product edits or log analysis.
+When center **`worktree-setup.sh`** exits non-zero or hint **`bootstrapStatus`** is not success-class, close the turn with structured choice **before** product edits under **`WORKTREE_ROOT`**.
 
 **When required:** Exception-only retry path after setup failure. **Forbidden:** opening this gate when setup already reported success-class **`bootstrapStatus`**. **Forbidden:** prose-only bootstrap recap without this gate under Checkpoint trust.
 
@@ -162,60 +219,22 @@ USER_CHECKPOINT — pick bootstrap retry or defer before continuing debug work o
 
 | Option id | Label (brief) | Act |
 |-----------|---------------|-----|
-| `retry-center-setup` | Retry center worktree-setup.sh | Re-run step **2** substeps **1–3** |
+| `retry-center-setup` | Retry center worktree-setup.sh | Re-run step **4** substeps **1–3** |
 | `retry-inline-bootstrap` | Retry inline worktree-bootstrap (attested) | Follow inline [`worktree-bootstrap/SKILL.md`](../../../plan-and-deliver/skills/worktree-bootstrap/SKILL.md) per rule **20** |
 | `retry-with-skip-flags` | Retry with attested `--skip-*` flags | Re-run setup with updated **`bootstrapSkipFlags`** |
 | `defer-debug` | Defer — return partial to Squad Leader | Emit **`partial`** with **`continuationStatus: active`**; no product edits |
 | `more-details` | More details for option _ | Elaborate; re-open this gate |
 
 - **`defaultOptionId: retry-center-setup`** when failure looks transient and paths are valid.
-- **Next-step resolution:** Auto-advance to step **3** when **`outputs.bootstrapStatus: success`** — no `USER_CHECKPOINT` on the default happy path.
+- **Next-step resolution:** Auto-advance to step **5** when **`outputs.bootstrapStatus: success`** — no `USER_CHECKPOINT` on the default happy path.
 
-### 3 — Logs first (mandatory gate)
+### 5 — Apply fix (after approval and worktree)
 
-**Do not start substantive root-cause analysis until log access is established.**
-
-1. Read [`.cursor/rules/sedea-debug-logging-settings.mdc`](.cursor/rules/sedea-debug-logging-settings.mdc) when present on the hosting repo — follow its **cwd routing** table before tuning any channel.
-2. When the bug is under **`tapcart-push/`** or **`tapcart-merchant-dashboard/`**, read that submodule's logging rules first (for example [`tapcart-push/.cursor/rules/logging.mdc`](tapcart-push/.cursor/rules/logging.mdc) — `LOG_LEVEL`, pino).
-3. When the bug is **Mission Control**, **Sedea Hub**, or dispatch/agent lanes — tune `sedeaHub.logLevel`, `missionControl.logLevel`, and Output panel sinks per that router; inspect `.sedea/operations/.../dispatch/` on the **primary** clone when lane evidence is needed.
-4. Collect existing logs relevant to `issueSummary` / `logHints`.
-5. Add **liberal debug logging** to code under **`WORKTREE_ROOT`** when existing logs are insufficient — verbose debug output is acceptable for this stage.
-6. Reproduce using `reproductionSteps` when provided; capture log evidence before proposing fixes.
-
-**Node toolchain:** when running `node` / `npm` / `yarn` in a submodule during diagnosis, use that repo's declared version (`fnm use` when `.node-version` or `.nvmrc` exists) per [`.cursor/rules/dot-sedea.mdc`](.cursor/rules/dot-sedea.mdc) — not a separate hosting-root warmUp rule.
-
-- **Next-step resolution:** Auto-advance to step **4** when log access is established — no `USER_CHECKPOINT` on this step (agent procedural gate, not developer-input).
-
-### 4 — Analyze and propose fix
-
-1. Analyze code with log evidence — prioritize log-backed hypotheses.
-2. Propose fix with explicit **testing scenarios** (automated and manual).
-3. Close turn with structured choice at [Fix proposal gate](#fix-proposal-gate-binding) — developer approves fix proposal, requests revision, or aborts.
-
-- **Next-step resolution:** Auto-advance to step **5** only after **`approve-fix`** at the fix proposal gate — revision loops return to step **4** analysis.
-
-#### Fix proposal gate (binding)
-
-After log-backed analysis and a concrete fix proposal with test scenarios, close the turn with structured choice **before** implementing under **`WORKTREE_ROOT`**.
-
-**When required:** Every fix proposal before step **5** implementation. **Forbidden:** applying product edits before developer approval. **Forbidden:** prose-only *approve this fix?* without **`mission_control_present_structured_choice`** / AskQuestion under Checkpoint trust.
-
-Include [Session orientation table (binding)](#session-orientation-table-binding) as the first block in **`display.markdown`**. Recap: hypothesis, proposed change scope, automated test plan, manual test scenarios.
-
-USER_CHECKPOINT — approve fix proposal, request revision, or abort on this lane. defaultOptionId: approve-fix
-
-| Option id | Label (brief) | Act |
-|-----------|---------------|-----|
-| `approve-fix` | Approve — implement fix (step 5) | Proceed to [Apply fix](#5--apply-fix-after-approval) |
-| `revise-proposal` | Revise proposal — more analysis | Return to step **4** substeps **1–2** |
-| `abort-debug` | Abort debug session | Terminal **`aborted`** with evidence recap |
-| `more-details` | More details for option _ | Elaborate; re-open this gate |
-
-### 5 — Apply fix (after approval)
-
-1. Implement approved fix only under **`WORKTREE_ROOT`**.
-2. Run automated tests applicable to the change.
-3. Guide developer through manual test scenarios step-by-step via [Manual test verification gate](#manual-test-verification-gate-binding).
+1. When step **4** has not run this session, run [Worktree create](#4--worktree-create-attach-bootstrap-binding) first.
+2. Add **liberal debug logging** under **`WORKTREE_ROOT`** when diagnosis still needs instrumentation.
+3. Implement approved fix only under **`WORKTREE_ROOT`**.
+4. Run automated tests applicable to the change.
+5. Guide developer through manual test scenarios step-by-step via [Manual test verification gate](#manual-test-verification-gate-binding).
 
 - **Next-step resolution:** Auto-advance automated test runs on happy path — open manual test gate per scenario; auto-advance to step **6** / **7** when all scenarios pass.
 
@@ -232,17 +251,77 @@ USER_CHECKPOINT — confirm manual test scenario results on this lane.
 | Option id | Label (brief) | Act |
 |-----------|---------------|-----|
 | `scenario-pass` | Scenario passed — continue | Advance to next scenario or step **6** when all pass |
-| `scenario-fail` | Scenario failed — return to diagnosis | Return to step **3** (logs first on new evidence) |
+| `scenario-fail` | Scenario failed — return to diagnosis | Return to step **2** (logs first on new evidence) |
 | `run-tests-outside-chat` | Running tests outside chat — resume when done | External-wait — same gate on resume with results |
+| `copy-dsv-handoff` | Copy Deploy Step Verification agent prompt | Emit [Deploy Step Verification (agent handoff)](#deploy-step-verification-agent-handoff-binding) in the same turn’s **`displayMarkdown`** (or re-emit if already shown); re-open this gate — does **not** mark the scenario passed |
 | `blocked-manual` | Blocked — cannot complete manual test | Set **`fixStatus: blocked`**; terminal with evidence |
 | `more-details` | More details for option _ | Elaborate; re-open this gate |
 
+##### Deploy Step Verification (agent handoff) (binding)
+
+When manual scenarios need an **agent** to verify them (especially when **no** PR-plan `## 7. Deploy test plan` anchor exists yet), emit a copy-safe prompt for a **detached** Mission Control dispatch of **Perform Deploy Step Verification** (`sedea-for-testing` / `perform-deploy-step-verification` — command phrase **`perform deploy step verification`**). Confirm that center exists on the hosting repo before naming the path; if it is missing, say so and keep user-facing gate options.
+
+**When to emit**
+
+| Trigger | Rule |
+|---------|------|
+| Developer picks **`copy-dsv-handoff`** | **Must** include the fenced handoff block in **`displayMarkdown`** on that turn |
+| First manual-test gate of the session when scenarios are agent-executable (commands, logs, HTTP, introspection) and **no** `targetPlanPath` is in scope | **Should** include the handoff block proactively in **`displayMarkdown`** above the modal (developer may still use user-facing options) |
+
+**Forbidden**
+
+- Treating developer-facing scenario bullets (“open the UI and confirm …”) as the agent handoff body
+- Implying this mission **spawns** Deploy Step Verification — the developer starts a **new** Mission Control dispatch (detached)
+- Requiring a PR-plan path when debug has none — free-form checklist intake is valid for DSV
+- Prose-only “paste something into Deploy Step Verification” without the fenced agent prompt
+
+**Prompt shape (LLM consumer — agent-targeted)**
+
+Put this under a `### Deploy Step Verification (agent handoff)` heading. Optimize for an agent reader (rule **1** § *Generating content for another agent*): completeness over brevity. Fill placeholders from the approved proposal and known env.
+
+````markdown
+### Deploy Step Verification (agent handoff)
+
+Copy into a **new** Mission Control dispatch on center **`sedea-for-testing`**, mission **Perform Deploy Step Verification**.
+
+```text
+perform deploy step verification
+
+## Goal
+Verify the following debug-session manual scenarios for the fix under test. Prefer autonomous checks (shell, HTTP, log grep, introspection). Do not ask the developer to run commands you can run.
+
+## Context
+- Hosting root: <absolute HOSTING_ROOT>
+- Debug worktree (if product fix lives there): <absolute WORKTREE_ROOT>
+- Worktree name: <worktreeName>
+- Environment: <local|staging|… or unknown>
+- PR plan deploy anchor: <targetPlanPath or "none — free-form checklist below">
+
+## Scenarios to verify
+1. <scenario id / title> — success: <one-line criteria>
+2. …
+
+## How to verify (agent)
+For each scenario:
+- Run concrete commands or scripts (name argv; cwd under HOSTING_ROOT or WORKTREE_ROOT as appropriate).
+- Use log tail/grep, HTTP probes, or read-only introspection when UI is not required.
+- Record pass/fail + evidence per scenario.
+- Authorized ops hint: shell, http, log-grep, read-only-db, write-scratch (narrow further if known).
+
+## Out of scope
+- Do not re-implement the product fix.
+- Do not mark debug-and-fix scenarios passed — report results back so the developer can pick scenario-pass / scenario-fail on the debug lane.
+```
+````
+
+After the developer runs DSV and returns, they resume this gate with **`scenario-pass`** / **`scenario-fail`** (or **`run-tests-outside-chat`** while waiting).
+
 ### 6 — Fix loop
 
-- If issue persists or a new issue appears → return to step **3** (logs first on new evidence).
+- If issue persists or a new issue appears → return to step **2** (logs first on new evidence; **`WORKTREE_ROOT`** may already exist).
 - If blocked (missing access, unrecoverable env) → set `fixStatus: blocked` and terminal with evidence.
 
-- **Next-step resolution:** Auto-advance routing — no `USER_CHECKPOINT` on loop hops; gates live at steps **4** and **5** only.
+- **Next-step resolution:** Auto-advance routing — no `USER_CHECKPOINT` on loop hops; gates live at steps **3** and **5** only.
 
 ### 7 — Session cleanup vs post-fix recommendation
 

@@ -1,6 +1,6 @@
-# Checkpoint skill calibration — R&D center
+# Checkpoint skill calibration — Software Development center
 
-Derived index of **Checkpoint trust** turn behavior for **research-and-development** plan-and-deliver skills and mission `plan.mdc` protocol surfaces. Authoritative sources remain each skill's `## Checkpoint turn UX (skill-local)` table and each mission `plan.mdc`.
+Derived index of **Checkpoint trust** turn behavior for **software-development** plan-and-deliver skills and mission `plan.mdc` protocol surfaces. Authoritative sources remain each skill's `## Checkpoint turn UX (skill-local)` table and each mission `plan.mdc`.
 
 **Related:**
 
@@ -9,7 +9,7 @@ Derived index of **Checkpoint trust** turn behavior for **research-and-developme
 - [Sedea mission calibration](../../sedea/docs/checkpoint-mission-calibration.md) — sedea-center mission skills and plans
 - Parent rollout: governance marker rollout row 6 (`6_governance_matrix_66a5fdbe`)
 
-**Rollout status (2026-06-28):** Documents **shipped** R&D skill Checkpoint turn UX tables and aligned R&D mission `plan.mdc` markers. Skills without a local table are **pending calibration**. Host/platform governance and per-center split reconciled after [#764](https://github.com/sedea-ai/app/pull/764) / [#765](https://github.com/sedea-ai/app/pull/765) — see [host governance](../../sedea/docs/checkpoint-ask-auto-advance-matrix.md) § Reconcile note.
+**Rollout status (2026-06-28):** Documents **shipped** Software Development skill Checkpoint turn UX tables and aligned Software Development mission `plan.mdc` markers. Skills without a local table are **pending calibration**. Host/platform governance and per-center split reconciled after [#764](https://github.com/sedea-ai/app/pull/764) / [#765](https://github.com/sedea-ai/app/pull/765) — see [host governance](../../sedea/docs/checkpoint-ask-auto-advance-matrix.md) § Reconcile note.
 
 **No cross-skill inheritance (binding):** This doc is a **derived** cross-ref for R&D only — prefer skill and plan sources.
 
@@ -73,7 +73,7 @@ Derived index of **Checkpoint trust** turn behavior for **research-and-developme
 | **plan-reconcile** | Inline closure gate (inline on coding-session) | Preview dry-run, list-candidates | [`plan-reconcile/SKILL.md`](../missions/plan-and-deliver/skills/plan-reconcile/SKILL.md) § Checkpoint turn UX |
 | **hosting-repo-rules** | Worktree-open gate | Implement through review-ready | [`hosting-repo-rules/SKILL.md`](../missions/plan-and-deliver/skills/hosting-repo-rules/SKILL.md) § Checkpoint turn UX |
 | **worktree-bootstrap** | Step **1** validate gate (exception-only inline retry) | Prerequisites when parent completed setup | [`worktree-bootstrap/SKILL.md`](../missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md) § Checkpoint turn UX |
-| **pr-review** | *Pending calibration* | *Pending* | [`pr-review/SKILL.md`](../missions/plan-and-deliver/skills/pr-review/SKILL.md) |
+| **pr-review** | Step **4** disposition (single-PR); batch mode skips gate | Batch mode auto-advance when **`batchShipAuthorized`** | [`pr-review/SKILL.md`](../missions/plan-and-deliver/skills/pr-review/SKILL.md) § Batch mode |
 
 ### coding-session — key gates (detail)
 
@@ -86,6 +86,7 @@ Derived index of **Checkpoint trust** turn behavior for **research-and-developme
 | Implementation **5–6** | Auto-advance | exception: blocking stop |
 | Implementation continuation | Auto-advance when clean | **Gate** when criteria fail |
 | Ship cut-point | Auto-advance when clean | **Gate** when criteria fail |
+| Batch ship (`openPrBatch.length > 1`) | **`approve-ship-batch`** then auto-advance tail | Per [batch ship profile](.sedea/centers/sedea/docs/batch-ship-checkpoint-profile.md) |
 | Post-merge tail | Auto-advance chain | exception: cleanup partial |
 | After deploy deploy-walk | **Gate** — sole post-merge USER_CHECKPOINT | Manual step await (deploy-walk) |
 
@@ -93,9 +94,9 @@ Derived index of **Checkpoint trust** turn behavior for **research-and-developme
 
 ---
 
-## Mission `plan.mdc` protocol surfaces (row 5 — R&D)
+## Mission `plan.mdc` protocol surfaces (row 5 — Software Development)
 
-Aligned warm-up tables and protocol **USER_CHECKPOINT** markers. Host merge for plan-and-deliver missions: `effectiveWarmUp = dedupe(sedeaBootstrapRules → rdBootstrapRules → laneRules)`.
+Aligned warm-up tables and protocol **USER_CHECKPOINT** markers. Host merge for plan-and-deliver missions: `effectiveWarmUp = dedupe(sedeaBootstrapRules → softwareDevelopmentBootstrapRules → laneRules)`.
 
 | Mission plan | Checkpoint warm-up binding | Protocol USER_CHECKPOINT markers (representative) | Source |
 |--------------|---------------------------|---------------------------------------------------|--------|
@@ -115,9 +116,9 @@ Aligned warm-up tables and protocol **USER_CHECKPOINT** markers. Host merge for 
 
 ---
 
-## Cross-ref index — R&D skills with Checkpoint turn UX tables
+## Cross-ref index — Software Development skills with Checkpoint turn UX tables
 
-| # | Skill path (under `.sedea/centers/research-and-development/`) | Calibrated |
+| # | Skill path (under `.sedea/centers/software-development/`) | Calibrated |
 |---|----------------------------------------------------------------|------------|
 | 1 | `missions/plan-and-deliver/skills/master-planner/SKILL.md` | yes |
 | 2 | `missions/plan-and-deliver/skills/new-plan/SKILL.md` | yes |
@@ -145,30 +146,31 @@ Aligned warm-up tables and protocol **USER_CHECKPOINT** markers. Host merge for 
 
 ---
 
-## Maintenance policy (R&D)
+## Maintenance policy (Software Development)
 
 | Trigger | Action |
 |---------|--------|
-| R&D skill adds/removes/moves a **USER_CHECKPOINT** marker | Update skill `Checkpoint turn UX` table; refresh cluster summary here |
-| R&D mission `plan.mdc` gate changes | Update mission plan; refresh mission table above |
-| New R&D skill ships with calibration table | Append cross-ref index row |
+| Software Development skill adds/removes/moves a **USER_CHECKPOINT** marker | Update skill `Checkpoint turn UX` table; refresh cluster summary here |
+| Software Development mission `plan.mdc` gate changes | Update mission plan; refresh mission table above |
+| New Software Development skill ships with calibration table | Append cross-ref index row |
 
-**Verification (R&D scope):**
+**Verification (Software Development scope):**
 
 ```bash
-find .sedea/centers/research-and-development -path '*/skills/*/SKILL.md' \
+find .sedea/centers/software-development -path '*/skills/*/SKILL.md' \
   -exec rg -l 'Checkpoint turn UX \(skill-local\)' {} \;
-rg -l 'Checkpoint trust \(binding\)' .sedea/centers/research-and-development/**/plan.mdc
+rg -l 'Checkpoint trust \(binding\)' .sedea/centers/software-development/**/plan.mdc
 ```
 
 ---
 
-## Spot-check (R&D skills)
+## Spot-check (Software Development skills)
 
 1. Confirm dispatch `trustLevel: checkpoint`.
 2. Walk to first documented **Gate** — happy-path steps auto-advance without turn-end modals.
 3. At USER_CHECKPOINT, confirm structured choice opens.
 4. Replay skip paths (coding-session auto-authorize, pr-plan `skipPrPlanHandoffModal`).
 5. Record verdict in skill PR plan §7 After deploy.
+6. **Batch ship:** run one multi-PR **`coding-session`** through **`approve-ship-batch`** and verify Phase A + B auto-advance per [batch ship profile](.sedea/centers/sedea/docs/batch-ship-checkpoint-profile.md).
 
 See [host governance](../../sedea/docs/checkpoint-ask-auto-advance-matrix.md) for platform StreamFinal behavior.

@@ -5,7 +5,7 @@ alwaysApply: false
 
 # Plan & PR naming
 
-**On-demand rule.** Mission Control warm-up loads [`.sedea/centers/research-and-development/rules/bootstrap.mdc`](bootstrap.mdc) as the sole R&D `alwaysApply: true` bootstrap. Read **this file** when you need plan/PR/worktree naming and forbidden-word policy — not on every dispatch warm-up.
+**On-demand rule.** Mission Control warm-up loads [`.sedea/centers/software-development/rules/bootstrap.mdc`](bootstrap.mdc) as the sole Software Development `alwaysApply: true` bootstrap. Read **this file** when you need plan/PR/worktree naming and forbidden-word policy — not on every dispatch warm-up.
 
 Applies to **plan filenames and headings**, **worktree names** (`-b` on `git worktree add`), **PR titles and descriptions**, **chat titles**, and **commit messages** across all repos.
 
@@ -70,12 +70,12 @@ Worktree naming depends on the **hosting repo** that receives the code change, n
 
 | Hosting repo | Pattern | Authority |
 |--------------|---------|-----------|
-| **Hosting repo** (root contains `.sedea/centers/sedea/`) | `<prefix>/<NN>-<slug>` — two-digit stack index required when the team uses stacked PRs on `main` | [`.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc`](.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc) and [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](20_efficient-pr-shipping.mdc) § *Worktree naming* |
+| **Hosting repo** (root contains `.sedea/centers/sedea/`) | `<prefix>/<NN>-<slug>` — two-digit stack index required when the team uses stacked PRs on `main` | [`.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc`](.sedea/centers/sedea/rules/7_stacked-pr-worktree-naming.mdc) and [`.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc`](20_efficient-pr-shipping.mdc) § *Worktree naming* |
 | **Separate hosting repo worktree** (e.g. `user-auth`, `payments-web`) | `improve/<desc>`, `simplify/<desc>`, `harden/<desc>`, `fix/<desc>`, etc. — benefit-named prefix, **no** `NN` unless that repo's own rules require stacking | This rule § *Forbidden word* and *GOOD worktree names* above |
 
 Do **not** copy stacked **hosting repo** examples such as `feat/token-auth` or bare `improve/logger` onto a **separate hosting repo** — use `feat/01-token-auth` on the primary hosting repo when stacked on `main`. Do **not** use the forbidden busy-work prefix from any center naming rule.
 
-**Naming is not removal permission.** Choosing or documenting a worktree name does **not** authorize **`git worktree remove`**, **`git worktree prune`**, or **`sedea_remove_worktree_folder`** on that path. Removal requires **worktree ownership** preconditions — see [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](20_efficient-pr-shipping.mdc) § *Worktree removal ownership (binding)* and [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § *Worktree ownership*. **If unsure** whether a path is yours to remove: **stop** and use structured choice — **do not remove**, and **do not** end with prose-only idle.
+**Naming is not removal permission.** Choosing or documenting a worktree name does **not** authorize **`git worktree remove`**, **`git worktree prune`**, or **`sedea_remove_worktree_folder`** on that path. Removal requires **worktree ownership** preconditions — see [`.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc`](20_efficient-pr-shipping.mdc) § *Worktree removal ownership (binding)* and [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § *Worktree ownership*. **If unsure** whether a path is yours to remove: **stop** and use structured choice — **do not remove**, and **do not** end with prose-only idle.
 
 ## When tempted to reach for the forbidden word
 
@@ -87,7 +87,7 @@ Agents **must not** update gcloud secrets, add environment variables to code, or
 
 ## Checkpoint step continuation (binding)
 
-This file is the **plan / PR / worktree naming and forbidden-word contract**, not a mission protocol with executable ship steps. Under **`trustLevel: checkpoint`**, turn-end modal UX for worktree-open, ship cut-points, and post-merge cleanup lives in invoker skills (`coding-session`, `create-pr`, `promote-center-submodule-pin`) and consent gates in rules **6** / **2** / **1** / sedea rule **7**. **Do not** add literal `USER_CHECKPOINT` markers here for happy-path benefit naming, prefix selection, or stacked-vs-separate pattern resolution when the plan or developer already named the outcome — that would fight skill auto-advance.
+This file is the **plan / PR / worktree naming and forbidden-word contract**, not a mission protocol with executable ship steps. Under **`trustLevel: checkpoint`**, turn-end modal UX for worktree-open, ship cut-points, and post-merge cleanup lives in invoker skills (`coding-session`, `create-pr`, `promote-submodule-pin`) and consent gates in rules **6** / **2** / **1** / sedea rule **7**. **Do not** add literal `USER_CHECKPOINT` markers here for happy-path benefit naming, prefix selection, or stacked-vs-separate pattern resolution when the plan or developer already named the outcome — that would fight skill auto-advance.
 
 | Surface | Designation | Owner |
 |---------|-------------|--------|

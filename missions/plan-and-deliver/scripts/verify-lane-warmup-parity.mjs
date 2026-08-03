@@ -8,7 +8,7 @@
  *
  * Run from hosting repo root (directory containing `.sedea/centers/sedea/`):
  *
- *   node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/verify-lane-warmup-parity.mjs
+ *   node .sedea/centers/software-development/missions/plan-and-deliver/scripts/verify-lane-warmup-parity.mjs
  *   node .../verify-lane-warmup-parity.mjs --bootstrap slim
  *
  * Exit 0 when every role passes; exit 1 when any path is missing or unknown.
@@ -33,34 +33,34 @@ const ROLE_MANIFESTS = {
     laneRules: [
       '.sedea/centers/sedea/rules/2_ask-question-instructions.mdc',
       '.sedea/centers/sedea/rules/4_mission.mdc',
-      '.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc',
-      '.sedea/centers/research-and-development/docs/development-process.md',
+      '.sedea/centers/software-development/missions/plan-and-deliver/plan.mdc',
+      '.sedea/centers/software-development/docs/development-process.md',
     ],
   },
   'author-prd': {
     laneRules: [
       '.sedea/centers/sedea/rules/2_ask-question-instructions.mdc',
-      '.sedea/centers/research-and-development/missions/plan-and-deliver/skills/author-prd/SKILL.md',
-      '.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc',
-      '.sedea/centers/research-and-development/rules/31_dispatch-scope.mdc',
+      '.sedea/centers/software-development/missions/plan-and-deliver/skills/author-prd/SKILL.md',
+      '.sedea/centers/software-development/missions/plan-and-deliver/plan.mdc',
+      '.sedea/centers/software-development/rules/31_dispatch-scope.mdc',
     ],
     skillRelPath: 'missions/plan-and-deliver/skills/author-prd/SKILL.md',
   },
   'brainstorm-research': {
     laneRules: [
       '.sedea/centers/sedea/rules/2_ask-question-instructions.mdc',
-      '.sedea/centers/research-and-development/missions/plan-and-deliver/skills/brainstorm-research/SKILL.md',
-      '.sedea/centers/research-and-development/rules/31_dispatch-scope.mdc',
-      '.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md',
+      '.sedea/centers/software-development/missions/plan-and-deliver/skills/brainstorm-research/SKILL.md',
+      '.sedea/centers/software-development/rules/31_dispatch-scope.mdc',
+      '.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md',
     ],
     skillRelPath: 'missions/plan-and-deliver/skills/brainstorm-research/SKILL.md',
   },
   'master-planner': {
     laneRules: [
       '.sedea/centers/sedea/rules/2_ask-question-instructions.mdc',
-      '.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc',
-      '.sedea/centers/research-and-development/missions/plan-and-deliver/skills/master-planner/SKILL.md',
-      '.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md',
+      '.sedea/centers/software-development/rules/30_planning-target-resolution.mdc',
+      '.sedea/centers/software-development/missions/plan-and-deliver/skills/master-planner/SKILL.md',
+      '.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md',
     ],
     skillRelPath: 'missions/plan-and-deliver/skills/master-planner/SKILL.md',
   },
@@ -68,26 +68,26 @@ const ROLE_MANIFESTS = {
     laneRules: [
       '.sedea/centers/sedea/rules/2_ask-question-instructions.mdc',
       '.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc',
-      '.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc',
-      '.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md',
+      '.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc',
+      '.sedea/centers/software-development/missions/plan-and-deliver/skills/coding-session/SKILL.md',
     ],
     skillRelPath: 'missions/plan-and-deliver/skills/coding-session/SKILL.md',
   },
   'phase-planner': {
     laneRules: [
       '.sedea/centers/sedea/rules/2_ask-question-instructions.mdc',
-      '.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc',
-      '.sedea/centers/research-and-development/missions/plan-and-deliver/skills/phase-planner/SKILL.md',
-      '.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md',
+      '.sedea/centers/software-development/rules/30_planning-target-resolution.mdc',
+      '.sedea/centers/software-development/missions/plan-and-deliver/skills/phase-planner/SKILL.md',
+      '.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md',
     ],
     skillRelPath: 'missions/plan-and-deliver/skills/phase-planner/SKILL.md',
   },
   'pre-pr-review': {
     laneRules: [
       '.sedea/centers/sedea/rules/2_ask-question-instructions.mdc',
-      '.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc',
-      '.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pre-pr-review/SKILL.md',
-      '.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md',
+      '.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc',
+      '.sedea/centers/software-development/missions/plan-and-deliver/skills/pre-pr-review/SKILL.md',
+      '.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md',
     ],
     skillRelPath: 'missions/plan-and-deliver/skills/pre-pr-review/SKILL.md',
   },
@@ -95,9 +95,9 @@ const ROLE_MANIFESTS = {
     // Deprecated role — retained for parity until drain gate D4 (see skills/README.md § worktree-bootstrap skill drain gate).
     laneRules: [
       '.sedea/centers/sedea/rules/2_ask-question-instructions.mdc',
-      '.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc',
-      '.sedea/centers/research-and-development/missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md',
-      '.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md',
+      '.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc',
+      '.sedea/centers/software-development/missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md',
+      '.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md',
     ],
     skillRelPath: 'missions/plan-and-deliver/skills/worktree-bootstrap/SKILL.md',
   },

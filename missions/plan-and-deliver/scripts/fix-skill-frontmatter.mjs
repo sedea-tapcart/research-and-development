@@ -3,7 +3,7 @@
  * Repair SKILL.md YAML frontmatter indentation so Mission Control skillResolver
  * can parse inputs (2 spaces per input name, 4 spaces for type/description/required/default).
  *
- *   node .sedea/centers/research-and-development/missions/plan-and-deliver/scripts/fix-skill-frontmatter.mjs [--write]
+ *   node .sedea/centers/software-development/missions/plan-and-deliver/scripts/fix-skill-frontmatter.mjs [--write]
  *
  * Without --write, prints files that would change. With --write, updates in place.
  */

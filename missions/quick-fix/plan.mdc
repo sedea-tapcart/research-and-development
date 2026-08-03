@@ -11,7 +11,7 @@ alwaysApply: false
 
 **Execution model:** Squad Leader collects a free-form fix description, synthesizes a confirmed **`changeList`**, and spawns a **Quick Fix Plan agent** that scaffolds a minimal parent plan and runs **`new-plan`** + **`pr-plan`** inline. **`pr-plan`** spawns **`coding-session`** (§5d). Ship execution stays on the detached **`coding-session`** lane; the Squad Leader tracks planning closure and ship progress, then proposes dispatch resolution.
 
-**Skill reuse:** [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/`](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/) — **`quick-fix-plan`** (§3 spawn), **`new-plan`**, **`pr-plan`**, **`coding-session`**. Spawn contracts: [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md`](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md).
+**Skill reuse:** [`.sedea/centers/software-development/missions/plan-and-deliver/skills/`](.sedea/centers/software-development/missions/plan-and-deliver/skills/) — **`quick-fix-plan`** (§3 spawn), **`new-plan`**, **`pr-plan`**, **`coding-session`**. Spawn contracts: [`.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md`](.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md).
 
 ## Mission constraints (binding)
 
@@ -24,7 +24,7 @@ alwaysApply: false
 | **PR count** | **Exactly one** PR plan per dispatch (single indexed child) |
 | **Skipped** | Full **`author-prd`**, **`master-planner`** Master Plan, **`pr-breakdown`**, **`delivery-phases`**, **`phase-planner`** |
 | **Out of scope redirect** | Complexity **>6**, multi-PR decomposition, or work needing Master Plan → **`plan and deliver a single phase`** (**1–6** PRs, complexity **≤ 20**) or **`plan and deliver`** (detached dispatch) |
-| **Ship chain** | Same detached **`coding-session`** order as plan-and-deliver §8. Two-phase bootstrap on **`mode: none`** script-bootstrap hosts — see [plan-and-deliver `coding-session/SKILL.md` § *Generic flow*](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md). |
+| **Ship chain** | Same detached **`coding-session`** order as plan-and-deliver §8. Two-phase bootstrap on **`mode: none`** script-bootstrap hosts — see [plan-and-deliver `coding-session/SKILL.md` § *Generic flow*](.sedea/centers/software-development/missions/plan-and-deliver/skills/coding-session/SKILL.md). |
 
 ### Operations filesystem invariant (binding)
 
@@ -32,17 +32,17 @@ All **`.sedea/operations/`** writes from the **main hosting clone** only — see
 
 ### Worktree removal ownership (binding)
 
-Same as plan-and-deliver — [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § *Worktree ownership*; rule **20** § *Worktree removal ownership* in [`.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc`](.sedea/centers/research-and-development/rules/20_efficient-pr-shipping.mdc).
+Same as plan-and-deliver — [`.sedea/centers/sedea/rules/0_hosting-repo.mdc`](.sedea/centers/sedea/rules/0_hosting-repo.mdc) § *Worktree ownership*; rule **20** § *Worktree removal ownership* in [`.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc`](.sedea/centers/software-development/rules/20_efficient-pr-shipping.mdc).
 
 ### Post-PR review inheritance (binding)
 
-Detached **`coding-session`** ship chains reuse plan-and-deliver mechanics — this wrapper does **not** own PR review-cycle steps. After **`create-pr`**, the inline **`pr-review`** / **`pr-review.mjs`** boundary from [plan-and-deliver/plan.mdc § Post-PR handoff](.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc) applies unchanged. Do **not** restate the review procedure here; when the developer picks **`start-pr-review`**, load [plan-and-deliver `pr-review/SKILL.md`](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-review/SKILL.md) via [Post-create-pr handoff gate](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md#post-create-pr-handoff-gate).
+Detached **`coding-session`** ship chains reuse plan-and-deliver mechanics — this wrapper does **not** own PR review-cycle steps. After **`create-pr`**, the inline **`pr-review`** / **`pr-review.mjs`** boundary from [plan-and-deliver/plan.mdc § Post-PR handoff](.sedea/centers/software-development/missions/plan-and-deliver/plan.mdc) applies unchanged — including Checkpoint **`fix-ci-only`** same-turn loop from plan-and-deliver **`pr-review/SKILL.md`**. Do **not** restate the review procedure here; when the developer picks **`start-pr-review`**, load [plan-and-deliver `pr-review/SKILL.md`](.sedea/centers/software-development/missions/plan-and-deliver/skills/pr-review/SKILL.md) via [Post-create-pr handoff gate](.sedea/centers/software-development/missions/plan-and-deliver/skills/coding-session/SKILL.md#post-create-pr-handoff-gate).
 
 ### Repo rules ship inheritance (binding)
 
-Detached **`coding-session`** lanes execute canonical plan-and-deliver repo-rules behavior — this wrapper does **not** duplicate reconcile or post-review rule-update steps. **Pre-PR:** [plan-and-deliver `coding-session/SKILL.md` § *Repo rules reconciliation (binding)*](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md#repo-rules-reconciliation-binding) and [Repo rules reconciliation gate](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md#repo-rules-reconciliation-gate) — plan §5 → **`.cursor/rules/*.mdc`** before ship cut-point. **Post-review:** when inline **`pr-review`** classifies **Rule-update required**, follow [Post-review repo rules handoff](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md#post-review-repo-rules-handoff) after the disposition gate — see [plan-and-deliver `pr-review/SKILL.md`](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-review/SKILL.md).
+Detached **`coding-session`** lanes execute canonical plan-and-deliver repo-rules behavior — this wrapper does **not** duplicate reconcile or post-review rule-update steps. **Pre-PR:** [plan-and-deliver `coding-session/SKILL.md` § *Repo rules reconciliation (binding)*](.sedea/centers/software-development/missions/plan-and-deliver/skills/coding-session/SKILL.md#repo-rules-reconciliation-binding) and [Repo rules reconciliation gate](.sedea/centers/software-development/missions/plan-and-deliver/skills/coding-session/SKILL.md#repo-rules-reconciliation-gate) — plan §5 → **`.cursor/rules/*.mdc`** before ship cut-point. **Post-review:** when inline **`pr-review`** classifies **Rule-update required**, follow [Post-review repo rules handoff](.sedea/centers/software-development/missions/plan-and-deliver/skills/coding-session/SKILL.md#post-review-repo-rules-handoff) after the disposition gate — see [plan-and-deliver `pr-review/SKILL.md`](.sedea/centers/software-development/missions/plan-and-deliver/skills/pr-review/SKILL.md).
 
-**Parallel `hosting-repo-rules` fork (cross-ref only):** When product **`coding-session`** terminals carry **`repoRulesReconciliationStatus: pending`**, parent **`master-planner`** / **`phase-planner`** may fire-and-forget spawn **`hosting-repo-rules`** per canonical [plan-and-deliver `coding-session/SKILL.md` § *Spawner spawn-detection outputs*](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/coding-session/SKILL.md#spawner-spawn-detection-outputs) and [plan-and-deliver/plan.mdc §8 detached branches](.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc). This wrapper inherits that contract — **no duplicate spawn prose here**.
+**Parallel `hosting-repo-rules` fork (cross-ref only):** When product **`coding-session`** terminals carry **`repoRulesReconciliationStatus: pending`**, parent **`master-planner`** / **`phase-planner`** may fire-and-forget spawn **`hosting-repo-rules`** per canonical [plan-and-deliver `coding-session/SKILL.md` § *Spawner spawn-detection outputs*](.sedea/centers/software-development/missions/plan-and-deliver/skills/coding-session/SKILL.md#spawner-spawn-detection-outputs) and [plan-and-deliver/plan.mdc §8 detached branches](.sedea/centers/software-development/missions/plan-and-deliver/plan.mdc). This wrapper inherits that contract — **no duplicate spawn prose here**.
 
 ## Objectives
 
@@ -50,7 +50,7 @@ Detached **`coding-session`** lanes execute canonical plan-and-deliver repo-rule
 
 2. **Single PR plan** — Produce one PR plan under `.sedea/operations/` via minimal parent scaffold, **`new-plan`** (indexed child), and **`pr-plan`** inline (§§1–4 populated).
 
-3. **Standard ship** — Hand off to **`coding-session`** for implementation and the full plan-and-deliver ship chain (worktree, cut-point, deploy-walk Local test, pre-pr-review, create-pr, pr-review, merge, post-merge cleanup, Staging test deploy-walk, Production, optional plan-reconcile).
+3. **Standard ship** — Hand off to **`coding-session`** for implementation and the full plan-and-deliver ship chain (worktree, cut-point, deploy-walk, pre-pr-review, create-pr, pr-review, post-merge cleanup, optional plan-reconcile). PR plan § 7 lists PR-specific deploy verification only — not ship-chain rows (**development-process.md** § *§7 Deploy test plan — ship-chain boundary*).
 
 4. **Squad Leader oversight** — Track planning completion and detached ship progress; gate **`mission_control_propose_dispatch_resolution`**.
 
@@ -84,9 +84,9 @@ flowchart TB
 |------|------|
 | `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc` | Structured choice at USER_CHECKPOINT gates and external-wait surfaces (Checkpoint precedence) |
 | `.sedea/centers/sedea/rules/4_mission.mdc` | Mission protocol, spawn/reload |
-| `.sedea/centers/research-and-development/missions/quick-fix/plan.mdc` | **This** mission plan |
-| `.sedea/centers/research-and-development/docs/development-process.md` | Cadence and protocol branches |
-| `.sedea/centers/research-and-development/rules/60_github-issue-dispatch-closure.mdc` | Bind GitHub issue at intake; status update before dispatch resolution |
+| `.sedea/centers/software-development/missions/quick-fix/plan.mdc` | **This** mission plan |
+| `.sedea/centers/software-development/docs/development-process.md` | Cadence and protocol branches |
+| `.sedea/centers/software-development/rules/60_github-issue-dispatch-closure.mdc` | Bind GitHub issue at intake; status update before dispatch resolution |
 
 **Quick Fix Plan agent spawn `warmUpRules` (binding):** Merge target skill frontmatter defaults but **replace** `plan-and-deliver/plan.mdc` with **`quick-fix/plan.mdc`**.
 
@@ -168,7 +168,7 @@ USER_CHECKPOINT — pick quick-fix intake mode and confirm scope before spawn.
 - **execution:** spawned
 - **Intent:** Optional research before quick-fix intake; approved report synthesizes §3 **`quick-fix-plan`** bullets.
 - **Trigger:** Developer selects **`brainstorm-first`** at §2 step 1.
-- **Assigned skill:** [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/brainstorm-research/SKILL.md`](../plan-and-deliver/skills/brainstorm-research/SKILL.md)
+- **Assigned skill:** [`.sedea/centers/software-development/missions/plan-and-deliver/skills/brainstorm-research/SKILL.md`](../plan-and-deliver/skills/brainstorm-research/SKILL.md)
 - **Checkpoint child UX:** Report approval USER_CHECKPOINT on **`brainstorm-research/SKILL.md`** § *Report approval gate*; this §2.5 **#external-wait** only.
 - **Inputs:** `invokerMissionSlug: quick-fix`, `operationsDocsDirectory` from lane identity, optional seeds from §1.
 - **Next-step resolution:**
@@ -189,7 +189,7 @@ USER_CHECKPOINT — pick next step when brainstorm child reports failure or part
 - **execution:** spawned
 - **Intent:** Optional research before quick-fix intake; approved report synthesizes §3 **`quick-fix-plan`** bullets.
 - **Trigger:** Developer selects **`brainstorm-first`** at §2 step 1.
-- **Assigned skill:** [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/brainstorm-research/SKILL.md`](../plan-and-deliver/skills/brainstorm-research/SKILL.md)
+- **Assigned skill:** [`.sedea/centers/software-development/missions/plan-and-deliver/skills/brainstorm-research/SKILL.md`](../plan-and-deliver/skills/brainstorm-research/SKILL.md)
 - **Checkpoint child UX:** Report approval USER_CHECKPOINT on **`brainstorm-research/SKILL.md`** § *Report approval gate*; this §2.5 **#external-wait** only.
 - **Inputs:** `invokerMissionSlug: quick-fix`, `operationsDocsDirectory` from lane identity, optional seeds from §1.
 - **Next-step resolution:**
@@ -211,10 +211,10 @@ USER_CHECKPOINT — pick next step when brainstorm child reports failure or part
 - **execution:** spawned
 - **Intent:** Delegate minimal parent scaffold and **`new-plan`** + **`pr-plan`** inline to a focused planning agent.
 - **Target agent role:** Quick Fix Plan agent
-- **skillPath (binding):** [`.sedea/centers/research-and-development/missions/quick-fix/skills/quick-fix-plan/SKILL.md`](.sedea/centers/research-and-development/missions/quick-fix/skills/quick-fix-plan/SKILL.md) — host **`mission_control_spawn_agent`** uses this single path per [spawn contracts README](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md) § *Universal spawn preflight*.
-- **Inline on child lane (not separate spawns):** [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/new-plan/SKILL.md`](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/new-plan/SKILL.md), [`.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-plan/SKILL.md`](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/pr-plan/SKILL.md) — executed per §4 inside the **`quick-fix-plan`** child lane.
-- **Required rule context:** Sedea baseline, **this `plan.mdc`**, **`development-process.md`**, [`.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc`](.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc), plan-and-deliver **`skills/README.md`**.
-- **Inputs:** `intakeMode: description-of-fix`, `changeList`, `changeDescription` (required), `title` from Mission Control, `centerSlug: research-and-development`, `complexityConfirmed: true`.
+- **skillPath (binding):** [`.sedea/centers/software-development/missions/quick-fix/skills/quick-fix-plan/SKILL.md`](.sedea/centers/software-development/missions/quick-fix/skills/quick-fix-plan/SKILL.md) — host **`mission_control_spawn_agent`** uses this single path per [spawn contracts README](.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md) § *Universal spawn preflight*.
+- **Inline on child lane (not separate spawns):** [`.sedea/centers/software-development/missions/plan-and-deliver/skills/new-plan/SKILL.md`](.sedea/centers/software-development/missions/plan-and-deliver/skills/new-plan/SKILL.md), [`.sedea/centers/software-development/missions/plan-and-deliver/skills/pr-plan/SKILL.md`](.sedea/centers/software-development/missions/plan-and-deliver/skills/pr-plan/SKILL.md) — executed per §4 inside the **`quick-fix-plan`** child lane.
+- **Required rule context:** Sedea baseline, **this `plan.mdc`**, **`development-process.md`**, [`.sedea/centers/software-development/rules/30_planning-target-resolution.mdc`](.sedea/centers/software-development/rules/30_planning-target-resolution.mdc), plan-and-deliver **`skills/README.md`**.
+- **Inputs:** `intakeMode: description-of-fix`, `changeList`, `changeDescription` (required), `title` from Mission Control, `centerSlug: software-development`, `complexityConfirmed: true`.
 - **Expected output:** Child terminal with `outputs.parentPlanPath`, `outputs.parentPlanSlug`, `outputs.targetPlanPath`, `outputs.targetPlanSlug`, `outputs.readyForImplementation`, `outputs.implementationHandoffStatus`, `outputs.prPlanHandoffReady`, optional `outputs.spawnCorrelationId` / `outputs.codingSessionStatus` after inline **`pr-plan`** §5d — per **`quick-fix-plan/SKILL.md`** **`## Completion (spawned)`** and **`## Checkpoint turn UX (skill-local)`**.
 - **Next-step resolution:** Emit spawn → **#external-wait** before turn end; on child terminal success with PR plan path → §6 ack on leader (auto-advance). Failure/partial → USER_CHECKPOINT gate below.
 
@@ -222,7 +222,7 @@ USER_CHECKPOINT — pick next step when Quick Fix Plan child reports failure or 
 
 **Spawn preflight**
 
-- **`skillPath`:** `.sedea/centers/research-and-development/missions/quick-fix/skills/quick-fix-plan/SKILL.md` (workspace-relative on emit).
+- **`skillPath`:** `.sedea/centers/software-development/missions/quick-fix/skills/quick-fix-plan/SKILL.md` (workspace-relative on emit).
 - **`name`** / **`description`** from intake **title** or first bullet — not generic placeholders.
 - **`initiatingPrompt`:** one narrative prompt string weaving the confirmed bullet list, scope/complexity confirmation, and full `changeDescription` — not separate structured sub-fields.
 - **`warmUpRules`:** include **`quick-fix/plan.mdc`** instead of **`plan-and-deliver/plan.mdc`**.
@@ -231,7 +231,7 @@ USER_CHECKPOINT — pick next step when Quick Fix Plan child reports failure or 
 
 1. Compile child **`inputs`** from §2: `intakeMode: description-of-fix`, `changeList`, `changeDescription`, `title`, `centerSlug`, `complexityConfirmed`.
 2. Set **`initiatingPrompt`** with the confirmed bullet list, scope/complexity attestation, and full prose.
-3. Run [spawn contracts README](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md) § *Universal spawn preflight*; set **`name`** from intake **title** or first bullet — not generic placeholders.
+3. Run [spawn contracts README](.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md) § *Universal spawn preflight*; set **`name`** from intake **title** or first bullet — not generic placeholders.
 4. Emit exactly one **`mission_control_spawn_agent`** for **`quick-fix-plan`** with dispatch-unique `slug` and preflight **`inputs`**.
 5. Open **next-step resume** structured choice (**#external-wait**) before ending the turn.
 6. Stop until Mission Control delivers **`mission_control_send_agent_result`** for the spawn.
@@ -239,7 +239,7 @@ USER_CHECKPOINT — pick next step when Quick Fix Plan child reports failure or 
 
 1. Compile child **`inputs`** from §2: `intakeMode: description-of-fix`, `changeList`, `changeDescription`, `title`, `centerSlug`, `complexityConfirmed`.
 2. Set **`initiatingPrompt`** with the confirmed bullet list, scope/complexity attestation, and full prose.
-3. Run [spawn contracts README](.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md) § *Universal spawn preflight*; set **`name`** from intake **title** or first bullet — not generic placeholders.
+3. Run [spawn contracts README](.sedea/centers/software-development/missions/plan-and-deliver/skills/README.md) § *Universal spawn preflight*; set **`name`** from intake **title** or first bullet — not generic placeholders.
 4. Emit exactly one **`mission_control_spawn_agent`** for **`quick-fix-plan`** with dispatch-unique `slug` and preflight **`inputs`**.
 5. Open **next-step resume** structured choice (**#external-wait**) before ending the turn.
 6. Stop until Mission Control delivers **`mission_control_send_agent_result`** for the spawn.
@@ -259,7 +259,7 @@ USER_CHECKPOINT — pick next step when Quick Fix Plan child reports failure or 
 2. **Minimal parent plan** — scaffold under `.sedea/operations/.../plans/` with:
    - Title from intake **`title`**
    - **`### PR list`** with **exactly one** row summarizing the bullet list as a single quick-fix concern
-   - Sidecar **`parent: null`**, **`status: started`** per [`.sedea/centers/sedea/rules/8_plan-board-contract.mdc`](.sedea/centers/sedea/rules/8_plan-board-contract.mdc)
+   - Sidecar **`parent: null`**, **`status: started`** per [`.sedea/centers/sedea/rules/8_operations-plan-sidecar-contract.mdc`](.sedea/centers/sedea/rules/8_operations-plan-sidecar-contract.mdc)
 3. **`new-plan`** inline — `mode: indexed-child`, `childKind: pr-plan`, `index: 1`, parent paths from step 2.
 4. **`pr-plan`** inline — populate §§1–4 from bullet list; §§5–8 remain **`_TBD_`** for **`coding-session`** (normative).
 5. At **`pr-plan`** §5c/§5d — spawn **`coding-session`** with planning handoff `inputs` (`readyForImplementation`, `targetPlanPath`, `upstreamSkill: pr-plan`, etc.) per **`pr-plan/SKILL.md`**.
@@ -275,7 +275,7 @@ USER_CHECKPOINT — pick next step when Quick Fix Plan child reports failure or 
 - **Expected output:** Ship milestones via **`coding-session`** terminal re-emits per plan-and-deliver §8.
 - **Next-step resolution:** Leader §7 tracks host-sync ship rows; §8 when gates allow.
 
-**Detached branches** — identical order to [`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`](.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc) §8 detached table: **`coding-session`** → before deploy **`deploy-walk`** → **`pre-pr-review`** spawn → **`create-pr`** → **`pr-review`** → post-merge cleanup → after deploy **`deploy-walk`** → explicit **`plan-reconcile`**. **`pre-pr-review`** reviewer lane auto-advances Steps **1–8** under Checkpoint trust — parent **`coding-session`** owns post-review developer gates per **`pre-pr-review/SKILL.md`** § *Checkpoint turn UX*.
+**Detached branches** — identical order to [`.sedea/centers/software-development/missions/plan-and-deliver/plan.mdc`](.sedea/centers/software-development/missions/plan-and-deliver/plan.mdc) §8 detached table: **`coding-session`** → before deploy **`deploy-walk`** → **`pre-pr-review`** spawn → **`create-pr`** → **`pr-review`** → post-merge cleanup → after deploy **`deploy-walk`** → post-staging-test tail (**hosting-pin-complete** when gitlinks in scope → **`plan-reconcile`** → **`prShipComplete`**) — Checkpoint auto-advance on **`coding-session`**; no developer reconcile-approval modal on clean path. **Forbidden:** **`prShipComplete`** before hosting **`main`** records merged gitlink tips when submodule scope applied. **`pre-pr-review`** reviewer lane auto-advances Steps **1–8** under Checkpoint trust — parent **`coding-session`** owns post-review developer gates per **`pre-pr-review/SKILL.md`** § *Checkpoint turn UX*.
 
 The Squad Leader **does not** spawn **`coding-session`** from §§1–3. The **Quick Fix Plan agent** child lane spawns **`coding-session`** via inline **`pr-plan`** §5d — same ownership contract as **`master-planner`** on plan-and-deliver (see **`../plan-and-deliver/skills/README.md`** § *Common mistake — Squad Leader redirect*).
 
@@ -302,7 +302,7 @@ Same automation contract as plan-and-deliver §8 (*Mission Control host sync*) w
 
 USER_CHECKPOINT — pick planning-only close vs keep ship active when pre-resolution checklist fails.
 
-**Pre-resolution checklist:** Before **`mission_control_propose_dispatch_resolution`**, re-scan ship rows — do not propose **`resolved`** while `open`/`blocked` rows lack host-sync this session unless developer chose planning-only close via USER_CHECKPOINT gate above.
+**Pre-resolution checklist:** Before **`mission_control_propose_dispatch_resolution`**, re-scan ship rows — do not propose **`resolved`** while `open`/`blocked` rows lack host-sync this session unless developer chose planning-only close via USER_CHECKPOINT gate above. **Also run** plan-and-deliver §8 [Release-versions dissolve gate](.sedea/centers/software-development/missions/plan-and-deliver/plan.mdc#release-versions-dissolve-gate-binding) (overlay check → once-per-dispatch release-note spawn → hard-block until success; skip when flag off or no commits) — **no duplicate full prose here**.
 
 **Pre-resolution checklist:** Before **`mission_control_propose_dispatch_resolution`**, re-scan ship rows — do not propose **`resolved`** while `open`/`blocked` rows lack host-sync this session unless developer chose planning-only close via USER_CHECKPOINT gate above.
 ### 8. Dispatch resolution (Squad Leader)
@@ -320,6 +320,6 @@ Per [`.sedea/centers/sedea/rules/4_mission.mdc`](.sedea/centers/sedea/rules/4_mi
 
 ## Related assets
 
-- Plan-and-deliver reference: [`.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc`](.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc)
-- Single-phase (broader small-feature path — **1–6** PRs, complexity **≤ 20**): [`.sedea/centers/research-and-development/missions/single-phase/plan.mdc`](.sedea/centers/research-and-development/missions/single-phase/plan.mdc)
-- Cadence: [`.sedea/centers/research-and-development/docs/development-process.md`](.sedea/centers/research-and-development/docs/development-process.md)
+- Plan-and-deliver reference: [`.sedea/centers/software-development/missions/plan-and-deliver/plan.mdc`](.sedea/centers/software-development/missions/plan-and-deliver/plan.mdc)
+- Single-phase (broader small-feature path — **1–6** PRs, complexity **≤ 20**): [`.sedea/centers/software-development/missions/single-phase/plan.mdc`](.sedea/centers/software-development/missions/single-phase/plan.mdc)
+- Cadence: [`.sedea/centers/software-development/docs/development-process.md`](.sedea/centers/software-development/docs/development-process.md)
